@@ -1,7 +1,7 @@
 /**
  * \file Mille.cc
- *  \author    : Gero Flucke
- *  date       : October 2006
+ *  \author    : Gero Flucke 
+ *  date       : October 2006  
  *  $Revision: 1.3 $
  *  $Date: 2007/04/16 17:47:38 $
  *  (last update by $Author: flucke $)

@@ -8,10 +8,11 @@
    followed by one or several calls to openC(..) to open one or several files.
    readC(..) is then called to read the records sequentially. It internally
    goes through all files as if it were only one, in contrast to the 
-   fortran READ used in routine PEREAD of pede.F.
+   fortran READ used in routine PEREAD of pede.F. 
 
    written by Gero Flucke (gero.flucke@cern.ch),
    last update on March 1st, 2007
+   
 */
 
 #include <stdio.h>
