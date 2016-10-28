@@ -1,5 +1,5 @@
 
-      SUBROUTINE MEGNIT ! ----------------------------- initialize array
+      SUBROUTINE MEGNIT ! ----------------------------- initialize array 
 *     internal initialization of memory and defaults
 #include "dynal.inc"
       CHARACTER*40 SUTEXT(0:39)
