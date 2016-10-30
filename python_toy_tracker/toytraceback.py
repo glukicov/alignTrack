@@ -1,4 +1,6 @@
 import random
+import sys
+import math
 
 class Wire:
     
@@ -22,6 +24,11 @@ class Wire:
     def get_absolute_y(self):
         # Returns absolute y-pos (same as parent layer)
         return self.y_layer_absolute
+
+    def set_absolute_layer_x(self, x_layer_absolute):
+        # Sets new position of wire, from new position of layer
+        self.absolute_x = self.x_rel_to_layer + x_layer_absolute
+
 
 class Layer:
 
@@ -49,7 +56,6 @@ class Layer:
     def get_wires_x(self):
         # Returns x-pos of all wires in layer
         return [wire.get_absolute_x() for wire in self.wires]
-
     
     def get_wires_y(self):
         # Returns y-pos of all wires in layer
@@ -59,6 +65,12 @@ class Layer:
         # Returns all wires in layer
         return self.wires
 
+    def set_absolute_plane_x(self, x_plane_absolute):
+        # Sets new position for layer, from new position of plane
+        self.absolute_x = self.x_rel_to_plane + x_plane_absolute
+        for wire in self.wires:
+            wire.set_absolute_layer_x(self.absolute_x)
+        
 
 class Plane:
 
@@ -99,6 +111,11 @@ class Plane:
         elif layer_num == 2:
             return self.layer_2
         
+    def set_absolute_module_x(self, x_module_absolute):
+        # Sets new absolute position for planes, from specified position of module
+        self.absolute_x = self.x_rel_to_module + x_module_absolute
+        self.layer_1.set_absolute_plane_x(self.absolute_x)
+        self.layer_2.set_absolute_plane_x(self.absolute_x)
 
 
 class Module:
@@ -140,8 +157,14 @@ class Module:
         elif plane_num == 2:
             return self.plane_2
 
+    def set_x_align(self, align_dist):
+        # Sets x-alignment for module - gives new position to planes
+        self.absolute_x = self.x_rel_to_tracker + align_dist
+        self.plane_1.set_absolute_module_x(self.absolute_x)
+        self.plane_2.set_absolute_module_x(self.absolute_x)
+        
 
-class Detector:
+class Detector:    
 
     # Class representing the whole traceback detector
 
@@ -149,11 +172,11 @@ class Detector:
         # Sets up two modules in the detector
         self.module_1 = Module(0, 0, 0, 0)
         self.module_2 = Module(0, 112, 0, 0)
-
+        
     def get_wires_x(self):
         # Returns x-pos of all wires in detector
         return self.module_1.get_wires_x() + self.module_2.get_wires_x()
-
+    
     def get_wires_y(self):
         # Returns y-pos of all wires in detector
         return self.module_1.get_wires_y() + self.module_2.get_wires_y()
@@ -164,7 +187,14 @@ class Detector:
             return self.module_1
         elif module_num == 2:
             return self.module_2
-        
+
+    def set_module_x_align(self, module_num, align_dist):
+        # Changes alignment of specified module.
+        if module_num == 1:
+            self.module_1.set_x_align(align_dist)
+        elif module_num == 2:
+            self.module_2.set_x_align(align_dist)
+
 
 class Track:
 
@@ -194,3 +224,57 @@ class Track:
     def get_y_points(self):
         # Returns y-pos of beginning, end of track
         return [self.y_bottom, self.y_top]
+
+
+def calc_approach_distance(wire, track):
+    
+    # Function to calculate perpendicular distance from track to wire
+    
+    # Get pos of wire
+    x_0 = wire.get_absolute_x()
+    y_0 = wire.get_absolute_y()
+    
+    # Get pos of beginning, end of track
+    x_1 = track.get_bottom_point()[0]
+    y_1 = track.get_bottom_point()[1]
+    x_2 = track.get_top_point()[0]
+    y_2 = track.get_top_point()[1]
+    
+    # Return perpendicular distance
+    return abs((y_2 - y_1) * x_0 - (x_2 - x_1) * y_0 + x_2 * y_1 - y_2 * x_1) / math.sqrt((y_2 - y_1)**2 + (x_2 - x_1)**2)
+
+    
+
+def closest_hit_wires(detector, track):
+    
+    # Function to find closest approached wires in each layer in detector
+
+    hit_wires = [] # Contains closest approached wires
+
+    # Iterating across all layers
+    for module_num in [1,2]:
+        for plane_num in [1,2]:
+            for layer_num in [1,2]:
+                
+                # Set up initial values for closest approach distance, wire in layer
+                closest_approach = sys.float_info.max 
+                closest_wire = None
+
+                # Iterate across wires in layer
+                for wire in detector.get_module(module_num).get_plane(plane_num).get_layer(layer_num).get_wires():
+                    
+                    # Calculate approach distance
+                    approach = calc_approach_distance(wire, track)
+                    
+                    # Check if wire closer to track than previously checked ones
+                    if approach < closest_approach:
+                        closest_approach = approach
+                        closest_wire = wire
+
+                # Add closest approached wire to list
+                hit_wires.append(closest_wire)
+
+    # Return list of closest approached wires in each layer
+    return hit_wires
+
+
