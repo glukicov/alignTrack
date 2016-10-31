@@ -2,6 +2,12 @@ import random
 import sys
 import math
 
+# Boundaries for track generation
+track_boundary_x_lower = -1
+track_boundary_x_upper = 100
+track_boundary_y_lower = 0
+track_boundary_y_upper = 250
+
 class Wire:
     
     # Class representing a single wire in the detector
@@ -170,8 +176,8 @@ class Detector:
 
     def __init__(self):
         # Sets up two modules in the detector
-        self.module_1 = Module(0, 0, 0, 0)
-        self.module_2 = Module(0, 112, 0, 0)
+        self.module_1 = Module(0, 50, 0, 0)
+        self.module_2 = Module(0, 162, 0, 0)
         
     def get_wires_x(self):
         # Returns x-pos of all wires in detector
@@ -195,20 +201,41 @@ class Detector:
         elif module_num == 2:
             self.module_2.set_x_align(align_dist)
 
+    def set_wire_hits(self, wire_hits):
+        # Assigns a list of wire hits to the detector, produced by a track
+        self.wire_hits = wire_hits
+
+    def get_hit_x_displacement(self, layer_num, track_grad, track_int):
+        
+        # Calculates x-displacement between position of wire in detector hit by track, and track with specified gradient and intercept
+
+        track = Track(track_grad, track_int) # Create track  
+            
+        print "Track Params:", track_grad, track_int
+
+        # Returns list of x-displacements if list of layer numbers is given, or single x-displacement if not.
+        if len(layer_num) > 1:
+            return [calc_x_approach_dist(self.wire_hits[i].get_wire(), track) for i in layer_num]
+        else:
+            return calc_x_approach_dist(self.wire_hits[i].get_wire(), track)
+
 
 class Track:
 
     # Class representing a track through the detector
 
-    def __init__(self):
-        
-        # Sets positions of beginning and end of track, above and below the detector.
-        # Random x-positions chosen for these points
-        self.y_bottom = -50
-        self.y_top = 200
-        self.x_bottom = random.uniform(-1, 100)
-        self.x_top = random.uniform(-1, 100)
+    def __init__(self, gradient, intercept):
+ 
+        # Takes arguments of gradient and integer for track. Note: gradient is taken as dx/dy, as direction of x is parallel to wire planes.
+        # Calculates points track travels through, at upper and lower y-boundaries
+        self.y_bottom = track_boundary_y_lower
+        self.y_top = track_boundary_y_upper
+        self.x_bottom = (gradient * track_boundary_y_lower) + intercept
+        self.x_top = (gradient * track_boundary_y_upper) + intercept 
 
+        self.gradient = gradient
+        self.intercept = intercept
+ 
     def get_bottom_point(self):
         # Returns bottom point of track
         return [self.x_bottom, self.y_bottom]
@@ -217,6 +244,26 @@ class Track:
         # Returns top point of track
         return [self.x_top, self.y_top]
 
+    def get_gradient(self):
+        # Returns gradient of track
+        return self.gradient 
+    
+    def get_intercept(self):
+        # Returns x-intercept of track
+        return self.intercept
+
+    def set_intercept(self, intercept):
+        # Sets x-intercept of track, changing bottom and top coordinates accordingly
+        self.intercept = intercept
+        self.x_bottom = (self.gradient * self.y_bottom) + self.intercept 
+        self.x_top = (self.gradient * self.y_top) + self.intercept 
+
+    def set_gradient(self, gradient):
+        # Sets gradient of track, changing bottom and top coordinates accordingly   
+        self.gradient = gradient
+        self.x_bottom = (self.gradient * self.y_bottom) + self.intercept 
+        self.x_top = (self.gradient * self.y_top) + self.intercept 
+
     def get_x_points(self):
         # Returns x-pos of beginning, end of track
         return [self.x_bottom, self.x_top]
@@ -224,6 +271,60 @@ class Track:
     def get_y_points(self):
         # Returns y-pos of beginning, end of track
         return [self.y_bottom, self.y_top]
+
+
+class WireHit:
+
+    # Class to represent a single hit of a wire. Takes arguments of wire which was hit, x-displacement of hit from wire, y-displacement of hit from wire, and numbers indexing the module, plane, layer, and wire of hit. 
+
+    def __init__(self, wire, hit_x_disp, hit_y_disp, module_num, plane_num, layer_num, wire_num):
+        # Set variables for wires hit. Calculate distance of hit from wire, and displacement in x and y for hit point from wire.
+        self.wire = wire
+        self.hit_x_disp = hit_x_disp 
+        self.hit_y_disp = hit_y_disp 
+        self.hit_dist = math.sqrt(hit_x_disp**2 + hit_y_disp**2)
+
+        # Index  position of wire in detector.
+        self.module_num = module_num
+        self.plane_num = plane_num
+        self.layer_num = layer_num
+        self.wire_num = wire_num
+
+    def set_wire(self, wire):
+        # Sets wire hit
+        self.wire = wire
+
+    def get_wire(self):
+        # Gets wire hit
+        return self.wire
+
+    def get_module_num(self):
+        # Gets number of module for hit
+        return self.module_num
+
+    def get_plane_num(self):
+        # Gets number of plane for hit
+        return self.plane_num
+
+    def get_layer_num(self):
+        # Gets number of layer for hit
+        return self.layer_num
+    
+    def get_wire_num(self):
+        # Gets number of wire for hit
+        return self.wire_num
+
+    def get_hit_dist(self):
+        # Gets distance of hit from wire
+        return self.hit_dist
+    
+    def get_hit_x_disp(self):
+        # Gets x-displacement from wire to hit point 
+        return self.hit_x_disp
+
+    def get_hit_y_disp(self):
+        # Gets y-displacement from wire to hit point 
+        return self.hit_y_disp
 
 
 def calc_approach_distance(wire, track):
@@ -242,14 +343,13 @@ def calc_approach_distance(wire, track):
     
     # Return perpendicular distance
     return abs((y_2 - y_1) * x_0 - (x_2 - x_1) * y_0 + x_2 * y_1 - y_2 * x_1) / math.sqrt((y_2 - y_1)**2 + (x_2 - x_1)**2)
-
     
 
 def closest_hit_wires(detector, track):
     
     # Function to find closest approached wires in each layer in detector
 
-    hit_wires = [] # Contains closest approached wires
+    wire_hits = [] # Contains closest approached wires
 
     # Iterating across all layers
     for module_num in [1,2]:
@@ -260,6 +360,10 @@ def closest_hit_wires(detector, track):
                 closest_approach = sys.float_info.max 
                 closest_wire = None
 
+                # Indexes wire position in layer
+                closest_wire_num = 0
+                wire_num = 0
+                
                 # Iterate across wires in layer
                 for wire in detector.get_module(module_num).get_plane(plane_num).get_layer(layer_num).get_wires():
                     
@@ -270,11 +374,50 @@ def closest_hit_wires(detector, track):
                     if approach < closest_approach:
                         closest_approach = approach
                         closest_wire = wire
+                        closest_wire_num = wire_num
 
-                # Add closest approached wire to list
-                hit_wires.append(closest_wire)
-
-    # Return list of closest approached wires in each layer
-    return hit_wires
+                    wire_num = wire_num + 1
 
 
+                # Calculate positions of hits
+                track_grad = track.get_gradient()
+                track_int = track.get_intercept()
+
+                wire_y = closest_wire.get_absolute_y()
+                wire_x = closest_wire.get_absolute_x()
+
+                delta_x = track.get_top_point()[0] - track.get_bottom_point()[0]
+                delta_y = track.get_top_point()[1] - track.get_bottom_point()[1]
+
+                y_hit_pos = ((wire_x * delta_x) - (track_int * delta_x) + (wire_y * delta_y)) / (delta_y + (track_grad * delta_x))
+                x_hit_pos = (track_grad * y_hit_pos) + track_int 
+
+                # Add wire hit to list of wire hits
+                wire_hit = WireHit(closest_wire, x_hit_pos - wire_x, y_hit_pos - wire_y, module_num, plane_num, layer_num, closest_wire_num)
+                wire_hits.append(wire_hit)
+
+    # Return list of wire hits in each layer
+    return wire_hits
+
+
+def calc_x_approach_dist(wire, track):
+    
+    # Calculates x-displacement between wire position closest approach position
+
+    # Get gradient, intercept of track, and position of wire
+    track_grad = track.get_gradient()
+    track_int = track.get_intercept()
+    wire_y = wire.get_absolute_y()
+    wire_x = wire.get_absolute_x()
+    
+    # Changes in x and y across track length
+    delta_x = track.get_top_point()[0] - track.get_bottom_point()[0]
+    delta_y = track.get_top_point()[1] - track.get_bottom_point()[1]
+
+    # Calculates position of closest approach by track
+    y_hit_pos = ((wire_x * delta_x) - (track_int * delta_x) + (wire_y * delta_y)) / (delta_y + (track_grad * delta_x))
+    x_hit_pos = (track_grad * y_hit_pos) + track_int 
+    
+    # Return x-displacement
+    return x_hit_pos - wire_x
+    
