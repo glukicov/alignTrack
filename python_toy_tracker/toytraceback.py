@@ -216,6 +216,9 @@ class Detector:
         # Assigns a list of wire hits to the detector, produced by a track
         self.wire_hits = wire_hits
 
+    def get_wire_hits(self):
+        return self.wire_hits
+
     def get_hit_x_displacement(self, layer_num, track_grad, track_int, module_1_align):
         
         # Calculates x-displacement between position of wire in detector hit by track, and track with specified gradient and intercept
@@ -230,7 +233,25 @@ class Detector:
         if len(layer_num) > 1:
             return [calc_x_approach_dist(self.wire_hits[i].get_wire(), track) for i in layer_num]
         else:
-            return calc_x_approach_dist(self.wire_hits[i].get_wire(), track)
+            return calc_x_approach_dist(self.wire_hits[layer_num].get_wire(), track)
+
+
+    def get_hit_radius(self, layer_num, track_grad, track_int, module_1_align):
+        
+        # Calculates x-displacement between position of wire in detector hit by track, and track with specified gradient and intercept
+
+        self.set_module_x_align(1, module_1_align) # Set alignment of detector module                                
+
+        track = Track(track_grad, track_int) # Create track  
+            
+        print "Params:", track_grad, track_int, module_1_align
+
+        # Returns list of x-displacements if list of layer numbers is given, or single x-displacement if not.
+        if len(layer_num) > 1:
+            return [calc_approach_distance(self.wire_hits[i].get_wire(), track) for i in layer_num]
+        else:
+            return calc_approach_distance(self.wire_hits[layer_num].get_wire(), track)
+
 
 
 class Track:
