@@ -178,6 +178,7 @@ class Detector:
         # Sets up two modules in the detector
         self.module_1 = Module(0, 50, 0, 0)
         self.module_2 = Module(0, 162, 0, 0)
+        self.wire_hits = []
         
     def get_wires_x(self):
         # Returns x-pos of all wires in detector
@@ -194,24 +195,36 @@ class Detector:
         elif module_num == 2:
             return self.module_2
 
+    def refresh_wire_hits(self):
+        # Updates wires used in list of wire hits, as their position may have changed by a shift in alignment of some object.
+        for wire_hit in self.wire_hits:
+            new_wire = self.get_module(wire_hit.get_module_num()).get_plane(wire_hit.get_plane_num()).get_layer(wire_hit.get_layer_num()).get_wires()[wire_hit.get_wire_num()]
+            wire_hit.set_wire(new_wire)
+
+
     def set_module_x_align(self, module_num, align_dist):
         # Changes alignment of specified module.
         if module_num == 1:
             self.module_1.set_x_align(align_dist)
         elif module_num == 2:
             self.module_2.set_x_align(align_dist)
+            
+        self.refresh_wire_hits() # Refresh wire positions in recorded wire hits
+
 
     def set_wire_hits(self, wire_hits):
         # Assigns a list of wire hits to the detector, produced by a track
         self.wire_hits = wire_hits
 
-    def get_hit_x_displacement(self, layer_num, track_grad, track_int):
+    def get_hit_x_displacement(self, layer_num, track_grad, track_int, module_1_align):
         
         # Calculates x-displacement between position of wire in detector hit by track, and track with specified gradient and intercept
 
+        self.set_module_x_align(1, module_1_align) # Set alignment of detector module                                
+
         track = Track(track_grad, track_int) # Create track  
             
-        print "Track Params:", track_grad, track_int
+        print "Params:", track_grad, track_int, module_1_align
 
         # Returns list of x-displacements if list of layer numbers is given, or single x-displacement if not.
         if len(layer_num) > 1:

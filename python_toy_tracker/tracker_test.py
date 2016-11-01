@@ -9,12 +9,12 @@ from scipy.optimize import curve_fit
 
 
 # Set up detector, and change alignment of first module
-detector = ttb.Detector()
-detector.set_module_x_align(1, 10.0)
+true_detector = ttb.Detector()
+true_detector.set_module_x_align(1, 1.0)
 
 # Get wire coordinates
-x_wires = detector.get_wires_x()
-y_wires = detector.get_wires_y()
+x_wires = true_detector.get_wires_x()
+y_wires = true_detector.get_wires_y()
 
 # Coordinates at beginning, end of track
 x_bottom = random.uniform(ttb.track_boundary_x_lower, ttb.track_boundary_x_upper)
@@ -32,30 +32,35 @@ x_true_track = true_track.get_x_points()
 y_true_track = true_track.get_y_points()
 
 print ""
-print "True Track Params:", true_track.get_gradient(), true_track.get_intercept()
+print "True Params:", true_track.get_gradient(), true_track.get_intercept(), "10"
 print ""
 
 # Get wire hits in each layer, then assign these to detector 
-wire_hits = ttb.closest_hit_wires(detector, true_track)
-detector.set_wire_hits(wire_hits)
+wire_hits = ttb.closest_hit_wires(true_detector, true_track)
+true_detector.set_wire_hits(wire_hits)
+
+# New detector object for fitting
+fitting_detector = ttb.Detector()
+fitting_detector.set_wire_hits(wire_hits)
 
 # Get x-displacement of all closest approached wires
 x_disp = [wire_hit.get_hit_x_disp() for wire_hit in wire_hits]
 
 layer_nums = [i for i in xrange(8)] # Numbers to index all layers
 
-guess = [0.0, 0.0] # Initial guess for fitted track gradient and intercept (spurious convergence without this)
+guess = [0.0, 0.0, 0.0] # Initial guess for fitted track gradient and intercept, and module alignment (spurious convergence without this)
 
 print "Fitting:"
 
 # Finds values for track gradient and intercept, by fitting to wire hit x-displacements
-popt, pcov = curve_fit(detector.get_hit_x_displacement, layer_nums, x_disp, p0=guess)
+popt, pcov = curve_fit(fitting_detector.get_hit_x_displacement, layer_nums, x_disp, p0=guess)
 
 print ""
-print "Final Fitted Track Params:", popt
+print "Final Fitted Params:", popt
 print ""
 print "Final Matrix of Covariance:"
 print pcov
+print ""
 
 # To draw fitted track
 fitted_track = ttb.Track(popt[0], popt[1])
