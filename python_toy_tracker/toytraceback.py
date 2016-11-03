@@ -3,8 +3,8 @@ import sys
 import math
 
 # Boundaries for track generation
-track_boundary_x_lower = -1
-track_boundary_x_upper = 100
+track_boundary_x_lower = 10
+track_boundary_x_upper = 90
 track_boundary_y_lower = 0
 track_boundary_y_upper = 250
 
@@ -219,39 +219,74 @@ class Detector:
     def get_wire_hits(self):
         return self.wire_hits
 
-    def get_hit_x_displacement(self, layer_num, track_grad, track_int, module_1_align):
+    def get_hit_x_displacement(self, wire_keys, *params):
         
         # Calculates x-displacement between position of wire in detector hit by track, and track with specified gradient and intercept
+        # First argument a list of strings taking the form of a number indexing the track to be examined, followed by a number indexing the wire hit to be examined.
+        # Second argument a list of parameters for all tracks being examined, with alternating gradients and intercepts.
 
-        self.set_module_x_align(1, module_1_align) # Set alignment of detector module                                
+        # Handles weirdness when using this function with the list of optimised parameters from curve_fit 
+        if len(params) == 1:
+            params = params[0]
 
-        track = Track(track_grad, track_int) # Create track  
+        print params
+
+        self.set_module_x_align(1, params[-1]) # Set alignment of detector module
+
+        hit_disps = [] # Contains all calculated hit radii
+
+        for key in wire_keys:
             
-        print "Params:", track_grad, track_int, module_1_align
+            # Get number for track and wire in key
+            split_key = key.split("-")
+            track_num = int(split_key[0])
+            wire_num = int(split_key[1])
 
-        # Returns list of x-displacements if list of layer numbers is given, or single x-displacement if not.
-        if len(layer_num) > 1:
-            return [calc_x_approach_dist(self.wire_hits[i].get_wire(), track) for i in layer_num]
-        else:
-            return calc_x_approach_dist(self.wire_hits[layer_num].get_wire(), track)
+            # Get gradient and intercept of track from list of parameters, then create track
+            track_grad = params[2 * track_num]
+            track_int = params[(2 * track_num) + 1]
+            track = Track(track_grad, track_int)
+
+            # Calculate hit radius for wire and track, and append to list
+            hit_disps.append(calc_x_approach_dist(self.wire_hits[(track_num * 8) + wire_num].get_wire(), track))
+
+        return hit_disps
 
 
-    def get_hit_radius(self, layer_num, track_grad, track_int, module_1_align):
+    def get_hit_radius(self, wire_keys, *params):
         
-        # Calculates x-displacement between position of wire in detector hit by track, and track with specified gradient and intercept
+        # Calculates smallest distance between position of wire in detector hit by track, and track with specified gradient and intercept
+        # First argument a list of strings taking the form of a number indexing the track to be examined, followed by a number indexing the wire hit to be examined.
+        # Second argument a list of parameters for all tracks being examined, with alternating gradients and intercepts.
 
-        self.set_module_x_align(1, module_1_align) # Set alignment of detector module                                
+        # Handles weirdness when using this function with the list of optimised parameters from curve_fit 
+        if len(params) == 1:
+            params = params[0]
 
-        track = Track(track_grad, track_int) # Create track  
-            
-        print "Params:", track_grad, track_int, module_1_align
+        print params
+
+        self.set_module_x_align(1, params[-1]) # Set alignment of detector module
 
         # Returns list of x-displacements if list of layer numbers is given, or single x-displacement if not.
-        if len(layer_num) > 1:
-            return [calc_approach_distance(self.wire_hits[i].get_wire(), track) for i in layer_num]
-        else:
-            return calc_approach_distance(self.wire_hits[layer_num].get_wire(), track)
 
+        hit_rads = [] # Contains all calculated hit radii
+
+        for key in wire_keys:
+            
+            # Get number for track and wire in key
+            split_key = key.split("-")
+            track_num = int(split_key[0])
+            wire_num = int(split_key[1])
+
+            # Get gradient and intercept of track from list of parameters, then create track
+            track_grad = params[2 * track_num]
+            track_int = params[(2 * track_num) + 1]
+            track = Track(track_grad, track_int)
+
+            # Calculate hit radius for wire and track, and append to list
+            hit_rads.append(calc_approach_distance(self.wire_hits[(track_num * 8) + wire_num].get_wire(), track))
+
+        return hit_rads
 
 
 class Track:
