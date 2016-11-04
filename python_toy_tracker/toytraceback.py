@@ -1,12 +1,16 @@
 import random
 import sys
 import math
+import numpy as np
 
 # Boundaries for track generation
-track_boundary_x_lower = 10
-track_boundary_x_upper = 90
-track_boundary_y_lower = 0
-track_boundary_y_upper = 250
+track_boundary_x_lower = 10.0
+track_boundary_x_upper = 90.0
+track_boundary_y_lower = 0.0
+track_boundary_y_upper = 250.0
+
+# Hit distance resolution, in mm
+hit_resolution = 0.020
 
 class Wire:
     
@@ -179,6 +183,8 @@ class Detector:
         self.module_1 = Module(0, 50, 0, 0)
         self.module_2 = Module(0, 162, 0, 0)
         self.wire_hits = []
+
+        self.verbose = False
         
     def get_wires_x(self):
         # Returns x-pos of all wires in detector
@@ -229,7 +235,8 @@ class Detector:
         if len(params) == 1:
             params = params[0]
 
-        print params
+        if self.verbose:
+            print params
 
         self.set_module_x_align(1, params[-1]) # Set alignment of detector module
 
@@ -263,7 +270,8 @@ class Detector:
         if len(params) == 1:
             params = params[0]
 
-        print params
+        if self.verbose:
+            print params
 
         self.set_module_x_align(1, params[-1]) # Set alignment of detector module
 
@@ -346,7 +354,7 @@ class WireHit:
 
     # Class to represent a single hit of a wire. Takes arguments of wire which was hit, x-displacement of hit from wire, y-displacement of hit from wire, and numbers indexing the module, plane, layer, and wire of hit. 
 
-    def __init__(self, wire, hit_x_disp, hit_y_disp, module_num, plane_num, layer_num, wire_num):
+    def __init__(self, wire, hit_x_disp, hit_y_disp, module_num, plane_num, layer_num, wire_num, jitter):
         # Set variables for wires hit. Calculate distance of hit from wire, and displacement in x and y for hit point from wire.
         self.wire = wire
         self.hit_x_disp = hit_x_disp 
@@ -358,6 +366,9 @@ class WireHit:
         self.plane_num = plane_num
         self.layer_num = layer_num
         self.wire_num = wire_num
+
+        if (jitter):
+           self.hit_dist = self.hit_dist + np.random.normal(scale=hit_resolution)
 
     def set_wire(self, wire):
         # Sets wire hit
@@ -414,7 +425,7 @@ def calc_approach_distance(wire, track):
     return abs((y_2 - y_1) * x_0 - (x_2 - x_1) * y_0 + x_2 * y_1 - y_2 * x_1) / math.sqrt((y_2 - y_1)**2 + (x_2 - x_1)**2)
     
 
-def closest_hit_wires(detector, track):
+def closest_hit_wires(detector, track, jitter):
     
     # Function to find closest approached wires in each layer in detector
 
@@ -462,7 +473,7 @@ def closest_hit_wires(detector, track):
                 x_hit_pos = (track_grad * y_hit_pos) + track_int 
 
                 # Add wire hit to list of wire hits
-                wire_hit = WireHit(closest_wire, x_hit_pos - wire_x, y_hit_pos - wire_y, module_num, plane_num, layer_num, closest_wire_num)
+                wire_hit = WireHit(closest_wire, x_hit_pos - wire_x, y_hit_pos - wire_y, module_num, plane_num, layer_num, closest_wire_num, jitter)
                 wire_hits.append(wire_hit)
 
     # Return list of wire hits in each layer

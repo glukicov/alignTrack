@@ -25,6 +25,25 @@ x_top = [random.uniform(ttb.track_boundary_x_lower, ttb.track_boundary_x_upper) 
 y_bottom = [ttb.track_boundary_y_lower for i in xrange(track_count)]
 y_top = [ttb.track_boundary_y_upper for i in xrange(track_count)]
 
+# # Get boundaries on intercepts and gradients for fit, with large boundary on module alignment distance
+# lower_fit_bounds = [0]*((2 * track_count) + 1)
+# upper_fit_bounds = [0]*((2 * track_count) + 1)
+# for i in xrange(len(lower_fit_bounds)):
+#     if (i % 2 == 0):
+#         lower_fit_bounds[i] = (ttb.track_boundary_x_lower - ttb.track_boundary_x_upper) / (ttb.track_boundary_y_upper - ttb.track_boundary_y_lower)
+#         upper_fit_bounds[i] = (ttb.track_boundary_x_upper - ttb.track_boundary_x_lower) / (ttb.track_boundary_y_upper - ttb.track_boundary_y_lower)
+#     else:
+#         lower_fit_bounds[i] = ttb.track_boundary_x_lower
+#         upper_fit_bounds[i] = ttb.track_boundary_x_upper
+
+# lower_fit_bounds[-1] = -np.inf
+# upper_fit_bounds[-1] = np.inf
+
+# fit_bounds = (lower_fit_bounds, upper_fit_bounds)
+# print fit_bounds
+
+
+
 # Calculate track gradient and x-intercept from track coordinates
 gradient = [((x_top[i] - x_bottom[i]) / (y_top[i] - y_bottom[i])) for i in xrange(track_count)]
 intercept = [x_bottom[i] - (gradient[i] * y_bottom[i]) for i in xrange(track_count)]
@@ -42,7 +61,7 @@ print ""
 # Get wire hits in each layer, then assign these to detector
 wire_hits = []
 for j in xrange(track_count): 
-    wire_hits = wire_hits + (ttb.closest_hit_wires(true_detector, true_track[j]))
+    wire_hits = wire_hits + (ttb.closest_hit_wires(true_detector, true_track[j], True))
 
 true_detector.set_wire_hits(wire_hits)
 
@@ -60,8 +79,10 @@ guess = [0.0 for i in xrange((2 * track_count) + 1)] # Initial guess for fitted 
 
 print "Fitting:"
 
+fit_sigmas = [ttb.hit_resolution]*len(hit_rads)
+
 # Finds values for track gradient and intercept, by fitting to wire hit x-displacements
-popt, pcov = curve_fit(fitting_detector.get_hit_radius, wire_keys, hit_rads, p0=guess)
+popt, pcov = curve_fit(fitting_detector.get_hit_radius, wire_keys, hit_rads, p0=guess, sigma=fit_sigmas)
 
 print ""
 print "Final Fitted Params:", popt
@@ -108,8 +129,8 @@ plt.ylabel("y-position / mm")
 
 # Plot histogram of residuals
 plt.subplot(1, 2, 2)
-plt.hist(residuals, normed=True, bins=5)
+plt.hist(residuals, bins=5)
 plt.xlabel("Residual Value / mm")
-plt.ylabel("Normalised Frequency")
+plt.ylabel("Frequency")
 
 plt.show()
