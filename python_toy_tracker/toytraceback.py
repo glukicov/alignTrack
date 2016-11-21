@@ -10,7 +10,7 @@ track_boundary_y_lower = 0.0
 track_boundary_y_upper = 250.0
 
 # Hit distance resolution, in mm
-hit_resolution = 0.020
+hit_resolution = 0.10
 
 class Wire:
     
@@ -178,14 +178,18 @@ class Detector:
 
     # Class representing the whole traceback detector
 
-    def __init__(self):
+    def __init__(self, smearing=True, verbose=False):
         # Sets up two modules in the detector
         self.module_1 = Module(0, 50, 0, 0)
         self.module_2 = Module(0, 162, 0, 0)
         self.wire_hits = []
 
-        self.verbose = False
+        self.verbose = verbose
+        self.smearing = smearing
         
+    def is_smearing(self):
+        return self.smearing
+
     def get_wires_x(self):
         # Returns x-pos of all wires in detector
         return self.module_1.get_wires_x() + self.module_2.get_wires_x()
@@ -354,7 +358,7 @@ class WireHit:
 
     # Class to represent a single hit of a wire. Takes arguments of wire which was hit, x-displacement of hit from wire, y-displacement of hit from wire, and numbers indexing the module, plane, layer, and wire of hit. 
 
-    def __init__(self, wire, hit_x_disp, hit_y_disp, module_num, plane_num, layer_num, wire_num, jitter):
+    def __init__(self, wire, hit_x_disp, hit_y_disp, module_num, plane_num, layer_num, wire_num, smearing):
         # Set variables for wires hit. Calculate distance of hit from wire, and displacement in x and y for hit point from wire.
         self.wire = wire
         self.hit_x_disp = hit_x_disp 
@@ -367,7 +371,7 @@ class WireHit:
         self.layer_num = layer_num
         self.wire_num = wire_num
 
-        if (jitter):
+        if (smearing):
            self.hit_dist = self.hit_dist + np.random.normal(scale=hit_resolution)
 
     def set_wire(self, wire):
@@ -425,11 +429,12 @@ def calc_approach_distance(wire, track):
     return abs((y_2 - y_1) * x_0 - (x_2 - x_1) * y_0 + x_2 * y_1 - y_2 * x_1) / math.sqrt((y_2 - y_1)**2 + (x_2 - x_1)**2)
     
 
-def closest_hit_wires(detector, track, jitter):
+def closest_hit_wires(detector, track):
     
     # Function to find closest approached wires in each layer in detector
 
     wire_hits = [] # Contains closest approached wires
+    smearing = detector.is_smearing()
 
     # Iterating across all layers
     for module_num in [1,2]:
@@ -473,7 +478,7 @@ def closest_hit_wires(detector, track, jitter):
                 x_hit_pos = (track_grad * y_hit_pos) + track_int 
 
                 # Add wire hit to list of wire hits
-                wire_hit = WireHit(closest_wire, x_hit_pos - wire_x, y_hit_pos - wire_y, module_num, plane_num, layer_num, closest_wire_num, jitter)
+                wire_hit = WireHit(closest_wire, x_hit_pos - wire_x, y_hit_pos - wire_y, module_num, plane_num, layer_num, closest_wire_num, smearing)
                 wire_hits.append(wire_hit)
 
     # Return list of wire hits in each layer
