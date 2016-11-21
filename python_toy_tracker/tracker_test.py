@@ -1,5 +1,6 @@
 import toytraceback as ttb
 import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
 import numpy as np
 import random
 import sys
@@ -8,11 +9,11 @@ import scipy.stats as stats
 from scipy.optimize import curve_fit 
 
 # Number of tracks to fit
-track_count = 5
+track_count = 50
 
 # Set up detector, and change alignment of first module
-module_alignment = 0.3
-true_detector = ttb.Detector()
+module_alignment = 1.5
+true_detector = ttb.Detector(smearing=True)
 true_detector.set_module_x_align(1, module_alignment)
 
 # Get wire coordinates
@@ -25,24 +26,6 @@ x_top = [random.uniform(ttb.track_boundary_x_lower, ttb.track_boundary_x_upper) 
 y_bottom = [ttb.track_boundary_y_lower for i in xrange(track_count)]
 y_top = [ttb.track_boundary_y_upper for i in xrange(track_count)]
 
-# # Get boundaries on intercepts and gradients for fit, with large boundary on module alignment distance
-# lower_fit_bounds = [0]*((2 * track_count) + 1)
-# upper_fit_bounds = [0]*((2 * track_count) + 1)
-# for i in xrange(len(lower_fit_bounds)):
-#     if (i % 2 == 0):
-#         lower_fit_bounds[i] = (ttb.track_boundary_x_lower - ttb.track_boundary_x_upper) / (ttb.track_boundary_y_upper - ttb.track_boundary_y_lower)
-#         upper_fit_bounds[i] = (ttb.track_boundary_x_upper - ttb.track_boundary_x_lower) / (ttb.track_boundary_y_upper - ttb.track_boundary_y_lower)
-#     else:
-#         lower_fit_bounds[i] = ttb.track_boundary_x_lower
-#         upper_fit_bounds[i] = ttb.track_boundary_x_upper
-
-# lower_fit_bounds[-1] = -np.inf
-# upper_fit_bounds[-1] = np.inf
-
-# fit_bounds = (lower_fit_bounds, upper_fit_bounds)
-# print fit_bounds
-
-
 
 # Calculate track gradient and x-intercept from track coordinates
 gradient = [((x_top[i] - x_bottom[i]) / (y_top[i] - y_bottom[i])) for i in xrange(track_count)]
@@ -54,19 +37,15 @@ x_true_track = [true_track[i].get_x_points() for i in xrange(track_count)]
 y_true_track = [true_track[i].get_y_points() for i in xrange(track_count)]
 
 
-print ""
-print "True Params:", [str(true_track[i].get_gradient()) + " " + str(true_track[i].get_intercept()) for i in xrange(track_count)], str(module_alignment)
-print ""
-
 # Get wire hits in each layer, then assign these to detector
 wire_hits = []
 for j in xrange(track_count): 
-    wire_hits = wire_hits + (ttb.closest_hit_wires(true_detector, true_track[j], True))
+    wire_hits = wire_hits + (ttb.closest_hit_wires(true_detector, true_track[j]))
 
 true_detector.set_wire_hits(wire_hits)
 
 # New detector object for fitting
-fitting_detector = ttb.Detector()
+fitting_detector = ttb.Detector(smearing=True)
 fitting_detector.set_wire_hits(wire_hits)
 
 # Get x-displacement of all closest approached wires
@@ -77,29 +56,38 @@ wire_keys = [str((i - (i % 8)) / 8) + "-" + str(i % 8) for i in xrange(8 * track
 
 guess = [0.0 for i in xrange((2 * track_count) + 1)] # Initial guess for fitted track gradient and intercept, and module alignment (spurious convergence without this)
 
+print ""
+print "True Alignment:", module_alignment
+print ""
 print "Fitting:"
 
-fit_sigmas = [ttb.hit_resolution]*len(hit_rads)
+fit_sigmas = [ttb.hit_resolution]*len(hit_rads) # Uncertainties on hit radii, from detector hit resolution
 
 # Finds values for track gradient and intercept, by fitting to wire hit x-displacements
 popt, pcov = curve_fit(fitting_detector.get_hit_radius, wire_keys, hit_rads, p0=guess, sigma=fit_sigmas)
-
-print ""
-print "Final Fitted Params:", popt
-print ""
-print "Final Matrix of Covariance:"
-print pcov
+print "Complete"
 print ""
 
-# Calculate residuals and chi-squared, to test goodness of fit.
+print "Fitted Alignment:", popt[-1]
+
+# Calculate residuals and chi-squared for residuals, to test goodness of fit.
 residuals = np.array(hit_rads) - np.array(fitting_detector.get_hit_radius(wire_keys, popt)) / 1.0
-deg_freedom = len(wire_keys) - len(popt)
-chi_squared = np.sum(residuals**2) / deg_freedom
+deg_freedom = len(residuals) - len(popt)
+chi_squared = np.sum((residuals / fit_sigmas)**2)
+
+
+# Print stats for all residuals
 print ""
-print "Residuals:", residuals
 print ""
-print "Chi^2:", chi_squared
+print "Hit Residual Goodness of Fit Testing:"
 print ""
+print "Hit Residual Mean:", np.mean(residuals)
+print "Hit Residual Std-Dev:", np.std(residuals)
+print ""
+print "Number of Hit Residuals:", len(residuals)
+print "Number of Constraining Parameters", len(popt) 
+print "Hit Residual Reduced chi^2:", chi_squared / deg_freedom
+print "P(chi^2)", 1 - stats.chi2.cdf(chi_squared, deg_freedom)
 
 # To draw fitted track
 fitted_track = [ttb.Track(popt[2 * i], popt[(2 * i) + 1]) for i in xrange(track_count)]
@@ -114,6 +102,7 @@ y_hit_wires = [wire_hit.get_wire().get_absolute_y() for wire_hit in fitting_dete
 x_fitted_wires = fitting_detector.get_wires_x()
 y_fitted_wires = fitting_detector.get_wires_y()
 
+
 # Plot points where wires located in true and fitted detector, where wires hit in fitted detector, lines showing true track and fitted track
 plt.subplot(1, 2, 1)
 plt.scatter(x_true_wires, y_true_wires, color='red')
@@ -127,10 +116,48 @@ plt.axis('equal')
 plt.xlabel("x-position / mm")
 plt.ylabel("y-position / mm")
 
+# Filter large residuals for fitting of gaussian function
+filtered_residuals = [x for x in residuals if abs(x) < (10 * ttb.hit_resolution)]
+
+# Get mean and std-dev of fitted gaussian, then array of x-values for plotting
+(mu_res, sigma_res) = stats.norm.fit(filtered_residuals)
+gaus_x_res = np.linspace(mu_res - 4 * sigma_res, mu_res + 4 * sigma_res, 500)
+
+
 # Plot histogram of residuals
 plt.subplot(1, 2, 2)
-plt.hist(residuals, bins=5)
+res_obs_bin_contents_unfiltered, res_obs_bin_edges, _ = plt.hist(filtered_residuals, bins=20)
+
+# Plot fitted gaussian function
+bin_width = (res_obs_bin_edges[-1] - res_obs_bin_edges[0]) / len(res_obs_bin_contents_unfiltered)
+plt.plot(gaus_x_res, sum(res_obs_bin_contents_unfiltered) * bin_width * mlab.normpdf(gaus_x_res, mu_res, sigma_res), 'r')
 plt.xlabel("Residual Value / mm")
 plt.ylabel("Frequency")
+
+# Output Gaussian parameters
+print ""
+print "Gaussian Goodness-of-Fit Testing:"
+print ""
+print "Fitted Gaussian Mean:", mu_res
+print "Fitted Gaussian Std-Dev:", sigma_res
+print ""
+
+# Get expected number of residuals in each bin, from fitted gaussian
+bin_count = len(res_obs_bin_contents_unfiltered)
+res_func_bin_contents_unfiltered = [len(filtered_residuals) * (stats.norm.cdf(res_obs_bin_edges[i+1], scale=(sigma_res), loc=mu_res) - stats.norm.cdf(res_obs_bin_edges[i], scale=(sigma_res), loc=mu_res)) for i in xrange(bin_count)]
+
+# Filter out bins containing zero observed residuals, to exclude from chi-squared calculation
+res_fun_bin_contents = np.array([res_func_bin_contents_unfiltered[i] for i in xrange(bin_count) if res_obs_bin_contents_unfiltered[i] > 0])
+res_obs_bin_contents = np.array([res_obs_bin_contents_unfiltered[i] for i in xrange(bin_count) if res_obs_bin_contents_unfiltered[i] > 0])
+
+res_sigmas = np.sqrt(res_fun_bin_contents) # Uncertainty in observed bins (Poisson)
+
+# Calculate chi-squared for histogram of residuals and gaussian fit
+chi_squared_fitted_gauss = np.sum(((res_fun_bin_contents - res_obs_bin_contents) / res_sigmas)**2)
+
+print "Number of bins used for test:", len(res_obs_bin_contents)
+print "Reduced Chi-squared of measured residuals to fitted gaussian:", chi_squared_fitted_gauss / len(res_obs_bin_contents)
+print "P(chi^2):", 1 - stats.chi2.cdf(chi_squared_fitted_gauss, len(res_obs_bin_contents))
+print ""
 
 plt.show()
