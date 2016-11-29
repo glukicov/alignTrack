@@ -20,16 +20,61 @@ start_cpu_time = time.clock()
 
 track_counts = [5, 10, 15, 20, 30, 40, 50] # Number of tracks to fit
 module_alignment = 1.5 # Alignment of first module (in mm)
-fit_count = 100 # Number of times to run fit
+fit_count = 10 # Number of times to run fit
 
 # Whether to include smearing of residuals, and finite straw size
 detector_smear = True
-detector_finite_straws = False
+detector_missing_hits = False
 
 # Time limits for script on batch system (in s), with time buffer to ensure partial results are processed. 
 wall_time_limit = 345600
 cpu_time_limit = 259200
 time_buffer = 100
+
+# Dictionary of CPU and wall times for different UCL Batch queues
+queue_time_dict = {"short": [3600, 3600], "medium": [28800, 86400], "long": [259200, 345600]}
+
+# Get arguments and options from console
+argv = sys.argv[1:]
+try:
+    opts, args = getopt.getopt(argv, "hf:s:m:q:a:o:", ["fit_count=", "smearing=", "missing_hits=", "batch_queue=", "module_alignment=", "output_dir="])
+except  getopt.GetoptError:
+    print "multi_fit.py -f <fit_count> -s <smearing> -m <missing_hits> -q <batch_queue> -a <module_alignment> -o <output_dir>"
+    sys.exit(2)
+
+# Set parameters according to arguments
+for opt, arg in opts:
+    if opt == "-h":
+        print "multi_fit.py -f <fit_count> -s <smearing> -m <missing_hits> -q <batch_queue> -a <module_alignment> -o <output_dir>"
+        sys.exit()
+    elif opt in ("-f", "--fit_count"):
+        fit_count = int(arg)
+    elif opt in ("-s", "--smearing"):
+        if (arg == "True"):
+            detector_smear = True
+        elif (arg == "False"):
+            detector_smear = False
+        else:
+            print "-s, --smearing: Must use 'True' or 'False'"
+            sys.exit()
+    elif opt in ("-m", "--missing_hits"):
+        if (arg == "True"):
+            detector_missing_hits = True
+        elif (arg == "False"):
+            detector_missing_hits = False
+        else:
+            print "-m, --missing_hits: Must use 'True' or 'False'"
+            sys.exit()
+    elif opt in ("-q", "--batch_queue"):
+        if (arg in ("short", "medium", "long")):
+            cpu_time_limit = queue_time_dict[arg][0]
+            wall_time_limit = queue_time_dict[arg][1]
+        else:
+            print "-q, --batch_queue: Must use 'short', 'medium', or 'long'"
+            sys.exit()
+    elif opt in ("-a", "-module_alignment"):
+        module_alignment = float(arg)
+    
 
 # Loop across track counts to be examined by script
 for track_count in track_counts:
@@ -53,7 +98,7 @@ for track_count in track_counts:
         # FITTING
 
         # Create instance of detector, and set alignment to desired value
-        true_detector = ttb.Detector(smearing=detector_smear, finite_straws=detector_finite_straws)
+        true_detector = ttb.Detector(smearing=detector_smear, finite_straws=detector_missing_hits)
         true_detector.set_module_x_align(1, module_alignment)
 
         # # Get wire coordinates
@@ -86,7 +131,7 @@ for track_count in track_counts:
             
 
         # New detector object for fitting
-        fitting_detector = ttb.Detector(smearing=detector_smear, finite_straws=detector_finite_straws)
+        fitting_detector = ttb.Detector(smearing=detector_smear, finite_straws=detector_missing_hits)
         fitting_detector.set_events(events)
 
         # Get x-displacement of all closest approached wires
@@ -170,7 +215,7 @@ for track_count in track_counts:
 
     # Set name of directory to save histograms in, with information on number of fits and tracks, whether finite straw sizes are used, whether smearing is implemented  
     smear_string = "smear" if detector_smear else "no_smear"
-    straw_string = "missed_straws" if detector_finite_straws else "all_straws"
+    straw_string = "missed_straws" if detector_missing_hits else "all_straws"
     directory = smear_string + "_" + straw_string + "_" + str(track_count) + "_track_" + str(fit_count) + "_fit/"
 
     # Create directory if doesn't already exist

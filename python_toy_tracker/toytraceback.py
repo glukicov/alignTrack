@@ -10,7 +10,7 @@ track_boundary_y_lower = 0.0
 track_boundary_y_upper = 250.0
 
 # Hit distance resolution, in mm
-hit_resolution = 0.10
+hit_resolution = 0.100
 
 # Radius of straws, in mm. Hits further from this distance from the wire should be excluded.
 straw_rad = 2.5
@@ -349,7 +349,7 @@ class WireHit:
 
     # Class to represent a single hit of a wire. Takes arguments of wire which was hit, x-displacement of hit from wire, y-displacement of hit from wire, and numbers indexing the module, plane, layer, and wire of hit. 
 
-    def __init__(self, wire, hit_x_disp, hit_y_disp, module_num, plane_num, layer_num, wire_num, smearing):
+    def __init__(self, wire, hit_x_disp, hit_y_disp, module_num, plane_num, layer_num, wire_num, smearing, finite_straws):
         # Set variables for wires hit. Calculate distance of hit from wire, and displacement in x and y for hit point from wire.
         self.wire = wire
         self.hit_x_disp = hit_x_disp 
@@ -364,7 +364,15 @@ class WireHit:
 
         # Smear hit residual, according to Gaussian distribution with standard deviation equal to hit resolution
         if (smearing):
-           self.hit_dist = self.hit_dist + np.random.normal(scale=hit_resolution)
+            smear_dist = np.random.normal(scale=hit_resolution)
+
+            # If smearing gives distance below zero, set distance to zero. Likewise if above hit radius, set distance to hit radius
+            if self.hit_dist + smear_dist < 0:
+                self.hit_dist = 0
+            elif finite_straws & (self.hit_dist + smear_dist > straw_rad):
+                self.hit_dist = straw_rad
+            else:
+                self.hit_dist = self.hit_dist + smear_dist
 
     def set_wire(self, wire):
         # Sets wire hit
@@ -496,7 +504,7 @@ def closest_hit_wires(detector, track):
                 x_hit_pos = (track_grad * y_hit_pos) + track_int 
 
                 # Add wire hit to list of wire hits
-                wire_hit = WireHit(closest_wire, x_hit_pos - wire_x, y_hit_pos - wire_y, module_num, plane_num, layer_num, closest_wire_num, smearing)
+                wire_hit = WireHit(closest_wire, x_hit_pos - wire_x, y_hit_pos - wire_y, module_num, plane_num, layer_num, closest_wire_num, smearing, detector.finite_straws)
 
                 # If detector is using finite straw sizes, only appends wire_hit to list if hit distance is less than straw radius.
                 if (detector.finite_straws):
