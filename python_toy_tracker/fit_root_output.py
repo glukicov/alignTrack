@@ -20,7 +20,7 @@ import rootpy.compiled
 # Script to carry out multiple fits with a specified number of tracks, recording results in a ROOT TTree.
 
 # Model for each entry in tree
-class Event(TreeModel):
+class HitEvent(TreeModel):
     
     # Integers for number of fit, and number of event
     fitNum = IntCol()
@@ -36,10 +36,15 @@ class Event(TreeModel):
     trueTrackGrad = DoubleCol()
     trueTrackInt = DoubleCol()
     
-    # Arrays of doubles for true and fitted hit distances
-    trueHitDistances = DoubleArrayCol(8)
-    fittedHitDistances = DoubleArrayCol(8)
+    # Doubles for true and fitted hit distances
+    trueHitDistance = DoubleCol()
+    fittedHitDistance = DoubleCol()
 
+    # Indexes for position of wire hit
+    moduleNum = IntCol()
+    planeNum = IntCol()
+    layerNum = IntCol()
+    wireNum = IntCol()
 
 # Get start CPU time, and wall time (in seconds), to ensure script doesn't overrun batch system limits
 start_wall_time = time.time()
@@ -115,7 +120,7 @@ straw_string = "missed_straws" if detector_missing_hits else "all_straws"
 file_name = directory + smear_string + "_" + straw_string + "_" + str(track_count) + "_track_" + str(fit_count) + "_fit.root"
 
 f = root_open(file_name, "recreate")
-t = Tree("event_tree", model=Event)
+t = Tree("event_tree", model=HitEvent)
 
             
 print "Carrying out", fit_count, "fits, with", track_count, "tracks:"  
@@ -178,19 +183,6 @@ for k in xrange(fit_count):
     # Loop across events in this fit, creating one entry in tree for each event
     for event_num in xrange(len(events)):
 
-        # Record event number and fit number for entry in tree
-        t.eventNum = event_num
-        t.fitNum = k
-
-        # Record true fitted alignment
-        t.trueAlignment = module_alignment
-        t.fittedAlignment = popt[-1]
-
-        # Record true and fitted track parameters
-        t.trueTrackGrad = events[event_num].track.get_gradient()
-        t.trueTrackInt = events[event_num].track.get_intercept()
-        t.fittedTrackGrad = popt[2 * event_num]
-        t.fittedTrackInt = popt[(2 * event_num) + 1] 
 
         # Get wire keys for this event only
         filtered_wire_keys = [wire_key for wire_key in wire_keys if int(wire_key.split('-')[0]) == event_num]
@@ -199,12 +191,34 @@ for k in xrange(fit_count):
         true_hit_rads = [wire_hit.get_hit_dist() for wire_hit in events[event_num].wire_hits]
         fitted_hit_rads = fitting_detector.get_hit_radius(filtered_wire_keys, popt)
 
+        # Records hit distances to arrays, recording zero if straw was not hit.
         for j in xrange(len(true_hit_rads)):
-            t.trueHitDistances[j] = true_hit_rads[j]
-            t.fittedHitDistances[j] = fitted_hit_rads[j]
+            # Record event number and fit number for entry in tree
+            t.eventNum = event_num
+            t.fitNum = k
 
-        # Fill tree
-        t.Fill()
+            # Record true fitted alignment
+            t.trueAlignment = module_alignment
+            t.fittedAlignment = popt[-1]
+
+            # Record true and fitted track parameters
+            t.trueTrackGrad = events[event_num].track.get_gradient()
+            t.trueTrackInt = events[event_num].track.get_intercept()
+            t.fittedTrackGrad = popt[2 * event_num]
+            t.fittedTrackInt = popt[(2 * event_num) + 1] 
+
+            # Record true and fitted hit distances
+            t.trueHitDistance = true_hit_rads[j]
+            t.fittedHitDistance = fitted_hit_rads[j]
+            
+            # Record numbers indexing position of struck wire
+            t.moduleNum = events[event_num].wire_hits[j].module_num
+            t.planeNum = events[event_num].wire_hits[j].plane_num
+            t.layerNum = events[event_num].wire_hits[j].layer_num
+            t.wireNum =  events[event_num].wire_hits[j].wire_num
+
+            # Fill tree
+            t.Fill()
  
     # Stop carrying out fits, if close to time limit
     if (time.time() - start_wall_time) > (wall_time_limit - time_buffer):
