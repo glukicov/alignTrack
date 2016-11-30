@@ -70,16 +70,19 @@ directory = os.path.expanduser("~/")
 queue_time_dict = {"short": [3600, 3600], "medium": [28800, 86400], "long": [259200, 345600]}
 
 # Get arguments and options from console
+
+print str(sys.argv)
+
 argv = sys.argv[1:]
 try:
-    opts, args = getopt.getopt(argv, "hf:t:s:m:q:a:o:", ["fit_count=", "track_count=", "smearing=", "missing_hits=", "batch_queue=", "module_alignment=", "output_dir="])
+    opts, args = getopt.getopt(argv, "h:f:t:s:m:q:a:o:", ["help", "fit_count=", "track_count=", "smearing=", "missing_hits=", "batch_queue=", "module_alignment=", "output_dir="])
 except  getopt.GetoptError:
     print "multi_fit.py -f <fit_count> -t <track_count> -s <smearing> -m <missing_hits> -q <batch_queue> -a <module_alignment> -o <output_dir>"
     sys.exit(2)
 
 # Set parameters according to arguments
 for opt, arg in opts:
-    if opt == "-h":
+    if opt in ("-h", "--help"):
         print "multi_fit.py -f <fit_count> -t <track_count> -s <smearing> -m <missing_hits> -q <batch_queue> -a <module_alignment> -o <output_dir>"
         sys.exit()
     elif opt in ("-f", "--fit_count"):
