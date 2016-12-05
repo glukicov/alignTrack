@@ -103,6 +103,10 @@ for i in xrange(fit_count):
     if (chi_sq_red < chi_sq_cut):
         fit_dof.append(fit_cut_tree_entry_count - ((2 * track_count) + 1))
 
+    fit_cut_tree.IsA().Destructor(fit_cut_tree) # To avoid stupid bloody memory leak
+
+
+
 # Calculate stats for list of degrees of freedoms
 dof_mean = np.mean(fit_dof)
 dof_std_dev = np.std(fit_dof)

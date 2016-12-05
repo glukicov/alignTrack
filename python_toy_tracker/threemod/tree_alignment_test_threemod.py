@@ -116,6 +116,9 @@ for i in xrange(fit_count):
         else:
             chi_sq_vals[fit_cut_tree_entry_count - ((2 * track_count) + 2)] = [chi_sq_red]
 
+    fit_cut_tree.IsA().Destructor(fit_cut_tree) # To avoid stupid bloody memory leak
+
+
 
 # Draw 2D histogram, sorting out cosmetics, then print
 cMisalignments = ROOT.TCanvas("cMisalignments", "cMisalignments", 2000, 1500)

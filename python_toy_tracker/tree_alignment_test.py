@@ -8,6 +8,11 @@ import scipy.stats as stats
 import os.path
 import getopt
 import ROOT
+from pympler import tracker
+
+memtrack = tracker.SummaryTracker()
+
+#ROOT.SetMemoryPolicy(ROOT.kMemoryHeuristics)
 
 track_count = 0
 fit_count = 0
@@ -71,12 +76,15 @@ tree.GetEntry(entry_count - 1)
 fit_count = tree.fitNum + 1
 
 
+
 print "Total Fits:", str(fit_count)
-        
+#fit_cut_tree = 0        
+
 for i in xrange(fit_count):
     
     if (i % 100) == 0:
         print i
+        #memtrack.print_diff()
 
     # Get entries with correct fit number in tree
     fit_cut_tree = tree.CopyTree('fitNum==' + str(i))
@@ -115,6 +123,8 @@ for i in xrange(fit_count):
             chi_sq_vals[fit_cut_tree_entry_count - ((2 * track_count) + 1)].append(chi_sq_red)
         else:
             chi_sq_vals[fit_cut_tree_entry_count - ((2 * track_count) + 1)] = [chi_sq_red]
+
+    fit_cut_tree.IsA().Destructor(fit_cut_tree) # To avoid stupid bloody memory leak
 
 # Calculate array of module misalignments
 module_misalignments = np.array(module_fitted_alignments) - np.array(module_true_alignments)
