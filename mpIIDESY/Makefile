@@ -13,7 +13,7 @@
 #
 # ### Define gcc to be used ###
 #
-GCC=gcc-4.9
+GCC=gcc
 GCCVERS=$(shell $(GCC) -dumpversion)
 # On SL5 replace default (gcc41) by gcc44
 ifeq ($(findstring 4.1., $(GCCVERS)), 4.1.)
