@@ -1,14 +1,13 @@
 /** 
-* File to interact with Mille:
+* Translation into C++11 of mptest2.f90 (description of purpose there) 
 * pass data as number of local and global parameters, and their derivatives, and residual and their sigma (smearing/accuracy)
 * Mille will then pack this in .bin to be used by PEDE routine.
 *
-* clang++ MilleHandler.cpp -o MilleHandler --std=c++11   -flag required (see below) - now has a Makefile (gmake)
 *
-*
-* Gleb Lukicov 17 Nov 2016 
+* Gleb Lukicov 11 Jan 2017 
 **/
 
+//TODO some includes might be redundant
 #include <fstream>
 #include <string.h>
 #include <stdlib.h>
@@ -22,7 +21,7 @@
 //////----Variable Intialisation-------///////////
 
 //arguments for Mille constructor:
-const char* outFileName = "test.bin";
+const char* outFileName = "cppMptest2.bin";
 bool asBinary = true; 
 bool writeZero = false;
 
@@ -32,8 +31,39 @@ int NGL = 0 ;  // # of Global parameters
 float rMeas = 0.0;  // this will be a Gaussian random (0,x) for now - later to be filled be simulated residuals
 float sigma = 0.0; // for now, for simplicity
 
+
+///initialsing physics varibles
+const int nlyr = 10; //number of detector layers
+const int nmlyr = 14; //number of measurement layers
+const int nmx = 10; //number of modules in x direction
+const int nmy = 10; //number of modules in y direction
+
+int ntot=nlyr*nmx*nmy; //total number of modules
+//  define detector geometry
+float dets= 10.0; // arclength of first plane
+float diss= 10.0; // distance between planes
+float thck= 0.02; //thickness of plane (X0)
+float offs=  0.5;  // offset of stereo modules
+float stereo=0.08727;  // stereo angle
+float sizel= 20.0; //size of layers
+float sigl =0.002;  // <resolution
+
+//TODO continue line 77 
+
+
+
+
+
+
+
+
+
+
+
+
+
 //Dynamic allocation for arrays (cleaning up in the end!)
-//TODO use of size in practice
+//TODO 
 int size_gl = 1;
 int size_lc = 2;
 //XXX:  --std=c++11 flag is required for pre-initilised arrays
@@ -43,56 +73,26 @@ int *label=new int[size_gl]{0};
 float *derGl=new float[size_gl]{0.0};  
 float *derLc=new float[size_lc]{0.0, 0.0};   //same for all measurements 
 
-//Gausian random generator
-std::default_random_engine generator;
-std::normal_distribution<float> generate_residual(0.0, 100); //centerred at 0
-
 ///////////------------Function prototyping----------//////////////////
 void cleanUP();
-
 
 /////************MAIN***************/////////////
 int main(){
 
-Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a test.bin file
+Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
 
-TFile* file = new TFile("test.root", "recreate");  // recreate = owerwrite if already exisists
+TFile* file = new TFile("cppMptest2.root", "recreate");  // recreate = owerwrite if already exisists
 // Book histograms
 TH1F* h_1 = new TH1F("h_1", "Plane 1",  20,  -0.05, 0.05); // D=doube bins, name, title, nBins, Min, Max
-TH1F* h_2 = new TH1F("h_2", "Plane 2",  20,  -0.05, 0.05); 
-TH1F* h_3 = new TH1F("h_3", "Plane 3",  20,  -0.05, 0.05); 
-TH1F* h_4 = new TH1F("h_4", "Plane 4",  20,  -0.05, 0.05); 
 
-//keep this simple for now... 
+
+//keep this simple for now... TODO
 NLC = size_lc;
 NGL = size_gl;
-sigma=100;   
+sigma=100;   //TODO
 
 
-int nPlanes=4;
-int nEvents=1000; 
 
-
-for (int n=0; n<nEvents; ++n){
-//For planes
-	for (int i=0; i<nPlanes; ++i) {
-		rMeas = generate_residual(generator);   //generate a residual
-	
-    	//TODO make this effficient! see MWPCPlots_module.cc for example! 
-    	if(i==0){h_1->Fill(rMeas);}
-    	if(i==1){h_2->Fill(rMeas);}
-    	if(i==2){h_3->Fill(rMeas);}
-    	if(i==3){h_4->Fill(rMeas);}
-		derLc[0] = (i+1)*1E6; 
-		derLc[1] = 1; 
-		derGl[0] = 1;
-		label[0] = i+1;   
-		m.mille(NLC, derLc, NGL, derGl, label, rMeas, sigma);   //Add measurement to buffer 
-	}//end of planes 
-	
-	m.end();  // TODO: where to put this w.r.t planes/events. Write buffer (set of derivatives with same local parameters) to file
-		
-}// end of events
 
 
 cleanUP(); // TODO: Really (!) clarify how to use dynamic cleanup stuff..
