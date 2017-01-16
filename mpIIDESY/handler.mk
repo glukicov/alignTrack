@@ -16,7 +16,7 @@ $(PROGNAME):    $(OBJECTS)
 		g++ -o $@ $(OBJECTS) $(LDFLAGS) $(LIBS) -std=c++11
 
 %.o : %.cpp $(INCLUDES)
-	g++ ${CFLAGS} -c  -g -o $@ $< -std=c++11
+	g++ ${CFLAGS} -c  -g -o $@ $< -std=c++11 -I .
 
 test:
 	@echo $(ROOTCFLAGS)
