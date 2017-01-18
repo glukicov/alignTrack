@@ -13,7 +13,7 @@
 !!
 !! \author Claus Kleinwort, DESY, 2009
 
-							  TODO impliment passing arguments to the executable
+                              TODO impliment passing arguments to the executable
 
 !! No B-field, straight tracks. Selected with command line option '-t=track-model'
 !! The \a track-models differ in the implementation of multiple scattering (errors):
@@ -47,58 +47,77 @@
 **/
 
 //TODO some includes might be redundant
+#include "Mille.h"
+#include "Mille.cc"
+#include <iostream>
 #include <fstream>
-#include <string.h>
+#include <string>
+#include <vector>
+#include <random>
+#include <iomanip>
 #include <stdlib.h>
 #include <random>
 #include <cmath> //math class`
 #include <TH1D.h> //1D Histo Root class
+#include <TH2D.h> //1D Histo Root class
 #include <TFile.h> // data records for ROOT 
 #include <TRandom3.h> // rnd generator class for ROOT
-#include "Mille.h"
-#include "Mille.cc"
+
+using namespace std; 
+
 //////----Variable Intialisation-------///////////
 
 //arguments for Mille constructor:
 const char* outFileName = "Mptest2.bin";
 bool asBinary = true; 
 bool writeZero = false;
-
-//initilising variables for the data file
-int NLC = 0; // # of Local derivatives
-int NGL = 0 ;  // # of Global parameters
-float rMeas = 0.0;  // this will be a Gaussian random (0,x) for now - later to be filled be simulated residuals
-float sigma = 0.0; // for now, for simplicity
-
+const char* conFileName = "Mp2con.txt";
+string strFileName = "Mp2str.txt";
 
 ///initialsing physics varibles
 const int nlyr = 10; //number of detector layers
-const int nmlyr = 14; //number of measurement layers
-const int nmx = 10; //number of modules in x direction
-const int nmy = 10; //number of modules in y direction
+const int nmlyr = nlyr; //number of measurement layers   //why 14 is to do with stereo-angles for 1,4,7,10
+//const int nmx = 10; //number of modules in x direction
+const int nmy = 1; //number of modules in y direction   //total 50 modules nmx * nmy = 50
 
-int ntot=nlyr*nmx*nmy; //total number of modules
+const int ntot=nlyr*nmy; //total number of modules
 //  define detector geometry
 float dets= 10.0; // arclength of first plane
-float diss= 10.0; // distance between planes
+float diss= 10.0; // distance between planes //cm / Pede works in cm
 float thck= 0.02; //thickness of plane (X0)
-float offs=  0.5;  // offset of stereo modules
-float stereo=0.08727;  // stereo angle
-float sizel= 20.0; //size of layers
-float sigl =0.002;  // <resolution
+//float offs=  0.5;  // offset of stereo modules
+//float stereo=0.08727;  // stereo angle
+float sizel= 20.0; //size of layers  //cm 
+float sigl =0.002;  // <resolution  // 20um = 0.002 cm 
 
-int nhits = 0; // number of hits
-float the0 = 0; // multiple scattering error
-int[nmlyr]islyr;// (detector) layer
-int[nmlyr]ihits; // module number
-float[ntot]sdevx;// shift in x (alignment parameter)
-float[ntot] sdevy; //shift in y (alignment parameter)
-float[nmlyr]sarc;  // arc length
-float[nmlyr]ssig;   //resolution
-float[2][nmlyr]spro; //projection of measurent direction in (XY)
-float[nmlyr]xhits;   //position perp. to plane (hit)
-float[nmlyr]yhits;    //measured position in plane (hit)
-float[nmlyr]sigma;    // measurement sigma (hit)
+int nhits = 0; // number of hits  //XXX is this passed as argument 
+//float the0 = 0; // multiple scattering error
+int islyr[nmlyr];// (detector) layer
+int ihits[nmlyr]; // module number
+//float sdevx[ntot];// shift in x (alignment parameter)
+float sdevy[ntot] ; //shift in y (alignment GLOBAL parameter)
+float sarc[nmlyr];  // arc length
+float ssig[nmlyr];   //resolution
+float spro[1][nmlyr]; //projection of measurent direction in (Y) [change 1-> for XY]
+//float xhits[nmlyr];   //position perp. to plane (hit)
+float yhits[nmlyr];    //measured position in plane (hit)
+float sigma[nmlyr];    // measurement sigma (hit)
+
+// Structure to contain data of a generated line, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
+struct Line_data {
+    int hit_count;
+    vector<float> x_hits;
+    //vector<float> y_hits;
+    vector<float> hit_sigmas;
+    //vector<float> y_drifts;
+    vector<int> i_hits;
+};
+
+// Random number generators and distributions, for uniform and gaussian distribution
+default_random_engine uniform_generator;
+default_random_engine gaus_generator;
+uniform_real_distribution<float> uniform_dist(0.0,1.0);
+normal_distribution<float> gaus_dist(0.0, 1.0);
 
 // Generate test files.
 //
@@ -111,133 +130,68 @@ float[nmlyr]sigma;    // measurement sigma (hit)
 //
 // \param [in] imodel track model
 //
-//           0: 'straight line', ignoring multiple scattering
+//           0: 'straight line', ignoring multiple scattering // XXX using this explicitly for now 
 //           1: 'straight line', using diagonal of m.s. error matrix
 //           2: 'break points'
 //           3: 'broken lines', fine
 //           4: 'broken lines', coarse (stereo layers combined)
 //
+/////////------------Function prototyping----------//////////////////
 
-const int imodel = 0;  //straight line 
-// Defining function Mptst2 
-void Mptst2(imodel){
-
-	float cmbbrl = 0.0;
-    float dispxm =0.0;
-    float dispym =0.0;
-    float dn = 0.0;
-    float dp = 0.0;
-    float gran = 0.0;
-    float one = 0.0;
-    float p = 0.0;
-    float s = 0.0;
-    float sgn = 0.0;
-    float sbrl = 0.0;
-    float sold = 0.0;
-    float uran = 0.0;
-    float wbrl = 0.0;
-    int i = 0;
-    int ibrl = 0;
-    int icount = 0;
-    int im = 0;
-    int ios = 0;
-    int ip = 0;
-    int j = 0;
-    int k = 0;
-    int l = 0; 
-    int labelt = 0;
-    int layer = 0;
-    int lb = 0;
-    int lbrl = 0;
-    int luns = 0;
-    int lunt = 0;
-    int lyr = 0;
-    int nalc  = 0;
-    int nbrl = 0;
-    int ncount = 0;
-    int ncx = 0;
-    int nmxy = 0;
-    int nrecds = 0;
-    int nthits  = 0;
-
-
-    int size_gl = 1;  // XXX
-    int size_lc = 1; // XXX
-    float *derlc=new float[size_lc]{mlyr*2+3};  // XXX
-    float *dergl=new float[size_gl]{nmlyr*2+3}; // XXX 
-    int *label=new int[size_gl]{2};  // XXX
-    bool ex1;  // XXX
-    bool ex2; // XXX
-    bool ex3; //XXX 
-
-   // !     for broken lines: 1=fine, 2=coarse
-    // DIMENSION nbrl(2),lbrl(nmlyr,2),sbrl(nmlyr,2),wbrl(nmlyr,2), cmbbrl(2)
-    //DATA cmbbrl / 0.0, 1.0 / //! cut for combining layers
-
-
-}
-
-
-
-
-//Dynamic allocation for arrays (cleaning up in the end!)
-//TODO 
-
-//XXX:  --std=c++11 flag is required for pre-initilised arrays
-//int *label=new int[size_gl]{1, 2, 3, 4};
-
-//float *derGl=new float[size_gl]{1.0, 2.0, 3.0, 4.0};  
-
-
-///////////------------Function prototyping----------//////////////////
-void cleanUP();
-
-void Mptst2(const int imodel); 
+//Source code for genlin courtesy of John. 
+// hit_count, x_hits, y_hits, hit_sigmas, y_drifts, i_hits
+//std::vector<float> genlin2(int&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
+// hit_count, y_hits, hit_sigmas i_hits
+std::vector<float> genlin2(int&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
 
 
 /////************MAIN***************/////////////
 int main(){
 
-Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
+       
+   // Creating .bin, steering, constrating and ROOT files here:
+    Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
+     // Book histograms
+    TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=doube bins, name, title, nBins, Min, Max
 
-TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
-// Book histograms
-TH1F* h_1 = new TH1F("h_1", "Plane 1",  20,  -0.05, 0.05); // D=doube bins, name, title, nBins, Min, Max
+    cout << "" << endl;
+    cout << "Generating test data for Mp II...";
+    cout << "" << endl; 
 
+    // fstreams for str and cons files 
+    ofstream constraint_file(conFileName);
+    ofstream steering_file(strFileName);
+    
 
-//keep this simple for now... TODO
-NLC = size_lc;
-NGL = size_gl;
-sigma=100;   //TODO
-
-
-
-
-
-cleanUP(); // TODO: Really (!) clarify how to use dynamic cleanup stuff..
+   
 
 //ROOT stuff
 file->Write();
 file->Close(); //good habit! 
 return 0; 
-
 } //end of main 
 
 
 
 ////////----------Function Defenition--------------------- ///// 
-void cleanUP(){
-//TODO cleaning up: read bookmark - see the neat and correct way to do this (e.g pointer array-object?) or if it is really necessary - smart pointers c++11? 
-// When done, free memory pointed.
-delete [] label; 
-delete [] derGl; 
-delete [] derLc;  
-// Clear a to prevent using invalid memory reference.
-derGl = NULL;
-derLc = NULL; 
-label = NULL;     
-}
+//Source code for genlin courtesy of John. 
+// Function to simulate a linear track through the detector, returning data about detector hits.
 
+Line_data genlin2() {
 
+    // Set up new container for track data, with hit count set to zero
+    Line_data line;
+    line.hit_count = 0;
 
+    // Track parameters for rand-generated line
+    float ynull = sizel * (uniform_dist(uniform_generator)*0.5); //uniform vertex 
+    float yexit = sizel * (uniform_dist(uniform_generator)*0.5); //uniform exit point: so fitting a line to these two points
+    float yslop=(yexit-ynull)/sarc[nmlyr];
 
+   
+    
+
+    return line; // Return data from simulated track
+
+} // end of genlin2
