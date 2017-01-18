@@ -1,4 +1,8 @@
-/** 
+// TODOs: 0) get simple case working 1) rename variables to something more sensible 
+// 2) add x 3) extend to broken-lines, scattering etc.
+
+/*
+* 
 * Translation into C++11 of mptest2.f90 (original description below) 
 * pass data as number of local and global parameters, and their derivatives, and residual and their sigma (smearing/accuracy)
 * Mille will then pack this in .bin to be used by PEDE routine.
@@ -153,7 +157,7 @@ int main(){
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
      // Book histograms
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
-    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=doube bins, name, title, nBins, Min, Max
+    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
 
     cout << "" << endl;
     cout << "Generating test data for Mp II...";
@@ -163,13 +167,12 @@ int main(){
     ofstream constraint_file(conFileName);
     ofstream steering_file(strFileName);
     
+    
 
-   
-
-//ROOT stuff
-file->Write();
-file->Close(); //good habit! 
-return 0; 
+    //ROOT stuff
+    file->Write();
+    file->Close(); //good habit! 
+    return 0; 
 } //end of main 
 
 
@@ -189,8 +192,35 @@ Line_data genlin2() {
     float yexit = sizel * (uniform_dist(uniform_generator)*0.5); //uniform exit point: so fitting a line to these two points
     float yslop=(yexit-ynull)/sarc[nmlyr];
 
-   
+    nhits=0;
+    float y = ynull;
+    float dy = yslop;
+    float sold = 0.0; 
     
+    for(int i=0; i++; nmlyr){
+        float ds = sarc[i] - sold;
+        sold = sarc[i];
+
+        //position with parameters 1. hit
+        float ys=ynull+sarc[i]*yslop;
+        //true track position
+        y=y+dy*ds;
+
+        float imy=int(y+sizel*0.5)/sizel*float(nmy);
+
+        if (imy < 0. || imy >= nmy) continue;
+
+        float ihit = ((i-1)*nmy+imy);
+        int ioff=((islyr[i]-1)*nmy+imy)+1;
+        nhits++;
+        ihits[nhits]=ihit;
+        float yl=y-sdevy[ioff];
+        yhits[nhits]=(yl-ys)*spro[1][i]+gaus_dist(gaus_generator)*ssig[i];
+        sigma[nhits]=ssig[i];
+
+    }// end of looping over detector layers
+    
+    //101 FORMAT(3I3,5F8.4) TODO 
 
     return line; // Return data from simulated track
 
