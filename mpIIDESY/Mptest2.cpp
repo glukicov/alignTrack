@@ -1,5 +1,9 @@
-// TODOs: 0) get simple case working 1) rename variables to something more sensible 
-// 2) add x 3) extend to broken-lines, scattering etc.
+// TODOs: 
+// 0) get simple case working 
+// 1) rename variables to something more sensible 
+// 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <]
+// 3) add x [i=0], generate .bin file from Fortran for simplest case and compare
+// 4) extend to broken-lines, scattering etc.
 
 /*
 * 
@@ -50,22 +54,7 @@
 !!
 **/
 
-//TODO some includes might be redundant
-#include "Mille.h"
-#include "Mille.cc"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <random>
-#include <iomanip>
-#include <stdlib.h>
-#include <random>
-#include <cmath> //math class`
-#include <TH1D.h> //1D Histo Root class
-#include <TH2D.h> //1D Histo Root class
-#include <TFile.h> // data records for ROOT 
-#include <TRandom3.h> // rnd generator class for ROOT
+#include "Mptest2.h"
 
 using namespace std; 
 
@@ -75,7 +64,7 @@ using namespace std;
 const char* outFileName = "Mptest2.bin";
 bool asBinary = true; 
 bool writeZero = false;
-const char* conFileName = "Mp2con.txt";
+string conFileName = "Mp2con.txt";
 string strFileName = "Mp2str.txt";
 
 ///initialsing physics varibles
@@ -140,44 +129,9 @@ normal_distribution<float> gaus_dist(0.0, 1.0);
 //           3: 'broken lines', fine
 //           4: 'broken lines', coarse (stereo layers combined)
 //
-/////////------------Function prototyping----------//////////////////
-
-//Source code for genlin courtesy of John. 
-// hit_count, x_hits, y_hits, hit_sigmas, y_drifts, i_hits
-//std::vector<float> genlin2(int&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
-// hit_count, y_hits, hit_sigmas i_hits
-std::vector<float> genlin2(int&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
 
 
-/////************MAIN***************/////////////
-int main(){
-
-       
-   // Creating .bin, steering, constrating and ROOT files here:
-    Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-     // Book histograms
-    TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
-    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
-
-    cout << "" << endl;
-    cout << "Generating test data for Mp II...";
-    cout << "" << endl; 
-
-    // fstreams for str and cons files 
-    ofstream constraint_file(conFileName);
-    ofstream steering_file(strFileName);
-    
-    
-
-    //ROOT stuff
-    file->Write();
-    file->Close(); //good habit! 
-    return 0; 
-} //end of main 
-
-
-
-////////----------Function Defenition--------------------- ///// 
+///////----------Function Defenition--------------------- ///// 
 //Source code for genlin courtesy of John. 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 
@@ -197,7 +151,7 @@ Line_data genlin2() {
     float dy = yslop;
     float sold = 0.0; 
     
-    for(int i=0; i++; nmlyr){
+    for(int i=0; i<nmlyr; i++){
         float ds = sarc[i] - sold;
         sold = sarc[i];
 
@@ -225,3 +179,149 @@ Line_data genlin2() {
     return line; // Return data from simulated track
 
 } // end of genlin2
+
+
+
+
+/////************MAIN***************/////////////
+int main(){
+
+    //TODO draw a respectable-looking millipede here 
+    cout << "" << endl;
+    cout << "$            $"<< endl;
+    cout << " $          $ "<< endl;
+    cout << "  $        $ "<< endl;
+    cout << "   $      $ "<< endl;
+    cout << "     $ $ $ "<< endl;
+    cout << "" << endl; 
+       
+   // Creating .bin, steering, constrating and ROOT files here:
+    Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
+     // Book histograms
+    TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
+
+    cout << "" << endl;
+    cout << "Generating test data for Mp II...";
+    cout << "" << endl; 
+
+    // fstreams for str and cons files 
+    ofstream constraint_file(conFileName);
+    ofstream steering_file(strFileName);
+    
+    float s=dets;
+    int i_counter = 0;
+    float sgn = 1.0;
+
+    for (int layer=1; layer<10; layer++){
+        i_counter++;
+        islyr[i_counter] = layer;  // layer
+        sarc[i_counter] = s;  //arclength
+        ssig[i_counter] = sigl; //resolution
+        spro[1][i_counter]=1.0;  // y
+        s=s+diss;  // incrimenting distance between detecors 
+    }  // end of looping over layers
+
+    //Now misaligning detecors
+    float dispym = 0.01; // module displacement in Y .05 mm * N(0,1)
+
+    //so we are only displacing 9/10 dets.? XXX
+    for (int i=0; i<nlyr-1; i++){
+        for(int k=0; k<=nmy-1; k++){
+            sdevy[(i*nmy+k)+1] = dispym * uniform_dist(uniform_generator);          
+        } // end of number of modules in y 
+    } // end of layers
+
+    
+    //Now writing steering and constraint files
+    if(steering_file.is_open()){
+
+        cout << "" << endl;
+        cout<< "Writing the steering file" << endl;
+        cout << "" << endl;
+
+        steering_file <<  "*            Default test steering file" << endl
+        << "fortranfiles ! following bin files are fortran" << endl
+        << "Mp2con.txt   ! constraints text file " << endl
+        << "Mp2tst.bin   ! binary data file" << endl
+        << "Cfiles       ! following bin files are Cfiles" << endl
+        << "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
+        << "*outliersuppression 3   ! 3 local_fit iterations" << endl
+
+        << "*hugecut 50.0     !cut factor in iteration 0" << endl
+        << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
+        << "*entries  10 ! lower limit on number of entries/parameter" << endl
+        <<  "" << endl 
+        <<  "*pairentries 10 ! lower limit on number of parameter pairs"  << endl
+        <<    "                ! (not yet!)"            << endl
+        << "*printrecord   1  2      ! debug printout for records" << endl
+        <<   "" << endl
+        <<    "*printrecord  -1 -1      ! debug printout for bad data records" << endl
+        <<   "" << endl
+        <<   "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
+        << "*dwfractioncut      0.2  ! 0 < value < 0.5"<< endl
+        << "*presigma           0.01 ! default value for presigma"<< endl
+        << "*regularisation 1.0      ! regularisation factor"<< endl
+        << "*regularisation 1.0 0.01 ! regularisation factor, pre-sigma"<< endl
+        << " " << endl
+        << "*bandwidth 0         ! width of precond. band matrix"<< endl
+        << "method diagonalization 3 0.001 ! diagonalization      "<< endl
+        << "method fullMINRES       3 0.01 ! minimal residual     "<< endl
+        << "method sparseMINRES     3 0.01 ! minimal residual     "<< endl
+        << "*mrestol      1.0D-8          ! epsilon for MINRES"<< endl
+        << "method inversion       3 0.001 ! Gauss matrix inversion"<< endl
+        << "* last method is applied"<< endl
+        << "*matiter      3  ! recalculate matrix in iterations" << endl
+        << " "  << endl
+        << "end ! optional for end-of-data"<< endl;
+    } 
+
+    if (constraint_file.is_open()) {
+        cout << "" << endl;
+        cout << "Writing Constraint File" << endl;
+        cout << "" << endl;
+
+        //Evaluation of constraints
+        int nmxy = nmy; 
+        int lunt = 9;
+        float one = 1.0;
+        for (int i=1; i<=nlyr; i++){  //TODO see line  DO i=1,nlyr,nlyr-1 
+            //cout << "HERE" << endl;
+            constraint_file << "Constraint 0.0" << endl;
+            for (int k=0; k<nmy-1; k++){
+                int labelt=(i*nmy+k)+1000-1;
+                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
+                sdevy[(i-1)*nmy+k]=0.0;      // fix center modules at 0.
+            } // end of y loop
+        } // end of detecors loop 
+
+
+    } //end of constraints
+
+    //record loop
+    int ncount = 10000;
+    int nthits = 0;
+    int nrecds=0;
+
+    //Generating particles with energies: 10..100 Gev
+    for (int icount=1; icount<10000; icount++){
+        float p=pow(10.0, 1+uniform_dist(uniform_generator));
+        //the0=sqrt(thck)*0.014/p
+
+        //Generating hits
+        Line_data generated_line = genlin2();
+
+        for (int i=1; i<nhits; i++){
+            //simple straight line
+
+        } // end of hits
+
+    } // end of N of trials
+
+
+
+    //ROOT stuff
+    file->Write();
+    file->Close(); //good habit! 
+    return 0; 
+} //end of main 
