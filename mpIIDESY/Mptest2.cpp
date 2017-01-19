@@ -285,11 +285,11 @@ int main(){
         int nmxy = nmy; 
         int lunt = 9;
         float one = 1.0;
-        for (int i=1; i<=nlyr; i++){  //TODO see line  DO i=1,nlyr,nlyr-1 
-            //cout << "HERE" << endl;
-            constraint_file << "Constraint 0.0" << endl;
-            for (int k=0; k<nmy-1; k++){
-                int labelt=(i*nmy+k)+1000-1;
+        constraint_file << "Constraint 0.0" << endl;
+        for (int i=1; i<nlyr-1; i++){  //TODO see line  DO i=1,nlyr,nlyr-1 
+            //TODO fix contstrain file output
+            for (int k=0; k<=nmy-1; k++){
+                 int labelt=(i*nmy+k)+1000-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
                 sdevy[(i-1)*nmy+k]=0.0;      // fix center modules at 0.
             } // end of y loop
