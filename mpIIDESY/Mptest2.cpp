@@ -245,9 +245,9 @@ int main(){
         cout << "" << endl;
 
         steering_file <<  "*            Default test steering file" << endl
-        << "fortranfiles ! following bin files are fortran" << endl
+        << "Cfiles ! following bin files are C++" << endl   // XXX 
         << "Mp2con.txt   ! constraints text file " << endl
-        << "Mp2tst.bin   ! binary data file" << endl
+        << "Mptest2.bin   ! binary data file" << endl
         << "Cfiles       ! following bin files are Cfiles" << endl
         << "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         << "*outliersuppression 3   ! 3 local_fit iterations" << endl
