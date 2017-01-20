@@ -51,6 +51,25 @@
 !!
 !! Global parameters:
 !! - Position offsets (2D) in measurement plane per module (alignment).
+
+// Generate test files.
+//
+// Create text and binary files.
+//
+//      unit  8: textfile Mp2str.txt   = steering file
+//      unit  9: textfile Mp2con.txt   = constraint file
+//      unit 51: binary file Mp2test.bin, written using CALL MILLE(.)
+//      existing file are removed
+//
+// \param [in] imodel track model
+//
+//           0: 'straight line', ignoring multiple scattering // XXX using this explicitly for now 
+//           1: 'straight line', using diagonal of m.s. error matrix
+//           2: 'break points'
+//           3: 'broken lines', fine
+//           4: 'broken lines', coarse (stereo layers combined)
+//
+
 !!
 **/
 
@@ -59,6 +78,9 @@
 using namespace std; 
 
 //////----Variable Intialisation-------///////////
+
+//XXX Model type (see above)
+int imodel = 0; 
 
 //arguments for Mille constructor:
 const char* outFileName = "Mptest2.bin";
@@ -111,24 +133,6 @@ default_random_engine uniform_generator;
 default_random_engine gaus_generator;
 uniform_real_distribution<float> uniform_dist(0.0,1.0);
 normal_distribution<float> gaus_dist(0.0, 1.0);
-
-// Generate test files.
-//
-// Create text and binary files.
-//
-//      unit  8: textfile Mp2str.txt   = steering file
-//      unit  9: textfile Mp2con.txt   = constraint file
-//      unit 51: binary file Mp2test.bin, written using CALL MILLE(.)
-//      existing file are removed
-//
-// \param [in] imodel track model
-//
-//           0: 'straight line', ignoring multiple scattering // XXX using this explicitly for now 
-//           1: 'straight line', using diagonal of m.s. error matrix
-//           2: 'break points'
-//           3: 'broken lines', fine
-//           4: 'broken lines', coarse (stereo layers combined)
-//
 
 
 ///////----------Function Defenition--------------------- ///// 
@@ -276,20 +280,21 @@ int main(){
         << "end ! optional for end-of-data"<< endl;
     } 
 
+    int nmxy = nmy; 
     if (constraint_file.is_open()) {
         cout << "" << endl;
         cout << "Writing Constraint File" << endl;
         cout << "" << endl;
 
         //Evaluation of constraints
-        int nmxy = nmy; 
+       
         int lunt = 9;
         float one = 1.0;
+        for (int i = 1; i <= nlyr; i=i+(nlyr-1)){  //XXX 
         constraint_file << "Constraint 0.0" << endl;
-        for (int i=1; i<nlyr-1; i++){  //TODO see line  DO i=1,nlyr,nlyr-1 
             //TODO fix contstrain file output
             for (int k=0; k<=nmy-1; k++){
-                 int labelt=(i*nmy+k)+1000-1;
+                int labelt=(i*nmy+k)+1000-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
                 sdevy[(i-1)*nmy+k]=0.0;      // fix center modules at 0.
             } // end of y loop
@@ -298,13 +303,13 @@ int main(){
 
     } //end of constraints
 
-    //record loop
+    //record loop  TODO put this into genlin2
     int ncount = 10000;
     int nthits = 0;
     int nrecds=0;
 
     //Generating particles with energies: 10..100 Gev
-    for (int icount=1; icount<10000; icount++){
+    for (int icount=1; icount<ncount; icount++){
         float p=pow(10.0, 1+uniform_dist(uniform_generator));
         //the0=sqrt(thck)*0.014/p
 
@@ -313,12 +318,45 @@ int main(){
 
         for (int i=1; i<nhits; i++){
             //simple straight line
+            int lyr = ihits[i]/nmxy+1;
+            int im = ihits[i]%nmxy;
+            //const int nalc = 4; // XXX  number of LC paremeters? 
+            const int nalc = 2; // XXX  number of LC paremeters? 
+            //only xhits? XXX see line 320 fix this 
+           
+            float derlc[nalc] = {spro[1][lyr], yhits[i]*spro[1][lyr]};
+            const int nagl = 2;
+            float dergl[nagl] = {spro[1][lyr], spro[1][lyr]}; //XXX
+            int label[nalc] = {im+nmxy*islyr[lyr], im+nmxy*islyr[lyr]+1000};
+            //add multiple scattering errors later XXX
 
-        } // end of hits
+            if (imodel == 1){
+                for (int j=1; i<nhits; i++){
+                    sigma[j] = sqrt(pow(sigma[j],2) + pow(yhits[j]-yhits[i],2));  //XXX 
+                }
+            }
 
-    } // end of N of trials
+            //add break points multiple scattering later XXX
+            
+            m.mille(2, derlc, 2, dergl, label, yhits[i], sigma[i]);
+            nthits++; //count hits
+        } // end of hits loop
+
+        // XXX additional measurements from MS
+
+        //IF (imodel >= 3) THEN
+
+        m.end(); // Write buffer (set of derivatives with same local parameters) to file.
+        nrecds++; // count records;
+
+    } // end of N trials (track count)
 
 
+    cout << " " << endl;
+    cout << ncount << " tracks generated with " << nthits << " hits." << endl;
+    cout << nrecds << " records written." << endl;
+    cout << " " << endl;
+    cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl; 
 
     //ROOT stuff
     file->Write();
