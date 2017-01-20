@@ -7,13 +7,13 @@
 #include <vector>
 #include <random>
 #include <iomanip>
+#include <chrono>
+#include <typeinfo>
 
 #include <Mille.h>
 #include <Mille.cc>
 
 std::vector<float> genlin(int&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
-
-void mptest1();
 
 int main();
 

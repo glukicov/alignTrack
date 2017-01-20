@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 // Number of planes and tracks.
 const int plane_count = 100;
 int track_count = 10000;
@@ -47,13 +46,22 @@ struct Line_data {
 };
 
 // Random number generators and distributions, for uniform and gaussian distribution
-default_random_engine uniform_generator;
-default_random_engine gaus_generator;
-uniform_real_distribution<float> uniform_dist(0.0,1.0);
+
+random_device uniform_device;
+random_device gaus_device;
+
+uniform_real_distribution<float> uniform_dist(0.0, 1.0);
 normal_distribution<float> gaus_dist(0.0, 1.0);
 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 Line_data genlin() {
+
+	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
+	seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
+
+	mt19937 uniform_generator(uniform_seeds);
+	mt19937 gaus_generator(gaus_seeds);
+
 
 	// Set up new container for track data, with hit count set to zero
 	Line_data line;
@@ -113,8 +121,14 @@ Line_data genlin() {
 
 int main() {
 
+	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
+	seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
+
+	mt19937 uniform_generator(uniform_seeds);
+	mt19937 gaus_generator(gaus_seeds);
+
 	// Name and properties of binary output file
-	string binary_file_name = "mp2tst.bin";
+	string binary_file_name = "mp2tst.bin_c";
 	bool as_binary = true;
 	bool write_zero = false;
 
@@ -124,6 +138,7 @@ int main() {
 	// Names of constraint and steering files
 	string constraint_file_name = "mp2con.txt";
 	string steering_file_name = "mp2str.txt";
+	string true_params_file_name = "mp2test1_true_params.txt";
 
 	cout << "" << endl;
 	cout << "Generating test data for mp II..." << endl;
@@ -132,6 +147,7 @@ int main() {
 	// Open file streams for constraint and steering files, overwriting any original files
 	ofstream constraint_file(constraint_file_name);
 	ofstream steering_file(steering_file_name);
+	ofstream true_params_file(true_params_file_name);
 
 	// Iterate across planes, setting plane efficiencies, resolutions, deviations in position and drift velocity.
 	for (int i=0; i<plane_count; i++) {
@@ -142,6 +158,17 @@ int main() {
 		drift_vel_devs[i] = drift_sigma * gaus_dist(gaus_generator);
 
 	}
+
+	// Print plane labels, and plane displacements to file
+	for (int i=0; i<plane_count; i++) 
+		true_params_file << 10 + (2 * (i + 1)) << " " << -plane_pos_devs[i] << endl;
+
+	true_params_file << endl; // Insert blank line
+
+	// Print drift velocity labels, and drift velocity displacements to file.
+	for (int i=0; i<plane_count; i++) 
+		true_params_file << 500 + i + 1 << " " << -drift_vel_devs[i] << endl; 
+
 
 	// To constrain measurement
 	plane_pos_devs[9] = 0.0;
@@ -241,6 +268,9 @@ int main() {
 			// Labels for plane displacement, and velcity deviation. 
 			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
 			
+			int local_deriv_count = 2;
+			int global_deriv_count = 2;
+
 			// Write to binary file.
 			m.mille(2, local_derivs, 2, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
 
@@ -258,6 +288,10 @@ int main() {
 	cout << track_count << " tracks generated with " << all_hit_count << " hits." << endl;
 	cout << all_record_count << " records written." << endl;
 	cout << " " << endl; 
+
+	constraint_file.close();
+	steering_file.close();
+	true_params_file.close();
 
 	// Terminate program.
 	return 0;
