@@ -16,7 +16,7 @@ to get the latest code from our repository
 3) `make`
 to build the pede executable 
 
-4) `test that it works by pede -t`
+4) test that it works by `pede -t`
 (should give a terminal output [last 2 lines]:
  Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
  Peak dynamic memory allocation:    0.100512 GB
