@@ -43,6 +43,6 @@ e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines]
 
 
 ### To run PEDE algorithm ###
-1. ./pede mp2str.txt [where e.g. mp2str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. mp2con.txt)]
+1.  ` ./pede mp2str.txt  ` [where e.g. mp2str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. mp2con.txt)]
 
 
