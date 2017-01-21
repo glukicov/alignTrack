@@ -132,6 +132,8 @@ SUBROUTINE mptest
     IF(.NOT.ex2) OPEN(UNIT=9,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2con.txt')
     OPEN(UNIT=51,ACCESS='SEQUENTIAL',FORM='UNFORMATTED', FILE='mp2tst.bin')
+    OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test1_true_params_fortran.txt')
 
     DO i=1,nplan
         eff(i)=effp          ! plane efficiency
@@ -153,6 +155,16 @@ SUBROUTINE mptest
     END DO
     del(10)=0.0                      ! no shift
     del(90)=0.0                      ! no shift
+
+    DO i=1, nplan
+       WRITE(11,*) 10+i*2, ' ', -del(i)
+    END DO
+
+    WRITE(11,*) ' '
+
+    DO i=1, nplan
+       WRITE(11,*) 500+i, ' ', -dvd(i)
+    END DO
 
     !     write text files -------------------------------------------------
 
@@ -262,6 +274,7 @@ SUBROUTINE mptest
             dergl(2)=ydrft(i)
             label(1)=10+ihits(i)*2
             label(2)=500 + ihits(i)
+
             CALL mille(2,derlc,2,dergl,label,yhits(i),sigma(i))
             nthits=nthits+1  ! count hits
         END DO
