@@ -162,16 +162,8 @@ int main() {
 
 	}
 
-	// Print plane labels, and plane displacements to file
-	for (int i=0; i<plane_count; i++) 
-		true_params_file << 10 + (2 * (i + 1)) << " " << -plane_pos_devs[i] << endl;
 
 	true_params_file << endl; // Insert blank line
-
-	// Print drift velocity labels, and drift velocity displacements to file.
-	for (int i=0; i<plane_count; i++) 
-		true_params_file << 500 + i + 1 << " " << -drift_vel_devs[i] << endl; 
-
 
 	// To constrain measurement
 	plane_pos_devs[9] = 0.0;
@@ -181,6 +173,13 @@ int main() {
 	true_plane_effs[6] = 0.1;
 	true_meas_sigmas[6] = 0.0400;
 	
+	// Print plane labels, and plane displacements to file
+	for (int i=0; i<plane_count; i++) 
+		true_params_file << 10 + (2 * (i + 1)) << " " << -plane_pos_devs[i] << endl;
+	// Print drift velocity labels, and drift velocity displacements to file.
+	for (int i=0; i<plane_count; i++) 
+		true_params_file << 500 + i + 1 << " " << -drift_vel_devs[i] << endl; 
+
 
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {
@@ -258,6 +257,8 @@ int main() {
 	// Iterate over number of tracks
 	for (int i=0; i<track_count; i++) {
 
+		if (i==0) true_params_file << endl;
+
 		// Simulate track, and get data
 		Line_data generated_line = genlin();
 		
@@ -276,6 +277,17 @@ int main() {
 
 			// Write to binary file.
 			m.mille(2, local_derivs, 2, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
+
+			if (i==0) {
+				true_params_file << "Hit " << j << endl 
+								 << "Local: " << local_derivs[0] << " " << local_derivs[1] << endl
+								 << "Global: " << global_derivs[0] << " " << global_derivs[1] << endl
+								 << "Label: " << labels[0] << " " << labels[1] << endl
+								 << "Hit: " << generated_line.y_hits[j] << endl
+								 << "Sigma: " << generated_line.hit_sigmas[j] << endl << endl;
+
+			}
+				
 
 			all_hit_count++; // Increment total number of recorded hits
 

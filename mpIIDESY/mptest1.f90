@@ -31,6 +31,7 @@
 !! - Relative drift velocity corrections (calibration).
 
 
+
 !> Parameters and data.
 MODULE mptest1
     USE mpdef
@@ -262,6 +263,9 @@ SUBROUTINE mptest
 
     DO icount=1,ncount
         ip=0
+
+        if(icount == 1) WRITE(11,*) ''
+
         IF(icount == 8759) ip=1
         !       IF(ICOUNT.EQ.6309) IP=1
         !       IF(ICOUNT.EQ.7468) IP=1
@@ -276,6 +280,15 @@ SUBROUTINE mptest
             label(2)=500 + ihits(i)
 
             CALL mille(2,derlc,2,dergl,label,yhits(i),sigma(i))
+            
+            IF(icount==1) WRITE(11,*) 'Hit: ', i
+            IF(icount==1)WRITE(11,*) 'Local: ', derlc(1), ' ', derlc(2)
+            IF(icount==1)WRITE(11,*) 'Global: ', dergl(1), ' ', dergl(2)
+            IF(icount==1)WRITE(11,*) 'Label: ', label(1), ' ', label(2)
+            IF(icount==1)WRITE(11,*) 'Hit: ', yhits(i)
+            IF(icount==1)WRITE(11,*) 'Sigma: ', sigma(i)
+            IF(icount==1)WRITE(11,*) ''
+
             nthits=nthits+1  ! count hits
         END DO
         CALL endle
