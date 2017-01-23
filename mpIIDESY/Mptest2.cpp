@@ -79,6 +79,15 @@
 
 using namespace std; 
 
+//// -- Initialising logger staff -- ///
+//add logger methods here
+const unsigned int logLevel = 4; // DEBUG
+//Logger l; XXX 
+//Logger l (logLevel); 
+
+
+
+
 //////----Variable Intialisation-------///////////
 
 //XXX Model type (see above)
@@ -123,8 +132,8 @@ float sigma[nmlyr];    // measurement sigma (hit)
 // Structure to contain data of a generated line, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
 struct Line_data {
     int hit_count;
-    vector<float> x_hits;
-    //vector<float> y_hits;
+    //vector<float> x_hits;
+    vector<float> y_hits;
     vector<float> hit_sigmas;
     //vector<float> y_drifts;
     vector<int> i_hits;
@@ -306,13 +315,13 @@ int main(){
     } //end of constraints
 
     //record loop  TODO put this into genlin2
-    //int ncount = 10000; XXX
-    int ncount = 2;
+    int ncount = 10000; // = number of generated tracks 
+    //int ncount = 2;  XXX for debug // = number of generated tracks 
     int nthits = 0;
     int nrecds=0;
 
     //Generating particles with energies: 10..100 Gev
-    for (int icount=1; icount<ncount; icount++){
+    for (int icount=1; icount<=ncount; icount++){
         float p=pow(10.0, 1+uniform_dist(uniform_generator));
         //the0=sqrt(thck)*0.014/p
 
@@ -322,7 +331,7 @@ int main(){
         //XXX HACK!!!
         nhits = 10;
 
-        for (int i=1; i<nhits; i++){
+        for (int i=1; i<=nhits; i++){
             //simple straight line
             int lyr = ihits[i]/nmxy+1;
             int im = ihits[i]%nmxy;
