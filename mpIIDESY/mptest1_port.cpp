@@ -45,23 +45,24 @@ struct Line_data {
 	vector<int> i_hits;
 };
 
-// Random number generators and distributions, for uniform and gaussian distribution
-
+// Random devices for seeding
 random_device uniform_device;
 random_device gaus_device;
 
+// Distributions for random numbers
 uniform_real_distribution<float> uniform_dist(0.0, 1.0);
 normal_distribution<float> gaus_dist(0.0, 1.0);
 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 Line_data genlin() {
 
+	// Get sequences of seeds for random number generation
 	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
 	seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
 
+	// Set up Marsenne Twister random number generators with seeds
 	mt19937 uniform_generator(uniform_seeds);
 	mt19937 gaus_generator(gaus_seeds);
-
 
 	// Set up new container for track data, with hit count set to zero
 	Line_data line;
@@ -121,14 +122,16 @@ Line_data genlin() {
 
 int main() {
 
+	// Get sequences of seeds for random number generation
 	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
 	seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
 
+	// Set up Marsenne Twister random number generators with seeds
 	mt19937 uniform_generator(uniform_seeds);
 	mt19937 gaus_generator(gaus_seeds);
 
 	// Name and properties of binary output file
-	string binary_file_name = "mp2tst.bin_c";
+	string binary_file_name = "mp2tst1_c.bin";
 	bool as_binary = true;
 	bool write_zero = false;
 
@@ -136,9 +139,9 @@ int main() {
 	Mille m (binary_file_name.c_str(), as_binary, write_zero);
 
 	// Names of constraint and steering files
-	string constraint_file_name = "mp2con.txt";
-	string steering_file_name = "mp2str.txt";
-	string true_params_file_name = "mp2test1_true_params.txt";
+	string constraint_file_name = "mp2test1con_c.txt";
+	string steering_file_name = "mp2test1str_c.txt";
+	string true_params_file_name = "mp2test1_true_params_c.txt";
 
 	cout << "" << endl;
 	cout << "Generating test data for mp II..." << endl;
@@ -159,16 +162,8 @@ int main() {
 
 	}
 
-	// Print plane labels, and plane displacements to file
-	for (int i=0; i<plane_count; i++) 
-		true_params_file << 10 + (2 * (i + 1)) << " " << -plane_pos_devs[i] << endl;
 
 	true_params_file << endl; // Insert blank line
-
-	// Print drift velocity labels, and drift velocity displacements to file.
-	for (int i=0; i<plane_count; i++) 
-		true_params_file << 500 + i + 1 << " " << -drift_vel_devs[i] << endl; 
-
 
 	// To constrain measurement
 	plane_pos_devs[9] = 0.0;
@@ -178,6 +173,13 @@ int main() {
 	true_plane_effs[6] = 0.1;
 	true_meas_sigmas[6] = 0.0400;
 	
+	// Print plane labels, and plane displacements to file
+	for (int i=0; i<plane_count; i++) 
+		true_params_file << 10 + (2 * (i + 1)) << " " << -plane_pos_devs[i] << endl;
+	// Print drift velocity labels, and drift velocity displacements to file.
+	for (int i=0; i<plane_count; i++) 
+		true_params_file << 500 + i + 1 << " " << -drift_vel_devs[i] << endl; 
+
 
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {
@@ -189,9 +191,9 @@ int main() {
 
 		steering_file << "*            Default test steering file" << endl
 					  << "fortranfiles ! following bin files are fortran" << endl
-					  << "mp2con.txt   ! constraints text file " << endl
+					  << "mp2test1con_c.txt   ! constraints text file " << endl
 					  << "Cfiles       ! following bin files are Cfiles" << endl
-					  << "mp2tst.bin   ! binary data file" << endl
+					  << "mp2tst1_c.bin   ! binary data file" << endl
 					  << "*hugecut 50.0     !cut factor in iteration 0" << endl
 					  << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
 					  << "*entries  10 ! lower limit on number of entries/parameter" << endl
@@ -255,6 +257,8 @@ int main() {
 	// Iterate over number of tracks
 	for (int i=0; i<track_count; i++) {
 
+		if (i==0) true_params_file << endl;
+
 		// Simulate track, and get data
 		Line_data generated_line = genlin();
 		
@@ -274,6 +278,17 @@ int main() {
 			// Write to binary file.
 			m.mille(2, local_derivs, 2, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
 
+			if (i==0) {
+				true_params_file << "Hit " << j << endl 
+								 << "Local: " << local_derivs[0] << " " << local_derivs[1] << endl
+								 << "Global: " << global_derivs[0] << " " << global_derivs[1] << endl
+								 << "Label: " << labels[0] << " " << labels[1] << endl
+								 << "Hit: " << generated_line.y_hits[j] << endl
+								 << "Sigma: " << generated_line.hit_sigmas[j] << endl << endl;
+
+			}
+				
+
 			all_hit_count++; // Increment total number of recorded hits
 
 		}
@@ -289,6 +304,7 @@ int main() {
 	cout << all_record_count << " records written." << endl;
 	cout << " " << endl; 
 
+	// Close text files
 	constraint_file.close();
 	steering_file.close();
 	true_params_file.close();

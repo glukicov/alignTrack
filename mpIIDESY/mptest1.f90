@@ -31,6 +31,7 @@
 !! - Relative drift velocity corrections (calibration).
 
 
+
 !> Parameters and data.
 MODULE mptest1
     USE mpdef
@@ -132,6 +133,8 @@ SUBROUTINE mptest
     IF(.NOT.ex2) OPEN(UNIT=9,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2con.txt')
     OPEN(UNIT=51,ACCESS='SEQUENTIAL',FORM='UNFORMATTED', FILE='mp2tst.bin')
+    OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test1_true_params_fortran.txt')
 
     DO i=1,nplan
         eff(i)=effp          ! plane efficiency
@@ -153,6 +156,16 @@ SUBROUTINE mptest
     END DO
     del(10)=0.0                      ! no shift
     del(90)=0.0                      ! no shift
+
+    DO i=1, nplan
+       WRITE(11,*) 10+i*2, ' ', -del(i)
+    END DO
+
+    WRITE(11,*) ' '
+
+    DO i=1, nplan
+       WRITE(11,*) 500+i, ' ', -dvd(i)
+    END DO
 
     !     write text files -------------------------------------------------
 
@@ -250,6 +263,9 @@ SUBROUTINE mptest
 
     DO icount=1,ncount
         ip=0
+
+        if(icount == 1) WRITE(11,*) ''
+
         IF(icount == 8759) ip=1
         !       IF(ICOUNT.EQ.6309) IP=1
         !       IF(ICOUNT.EQ.7468) IP=1
@@ -262,7 +278,17 @@ SUBROUTINE mptest
             dergl(2)=ydrft(i)
             label(1)=10+ihits(i)*2
             label(2)=500 + ihits(i)
+
             CALL mille(2,derlc,2,dergl,label,yhits(i),sigma(i))
+            
+            IF(icount==1) WRITE(11,*) 'Hit: ', i
+            IF(icount==1)WRITE(11,*) 'Local: ', derlc(1), ' ', derlc(2)
+            IF(icount==1)WRITE(11,*) 'Global: ', dergl(1), ' ', dergl(2)
+            IF(icount==1)WRITE(11,*) 'Label: ', label(1), ' ', label(2)
+            IF(icount==1)WRITE(11,*) 'Hit: ', yhits(i)
+            IF(icount==1)WRITE(11,*) 'Sigma: ', sigma(i)
+            IF(icount==1)WRITE(11,*) ''
+
             nthits=nthits+1  ! count hits
         END DO
         CALL endle
