@@ -1,7 +1,7 @@
 // TODOs: 
-// 0) get simple case working: nhits not incimentig correctly via genline2() 
+// 0) get simple case working: hitsN not incimentig correctly via genline2()
 // 0.5) add logger 
-// 1) rename variables to something more sensible.
+// 1) rename variables to something more sensible, and replace from Line_data. 
 // 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <].
 // 3) add x [i=0], generate .bin file from Fortran for simplest case and compare.
 // 4) extend to broken-lines, scattering etc.
@@ -30,16 +30,16 @@
 !! - \c SLE: Ignore correlations due to multiple scattering, use only diagonal of
 !!   m.s. covariance matrix. Fit 4 track parameters.
 !! - \c BP: Intoduce explicit scattering angles at each scatterer.
-!!   Fit 4+2*(\ref mptest2::nmlyr "nmlyr"-2) parameters.
+!!   Fit 4+2*(\ref mptest2::layerN "layerN"-2) parameters.
 !!   Matrix of corresponding linear equation system is full and solution
 !!   is obtained by inversion (time ~ parameters^3).
 !! - \c BRLF: Use (fine) broken lines (see \ref ref_sec). Multiple scattering kinks
 !!   are described by triplets of offsets at scatterers as track parameters.
-!!   Fit 4+2*(\ref mptest2::nmlyr "nmlyr"-2) parameters. Matrix of corresponding
+!!   Fit 4+2*(\ref mptest2::layerN "layerN"-2) parameters. Matrix of corresponding
 !!   linear equation system has band structure and solution
 !!   is obtained by root-free Cholesky decomposition (time ~ parameters).
 !! - \c BRLC: Use (coarse) broken lines. Similar to \c BRLF, but with stereo layers
-!!   combined into single layer/scatterer. Fit 4+2*(\ref mptest2::nlyr "nlyr"-2) parameters.
+!!   combined into single layer/scatterer. Fit 4+2*(\ref mptest2::detectorN "detectorN"-2) parameters.
 !!
 !! MC for simple silicon strip tracker:
 !! - 10 silicon detector layers
@@ -89,9 +89,8 @@ const unsigned int logLevel = 4; // DEBUG
 
 
 //////----Variable Intialisation-------///////////
-
-//XXX Model type (see above)
-int imodel = 0; 
+int imodel = 0;  //XXX Model type (see above)
+int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX 
 
 //arguments for Mille constructor:
 const char* outFileName = "Mptest2.bin";
@@ -99,103 +98,53 @@ bool asBinary = true;
 bool writeZero = false;
 string conFileName = "Mp2con.txt";
 string strFileName = "Mp2str.txt";
+//output ROOT file
+TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
 
 ///initialsing physics varibles
-const int nlyr = 10; //number of detector layers
-const int nmlyr = nlyr; //number of measurement layers   //why 14 is to do with stereo-angles for 1,4,7,10
-//const int nmx = 10; //number of modules in x direction
-const int nmy = 1; //number of modules in y direction   //total 50 modules nmx * nmy = 50
+const int detectorN = 10; //number of detector layers
+const int layerN = 14; //number of measurement layers   //XXX why 14 is to do with stereo-angles for 1,4,7,10
+const int moduleXN = 10; //number of modules in x direction
+const int moduleYN = 5; //number of modules in y direction   //total 50 modules moduleXN * moduleYN = 50
 
-const int ntot=nlyr*nmy; //total number of modules
+const int modulesTotalN=detectorN*moduleYN*moduleXN; //total number of modules
 //  define detector geometry
-float dets= 10.0; // arclength of first plane
-float diss= 10.0; // distance between planes //cm / Pede works in cm
-float thck= 0.02; //thickness of plane (X0)
-//float offs=  0.5;  // offset of stereo modules
-//float stereo=0.08727;  // stereo angle
-float sizel= 20.0; //size of layers  //cm 
-float sigl =0.002;  // <resolution  // 20um = 0.002 cm 
+float arcLength_Plane1= 10.0; // arclength of first plane
+float planeDistance= 10.0; // distance between planes //cm / Pede works in cm
+float width= 0.02; //thickness/width of plane (X0)
+float offset=  0.5;  // offset of stereo modules
+float stereoTheta=0.08727;  // stereo angle
+float layerSize= 20.0; //size of layers  //cm 
+float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
 
-int nhits = 0; // number of hits  //XXX is this passed as argument 
-//float the0 = 0; // multiple scattering error
-int islyr[nmlyr];// (detector) layer
-int ihits[nmlyr]; // module number
-//float sdevx[ntot];// shift in x (alignment parameter)
-float sdevy[ntot] ; //shift in y (alignment GLOBAL parameter)
-float sarc[nmlyr];  // arc length
-float ssig[nmlyr];   //resolution
-float spro[1][nmlyr]; //projection of measurent direction in (Y) [change 1-> for XY]
-//float xhits[nmlyr];   //position perp. to plane (hit)
-float yhits[nmlyr];    //measured position in plane (hit)
-float sigma[nmlyr];    // measurement sigma (hit)
+//int hitsN = 0; // number of hits  //XXX passed from genlin2(hit_count)
+float scatterError = 0; // multiple scattering error
+int layer[layerN];// (detector) layer
+//int moduleN[layerN]; // module number //XXX passed from genlin2(i_hits)
+float sdevX[modulesTotalN];// shift in x (alignment parameter)
+float sdevY[modulesTotalN] ; //shift in y (alignment GLOBAL parameter)
+float arcLength[layerN];  // arc length
+float resolutionLayer[layerN];   //resolution
+float projection[2][layerN]; //projection of measurent direction in (XY)
+//float hitsX[layerN];   //position perp. to plane (hit) //XXX passed from genlin2(x_hits)
+//float hitsY[layerN];    //measured position in plane (hit)  //XXX passed from genlin2(y_hits)
+//float sigma[layerN];    // measurement sigma (hit) //XXX passed from genlin2(hit_sigmas)
 
 // Structure to contain data of a generated line, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
 struct Line_data {
-    int hit_count;
-    //vector<float> x_hits;
-    vector<float> y_hits;
-    vector<float> hit_sigmas;
-    //vector<float> y_drifts;
-    vector<int> i_hits;
+    int hit_count;  // number of hits
+    vector<float> x_hits;
+    vector<float> y_hits; 
+    vector<float> hit_sigmas; // measurment sigma 
+    vector<int> i_hits;   //mdoule number 
 };
 
-// Random number generators and distributions, for uniform and gaussian distribution
-default_random_engine uniform_generator;
-default_random_engine gaus_generator;
-uniform_real_distribution<float> uniform_dist(0.0,1.0);
+// Random devices for seeding
+random_device uniform_device;
+random_device gaus_device;
+// Distributions for random numbers
+uniform_real_distribution<float> uniform_dist(0.0, 1.0);
 normal_distribution<float> gaus_dist(0.0, 1.0);
-
-
-///////----------Function Defenition--------------------- ///// 
-//Source code for genlin courtesy of John. 
-// Function to simulate a linear track through the detector, returning data about detector hits.
-
-Line_data genlin2() {
-
-    // Set up new container for track data, with hit count set to zero
-    Line_data line;
-    line.hit_count = 0;
-
-    // Track parameters for rand-generated line
-    float ynull = sizel * (uniform_dist(uniform_generator)*0.5); //uniform vertex 
-    float yexit = sizel * (uniform_dist(uniform_generator)*0.5); //uniform exit point: so fitting a line to these two points
-    float yslop=(yexit-ynull)/sarc[nmlyr];
-
-    nhits=0;
-    float y = ynull;
-    float dy = yslop;
-    float sold = 0.0; 
-    
-    for(int i=0; i<nmlyr; i++){
-        float ds = sarc[i] - sold;
-        sold = sarc[i];
-
-        //position with parameters 1. hit
-        float ys=ynull+sarc[i]*yslop;
-        //true track position
-        y=y+dy*ds;
-
-        float imy=int(y+sizel*0.5)/sizel*float(nmy);
-
-        if (imy < 0. || imy >= nmy) continue;
-
-        float ihit = ((i-1)*nmy+imy);
-        int ioff=((islyr[i]-1)*nmy+imy)+1;
-        nhits++;
-        ihits[nhits]=ihit;
-        float yl=y-sdevy[ioff];
-        yhits[nhits]=(yl-ys)*spro[1][i]+gaus_dist(gaus_generator)*ssig[i];
-        sigma[nhits]=ssig[i];
-
-    }// end of looping over detector layers
-    
-    //101 FORMAT(3I3,5F8.4) TODO 
-
-    return line; // Return data from simulated track
-
-} // end of genlin2
-
-
 
 
 /////************MAIN***************/////////////
@@ -209,11 +158,18 @@ int main(){
     cout << "   $      $ "<< endl;
     cout << "     $ $ $ "<< endl;
     cout << "" << endl; 
-       
+
+    // Get sequences of seeds for random number generation
+    seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
+    seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
+
+    // Set up Marsenne Twister random number generators with seeds
+    mt19937 uniform_generator(uniform_seeds);
+    mt19937 gaus_generator(gaus_seeds);
+     
    // Creating .bin, steering, constrating and ROOT files here:
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
      // Book histograms
-    TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
     TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
 
     cout << "" << endl;
@@ -224,26 +180,26 @@ int main(){
     ofstream constraint_file(conFileName);
     ofstream steering_file(strFileName);
     
-    float s=dets;
+    float s=arcLength_Plane1;
     int i_counter = 0;
     float sgn = 1.0;
 
     for (int layer=1; layer<10; layer++){
         i_counter++;
-        islyr[i_counter] = layer;  // layer
-        sarc[i_counter] = s;  //arclength
-        ssig[i_counter] = sigl; //resolution
-        spro[1][i_counter]=1.0;  // y
-        s=s+diss;  // incrimenting distance between detecors 
+        layer[i_counter] = layer;  // layer
+        arcLength[i_counter] = s;  //arclength
+        resolutionLayer[i_counter] = resolution; //resolution
+        projection[1][i_counter]=1.0;  // y
+        s=s+planeDistance;  // incrimenting distance between detecors 
     }  // end of looping over layers
 
     //Now misaligning detecors
     float dispym = 0.01; // module displacement in Y .05 mm * N(0,1)
 
-    //so we are only displacing 9/10 dets.? XXX
-    for (int i=0; i<nlyr-1; i++){
-        for(int k=0; k<=nmy-1; k++){
-            sdevy[(i*nmy+k)+1] = dispym * uniform_dist(uniform_generator);          
+    //so we are only displacing 9/10 detectors? XXX
+    for (int i=0; i<detectorN-1; i++){
+        for(int k=0; k<=moduleYN-1; k++){
+            sdevY[(i*moduleYN+k)+1] = dispym * uniform_dist(uniform_generator);          
         } // end of number of modules in y 
     } // end of layers
 
@@ -291,7 +247,7 @@ int main(){
         << "end ! optional for end-of-data"<< endl;
     } 
 
-    int nmxy = nmy; 
+    int moduleXNy = moduleYN; // TODO fix variable name  
     if (constraint_file.is_open()) {
         cout << "" << endl;
         cout << "Writing Constraint File" << endl;
@@ -301,13 +257,13 @@ int main(){
        
         int lunt = 9;
         float one = 1.0;
-        for (int i = 1; i <= nlyr; i=i+(nlyr-1)){  //XXX 
+        for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX 
         constraint_file << "Constraint 0.0" << endl;
             //TODO fix contstrain file output
-            for (int k=0; k<=nmy-1; k++){
-                int labelt=(i*nmy+k)+1000-1;
+            for (int k=0; k<=moduleYN-1; k++){
+                int labelt=(i*moduleYN+k)+1000-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevy[(i-1)*nmy+k]=0.0;      // fix center modules at 0.
+                sdevY[(i-1)*moduleYN+k]=0.0;      // fix center modules at 0.
             } // end of y loop
         } // end of detecors loop 
 
@@ -323,31 +279,31 @@ int main(){
     //Generating particles with energies: 10..100 Gev
     for (int icount=1; icount<=ncount; icount++){
         float p=pow(10.0, 1+uniform_dist(uniform_generator));
-        //the0=sqrt(thck)*0.014/p
+        //scatterError=sqrt(width)*0.014/p
 
         //Generating hits
         Line_data generated_line = genlin2();
 
         //XXX HACK!!!
-        nhits = 10;
+        hitsN = 10;
 
-        for (int i=1; i<=nhits; i++){
+        for (int i=1; i<=hitsN; i++){
             //simple straight line
-            int lyr = ihits[i]/nmxy+1;
-            int im = ihits[i]%nmxy;
+            int lyr = moduleN[i]/moduleXNy+1;
+            int im = moduleN[i]%moduleXNy;
             //const int nalc = 4; // XXX  number of LC paremeters? 
             const int nalc = 2; // XXX  number of LC paremeters? 
-            //only xhits? XXX see line 320 fix this 
+            //only hitsX? XXX see line 320 fix this 
            
-            float derlc[nalc] = {spro[1][lyr], yhits[i]*spro[1][lyr]};
+            float derlc[nalc] = {projection[1][lyr], hitsY[i]*projection[1][lyr]};
             const int nagl = 2;
-            float dergl[nagl] = {spro[1][lyr], spro[1][lyr]}; //XXX
-            int label[nalc] = {im+nmxy*islyr[lyr], im+nmxy*islyr[lyr]+1000};
+            float dergl[nagl] = {projection[1][lyr], projection[1][lyr]}; //XXX
+            int label[nalc] = {im+moduleXNy*layer[lyr], im+moduleXNy*layer[lyr]+1000};
             //add multiple scattering errors later XXX
 
             if (imodel == 1){
-                for (int j=1; j<nhits; j++){
-                    sigma[j] = sqrt(pow(sigma[j],2) + pow(yhits[j]-yhits[i],2));  //XXX 
+                for (int j=1; j<hitsN; j++){
+                    sigma[j] = sqrt(pow(sigma[j],2) + pow(hitsY[j]-hitsY[i],2));  //XXX 
                 }
             }
 
@@ -364,7 +320,7 @@ int main(){
             cout << "label2= " << sigma[2] << endl; 
             #endif 
 
-            m.mille(nalc, derlc, nagl, dergl, label, yhits[i], sigma[i]);
+            m.mille(nalc, derlc, nagl, dergl, label, hitsY[i], sigma[i]);
             nthits++; //count hits
         } // end of hits loop
 
@@ -390,3 +346,82 @@ int main(){
     file->Close(); //good habit! 
     return 0; 
 } //end of main 
+
+
+///////----------Function Defenition--------------------- ///// 
+//Source code for genlin courtesy of John. 
+// Function to simulate a linear track through the detector, returning data about detector hits.
+
+Line_data genlin2() {
+
+    // Get sequences of seeds for random number generation
+    seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
+    seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
+
+    // Set up Mersenne Twister random number generators with seeds
+    mt19937 uniform_generator(uniform_seeds);
+    mt19937 gaus_generator(gaus_seeds);
+
+    // Set up new container for track data, with hit count set to zero
+    Line_data line;
+    line.hit_count = 0;
+
+    // Track parameters for rand-generated line
+    float x_0 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform vertex
+    float y_0 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform vertex 
+    float x_1 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform exit point: so fitting a line to these two points
+    float y_1 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform exit point: 
+    float x_slope=(x_1-x_1)/arcLength[layerN];
+    float y_slope=(y_1-y_0)/arcLength[layerN];
+
+    if (ip =! 0){
+        cout << "" << endl;
+        cout << "Track: " << x_0 <<  y_0 << x_slope << y_slope << endl;
+    }
+
+    
+    float x = x_0;
+    float dx = x_slope;
+    float y = y_0;
+    float dy = y_slope;
+    float sold = 0.0;  // XXX ??? 
+    
+    for(int i=0; i<=layerN; i++){
+        float ds = arcLength[i] - sold;
+        sold = arcLength[i];
+
+        //position with parameters 1. hit
+        float xs=x_0 + arcLength[i] * x_slope;
+        float ys=y_0 + arcLength[i] * y_slope;
+        
+        //true track position
+        x=x+dx*ds;
+        y=y+dy*ds;
+
+        //multiple scattering
+        dx = dx+ gaus_dist(gaus_generator) * scatterError;
+        dy = dy+ gaus_dist(gaus_generator) * scatterError;
+
+        // TODO understand purpose of this part properly 
+        float imx=int(x+layerSize*0.5)/layerSize*float(moduleXN);
+        if (imx < 0. || imx >= moduleXN) continue;
+        float imy=int(y+layerSize*0.5)/layerSize*float(moduleYN);
+        if (imy < 0. || imy >= moduleYN) continue;      
+
+        
+        line.i_hits = ((i-1)*moduleYN+imy)*moduleXN;
+        int ioff=((layer[i]-1)*moduleYN+imy)+1;
+        line.hit_count++;
+        moduleN[hitsN]=ihit;
+        float yl=y-sdevY[ioff];
+        hitsY[hitsN]=(yl-ys)*projection[1][i]+gaus_dist(gaus_generator)*resolutionLayer[i];
+        sigma[hitsN]=resolutionLayer[i];
+
+    }// end of looping over detector layers
+    
+    //101 FORMAT(3I3,5F8.4) XXX
+
+    return line; // Return data from simulated track
+
+} // end of genlin2
+

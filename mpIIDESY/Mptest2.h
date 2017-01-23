@@ -1,7 +1,7 @@
 #ifndef MPTEST2
 #define MPTEST2
 
-//TODO some includes might be redundant
+//TODO some includes might be redundant  
 #include "Mille.h"
 #include "Mille.cc"
 #include <iostream>
@@ -18,7 +18,7 @@
 #include <TFile.h> // data records for ROOT 
 #include <TRandom3.h> // rnd generator class for ROOT
 
-std::vector<float> genlin2(int&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
+std::vector<float> genlin2(int&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
 
 int main();
 
