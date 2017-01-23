@@ -1,8 +1,9 @@
 // TODOs: 
-// 0) get simple case working 
-// 1) rename variables to something more sensible 
-// 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <]
-// 3) add x [i=0], generate .bin file from Fortran for simplest case and compare
+// 0) get simple case working: nhits not incimentig correctly via genline2() 
+// 0.5) add logger 
+// 1) rename variables to something more sensible.
+// 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <].
+// 3) add x [i=0], generate .bin file from Fortran for simplest case and compare.
 // 4) extend to broken-lines, scattering etc.
 
 /*
@@ -74,6 +75,7 @@
 **/
 
 #include "Mptest2.h"
+#include "Logger.cc" //XXX - need to specicfy debug level and ouput file 
 
 using namespace std; 
 
@@ -304,7 +306,8 @@ int main(){
     } //end of constraints
 
     //record loop  TODO put this into genlin2
-    int ncount = 10000;
+    //int ncount = 10000; XXX
+    int ncount = 2;
     int nthits = 0;
     int nrecds=0;
 
@@ -315,6 +318,9 @@ int main(){
 
         //Generating hits
         Line_data generated_line = genlin2();
+
+        //XXX HACK!!!
+        nhits = 10;
 
         for (int i=1; i<nhits; i++){
             //simple straight line
@@ -331,14 +337,25 @@ int main(){
             //add multiple scattering errors later XXX
 
             if (imodel == 1){
-                for (int j=1; i<nhits; i++){
+                for (int j=1; j<nhits; j++){
                     sigma[j] = sqrt(pow(sigma[j],2) + pow(yhits[j]-yhits[i],2));  //XXX 
                 }
             }
 
             //add break points multiple scattering later XXX
-            
-            m.mille(2, derlc, 2, dergl, label, yhits[i], sigma[i]);
+           
+            #if 0
+            cout << "derlc1= " << derlc[1] << endl; 
+            cout << "derlc2= " << derlc[2] << endl; 
+            cout << "dergl1= " << dergl[1] << endl; 
+            cout << "dergl2= " << dergl[2] << endl; 
+            cout << "label1= " << label[1] << endl; 
+            cout << "label2= " << label[2] << endl;
+            cout << "sigma= " << sigma[1] << endl; 
+            cout << "label2= " << sigma[2] << endl; 
+            #endif 
+
+            m.mille(nalc, derlc, nagl, dergl, label, yhits[i], sigma[i]);
             nthits++; //count hits
         } // end of hits loop
 
@@ -346,6 +363,7 @@ int main(){
 
         //IF (imodel >= 3) THEN
 
+        cout << "Recored passed to bin file" << endl; 
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         nrecds++; // count records;
 
