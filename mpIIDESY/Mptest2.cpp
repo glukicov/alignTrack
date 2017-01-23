@@ -294,11 +294,10 @@ int main(){
             //const int nalc = 4; // XXX  number of LC paremeters? 
             const int nalc = 2; // XXX  number of LC paremeters? 
             //only hitsX? XXX see line 320 fix this 
-           
-            float derlc[nalc] = {projection[1][lyr], hitsY[i]*projection[1][lyr]};
+            derlc[nalc] = {projection[1][lyr], hitsY[i]*projection[1][lyr]}; ///XXX
             const int nagl = 2;
-            float dergl[nagl] = {projection[1][lyr], projection[1][lyr]}; //XXX
-            int label[nalc] = {im+moduleXNy*layer[lyr], im+moduleXNy*layer[lyr]+1000};
+            dergl[nagl] = {projection[1][lyr], projection[1][lyr]}; //XXX  
+            label[nalc] = {im+moduleXNy*layer[lyr], im+moduleXNy*layer[lyr]+1000};  ///XXX
             //add multiple scattering errors later XXX
 
             if (imodel == 1){
@@ -378,7 +377,6 @@ Line_data genlin2() {
         cout << "" << endl;
         cout << "Track: " << x_0 <<  y_0 << x_slope << y_slope << endl;
     }
-
     
     float x = x_0;
     float dx = x_slope;
@@ -409,14 +407,22 @@ Line_data genlin2() {
         if (imy < 0. || imy >= moduleYN) continue;      
 
         
-        line.i_hits = ((i-1)*moduleYN+imy)*moduleXN;
-        int ioff=((layer[i]-1)*moduleYN+imy)+1;
-        line.hit_count++;
-        moduleN[hitsN]=ihit;
+        int ihit= ((i)*moduleYN+imy)*moduleXN; // XXX i from 0 to 14
+        int ioff=((layer[i]-1)*moduleYN+imy)*moduleXN*imx+1;
+        //line.i_hits.push_back(ihit);
+        line.i_hits.push_back(i); //XXX which one do we need?
+        float xl=x-sdevX[ioff];
         float yl=y-sdevY[ioff];
-        hitsY[hitsN]=(yl-ys)*projection[1][i]+gaus_dist(gaus_generator)*resolutionLayer[i];
-        sigma[hitsN]=resolutionLayer[i];
+        line.x_hits.push_back(arcLength[i]);
+        line.y_hits.push_back((xl-xs)*projection[1][i]+(yl-ys)*projection[2][i]+gaus_dist(gaus_generator)*resolutionLayer[i]);
+        line.hit_sigmas.push_back(resolutionLayer[i]);
+        line.hit_count++;
 
+
+        if (ip =! 0){
+            cout << "" << endl;
+            cout << "Generated Line data: " <<   line.hit_sigmas[i] <<  ine.x_hits[i] << ine.y_hits[i] << ine.hit_sigmas[i] << endl;
+        }
     }// end of looping over detector layers
     
     //101 FORMAT(3I3,5F8.4) XXX
