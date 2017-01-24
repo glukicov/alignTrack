@@ -123,10 +123,15 @@ Line_data genlin() {
 int main() {
 
 	cout << endl;
-	cout << "***********************************" << endl;
-	cout << "*            MPTEST 1             *" << endl;
-	cout << "***********************************" << endl;
-		
+	cout << "********************************************" << endl;
+	cout << "*                 MPTEST 1                 *" << endl;
+	cout << "********************************************" << endl;
+	cout << endl;
+	cout << "    _____________________________  \\  /" << endl;
+	cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
+    cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl << endl; 
+
+
 
 	// Get sequences of seeds for random number generation
 	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
