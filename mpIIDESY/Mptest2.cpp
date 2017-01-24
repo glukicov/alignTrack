@@ -86,11 +86,10 @@ const unsigned int logLevel = 4; // DEBUG
 //Logger l (logLevel); 
 
 
-
-
 //////----Variable Intialisation-------///////////
 int imodel = 0;  //XXX Model type (see above)
-int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX 
+int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX
+int track_count = 10000; // = number of generated tracks (recods) ///XXX
 
 //arguments for Mille constructor:
 const char* outFileName = "Mptest2.bin";
@@ -113,7 +112,7 @@ float arcLength_Plane1= 10.0; // arclength of first plane
 float planeDistance= 10.0; // distance between planes //cm / Pede works in cm
 float width= 0.02; //thickness/width of plane (X0)
 float offset=  0.5;  // offset of stereo modules
-float stereoTheta=0.08727;  // stereo angle
+float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
 float layerSize= 20.0; //size of layers  //cm 
 float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
 
@@ -182,24 +181,42 @@ int main(){
     
     float s=arcLength_Plane1;
     int i_counter = 0;
-    float sgn = 1.0;
+    float sign = 1.0;
 
-    for (int layer=1; layer<10; layer++){
+    // Geometry of detecor arrangement 
+    for (int layer_i=1; layer_i<=10; layer_i++){
         i_counter++;
-        layer[i_counter] = layer;  // layer
+        layer[i_counter] = layer_i;  // layer
         arcLength[i_counter] = s;  //arclength
         resolutionLayer[i_counter] = resolution; //resolution
-        projection[1][i_counter]=1.0;  // y
+        projection[1][i_counter]=1.0;  // x
+        projection[2][i_counter]=0.0;  // y
+        //taking care of stereo modules
+        if ((layer % 3) == 1){
+            i_counter++;
+            layer[i_counter] = layer_i;  // layer
+            arcLength[i_counter] = s+offset;  //arclength
+            resolutionLayer[i_counter] = resolution; //resolution
+            projection[1][i_counter]=sqrt(1.0-pow(stereoTheta,2));  // x
+            projection[2][i_counter]=stereoTheta*sign;  // y
+            sign=-sign;
+        }
         s=s+planeDistance;  // incrimenting distance between detecors 
     }  // end of looping over layers
 
+    // XXX: definition of broken lines here in the future
+
     //Now misaligning detecors
-    float dispym = 0.01; // module displacement in Y .05 mm * N(0,1)
+    float dispX = 0.01; // module displacement in Y .05 mm * N(0,1)
+    float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
 
     //so we are only displacing 9/10 detectors? XXX
-    for (int i=0; i<detectorN-1; i++){
+    for (int i=0; i<=detectorN-1; i++){
         for(int k=0; k<=moduleYN-1; k++){
-            sdevY[(i*moduleYN+k)+1] = dispym * uniform_dist(uniform_generator);          
+            for(int l=1, l<=moduleXN){
+                sdevX[(i*moduleYN+k)*moduleXN+l] = dispym * uniform_dist(uniform_generator); 
+                sdevY[(i*moduleYN+k)*moduleXN+l] = dispym * uniform_dist(uniform_generator);          
+            } // // end of number of modules in x
         } // end of number of modules in y 
     } // end of layers
 
@@ -212,12 +229,12 @@ int main(){
         cout << "" << endl;
 
         steering_file <<  "*            Default test steering file" << endl
-        << "Cfiles ! following bin files are C++" << endl   // XXX 
+        << "Cfiles ! following bin files are Cfiles" << endl   // XXX 
         << "Mp2con.txt   ! constraints text file " << endl
         << "Mptest2.bin   ! binary data file" << endl
-        << "Cfiles       ! following bin files are Cfiles" << endl
-        << "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
-        << "*outliersuppression 3   ! 3 local_fit iterations" << endl
+        //<< "Cfiles       ! following bin files are Cfiles" << endl
+       // << "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
+        //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
 
         << "*hugecut 50.0     !cut factor in iteration 0" << endl
         << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
@@ -247,47 +264,48 @@ int main(){
         << "end ! optional for end-of-data"<< endl;
     } 
 
-    int moduleXNy = moduleYN; // TODO fix variable name  
+    
     if (constraint_file.is_open()) {
         cout << "" << endl;
         cout << "Writing Constraint File" << endl;
         cout << "" << endl;
 
         //Evaluation of constraints
-       
+        int ncx = (nmx+1)/2; 
+        int moduleXYN = moduleXN*moduleYN; 
         int lunt = 9;
         float one = 1.0;
-        for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX 
-        constraint_file << "Constraint 0.0" << endl;
-            //TODO fix contstrain file output
+        for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX coorect implimentation of DO i=1,nlyr,nlyr-1
+            constraint_file << "Constraint 0.0" << endl;
             for (int k=0; k<=moduleYN-1; k++){
-                int labelt=(i*moduleYN+k)+1000-1;
+                int labelt=(i*moduleYN+k)*moduleXN+ncx-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevY[(i-1)*moduleYN+k]=0.0;      // fix center modules at 0.
+                sdevX[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0;      // fix center modules at 0.
             } // end of y loop
+            constraint_file << "Constraint 0.0" << endl;
+            for(int k=0; k<=moduleYN-1; k++){
+                int labelt=(i*moduleYN+k)*moduleXN+ncx+1000-1
+                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
+                sdevY[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0; // fix center modules at 0.
+            } // end of x loop
         } // end of detecors loop 
 
-
     } //end of constraints
-
-    //record loop  TODO put this into genlin2
-    int ncount = 10000; // = number of generated tracks 
-    //int ncount = 2;  XXX for debug // = number of generated tracks 
-    int nthits = 0;
-    int nrecds=0;
+  
+    //Set up counters for hits and records (tracks)
+    int hitsN = 0;
+    int recordN=0;
 
     //Generating particles with energies: 10..100 Gev
-    for (int icount=1; icount<=ncount; icount++){
+    // track_count is set manually 
+    for (int icount=1; icount<=track_count; icount++){
         float p=pow(10.0, 1+uniform_dist(uniform_generator));
-        //scatterError=sqrt(width)*0.014/p
+        scatterError=sqrt(width)*0.014/p;
 
-        //Generating hits
+        //Generating hits for N=track_count
         Line_data generated_line = genlin2();
 
-        //XXX HACK!!!
-        hitsN = 10;
-
-        for (int i=1; i<=hitsN; i++){
+        for (int i=1; i<=generated_line.hit_count; i++){
             //simple straight line
             int lyr = moduleN[i]/moduleXNy+1;
             int im = moduleN[i]%moduleXNy;
@@ -301,7 +319,7 @@ int main(){
             //add multiple scattering errors later XXX
 
             if (imodel == 1){
-                for (int j=1; j<hitsN; j++){
+                for (int j=1; j<=hitsN; j++){
                     sigma[j] = sqrt(pow(sigma[j],2) + pow(hitsY[j]-hitsY[i],2));  //XXX 
                 }
             }
@@ -335,7 +353,7 @@ int main(){
 
 
     cout << " " << endl;
-    cout << ncount << " tracks generated with " << nthits << " hits." << endl;
+    cout << track_count << " tracks generated with " << nthits << " hits." << endl;
     cout << nrecds << " records written." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl; 
