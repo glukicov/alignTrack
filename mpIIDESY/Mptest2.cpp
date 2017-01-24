@@ -1,7 +1,6 @@
 // TODOs: 
-// 0) get simple case working: hitsN not incimentig correctly via genline2()
-// 0.5) add logger 
-// 1) rename variables to something more sensible, and replace from Line_data. 
+// 0) Segmentation faul: ROOT disabled temp. to debug.
+// 1) add logger 
 // 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <].
 // 3) add x [i=0], generate .bin file from Fortran for simplest case and compare.
 // 4) extend to broken-lines, scattering etc.
@@ -75,11 +74,11 @@
 **/
 
 #include "Mptest2.h"
-#include "Logger.cc" //XXX - need to specicfy debug level and ouput file 
+//#include "Logger.cc" //XXX - need to specicfy debug level and ouput file 
 
 using namespace std; 
 
-//// -- Initialising logger staff -- ///
+//// -- Initialising logger staff -- /// 
 //add logger methods here
 const unsigned int logLevel = 4; // DEBUG
 //Logger l; XXX 
@@ -98,7 +97,7 @@ bool writeZero = false;
 string conFileName = "Mp2con.txt";
 string strFileName = "Mp2str.txt";
 //output ROOT file
-TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+//TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
 
 ///initialsing physics varibles
 const int detectorN = 10; //number of detector layers
@@ -145,224 +144,6 @@ random_device gaus_device;
 uniform_real_distribution<float> uniform_dist(0.0, 1.0);
 normal_distribution<float> gaus_dist(0.0, 1.0);
 
-
-/////************MAIN***************/////////////
-int main(){
-
-    //TODO draw a respectable-looking millipede here 
-    cout << "" << endl;
-    cout << "$            $"<< endl;
-    cout << " $          $ "<< endl;
-    cout << "  $        $ "<< endl;
-    cout << "   $      $ "<< endl;
-    cout << "     $ $ $ "<< endl;
-    cout << "" << endl; 
-
-    // Get sequences of seeds for random number generation
-    seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
-    seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
-
-    // Set up Marsenne Twister random number generators with seeds
-    mt19937 uniform_generator(uniform_seeds);
-    mt19937 gaus_generator(gaus_seeds);
-     
-   // Creating .bin, steering, constrating and ROOT files here:
-    Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-     // Book histograms
-    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
-
-    cout << "" << endl;
-    cout << "Generating test data for Mp II...";
-    cout << "" << endl; 
-
-    // fstreams for str and cons files 
-    ofstream constraint_file(conFileName);
-    ofstream steering_file(strFileName);
-    
-    float s=arcLength_Plane1;
-    int i_counter = 0;
-    float sign = 1.0;
-
-    // Geometry of detecor arrangement 
-    for (int layer_i=1; layer_i<=10; layer_i++){
-        i_counter++;
-        layer[i_counter] = layer_i;  // layer
-        arcLength[i_counter] = s;  //arclength
-        resolutionLayer[i_counter] = resolution; //resolution
-        projection[1][i_counter]=1.0;  // x
-        projection[2][i_counter]=0.0;  // y
-        //taking care of stereo modules
-        if ((layer % 3) == 1){
-            i_counter++;
-            layer[i_counter] = layer_i;  // layer
-            arcLength[i_counter] = s+offset;  //arclength
-            resolutionLayer[i_counter] = resolution; //resolution
-            projection[1][i_counter]=sqrt(1.0-pow(stereoTheta,2));  // x
-            projection[2][i_counter]=stereoTheta*sign;  // y
-            sign=-sign;
-        }
-        s=s+planeDistance;  // incrimenting distance between detecors 
-    }  // end of looping over layers
-
-    // XXX: definition of broken lines here in the future
-
-    //Now misaligning detecors
-    float dispX = 0.01; // module displacement in Y .05 mm * N(0,1)
-    float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
-
-    //so we are only displacing 9/10 detectors? XXX
-    for (int i=0; i<=detectorN-1; i++){
-        for(int k=0; k<=moduleYN-1; k++){
-            for(int l=1, l<=moduleXN){
-                sdevX[(i*moduleYN+k)*moduleXN+l] = dispym * uniform_dist(uniform_generator); 
-                sdevY[(i*moduleYN+k)*moduleXN+l] = dispym * uniform_dist(uniform_generator);          
-            } // // end of number of modules in x
-        } // end of number of modules in y 
-    } // end of layers
-
-    
-    //Now writing steering and constraint files
-    if(steering_file.is_open()){
-
-        cout << "" << endl;
-        cout<< "Writing the steering file" << endl;
-        cout << "" << endl;
-
-        steering_file <<  "*            Default test steering file" << endl
-        << "Cfiles ! following bin files are Cfiles" << endl   // XXX 
-        << "Mp2con.txt   ! constraints text file " << endl
-        << "Mptest2.bin   ! binary data file" << endl
-        //<< "Cfiles       ! following bin files are Cfiles" << endl
-       // << "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
-        //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
-
-        << "*hugecut 50.0     !cut factor in iteration 0" << endl
-        << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
-        << "*entries  10 ! lower limit on number of entries/parameter" << endl
-        <<  "" << endl 
-        <<  "*pairentries 10 ! lower limit on number of parameter pairs"  << endl
-        <<    "                ! (not yet!)"            << endl
-        << "*printrecord   1  2      ! debug printout for records" << endl
-        <<   "" << endl
-        <<    "*printrecord  -1 -1      ! debug printout for bad data records" << endl
-        <<   "" << endl
-        <<   "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
-        << "*dwfractioncut      0.2  ! 0 < value < 0.5"<< endl
-        << "*presigma           0.01 ! default value for presigma"<< endl
-        << "*regularisation 1.0      ! regularisation factor"<< endl
-        << "*regularisation 1.0 0.01 ! regularisation factor, pre-sigma"<< endl
-        << " " << endl
-        << "*bandwidth 0         ! width of precond. band matrix"<< endl
-        << "method diagonalization 3 0.001 ! diagonalization      "<< endl
-        << "method fullMINRES       3 0.01 ! minimal residual     "<< endl
-        << "method sparseMINRES     3 0.01 ! minimal residual     "<< endl
-        << "*mrestol      1.0D-8          ! epsilon for MINRES"<< endl
-        << "method inversion       3 0.001 ! Gauss matrix inversion"<< endl
-        << "* last method is applied"<< endl
-        << "*matiter      3  ! recalculate matrix in iterations" << endl
-        << " "  << endl
-        << "end ! optional for end-of-data"<< endl;
-    } 
-
-    
-    if (constraint_file.is_open()) {
-        cout << "" << endl;
-        cout << "Writing Constraint File" << endl;
-        cout << "" << endl;
-
-        //Evaluation of constraints
-        int ncx = (nmx+1)/2; 
-        int moduleXYN = moduleXN*moduleYN; 
-        int lunt = 9;
-        float one = 1.0;
-        for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX coorect implimentation of DO i=1,nlyr,nlyr-1
-            constraint_file << "Constraint 0.0" << endl;
-            for (int k=0; k<=moduleYN-1; k++){
-                int labelt=(i*moduleYN+k)*moduleXN+ncx-1;
-                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevX[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0;      // fix center modules at 0.
-            } // end of y loop
-            constraint_file << "Constraint 0.0" << endl;
-            for(int k=0; k<=moduleYN-1; k++){
-                int labelt=(i*moduleYN+k)*moduleXN+ncx+1000-1
-                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevY[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0; // fix center modules at 0.
-            } // end of x loop
-        } // end of detecors loop 
-
-    } //end of constraints
-  
-    //Set up counters for hits and records (tracks)
-    int hitsN = 0;
-    int recordN=0;
-
-    //Generating particles with energies: 10..100 Gev
-    // track_count is set manually 
-    for (int icount=1; icount<=track_count; icount++){
-        float p=pow(10.0, 1+uniform_dist(uniform_generator));
-        scatterError=sqrt(width)*0.014/p;
-
-        //Generating hits for N=track_count
-        Line_data generated_line = genlin2();
-
-        for (int i=1; i<=generated_line.hit_count; i++){
-            //simple straight line
-            int lyr = moduleN[i]/moduleXNy+1;
-            int im = moduleN[i]%moduleXNy;
-            //const int nalc = 4; // XXX  number of LC paremeters? 
-            const int nalc = 2; // XXX  number of LC paremeters? 
-            //only hitsX? XXX see line 320 fix this 
-            derlc[nalc] = {projection[1][lyr], hitsY[i]*projection[1][lyr]}; ///XXX
-            const int nagl = 2;
-            dergl[nagl] = {projection[1][lyr], projection[1][lyr]}; //XXX  
-            label[nalc] = {im+moduleXNy*layer[lyr], im+moduleXNy*layer[lyr]+1000};  ///XXX
-            //add multiple scattering errors later XXX
-
-            if (imodel == 1){
-                for (int j=1; j<=hitsN; j++){
-                    sigma[j] = sqrt(pow(sigma[j],2) + pow(hitsY[j]-hitsY[i],2));  //XXX 
-                }
-            }
-
-            //add break points multiple scattering later XXX
-           
-            #if 0
-            cout << "derlc1= " << derlc[1] << endl; 
-            cout << "derlc2= " << derlc[2] << endl; 
-            cout << "dergl1= " << dergl[1] << endl; 
-            cout << "dergl2= " << dergl[2] << endl; 
-            cout << "label1= " << label[1] << endl; 
-            cout << "label2= " << label[2] << endl;
-            cout << "sigma= " << sigma[1] << endl; 
-            cout << "label2= " << sigma[2] << endl; 
-            #endif 
-
-            m.mille(nalc, derlc, nagl, dergl, label, hitsY[i], sigma[i]);
-            nthits++; //count hits
-        } // end of hits loop
-
-        // XXX additional measurements from MS
-
-        //IF (imodel >= 3) THEN
-
-        cout << "Recored passed to bin file" << endl; 
-        m.end(); // Write buffer (set of derivatives with same local parameters) to file.
-        nrecds++; // count records;
-
-    } // end of N trials (track count)
-
-
-    cout << " " << endl;
-    cout << track_count << " tracks generated with " << nthits << " hits." << endl;
-    cout << nrecds << " records written." << endl;
-    cout << " " << endl;
-    cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl; 
-
-    //ROOT stuff
-    file->Write();
-    file->Close(); //good habit! 
-    return 0; 
-} //end of main 
 
 
 ///////----------Function Defenition--------------------- ///// 
@@ -439,7 +220,7 @@ Line_data genlin2() {
 
         if (ip =! 0){
             cout << "" << endl;
-            cout << "Generated Line data: " <<   line.hit_sigmas[i] <<  ine.x_hits[i] << ine.y_hits[i] << ine.hit_sigmas[i] << endl;
+            cout << "Generated Line data: " <<   line.hit_sigmas[i] <<  line.x_hits[i] << line.y_hits[i] << line.hit_sigmas[i] << endl;
         }
     }// end of looping over detector layers
     
@@ -449,3 +230,221 @@ Line_data genlin2() {
 
 } // end of genlin2
 
+
+
+
+/////************MAIN***************/////////////
+int main(){
+
+    //TODO draw a respectable-looking millipede here 
+    cout << "" << endl;
+    cout << "$            $"<< endl;
+    cout << " $          $ "<< endl;
+    cout << "  $        $ "<< endl;
+    cout << "   $      $ "<< endl;
+    cout << "     $ $ $ "<< endl;
+    cout << "" << endl; 
+
+    // Get sequences of seeds for random number generation
+    seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
+    seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
+
+    // Set up Marsenne Twister random number generators with seeds
+    mt19937 uniform_generator(uniform_seeds);
+    mt19937 gaus_generator(gaus_seeds);
+     
+   // Creating .bin, steering, constrating and ROOT files here:
+    Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
+     // Book histograms
+   // TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
+
+    cout << "" << endl;
+    cout << "Generating test data for Mp II...";
+    cout << "" << endl; 
+
+    // fstreams for str and cons files 
+    ofstream constraint_file(conFileName);
+    ofstream steering_file(strFileName);
+    
+    float s=arcLength_Plane1;
+    int i_counter = 0;
+    float sign = 1.0;
+
+    // Geometry of detecor arrangement 
+    for (int layer_i=1; layer_i<=10; layer_i++){
+        i_counter++;
+        layer[i_counter] = layer_i;  // layer
+        arcLength[i_counter] = s;  //arclength
+        resolutionLayer[i_counter] = resolution; //resolution
+        projection[1][i_counter]=1.0;  // x
+        projection[2][i_counter]=0.0;  // y
+        //taking care of stereo modules
+        if ((layer_i % 3) == 1){
+            i_counter++;
+            layer[i_counter] = layer_i;  // layer
+            arcLength[i_counter] = s+offset;  //arclength
+            resolutionLayer[i_counter] = resolution; //resolution
+            projection[1][i_counter]=sqrt(1.0-pow(stereoTheta,2));  // x
+            projection[2][i_counter]=stereoTheta*sign;  // y
+            sign=-sign;
+        }
+        s=s+planeDistance;  // incrimenting distance between detecors 
+    }  // end of looping over layers
+
+    // XXX: definition of broken lines here in the future
+
+    //Now misaligning detecors
+    float dispX = 0.01; // module displacement in Y .05 mm * N(0,1)
+    float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
+
+    //so we are only displacing 9/10 detectors? XXX
+    for (int i=0; i<=detectorN-1; i++){
+        for(int k=0; k<=moduleYN-1; k++){
+            for(int l=1; l<=moduleXN; l++){
+                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * uniform_dist(uniform_generator); 
+                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * uniform_dist(uniform_generator);          
+            } // // end of number of modules in x
+        } // end of number of modules in y 
+    } // end of layers
+
+    
+    //Now writing steering and constraint files
+    if(steering_file.is_open()){
+
+        cout << "" << endl;
+        cout<< "Writing the steering file" << endl;
+        cout << "" << endl;
+
+        steering_file <<  "*            Default test steering file" << endl
+        << "Cfiles ! following bin files are Cfiles" << endl   // XXX 
+        << "Mp2con.txt   ! constraints text file " << endl
+        << "Mptest2.bin   ! binary data file" << endl
+        //<< "Cfiles       ! following bin files are Cfiles" << endl
+       // << "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
+        //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
+
+        << "*hugecut 50.0     !cut factor in iteration 0" << endl
+        << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
+        << "*entries  10 ! lower limit on number of entries/parameter" << endl
+        <<  "" << endl 
+        <<  "*pairentries 10 ! lower limit on number of parameter pairs"  << endl
+        <<    "                ! (not yet!)"            << endl
+        << "*printrecord   1  2      ! debug printout for records" << endl
+        <<   "" << endl
+        <<    "*printrecord  -1 -1      ! debug printout for bad data records" << endl
+        <<   "" << endl
+        <<   "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
+        << "*dwfractioncut      0.2  ! 0 < value < 0.5"<< endl
+        << "*presigma           0.01 ! default value for presigma"<< endl
+        << "*regularisation 1.0      ! regularisation factor"<< endl
+        << "*regularisation 1.0 0.01 ! regularisation factor, pre-sigma"<< endl
+        << " " << endl
+        << "*bandwidth 0         ! width of precond. band matrix"<< endl
+        << "method diagonalization 3 0.001 ! diagonalization      "<< endl
+        << "method fullMINRES       3 0.01 ! minimal residual     "<< endl
+        << "method sparseMINRES     3 0.01 ! minimal residual     "<< endl
+        << "*mrestol      1.0D-8          ! epsilon for MINRES"<< endl
+        << "method inversion       3 0.001 ! Gauss matrix inversion"<< endl
+        << "* last method is applied"<< endl
+        << "*matiter      3  ! recalculate matrix in iterations" << endl
+        << " "  << endl
+        << "end ! optional for end-of-data"<< endl;
+    } 
+
+    int ncx = (moduleXN+1)/2; 
+    int moduleXYN=0;
+    int lunt = 9;
+    float one = 1.0;
+
+    if (constraint_file.is_open()) {
+        cout << "" << endl;
+        cout << "Writing Constraint File" << endl;
+        cout << "" << endl;
+
+        //Evaluation of constraints
+        
+        moduleXYN = moduleXN*moduleYN; 
+        
+        for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX coorect implimentation of DO i=1,nlyr,nlyr-1
+            constraint_file << "Constraint 0.0" << endl;
+            for (int k=0; k<=moduleYN-1; k++){
+                int labelt=(i*moduleYN+k)*moduleXN+ncx-1;
+                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
+                sdevX[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0;      // fix center modules at 0.
+            } // end of y loop
+            constraint_file << "Constraint 0.0" << endl;
+            for(int k=0; k<=moduleYN-1; k++){
+                int labelt=(i*moduleYN+k)*moduleXN+ncx+1000-1;
+                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
+                sdevY[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0; // fix center modules at 0.
+            } // end of x loop
+        } // end of detecors loop 
+
+    } //end of constraints
+  
+    //Set up counters for hits and records (tracks)
+    int hitsN = 0;
+    int recordN=0;
+
+    //Generating particles with energies: 10..100 Gev
+    // track_count is set manually 
+    for (int icount=0; icount<track_count; icount++){
+        float p=pow(10.0, 1+uniform_dist(uniform_generator));
+        scatterError=sqrt(width)*0.014/p;
+
+        //Generating hits for N=track_count
+        Line_data generated_line = genlin2();
+
+        for (int i=0; i<generated_line.hit_count; i++){
+            //simple straight line
+            int lyr = generated_line.i_hits[i]/moduleXYN+1;
+            int im = generated_line.i_hits[i]%moduleXYN;
+            const int nalc = 4; // XXX  number of LC paremeters? 
+            const int nagl = 2; //XXX  number of GL paremeters? 
+            
+            float dlc1=projection[1][lyr];
+            float dlc2=projection[2][lyr];
+            float dlc3=generated_line.x_hits[i]*projection[1][lyr];
+            float dlc4=generated_line.x_hits[i]*projection[2][lyr];  //XXX xhits again? 
+            float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
+            
+            float dgl1 = projection[1][lyr];
+            float dgl2 = projection[2][lyr];
+            float dergl[nagl] = {dgl1, dgl2};  
+            
+            int l1 = im+moduleXYN*layer[lyr];
+            int l2 = im+moduleXYN*layer[lyr]+1000;
+            int label[nalc] = {l1, l2};  ///XXX
+            
+            //multiple scattering errors (no correlations) (for imodel == 1)
+            //add break points multiple scattering later XXX (for imodel == 2)
+            //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
+           
+            float rMeas_mp2 =  generated_line.y_hits[i]; 
+            float sigma_mp2 = generated_line.hit_sigmas[i]; 
+
+            m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
+            hitsN++; //count hits
+        } // end of hits loop
+
+        // XXX additional measurements from MS IF (imodel == 2) THEN
+
+        //IF (imodel >= 3) THEN
+
+        cout << "Recored passed to bin file" << endl; 
+        m.end(); // Write buffer (set of derivatives with same local parameters) to file.
+        recordN++; // count records;
+    } // end of N trials (track count)
+
+
+    cout << " " << endl;
+    cout << track_count << " tracks generated with " << hitsN << " hits." << endl;
+    cout << recordN << " records written." << endl;
+    cout << " " << endl;
+    cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl; 
+
+    //ROOT stuff
+  //  file->Write();
+  //  file->Close(); //good habit! 
+    return 0; 
+} //end of main 
