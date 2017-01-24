@@ -1,8 +1,8 @@
 // TODOs: 
-// 0) Segmentation faul: ROOT disabled temp. to debug.
-// 1) add logger 
+// 0) FIX: Warning: insufficient constraint equations
+// 1) add logger from gm2trackerdaq
 // 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <].
-// 3) add x [i=0], generate .bin file from Fortran for simplest case and compare.
+// 3) add [iModel=0], generate .bin file from Fortran for simplest case and compare.
 // 4) extend to broken-lines, scattering etc.
 
 /*
@@ -98,6 +98,9 @@ string conFileName = "Mp2con.txt";
 string strFileName = "Mp2str.txt";
 //output ROOT file
 TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+ // Book histograms
+TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -0.002, 0.004); // D=double bins, name, title, nBins, Min, Max
+TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max
 
 ///initialsing physics varibles
 const int detectorN = 10; //number of detector layers
@@ -135,18 +138,15 @@ struct Line_data {
 
 
 
-
-
 ///////----------Function Defenition--------------------- ///// 
 //Source code for genlin courtesy of John. 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 
 Line_data genlin2() {
-
+   
     int seed = 123456;  //pseudorandom 
     //Mersenne Twister generator TR3 root class: 
     TRandom3* rnd = new TRandom3(seed);  // ran->Rndm(); // uniform in [0,1] TRandom::Rndm 
-    
     // Set up new container for track data, with hit count set to zero
     Line_data line;
     line.hit_count = 0;
@@ -158,8 +158,9 @@ Line_data genlin2() {
     float y_1 = layerSize * (rnd->Rndm()-0.5); //uniform exit point: 
     float x_slope=(x_1-x_1)/arcLength[layerN];
     float y_slope=(y_1-y_0)/arcLength[layerN];
+     
 
-    if (ip =! 0){
+    if (ip != 0){
         cout << "" << endl;
         cout << "Track: " << "x0= " << x_0 << " y0= " << y_0 << "x_slope = " << x_slope << "y_slope = " << y_slope << endl;
    } 
@@ -170,7 +171,7 @@ Line_data genlin2() {
     float dy = y_slope;
     float sold = 0.0;  // XXX ??? 
     
-    for(int i=0; i<=layerN; i++){
+    for(int i=0; i<layerN; i++){
         float ds = arcLength[i] - sold;
         sold = arcLength[i];
 
@@ -204,10 +205,11 @@ Line_data genlin2() {
         line.hit_sigmas.push_back(resolutionLayer[i]);
         line.hit_count++;
 
+        h_2 -> Fill(line.x_hits[i], line.y_hits[i]);
 
-        if (ip =! 0){
+        if (ip != 0){
             cout << "" << endl;
-            cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << "Y hit =" << line.y_hits[i] << endl;
+            cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << " Y hit =" << line.y_hits[i] << endl;
         }
     }// end of looping over detector layers
     
@@ -237,9 +239,7 @@ int main(){
        
    // Creating .bin, steering, constrating and ROOT files here:
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-     // Book histograms
-    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
-
+    
     cout << "" << endl;
     cout << "Generating test data for Mp II...";
     cout << "" << endl; 
@@ -283,8 +283,8 @@ int main(){
     for (int i=0; i<detectorN-1; i++){   /// XXX
         for(int k=0; k<=moduleYN-1; k++){
             for(int l=1; l<=moduleXN; l++){
-                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * ran -> Gaus(0,1); 
-                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * ran -> Gaus(0,1);          
+                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * ran -> Gaus(0,1);  //XXX where is that used in imodel=0?? 
+                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * ran -> Gaus(0,1);         
             } // // end of number of modules in x
         } // end of number of modules in y 
     } // end of layers
@@ -410,6 +410,8 @@ int main(){
             float rMeas_mp2 =  generated_line.y_hits[i]; 
             float sigma_mp2 = generated_line.hit_sigmas[i]; 
 
+            h_1 -> Fill(sigma_mp2);
+            
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
             hitsN++; //count hits
         } // end of hits loop
@@ -428,7 +430,9 @@ int main(){
     cout << track_count << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
-    cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl; 
+    cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl;
+    cout << "Sanity Plots: root -l Mptest2.root" << endl; 
+
 
     //ROOT stuff
     file->Write();
