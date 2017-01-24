@@ -7,7 +7,10 @@
  *
  **/
 
+
+
 #include "mptest1_port.h"
+
 
 using namespace std;
 
@@ -53,24 +56,21 @@ random_device gaus_device;
 uniform_real_distribution<float> uniform_dist(0.0, 1.0);
 normal_distribution<float> gaus_dist(0.0, 1.0);
 
+// Declare random number generator, with seed
+int seed = 453032763;
+TRandom3* rand_gen;
+
+
 // Function to simulate a linear track through the detector, returning data about detector hits.
 Line_data genlin() {
-
-	// Get sequences of seeds for random number generation
-	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
-	seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
-
-	// Set up Marsenne Twister random number generators with seeds
-	mt19937 uniform_generator(uniform_seeds);
-	mt19937 gaus_generator(gaus_seeds);
 
 	// Set up new container for track data, with hit count set to zero
 	Line_data line;
 	line.hit_count = 0;
 
 	// Generate random values of track intercept and gradient.
-	float y_intercept = (0.5 * plane_height) + (0.1 * plane_height * (uniform_dist(uniform_generator) - 0.5));
-	float gradient = ((uniform_dist(uniform_generator) - 0.5) * plane_height) / ((plane_count - 1) * plane_x_sep);
+	float y_intercept = (0.5 * plane_height) + (0.1 * plane_height * (rand_gen->Rndm() - 0.5));
+	float gradient = ((rand_gen->Rndm() - 0.5) * plane_height) / ((plane_count - 1) * plane_x_sep);
 	   
 	// Iterate across planes
 	for (int i=0; i < plane_count; i++) {
@@ -79,7 +79,7 @@ Line_data genlin() {
 		float x = plane_x_begin + (i * plane_x_sep);
 
 		// Check if hit is registered, due to limited plane efficiency.
-		if (uniform_dist(uniform_generator) < true_plane_effs[i]) {
+		if (rand_gen->Rndm() < true_plane_effs[i]) {
 			
 			// Calculate true value of y where line intercects plane, and biased value where hit is recorded, due to plane displacement
 			float true_y = y_intercept + (gradient * x);
@@ -94,8 +94,8 @@ Line_data genlin() {
 			line.i_hits.push_back(i);
 
 			// Calculate smear value from detector resolution.
-			float smear_y = true_meas_sigmas[i] * gaus_dist(gaus_generator); 
-				
+			float smear_y = true_meas_sigmas[i] * rand_gen->Gaus(0,1); 
+
 			// Calculate y-position of hit wire, then calculate drift distance.
 			float y_wire = (float) (wire_num * 4.0) - 2.0;
 			line.y_drifts.push_back(biased_y - y_wire);			
@@ -111,16 +111,12 @@ Line_data genlin() {
 			line.hit_count++;
 
 		}
- 
 	} 
-
 	return line; // Return data from simulated track
-
 }
 
 
-
-int main() {
+int main(int argc, char* argv[]) {
 
 	cout << endl;
 	cout << "********************************************" << endl;
@@ -129,17 +125,31 @@ int main() {
 	cout << endl;
 	cout << "    _____________________________  \\  /" << endl;
 	cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
-    cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl << endl; 
+    cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
+	cout << endl; 
 
+	
+	// Get seed from console argument, if given.
+	if (argc == 2) {
+		try {
+			seed = stoi(argv[1]);
+		} catch (exception& e) {
+			cout << "Exception caught: " << e.what() << endl;
+			cout << "Please ensure input seed is a number." << endl;
+			cout << endl;
+			return 1;
+		} 
+	} else if (argc > 2) {
+		cout << "Too many arguments. Please specify one seed, if desired." << endl;
+		cout << endl;
+		return 1;
+	}
+	
+	cout << "Seed: " << seed << endl;
 
-
-	// Get sequences of seeds for random number generation
-	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
-	seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
-
-	// Set up Marsenne Twister random number generators with seeds
-	mt19937 uniform_generator(uniform_seeds);
-	mt19937 gaus_generator(gaus_seeds);
+	
+	// Define random number generator, with seed
+	rand_gen = new TRandom3(seed);
 
 	// Name and properties of binary output file
 	string binary_file_name = "mp2tst1_c.bin";
@@ -155,7 +165,7 @@ int main() {
 	string true_params_file_name = "mp2test1_true_params_c.txt";
 
 	cout << "" << endl;
-	cout << "Generating Test Parameters..." << endl;
+	cout << "Generating test parameters..." << endl;
 
 	// Open file streams for constraint and steering files, overwriting any original files
 	ofstream constraint_file(constraint_file_name);
@@ -167,11 +177,10 @@ int main() {
 		true_plane_effs[i] = plane_eff;
 		true_meas_sigmas[i] = meas_sigma;
 
-		plane_pos_devs[i] = displ_sigma * gaus_dist(gaus_generator);
-		drift_vel_devs[i] = drift_sigma * gaus_dist(gaus_generator);
+		plane_pos_devs[i] = displ_sigma * rand_gen->Gaus(0,1);
+		drift_vel_devs[i] = drift_sigma * rand_gen->Gaus(0,1);
 
 	}
-
 
 	true_params_file << endl; // Insert blank line
 
@@ -194,7 +203,7 @@ int main() {
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {
 
-		cout << "Writing Steering File..." << endl;
+		cout << "Writing steering file..." << endl;
 
 		steering_file << "*            Default test steering file" << endl
 					  << "fortranfiles ! following bin files are fortran" << endl
@@ -230,7 +239,7 @@ int main() {
 	// Check constraints file is open, then write. [Note - Don't yet understand these]
 	if (constraint_file.is_open()) {
 		
-		cout << "Writing Constraint File..." << endl;
+		cout << "Writing constraint file..." << endl;
 
 		constraint_file << "Constraint 0.0" << endl;
 		for (int i=0; i<plane_count; i++) {
@@ -250,11 +259,11 @@ int main() {
 			float ww = (x - x_bar) / d_bar;
 
 			constraint_file << labelt << " " << fixed << setprecision(7) << ww << endl;
-		}
-		
+		}	
+	
 	}
 
-	cout << "Generating Tracks, Writing Hit Data to Binary..." << endl;
+	cout << "Generating tracks, writing hit data to binary..." << endl;
 	
 	// Set up counters for number of hits, and tracks
 	int all_hit_count = 0;
@@ -314,9 +323,10 @@ int main() {
 	steering_file.close();
 	true_params_file.close();
 
+	delete rand_gen; // Cleaning up
+
 	// Terminate program.
 	return 0;
-
 }
 
 									   

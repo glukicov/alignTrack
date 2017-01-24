@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt 
+import matplotlib.mlab as mlab
 import numpy as np
 import sys
 import getopt
@@ -64,8 +65,29 @@ true_drift_vel = []
 true_vert_dev = []
 
 # Lists for difference between fitted and true parameter values, divided by uncertainties in fitted parameter uncertainty
-errors_drift_vel = []
-errors_vert_dev = []
+unc_norm_errors_drift_vel = []
+unc_norm_errors_vert_dev = []
+
+# Lists for difference between fitted and true parameter values, divided by uncertainties in fitted parameter uncertainty
+val_norm_errors_drift_vel = []
+val_norm_errors_vert_dev = []
+
+# Absolute differences between fitted, true parameter values
+abs_errors_vel = []
+abs_errors_dev = []
+
+
+# Print column headers
+if (len(fitted_param_errors) > 0):
+    print ""
+    print "{:<10} {:<15} {:<15} {:<15} {:<22} {:<22}".format("Label", "True Param.", "Fitted Param.", "Fit Error", "Unc. Norm. Difference", "Val. Norm. Difference")
+    print ""
+else:
+    print ""
+    print "{:<10} {:<15} {:<15} {:<22}".format("Label", "True Param.", "Fitted Param.", "Val. Norm. Difference")
+    print ""
+    
+
 
 # Iterate across all keys in dictionary
 for label in sorted(true_params.iterkeys()):
@@ -73,45 +95,120 @@ for label in sorted(true_params.iterkeys()):
     # Print blank line between PDD, DVD outputs 
     if label == 501: print ""
 
-    # Print parameter label, true and fitted values, fitted uncertainty, and normalised difference between fitted, true values
-    print label, "\t", true_params[label], "\t", fitted_params[label], "\t", fitted_param_errors[label], "\t", (fitted_params[label] - true_params[label]) / fitted_param_errors[label]
+    if (len(fitted_param_errors) > 0):
 
-    # Add normalised difference, true parameter values to appropriate lists, checking label value to see if entry corrsponds to displacement of velocity deviation
-    if label < 500:
-        errors_vert_dev.append((fitted_params[label] - true_params[label]) / fitted_param_errors[label])
-        true_vert_dev.append(true_params[label])  
+        # Print parameter label, true and fitted values, fitted uncertainty, and normalised difference between fitted, true values, padding appropriately
+        print "{:<10} {:< 15} {:< 15} {:< 15} {:< 22} {:< 22}".format(label, true_params[label], fitted_params[label], fitted_param_errors[label], (fitted_params[label] - true_params[label]) / fitted_param_errors[label], (fitted_params[label] - true_params[label]) / fitted_params[label])
+
+        # Add normalised difference, true parameter values to appropriate lists, checking label value to see if entry corrsponds to displacement of velocity deviation
+        if label < 500:
+            unc_norm_errors_vert_dev.append((fitted_params[label] - true_params[label]) / fitted_param_errors[label])
+            val_norm_errors_vert_dev.append((fitted_params[label] - true_params[label]) / fitted_params[label])
+            abs_errors_dev.append(fitted_params[label] - true_params[label])
+            true_vert_dev.append(true_params[label])  
+        else:
+            unc_norm_errors_drift_vel.append((fitted_params[label] - true_params[label]) / fitted_param_errors[label])
+            val_norm_errors_drift_vel.append((fitted_params[label] - true_params[label]) / fitted_params[label])
+            abs_errors_vel.append(fitted_params[label] - true_params[label])
+            true_drift_vel.append(true_params[label])
+
+
     else:
-        errors_drift_vel.append((fitted_params[label] - true_params[label]) / fitted_param_errors[label])
-        true_drift_vel.append(true_params[label])
 
+        # Print parameter label, true and fitted values, fitted uncertainty, and normalised difference between fitted, true values, padding appropriately
+        print "{:<10} {:< 15} {:< 15} {:< 22}".format(label, true_params[label], fitted_params[label], (fitted_params[label] - true_params[label]) / fitted_params[label])
+
+        # Add normalised difference, true parameter values to appropriate lists, checking label value to see if entry corrsponds to displacement of velocity deviation
+        if label < 500:
+            val_norm_errors_vert_dev.append((fitted_params[label] - true_params[label]) / fitted_params[label])
+            abs_errors_dev.append(fitted_params[label] - true_params[label])
+            true_vert_dev.append(true_params[label])  
+        else:
+            val_norm_errors_drift_vel.append((fitted_params[label] - true_params[label]) / fitted_params[label])
+            abs_errors_vel.append(fitted_params[label] - true_params[label])
+            true_drift_vel.append(true_params[label])
+
+
+print ""
+
+
+# Plot absolute differences between fitted, true parameters
 
 #
-## Plot Histograms of true parameter values for detector, differences between fitted, true values.
+## Plot Histograms of true parameter values for detector, normalised differences between fitted, true values. Also plot expected pdfs for these values. 
 #
 
-plt.hist(true_drift_vel, 20)
+# Plot true parameter values
+bin_contents, bin_edges, _ = plt.hist(true_drift_vel, 20)
+bin_width = (bin_edges[-1] - bin_edges[0]) / (len(bin_edges) - 1)
+x_gaus = np.linspace(bin_edges[0], bin_edges[-1], 500)
+plt.plot(x_gaus, sum(bin_contents) * bin_width * mlab.normpdf(x_gaus, 0, 0.02), 'r')
 plt.title("True Values of Drift Velocity Deviation for Detector")
 plt.ylabel("Number of Detector Planes")
 plt.xlabel("Drift Velocity Deviation")
 plt.show()
 plt.clf()
 
-plt.hist(true_vert_dev, 20)
+bin_contents, bin_edges, _ = plt.hist(true_vert_dev, 20)
+bin_width = (bin_edges[-1] - bin_edges[0]) / (len(bin_edges) - 1)
+x_gaus = np.linspace(bin_edges[0], bin_edges[-1], 500)
+plt.plot(x_gaus, sum(bin_contents) * bin_width * mlab.normpdf(x_gaus, 0, 0.1), 'r')
 plt.title("True Values of Plane Displacement Deviation for Detector")
 plt.ylabel("Plane Count")
 plt.xlabel("Plane Displacement Deviation")
 plt.show()
 plt.clf()
 
+if (len(fitted_param_errors) > 0):
+    # Plot differences in true, fitted parameters normalised by fitted parameter uncertainty
+    bin_contents, bin_edges, _ = plt.hist(unc_norm_errors_drift_vel, 20)
+    bin_width = (bin_edges[-1] - bin_edges[0]) / (len(bin_edges) - 1)
+    x_gaus = np.linspace(bin_edges[0], bin_edges[-1], 500)
+    plt.plot(x_gaus, sum(bin_contents) * bin_width * mlab.normpdf(x_gaus, 0, 1), 'r')
+    plt.title("Differences Between Fitted, True Values of DVD for Detector Planes, \n Normalised by Fitted Parameter Uncertainty")
+    plt.ylabel("Number of Detector Planes")
+    plt.xlabel("Normalised Parameter Difference")
+    plt.show()
+    plt.clf()
 
-plt.hist(errors_drift_vel, 20)
-plt.title("Differences Between Fitted, True Values of DVD for Detector Planes, \n Normalised by Fitted Parameter Uncertainty")
+    bin_contents, bin_edges, _ = plt.hist(unc_norm_errors_vert_dev, 20)
+    bin_width = (bin_edges[-1] - bin_edges[0]) / (len(bin_edges) - 1)
+    x_gaus = np.linspace(bin_edges[0], bin_edges[-1], 500)
+    plt.plot(x_gaus, sum(bin_contents) * bin_width * mlab.normpdf(x_gaus, 0, 1), 'r')
+    plt.title("Differences Between Fitted, True Values of PDD for Detector Planes, \n Normalised by Fitted Parameter Uncertainty")
+    plt.xlabel("Normalised Parameter Difference")
+    plt.ylabel("Number of Detector Planes")
+    plt.show()
+    plt.clf()
+
+
+# Plot differences in true, fitted parameters normalised by fitted parameter value
+plt.hist(val_norm_errors_drift_vel, 20)
+plt.title("Differences Between Fitted, True Values of DVD for Detector Planes, \n Normalised by Fitted Parameter Value")
+plt.ylabel("Number of Detector Planes")
+plt.xlabel("Normalised Parameter Difference")
+plt.show()
+plt.clf()
+
+plt.hist(val_norm_errors_vert_dev, 20)
+plt.title("Differences Between Fitted, True Values of PDD for Detector Planes, \n Normalised by Fitted Parameter Value")
+plt.xlabel("Normalised Parameter Difference")
 plt.ylabel("Number of Detector Planes")
 plt.show()
 plt.clf()
 
-plt.hist(errors_vert_dev, 20)
-plt.title("Differences Between Fitted, True Values of PDD for Detector Planes, \n Normalised by Fitted Parameter Uncertainty")
+
+# Plot absolute differences between fitted, true parameters
+plt.hist(abs_errors_vel, 20)
+plt.title("Differences Between Fitted, True Values of DVD for Detector Planes")
 plt.ylabel("Number of Detector Planes")
+plt.xlabel("Fitted, True Parameter Difference")
+plt.show()
+plt.clf()
+
+plt.hist(abs_errors_dev, 20)
+plt.title("Differences Between Fitted, True Values of PDD for Detector Planes")
+plt.ylabel("Number of Detector Planes")
+plt.xlabel("Fitted, True Parameter Difference")
 plt.show()
 plt.clf()

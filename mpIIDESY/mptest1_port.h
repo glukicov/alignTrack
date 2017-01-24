@@ -10,11 +10,13 @@
 #include <chrono>
 #include <typeinfo>
 
+#include <TRandom3.h>
+
 #include <Mille.h>
 #include <Mille.cc>
 
 std::vector<float> genlin(int&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
 
-int main();
+int main(int argc, char* argv[]);
 
 #endif
