@@ -122,6 +122,12 @@ Line_data genlin() {
 
 int main() {
 
+	cout << endl;
+	cout << "***********************************" << endl;
+	cout << "*            MPTEST 1             *" << endl;
+	cout << "***********************************" << endl;
+		
+
 	// Get sequences of seeds for random number generation
 	seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
 	seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
@@ -144,8 +150,7 @@ int main() {
 	string true_params_file_name = "mp2test1_true_params_c.txt";
 
 	cout << "" << endl;
-	cout << "Generating test data for mp II..." << endl;
-	cout << "" << endl;
+	cout << "Generating Test Parameters..." << endl;
 
 	// Open file streams for constraint and steering files, overwriting any original files
 	ofstream constraint_file(constraint_file_name);
@@ -184,10 +189,7 @@ int main() {
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {
 
-		cout << "" << endl;
-		cout << "Writing Steering File" << endl;
-		cout << "" << endl;
-
+		cout << "Writing Steering File..." << endl;
 
 		steering_file << "*            Default test steering file" << endl
 					  << "fortranfiles ! following bin files are fortran" << endl
@@ -223,9 +225,7 @@ int main() {
 	// Check constraints file is open, then write. [Note - Don't yet understand these]
 	if (constraint_file.is_open()) {
 		
-		cout << "" << endl;
-		cout << "Writing Constraint File" << endl;
-		cout << "" << endl;
+		cout << "Writing Constraint File..." << endl;
 
 		constraint_file << "Constraint 0.0" << endl;
 		for (int i=0; i<plane_count; i++) {
@@ -249,6 +249,7 @@ int main() {
 		
 	}
 
+	cout << "Generating Tracks, Writing Hit Data to Binary..." << endl;
 	
 	// Set up counters for number of hits, and tracks
 	int all_hit_count = 0;
@@ -298,7 +299,6 @@ int main() {
 		all_record_count++; // Increment total number of records
 	}
 
-	cout << " " << endl;
 	cout << " " << endl;
 	cout << track_count << " tracks generated with " << all_hit_count << " hits." << endl;
 	cout << all_record_count << " records written." << endl;
