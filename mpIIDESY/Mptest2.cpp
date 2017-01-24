@@ -97,7 +97,7 @@ bool writeZero = false;
 string conFileName = "Mp2con.txt";
 string strFileName = "Mp2str.txt";
 //output ROOT file
-//TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
 
 ///initialsing physics varibles
 const int detectorN = 10; //number of detector layers
@@ -115,17 +115,13 @@ float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)
 float layerSize= 20.0; //size of layers  //cm 
 float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
 
-//int hitsN = 0; // number of hits  //XXX passed from genlin2(hit_count)
 float scatterError = 0; // multiple scattering error
 int layer[layerN];// (detector) layer
-//int moduleN[layerN]; // module number //XXX passed from genlin2(i_hits)
 float sdevX[modulesTotalN];// shift in x (alignment parameter)
 float sdevY[modulesTotalN] ; //shift in y (alignment GLOBAL parameter)
 float arcLength[layerN];  // arc length
 float resolutionLayer[layerN];   //resolution
 float projection[2][layerN]; //projection of measurent direction in (XY)
-//float hitsX[layerN];   //position perp. to plane (hit) //XXX passed from genlin2(x_hits)
-//float hitsY[layerN];    //measured position in plane (hit)  //XXX passed from genlin2(y_hits)
 //float sigma[layerN];    // measurement sigma (hit) //XXX passed from genlin2(hit_sigmas)
 
 // Structure to contain data of a generated line, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
@@ -156,7 +152,7 @@ Line_data genlin2() {
     seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
     seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
 
-    // Set up Mersenne Twister random number generators with seeds
+    // Set up Marsenne Twister random number generators with seeds
     mt19937 uniform_generator(uniform_seeds);
     mt19937 gaus_generator(gaus_seeds);
 
@@ -172,10 +168,10 @@ Line_data genlin2() {
     float x_slope=(x_1-x_1)/arcLength[layerN];
     float y_slope=(y_1-y_0)/arcLength[layerN];
 
-    if (ip =! 0){
-        cout << "" << endl;
-        cout << "Track: " << x_0 <<  y_0 << x_slope << y_slope << endl;
-    }
+    // if (ip =! 0){
+    //     cout << "" << endl;
+    //     cout << "Track: " << x_0 <<  y_0 << x_slope << y_slope << endl;
+   // }
     
     float x = x_0;
     float dx = x_slope;
@@ -218,14 +214,12 @@ Line_data genlin2() {
         line.hit_count++;
 
 
-        if (ip =! 0){
-            cout << "" << endl;
-            cout << "Generated Line data: " <<   line.hit_sigmas[i] <<  line.x_hits[i] << line.y_hits[i] << line.hit_sigmas[i] << endl;
-        }
+        // if (ip =! 0){
+        //     cout << "" << endl;
+        //     cout << "Generated Line data: " <<   line.hit_sigmas[i] <<  line.x_hits[i] << line.y_hits[i] << line.hit_sigmas[i] << endl;
+        // }
     }// end of looping over detector layers
     
-    //101 FORMAT(3I3,5F8.4) XXX
-
     return line; // Return data from simulated track
 
 } // end of genlin2
@@ -256,7 +250,7 @@ int main(){
    // Creating .bin, steering, constrating and ROOT files here:
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
      // Book histograms
-   // TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
+    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -100, 100); // D=double bins, name, title, nBins, Min, Max
 
     cout << "" << endl;
     cout << "Generating test data for Mp II...";
@@ -315,25 +309,25 @@ int main(){
         cout<< "Writing the steering file" << endl;
         cout << "" << endl;
 
+
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl   // XXX 
         << "Mp2con.txt   ! constraints text file " << endl
         << "Mptest2.bin   ! binary data file" << endl
-        //<< "Cfiles       ! following bin files are Cfiles" << endl
-       // << "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
+       // << "Cfiles       ! following bin files are Cfiles" << endl
+        //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
-
         << "*hugecut 50.0     !cut factor in iteration 0" << endl
         << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
         << "*entries  10 ! lower limit on number of entries/parameter" << endl
-        <<  "" << endl 
-        <<  "*pairentries 10 ! lower limit on number of parameter pairs"  << endl
-        <<    "                ! (not yet!)"            << endl
+        << "" << endl 
+        << "*pairentries 10 ! lower limit on number of parameter pairs"  << endl
+        << "                ! (not yet!)"            << endl
         << "*printrecord   1  2      ! debug printout for records" << endl
-        <<   "" << endl
-        <<    "*printrecord  -1 -1      ! debug printout for bad data records" << endl
-        <<   "" << endl
-        <<   "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
+        << "" << endl
+        << "*printrecord  -1 -1      ! debug printout for bad data records" << endl
+        << "" << endl
+        << "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
         << "*dwfractioncut      0.2  ! 0 < value < 0.5"<< endl
         << "*presigma           0.01 ! default value for presigma"<< endl
         << "*regularisation 1.0      ! regularisation factor"<< endl
@@ -350,6 +344,7 @@ int main(){
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
     } 
+
 
     int ncx = (moduleXN+1)/2; 
     int moduleXYN=0;
@@ -381,7 +376,8 @@ int main(){
         } // end of detecors loop 
 
     } //end of constraints
-  
+   
+
     //Set up counters for hits and records (tracks)
     int hitsN = 0;
     int recordN=0;
@@ -393,7 +389,12 @@ int main(){
         scatterError=sqrt(width)*0.014/p;
 
         //Generating hits for N=track_count
+        
+        //TODO fix *** Break *** illegal instruction
+
         Line_data generated_line = genlin2();
+
+        cout << "HERE" << endl ;
 
         for (int i=0; i<generated_line.hit_count; i++){
             //simple straight line
@@ -444,7 +445,7 @@ int main(){
     cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl; 
 
     //ROOT stuff
-  //  file->Write();
-  //  file->Close(); //good habit! 
+    file->Write();
+    file->Close(); //good habit! 
     return 0; 
 } //end of main 
