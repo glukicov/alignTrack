@@ -5,13 +5,14 @@
 #include "Mille.h"
 #include "Mille.cc"
 #include <iostream>
-#include <fstream>
+#include <fstream> 
 #include <string>
 #include <vector>
 #include <random>
 #include <iomanip>
-#include <chrono>
-#include <typeinfo>
+#include <stdlib.h>
+#include <random>
+#include <cmath> //math class`
 #include <TH1D.h> //1D Histo Root class
 #include <TH2D.h> //1D Histo Root class
 #include <TFile.h> // data records for ROOT 

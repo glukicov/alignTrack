@@ -133,12 +133,7 @@ struct Line_data {
     vector<int> i_hits;   //mdoule number 
 };
 
-// Random devices for seeding
-random_device uniform_device;
-random_device gaus_device;
-// Distributions for random numbers
-uniform_real_distribution<float> uniform_dist(0.0, 1.0);
-normal_distribution<float> gaus_dist(0.0, 1.0);
+
 
 
 
@@ -148,30 +143,26 @@ normal_distribution<float> gaus_dist(0.0, 1.0);
 
 Line_data genlin2() {
 
-    // Get sequences of seeds for random number generation
-    seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
-    seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
-
-    // Set up Marsenne Twister random number generators with seeds
-    mt19937 uniform_generator(uniform_seeds);
-    mt19937 gaus_generator(gaus_seeds);
-
+    int seed = 123456;  //pseudorandom 
+    //Mersenne Twister generator TR3 root class: 
+    TRandom3* rnd = new TRandom3(seed);  // ran->Rndm(); // uniform in [0,1] TRandom::Rndm 
+    
     // Set up new container for track data, with hit count set to zero
     Line_data line;
     line.hit_count = 0;
 
     // Track parameters for rand-generated line
-    float x_0 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform vertex
-    float y_0 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform vertex 
-    float x_1 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform exit point: so fitting a line to these two points
-    float y_1 = layerSize * (uniform_dist(uniform_generator)-0.5); //uniform exit point: 
+    float x_0 = layerSize * (rnd->Rndm()-0.5); //uniform vertex
+    float y_0 = layerSize * (rnd->Rndm()-0.5); //uniform vertex 
+    float x_1 = layerSize * (rnd->Rndm()-0.5); //uniform exit point: so fitting a line to these two points
+    float y_1 = layerSize * (rnd->Rndm()-0.5); //uniform exit point: 
     float x_slope=(x_1-x_1)/arcLength[layerN];
     float y_slope=(y_1-y_0)/arcLength[layerN];
 
-    // if (ip =! 0){
-    //     cout << "" << endl;
-    //     cout << "Track: " << x_0 <<  y_0 << x_slope << y_slope << endl;
-   // }
+    if (ip =! 0){
+        cout << "" << endl;
+        cout << "Track: " << "x0= " << x_0 << " y0= " << y_0 << "x_slope = " << x_slope << "y_slope = " << y_slope << endl;
+   } 
     
     float x = x_0;
     float dx = x_slope;
@@ -192,8 +183,8 @@ Line_data genlin2() {
         y=y+dy*ds;
 
         //multiple scattering
-        dx = dx+ gaus_dist(gaus_generator) * scatterError;
-        dy = dy+ gaus_dist(gaus_generator) * scatterError;
+        dx = dx+ rnd -> Gaus(0,1) * scatterError;
+        dy = dy+ rnd -> Gaus(0,1) * scatterError;
 
         // TODO understand purpose of this part properly 
         float imx=int(x+layerSize*0.5)/layerSize*float(moduleXN);
@@ -209,15 +200,15 @@ Line_data genlin2() {
         float xl=x-sdevX[ioff];
         float yl=y-sdevY[ioff];
         line.x_hits.push_back(arcLength[i]);
-        line.y_hits.push_back((xl-xs)*projection[1][i]+(yl-ys)*projection[2][i]+gaus_dist(gaus_generator)*resolutionLayer[i]);
+        line.y_hits.push_back((xl-xs)*projection[1][i]+(yl-ys)*projection[2][i]+ rnd -> Gaus(0,1)*resolutionLayer[i]);
         line.hit_sigmas.push_back(resolutionLayer[i]);
         line.hit_count++;
 
 
-        // if (ip =! 0){
-        //     cout << "" << endl;
-        //     cout << "Generated Line data: " <<   line.hit_sigmas[i] <<  line.x_hits[i] << line.y_hits[i] << line.hit_sigmas[i] << endl;
-        // }
+        if (ip =! 0){
+            cout << "" << endl;
+            cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << "Y hit =" << line.y_hits[i] << endl;
+        }
     }// end of looping over detector layers
     
     return line; // Return data from simulated track
@@ -230,6 +221,10 @@ Line_data genlin2() {
 /////************MAIN***************/////////////
 int main(){
 
+    int seed2 = 123456789;  //pseudorandom 
+    //Mersenne Twister generator TR3 root class: 
+    TRandom3* ran = new TRandom3(seed2);  // ran->Rndm(); // uniform in [0,1] TRandom::Rndm 
+    
     //TODO draw a respectable-looking millipede here 
     cout << "" << endl;
     cout << "$            $"<< endl;
@@ -239,14 +234,7 @@ int main(){
     cout << "     $ $ $ "<< endl;
     cout << "" << endl; 
 
-    // Get sequences of seeds for random number generation
-    seed_seq uniform_seeds{uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device(), uniform_device()}; 
-    seed_seq gaus_seeds{gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device(), gaus_device()}; 
-
-    // Set up Marsenne Twister random number generators with seeds
-    mt19937 uniform_generator(uniform_seeds);
-    mt19937 gaus_generator(gaus_seeds);
-     
+       
    // Creating .bin, steering, constrating and ROOT files here:
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
      // Book histograms
@@ -272,7 +260,7 @@ int main(){
         resolutionLayer[i_counter] = resolution; //resolution
         projection[1][i_counter]=1.0;  // x
         projection[2][i_counter]=0.0;  // y
-        //taking care of stereo modules
+        //taking care of stereo modules 
         if ((layer_i % 3) == 1){
             i_counter++;
             layer[i_counter] = layer_i;  // layer
@@ -292,11 +280,11 @@ int main(){
     float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
 
     //so we are only displacing 9/10 detectors? XXX
-    for (int i=0; i<=detectorN-1; i++){
+    for (int i=0; i<detectorN-1; i++){   /// XXX
         for(int k=0; k<=moduleYN-1; k++){
             for(int l=1; l<=moduleXN; l++){
-                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * uniform_dist(uniform_generator); 
-                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * uniform_dist(uniform_generator);          
+                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * ran -> Gaus(0,1); 
+                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * ran -> Gaus(0,1);          
             } // // end of number of modules in x
         } // end of number of modules in y 
     } // end of layers
@@ -385,7 +373,7 @@ int main(){
     //Generating particles with energies: 10..100 Gev
     // track_count is set manually 
     for (int icount=0; icount<track_count; icount++){
-        float p=pow(10.0, 1+uniform_dist(uniform_generator));
+        float p=pow(10.0, 1+ran->Rndm());
         scatterError=sqrt(width)*0.014/p;
 
         //Generating hits for N=track_count
@@ -393,8 +381,6 @@ int main(){
         //TODO fix *** Break *** illegal instruction
 
         Line_data generated_line = genlin2();
-
-        cout << "HERE" << endl ;
 
         for (int i=0; i<generated_line.hit_count; i++){
             //simple straight line
@@ -432,7 +418,7 @@ int main(){
 
         //IF (imodel >= 3) THEN
 
-        cout << "Recored passed to bin file" << endl; 
+        //cout << "Recored passed to bin file" << endl; 
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records;
     } // end of N trials (track count)
