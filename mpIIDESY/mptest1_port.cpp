@@ -48,6 +48,15 @@ struct Line_data {
 	vector<int> i_hits;
 };
 
+// Structure for parameter values to be written to root file.
+struct Parameter_data {
+	int label;
+	int fitType;
+	float paramValue;
+	float paramError;
+};
+
+
 // Random devices for seeding
 random_device uniform_device;
 random_device gaus_device;
@@ -130,7 +139,7 @@ int main(int argc, char* argv[]) {
 
 	
 	// Get seed from console argument, if given.
-	if (argc == 2) {
+	if (argc >= 2) {
 		try {
 			seed = stoi(argv[1]);
 		} catch (exception& e) {
@@ -192,13 +201,46 @@ int main(int argc, char* argv[]) {
 	true_plane_effs[6] = 0.1;
 	true_meas_sigmas[6] = 0.0400;
 	
+	// Initialise structure to hold TTree data
+	Parameter_data true_params;
+
+	// Create file, tree for parameters
+	TFile f ("mptest1_parameters.root", "recreate");
+	TTree t ("paramTree", "Tree to contain true, fitted parameter values");
+
+	// Set up tree branches
+	t.Branch("fitType", &true_params.fitType, "fitType/F");
+	t.Branch("label", &true_params.label, "label/I");
+	t.Branch("paramValue", &true_params.paramValue, "paramValue/F");
+	t.Branch("paramError", &true_params.paramError, "paramError/F");
+
+
 	// Print plane labels, and plane displacements to file
-	for (int i=0; i<plane_count; i++) 
+	for (int i=0; i<plane_count; i++) { 
 		true_params_file << 10 + (2 * (i + 1)) << " " << -plane_pos_devs[i] << endl;
+		
+		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
+		true_params.fitType = 0;
+		true_params.paramError = 0;
+		true_params.label = 10 + (2 * (i + 1));
+		true_params.paramValue = -plane_pos_devs[i];
+		t.Fill();
+	}
+
 	// Print drift velocity labels, and drift velocity displacements to file.
-	for (int i=0; i<plane_count; i++) 
+	for (int i=0; i<plane_count; i++) { 
 		true_params_file << 500 + i + 1 << " " << -drift_vel_devs[i] << endl; 
 
+		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
+		true_params.fitType = 0;
+		true_params.label = 500 + i + 1;
+		true_params.paramValue = -plane_pos_devs[i];
+		true_params.paramError = 0;
+		t.Fill();
+	}
+
+	// Write values to TTree.
+	t.Write();
 
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {

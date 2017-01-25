@@ -11,6 +11,8 @@
 #include <typeinfo>
 
 #include <TRandom3.h>
+#include <TFile.h>
+#include <TTree.h>
 
 #include <Mille.h>
 #include <Mille.cc>
