@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
 		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
 		true_params.fitType = 0;
 		true_params.label = 500 + i + 1;
-		true_params.paramValue = -plane_vel_devs[i];
+		true_params.paramValue = -drift_vel_devs[i];
 		true_params.paramError = 0;
 		t.Fill();
 	}
