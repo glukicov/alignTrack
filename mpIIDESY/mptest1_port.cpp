@@ -57,14 +57,6 @@ struct Parameter_data {
 };
 
 
-// Random devices for seeding
-random_device uniform_device;
-random_device gaus_device;
-
-// Distributions for random numbers
-uniform_real_distribution<float> uniform_dist(0.0, 1.0);
-normal_distribution<float> gaus_dist(0.0, 1.0);
-
 // Declare random number generator, with seed
 int seed = 453032763;
 TRandom3* rand_gen;
