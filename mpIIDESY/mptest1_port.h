@@ -8,14 +8,14 @@
 #include <iomanip>
 #include <typeinfo>
 
-#include <TRandom3.h>
-#include <TFile.h>
-#include <TTree.h>
+#include "TRandom3.h"
+#include "TFile.h"
+#include "TTree.h"
 
-#include <Mille.h>
-#include <Mille.cc>
+#include "mptest1_port_detector.h"
 
-std::vector<float> genlin(int&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
+#include "Mille.h"
+#include "Mille.cc"
 
 int main(int argc, char* argv[]);
 
