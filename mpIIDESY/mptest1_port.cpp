@@ -183,8 +183,8 @@ int main(int argc, char* argv[]) {
 			float local_derivs[2] {1.0, generated_line.x_hits[j]};
 			float global_derivs[2] {1.0, generated_line.y_drifts[j]};
 
-			cout << generated_line.x_hits[j] << " " << generated_line.y_drifts[j] << endl;
-			cout << 10 + (2 * (generated_line.i_hits[j] + 1)) << " " << 500 + generated_line.i_hits[j] + 1 << endl << endl;
+			// cout << generated_line.x_hits[j] << " " << generated_line.y_drifts[j] << endl;
+			// cout << 10 + (2 * (generated_line.i_hits[j] + 1)) << " " << 500 + generated_line.i_hits[j] + 1 << endl << endl;
 
 			// Labels for plane displacement, and velcity deviation. 
 			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
@@ -204,10 +204,8 @@ int main(int argc, char* argv[]) {
 								 << "Sigma: " << generated_line.hit_sigmas[j] << endl << endl;
 
 			}
-				
 
 			all_hit_count++; // Increment total number of recorded hits
-
 		}
 
 		m.end(); // End of this record

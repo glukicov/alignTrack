@@ -43,7 +43,7 @@ class Detector {
 
 	// Standard deviations of distributions of plane displacement and drift velocity.
 	float DISPL_SIGMA = 0.1;
-	float DRIFT_SIGMA = 0.002;
+	float DRIFT_SIGMA = 0.02;
 
 	// Arrays of the plane displacement and velocity deviations.
 	std::vector<float> plane_pos_devs;

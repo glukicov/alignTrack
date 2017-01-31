@@ -51,8 +51,8 @@ LineData Detector::gen_lin() {
 			line.x_hits.push_back(x);
 			line.i_hits.push_back(i);
 
-			// Calculate smear value from detector resolution.
-			float y_smear = true_meas_sigmas[i] * rand_gen->Gaus(1,0);
+			// Calculate smear value from detector resolution.			
+			float y_smear = true_meas_sigmas[i] * rand_gen->Gaus(0,1);
 
 			// Calculate y-position of hit wire, then calculate drift distance.
 			float y_wire = (float) (wire_num * 4.0) - 2.0;
@@ -62,7 +62,7 @@ LineData Detector::gen_lin() {
 			float y_dvd = line.y_drifts[line.hit_count] * drift_vel_devs[i];
 
 			// Calculate recorded hit y-position, with deviations due to smearing and drift velocity deviation.
-			line.y_hits.push_back(y_biased + y_smear + y_dvd);
+			line.y_hits.push_back(y_biased + y_smear - y_dvd);
 
 			// Record uncertainty in hit y-position, and increment number of hits.
 			line.hit_sigmas.push_back(true_meas_sigmas[i]);
@@ -97,6 +97,7 @@ void Detector::set_plane_properties() {
 
 	plane_pos_devs[9] = 0.0;
 	plane_pos_devs[89] = 0.0;
+
 }
 
 
