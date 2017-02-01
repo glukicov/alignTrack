@@ -1,5 +1,9 @@
 // TODOs: 
+//TODO move random intialisation outside of the genlin2() function, oterwise might get the same numbers...
 // 0) FIX: Warning: insufficient constraint equations
+// A) Generate RND to txt file and use from there
+// B) See example code for improvements: encasulation, C++ design, classess [with private and public vars/methods], 
+// Maps, Histogramm class, [singelton] Parametrs::Instance();   
 // 1) add logger from gm2trackerdaq
 // 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <].
 // 3) add [iModel=0], generate .bin file from Fortran for simplest case and compare.
@@ -137,25 +141,26 @@ struct Line_data {
 };
 
 
-
 ///////----------Function Defenition--------------------- ///// 
 //Source code for genlin courtesy of John. 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 
 Line_data genlin2() {
-   
-    int seed = 123456;  //pseudorandom 
+    
+     // TODO fix this! (segmentation fault if taken outstide the fucntion)
+    //int seed = 123456;  //pseudorandom 
     //Mersenne Twister generator TR3 root class: 
-    TRandom3* rnd = new TRandom3(seed);  // ran->Rndm(); // uniform in [0,1] TRandom::Rndm 
-    // Set up new container for track data, with hit count set to zero
+    //TRandom3* rand_gen = new TRandom3(seed);  // ran->Rndm(); // uniform in [0,1] TRandom::Rndm 
+
+
     Line_data line;
     line.hit_count = 0;
 
     // Track parameters for rand-generated line
-    float x_0 = layerSize * (rnd->Rndm()-0.5); //uniform vertex
-    float y_0 = layerSize * (rnd->Rndm()-0.5); //uniform vertex 
-    float x_1 = layerSize * (rnd->Rndm()-0.5); //uniform exit point: so fitting a line to these two points
-    float y_1 = layerSize * (rnd->Rndm()-0.5); //uniform exit point: 
+    float x_0 = layerSize * (rand_gen->Rndm()-0.5); //uniform vertex
+    float y_0 = layerSize * (rand_gen->Rndm()-0.5); //uniform vertex 
+    float x_1 = layerSize * (rand_gen->Rndm()-0.5); //uniform exit point: so fitting a line to these two points
+    float y_1 = layerSize * (rand_gen->Rndm()-0.5); //uniform exit point: 
     float x_slope=(x_1-x_1)/arcLength[layerN];
     float y_slope=(y_1-y_0)/arcLength[layerN];
      
@@ -184,8 +189,8 @@ Line_data genlin2() {
         y=y+dy*ds;
 
         //multiple scattering
-        dx = dx+ rnd -> Gaus(0,1) * scatterError;
-        dy = dy+ rnd -> Gaus(0,1) * scatterError;
+        dx = dx+ rand_gen-> Gaus(0,1) * scatterError;
+        dy = dy+ rand_gen -> Gaus(0,1) * scatterError;
 
         // TODO understand purpose of this part properly 
         float imx=int(x+layerSize*0.5)/layerSize*float(moduleXN);
@@ -201,7 +206,7 @@ Line_data genlin2() {
         float xl=x-sdevX[ioff];
         float yl=y-sdevY[ioff];
         line.x_hits.push_back(arcLength[i]);
-        line.y_hits.push_back((xl-xs)*projection[1][i]+(yl-ys)*projection[2][i]+ rnd -> Gaus(0,1)*resolutionLayer[i]);
+        line.y_hits.push_back((xl-xs)*projection[1][i]+(yl-ys)*projection[2][i]+ rand_gen -> Gaus(0,1)*resolutionLayer[i]);
         line.hit_sigmas.push_back(resolutionLayer[i]);
         line.hit_count++;
 
@@ -223,18 +228,17 @@ Line_data genlin2() {
 /////************MAIN***************/////////////
 int main(){
 
-    int seed2 = 123456789;  //pseudorandom 
-    //Mersenne Twister generator TR3 root class: 
-    TRandom3* ran = new TRandom3(seed2);  // ran->Rndm(); // uniform in [0,1] TRandom::Rndm 
-    
-    //TODO draw a respectable-looking millipede here 
-    cout << "" << endl;
-    cout << "$            $"<< endl;
-    cout << " $          $ "<< endl;
-    cout << "  $        $ "<< endl;
-    cout << "   $      $ "<< endl;
-    cout << "     $ $ $ "<< endl;
-    cout << "" << endl; 
+        
+    // Millepede courtesy of John 
+   cout << endl;
+    cout << "********************************************" << endl;
+    cout << "*                 MPTEST 1                 *" << endl;
+    cout << "********************************************" << endl;
+    cout << endl;
+    cout << "    _____________________________  \\  /" << endl;
+    cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
+    cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
+    cout << endl; 
 
        
    // Creating .bin, steering, constrating and ROOT files here:
@@ -243,6 +247,10 @@ int main(){
     cout << "" << endl;
     cout << "Generating test data for Mp II...";
     cout << "" << endl; 
+
+    //Random number generator
+    //int seed = 12345; 
+    //TRandom3* rand_gen = new TRandom3(seed); // TODO fix this! (segmentation fault if taken outstide the fucntion)
 
     // fstreams for str and cons files 
     ofstream constraint_file(conFileName);
@@ -283,8 +291,8 @@ int main(){
     for (int i=0; i<detectorN-1; i++){   /// XXX
         for(int k=0; k<=moduleYN-1; k++){
             for(int l=1; l<=moduleXN; l++){
-                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * ran -> Gaus(0,1);  //XXX where is that used in imodel=0?? 
-                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * ran -> Gaus(0,1);         
+                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * rand_gen -> Gaus(0,1);  //XXX where is that used in imodel=0?? 
+                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * rand_gen -> Gaus(0,1);         
             } // // end of number of modules in x
         } // end of number of modules in y 
     } // end of layers
@@ -373,7 +381,7 @@ int main(){
     //Generating particles with energies: 10..100 Gev
     // track_count is set manually 
     for (int icount=0; icount<track_count; icount++){
-        float p=pow(10.0, 1+ran->Rndm());
+        float p=pow(10.0, 1+rand_gen->Rndm());
         scatterError=sqrt(width)*0.014/p;
 
         //Generating hits for N=track_count
@@ -436,6 +444,7 @@ int main(){
 
     //ROOT stuff
     file->Write();
-    file->Close(); //good habit! 
+    file->Close(); //good habit!
+    delete rand_gen; // Cleaning up 
     return 0; 
 } //end of main 
