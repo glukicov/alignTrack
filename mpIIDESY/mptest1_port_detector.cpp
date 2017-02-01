@@ -1,25 +1,54 @@
+/** 
+	mptest1_port_detector.cpp
+
+	Purpose: Simulate linear tracks passing through a plane drift chamber detector, with misaligned plane positions uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions and drift velocities to be calculated using pede. This source file contains definitions of various functions in Detector class. 
+
+	@author John Smeaton
+	@version 01/02/2017
+
+ */
+
 #include "mptest1_port_detector.h"
 
 using namespace std;
 
+// Set up empty pointer for instance of class
 Detector* Detector::s_instance = NULL; 
 
+/** 
+	Empty constructor for detector class
+ */
 Detector::Detector() {
-
-	seed = 453032763; 
-	rand_gen = new TRandom3(seed);
-
-	s_instance = 0;
-
+	// Empty constructor
 }
 
+/** 
+	Destructor for detector class. Deletes random number generator pointer.
+*/
+Detector::~Detector() {
+	// Delete random generator
+	delete rand_gen;
+}
+
+
+/**
+   Get pointer to only instance of detector class, creating this instance if it doesn't already exist.
+
+   @return Pointer to detector instance.
+ */
 Detector* Detector::instance() {
 
+	// Create pointer to class instance if one doesn't exist already, then return that pointer.
 	if (s_instance == NULL) s_instance = new Detector();
 	return s_instance;
 }
 
 
+/**
+   Simulate the passage of a randomly generated linear track through the detector, calculating properties of hits by the track on detector planes.
+  
+   @return LineData struct containing data about detector hits.
+*/
 LineData Detector::gen_lin() {
 
 	// Set up new container for track data, with hit count set to zero`
@@ -74,33 +103,54 @@ LineData Detector::gen_lin() {
 }
 
 
-void Detector::set_seed(int new_seed) {
+/**
+   Set seed for random number generator.
+
+   @param new_seed The seed to be used for random number generation
+ */
+void Detector::reseed(int new_seed) {
+	
+	// Set random number seed, then set up a random number generator using this seed.
 	seed = new_seed;
 	rand_gen = new TRandom3(seed);
 	cout << "New Seed Set: " << seed << endl;
 }
 
 
+/**
+   Set up plane position deviations, and fractional drift velocity deviations, using random gaussian distributions.
+ */
 void Detector::set_plane_properties() {
 
+	// Loop across all planes in detector
 	for (int i=0; i<PLANE_COUNT; i++) {
 
+		// Set up vectors of plane efficiencies and resolutions.
 		true_plane_effs.push_back(PLANE_EFF);
 		true_meas_sigmas.push_back(MEAS_SIGMA);
 
+		// Set up random plane position deviations, and velocity deviations
 		plane_pos_devs.push_back(DISPL_SIGMA * rand_gen->Gaus(0,1));
 		drift_vel_devs.push_back(DRIFT_SIGMA * rand_gen->Gaus(0,1));
 	}
 
+	// Set up bad plane with low efficiency, and bad resolution.
 	true_plane_effs[6] = 0.1;
 	true_meas_sigmas[6] = 0.0400;
 
+	// Set two planes to have no deviation in position, to constrain fit.
 	plane_pos_devs[9] = 0.0;
 	plane_pos_devs[89] = 0.0;
 
 }
 
+/**
+   Write a constraint file to the supplied file-stream.
 
+   TODO: Use abstractions instead of specifying ofstream?
+
+   @param constraint_file Reference to ofstream to write constraint file to. 
+ */
 void Detector::write_constraint_file(ofstream& constraint_file) {
 
 	// Check constraints file is open, then write. [Note - Don't yet understand these]
@@ -129,4 +179,3 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 		}	
 	}
 }
-

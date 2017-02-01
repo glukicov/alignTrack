@@ -1,29 +1,31 @@
 /**
- * Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable
- * plane offset and drift velocity. Writes global and local derivatives to a binary file,
- * and writes appropriate steering and constraint files.
- *
- * John Smeaton 14/01/2017
- *
- **/
-
-
+   mptest1_port.cpp
+   
+   Purpose: Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable plane offset and drift velocity. Writes global and local derivatives to a binary file, and writes appropriate steering and constraint files. This source file defines the main function, and a structure used to define a TTree structure, allowing parameter values to be output.
+  
+   @author John Smeaton
+   @version 01/02/2017
+ 
+ */
 
 #include "mptest1_port.h"
 
-
 using namespace std;
 
-
-// Structure for parameter values to be written to root file.
+/**
+   Structure used to write data to TTree, with variable for each branch in tree.
+ */
 struct Parameter_data {
-	int label;
-	int fitType;
-	float paramValue;
-	float paramError;
+	int label; /** Parameter label, ranging from 12-210 for plane displacements, and 501-600 for velocity deviations.*/
+	int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */ 
+	float paramValue; /** Value of parameter */
+	float paramError; /** Error on parameter value (zero for true parameters) */
 };
 
 
+/**
+   Main function for test data generation. Simulates tracks passing through plane detector, then writing data to a binary file, and generating appropriate constraint and steering files so plane displacements and drift velocity deviations may be fitted using the pede executable
+ */
 int main(int argc, char* argv[]) {
 
 	cout << endl;
@@ -56,7 +58,7 @@ int main(int argc, char* argv[]) {
 	}	
 
 	// Set up random number generator for Detector, and set up randomised plane properties.
-	Detector::instance()->set_seed(seed);
+	Detector::instance()->reseed(seed);
 	Detector::instance()->set_plane_properties();
 
 	// Name and properties of binary output file
@@ -79,7 +81,6 @@ int main(int argc, char* argv[]) {
 	ofstream constraint_file(constraint_file_name);
 	ofstream steering_file(steering_file_name);
 	ofstream true_params_file(true_params_file_name);
-
 
 	// Initialise structure to hold TTree data
 	Parameter_data true_params;
@@ -123,6 +124,7 @@ int main(int argc, char* argv[]) {
 	// Write values to TTree.
 	t.Write();
 
+	// Write constraint file, for use with pede
 	Detector::instance()->write_constraint_file(constraint_file);
 
 	// Check steering file is open, then write
@@ -171,7 +173,7 @@ int main(int argc, char* argv[]) {
 	// Iterate over number of tracks
 	for (int i=0; i<Detector::instance()->get_track_count(); i++) {
 
-		if (i==0) true_params_file << endl;
+		if (i==0) true_params_file << endl; // For readability
 
 		// Simulate track, and get data
 		LineData generated_line = Detector::instance()->gen_lin();
@@ -183,18 +185,17 @@ int main(int argc, char* argv[]) {
 			float local_derivs[2] {1.0, generated_line.x_hits[j]};
 			float global_derivs[2] {1.0, generated_line.y_drifts[j]};
 
-			// cout << generated_line.x_hits[j] << " " << generated_line.y_drifts[j] << endl;
-			// cout << 10 + (2 * (generated_line.i_hits[j] + 1)) << " " << 500 + generated_line.i_hits[j] + 1 << endl << endl;
-
 			// Labels for plane displacement, and velcity deviation. 
 			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
 			
+			// Number of local, global derivatives for use in mille.
 			int local_deriv_count = 2;
 			int global_deriv_count = 2;
 
 			// Write to binary file.
 			m.mille(2, local_derivs, 2, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
 
+			// For debugging
 			if (i==0) {
 				true_params_file << "Hit " << j << endl 
 								 << "Local: " << local_derivs[0] << " " << local_derivs[1] << endl

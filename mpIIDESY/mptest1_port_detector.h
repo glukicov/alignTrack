@@ -1,3 +1,13 @@
+/** 
+	mptest1_port_detector.h
+
+	Purpose: Simulate linear tracks passing through a plane drift chamber detector, with misaligned plane positions uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions and drift velocities to be calculated using pede. This header file contains definitions of constant variables used in Detector class, as well as function declarations, and definitions of some inline functions. 
+
+	@author John Smeaton
+	@version 01/02/2017
+
+ */
+
 #ifndef MPTEST1DETECTOR_H
 #define MPTEST1DETECTOR_H
 
@@ -9,68 +19,113 @@
 
 #include "TRandom3.h"
 
-// Structure to contain data of a generated line, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
+
+/**
+   Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
+*/
 struct LineData {
-	int hit_count;
-	std::vector<float> x_hits;
-	std::vector<float> y_hits;
-	std::vector<float> hit_sigmas;
-	std::vector<float> y_drifts;
-	std::vector<int> i_hits;
+	int hit_count; /** Number of hits in detector */
+	std::vector<float> x_hits; /** X-positions of hits in detector */
+	std::vector<float> y_hits; /** Y-positions of hits in detector */
+	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
+	std::vector<float> y_drifts; /** Drift distance from hit position to closest wire */
+	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at zero, and increasing by one for each adjacent plane */
 };
 
-
+/**
+   Singleton class to represent a detector made up of an array of planar drift chambers, simulating the passage of linear tracks through the detector.
+ */
 class Detector {
 
  private:
 
-	static Detector* s_instance;
+	static Detector* s_instance; // Pointer to instance of class
 
-	TRandom3* rand_gen;
-	int seed;
+	// Random number generator, and seed.
+	TRandom3* rand_gen; /** Random number generator, from Root */
+	int seed = 123456789; /** Random number generator seed */
 
 	// Numbers of planes, tracks
-	int PLANE_COUNT = 100;
-	int TRACK_COUNT = 10000;
+	const int PLANE_COUNT = 100; /** Number of detector planes */
+	const int TRACK_COUNT = 10000; /** Number of tracks to be simulated passing through detector */
 	
 	// Parameters for detector plane properties 
-	float PLANE_X_BEGIN = 10.0; // Beginning of detector
-	float PLANE_X_SEP = 10.0; // Separation between planes
-	float PLANE_THICKNESS = 2.0; // Thickness of planes
-	float PLANE_HEIGHT = 100.0; // Height of planes
-	float PLANE_EFF = 0.90; // Default efficiency of planes
-	float MEAS_SIGMA = 0.0150; // Default resolution of planes
+	const float PLANE_X_BEGIN = 10.0; /** Beginning x-position of detector */
+	const float PLANE_X_SEP = 10.0; /** Separation distance between planes */
+	const float PLANE_THICKNESS = 2.0; /** Thickness of planes (note: This is not used)*/
+	const float PLANE_HEIGHT = 100.0; /** Height of planes (distance covered by planes in y-direction) */
+	const float PLANE_EFF = 0.90; /** Default efficiency of planes (fraction of hits recorded to planes a track passes through) */
+	const float MEAS_SIGMA = 0.0150; /** Default resolution of planes (smearing distance for y-position of hits) */
 
-	// Standard deviations of distributions of plane displacement and drift velocity.
-	float DISPL_SIGMA = 0.1;
-	float DRIFT_SIGMA = 0.02;
+	const float DISPL_SIGMA = 0.1; /** Standard deviation of plane hit displacement distribution */
+	const float DRIFT_SIGMA = 0.02; /** Standard deviation of plane drift velocity fractional deviation distribution */
 
-	// Arrays of the plane displacement and velocity deviations.
-	std::vector<float> plane_pos_devs;
-	std::vector<float> drift_vel_devs;
+	std::vector<float> plane_pos_devs; /** Vector of plane position deviations */
+	std::vector<float> drift_vel_devs; /** Vector of plane drift velocity fractional deviations */
 
-	// Arrays of the plane efficiencies and resolutions
-	std::vector<float> true_plane_effs;
-	std::vector<float> true_meas_sigmas;
+	std::vector<float> true_plane_effs; /** Vector of plane efficiencies */
+	std::vector<float> true_meas_sigmas; /** Vector of plane resolutions */
 
+	// Class constructor and destructor
 	Detector();
+	~Detector();
 
  public:
 
-	static Detector* instance();
-	LineData gen_lin();
-	void set_seed(int new_seed);
+	static Detector* instance(); // Function to return pointer to class instance
+
+	LineData gen_lin(); // Function to simulate a track through the detector, then return data for plane hits. 
 	
-	void set_plane_properties();
-	void write_constraint_file(std::ofstream&);
+	void reseed(int new_seed); // Function to set seed for detector, then set up random number generator with it. 
+	
+	void set_plane_properties(); // Sets up plane position, velocity deviations, using random number generator. 
 
+	void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
+
+	//
+	// Getter methods
+	//
+
+	/**
+	   Get the number of tracks to be generated in the detector.
+
+	   @return Number of tracks.
+	 */
 	int get_track_count() {return TRACK_COUNT;}
-	int get_plane_count() {return PLANE_COUNT;}
-	int get_seed() {return seed;}
-	std::vector<float> get_drift_vel_devs() {return drift_vel_devs;}
-	std::vector<float> get_plane_pos_devs() {return plane_pos_devs;}
-};
 
+
+	/**
+	   Get the number of planes in the detector.
+
+	   @return Detector plane count.
+	 */
+	int get_plane_count() {return PLANE_COUNT;}
+
+
+	/**
+	   Get the numerical seed for the random number generator.
+
+	   @return RNG seed.
+	*/
+	int get_seed() {return seed;}
+
+
+	/**
+	   Get the drift velocity deviations for the detector planes.
+
+	   @return Vector of plane drift velocity deviations.
+	*/
+	std::vector<float> get_drift_vel_devs() {return drift_vel_devs;}
+
+
+	/**
+	   Get the plane position deviations from zero for the detector planes.
+
+	   @return Vector of plane position deviations.
+	 */
+	std::vector<float> get_plane_pos_devs() {return plane_pos_devs;}
+
+};
 
 
 #endif
