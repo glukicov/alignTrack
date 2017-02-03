@@ -4,7 +4,7 @@
 	Purpose: Simulate linear tracks passing through a plane drift chamber detector, with misaligned plane positions uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions and drift velocities to be calculated using pede. This header file contains definitions of constant variables used in Detector class, as well as function declarations, and definitions of some inline functions. 
 
 	@author John Smeaton
-	@version 01/02/2017
+	@version 03/02/2017
 
  */
 
@@ -17,8 +17,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "TRandom3.h"
-
+#include "random_buffer.h"
 
 /**
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
@@ -40,10 +39,6 @@ class Detector {
  private:
 
 	static Detector* s_instance; // Pointer to instance of class
-
-	// Random number generator, and seed.
-	TRandom3* rand_gen; /** Random number generator, from Root */
-	int seed = 123456789; /** Random number generator seed */
 
 	// Numbers of planes, tracks
 	const int PLANE_COUNT = 100; /** Number of detector planes */
@@ -75,9 +70,7 @@ class Detector {
 	static Detector* instance(); // Function to return pointer to class instance
 
 	LineData gen_lin(); // Function to simulate a track through the detector, then return data for plane hits. 
-	
-	void reseed(int new_seed); // Function to set seed for detector, then set up random number generator with it. 
-	
+		
 	void set_plane_properties(); // Sets up plane position, velocity deviations, using random number generator. 
 
 	void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
@@ -100,14 +93,6 @@ class Detector {
 	   @return Detector plane count.
 	 */
 	int get_plane_count() {return PLANE_COUNT;}
-
-
-	/**
-	   Get the numerical seed for the random number generator.
-
-	   @return RNG seed.
-	*/
-	int get_seed() {return seed;}
 
 
 	/**

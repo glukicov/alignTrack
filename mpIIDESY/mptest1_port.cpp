@@ -4,7 +4,7 @@
    Purpose: Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable plane offset and drift velocity. Writes global and local derivatives to a binary file, and writes appropriate steering and constraint files. This source file defines the main function, and a structure used to define a TTree structure, allowing parameter values to be output.
   
    @author John Smeaton
-   @version 01/02/2017
+   @version 03/02/2017
  
  */
 
@@ -38,27 +38,7 @@ int main(int argc, char* argv[]) {
     cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
 	cout << endl; 
 
-	// Get default seed from Detector class
-	int seed = Detector::instance()->get_seed();
 
-	// Get seed from console argument, if given.
-	if (argc >= 2) {
-		try {
-			seed = stoi(argv[1]);
-		} catch (exception& e) {
-			cout << "Exception caught: " << e.what() << endl;
-			cout << "Please ensure input seed is a number." << endl;
-			cout << endl;
-			return 1;
-		} 
-	} else if (argc > 2) {
-		cout << "Too many arguments. Please specify one seed, if desired." << endl;
-		cout << endl;
-		return 1;
-	}	
-
-	// Set up random number generator for Detector, and set up randomised plane properties.
-	Detector::instance()->reseed(seed);
 	Detector::instance()->set_plane_properties();
 
 	// Name and properties of binary output file
