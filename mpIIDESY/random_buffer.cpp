@@ -58,7 +58,6 @@ void RandomBuffer::open_uniform_file(string uniform_filename) {
 
    @param gaussian_filename String of filename for the file of random numbers.
  */
-
 void RandomBuffer::open_gaussian_file(string gaussian_filename) {
 	cout << "Opened file of gaussian randoms - " << gaussian_filename << endl;
 	gaussian_file.open(gaussian_filename.c_str());
@@ -78,7 +77,7 @@ float RandomBuffer::get_uniform_number() {
 		uniform_file >> rand_num;
 		return stof(rand_num);
 	} else {
-		throw "Please open file of uniform random numbers."
+		throw "Please open file of uniform random numbers.";
 	}
 }
 
@@ -96,6 +95,6 @@ float RandomBuffer::get_gaussian_number() {
 		gaussian_file >> rand_num;
 		return stof(rand_num);
 	} else {
-		throw "Please open file of gaussian random numbers"
+		throw "Please open file of gaussian random numbers";
 	}
 }
