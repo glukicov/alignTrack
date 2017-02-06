@@ -38,8 +38,32 @@ int main(int argc, char* argv[]) {
     cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
 	cout << endl; 
 
+	// Check if correct number of arguments specified, exiting if not
+	if (argc > 3) {
+		cout << "Too many arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. " << endl << endl;
+		return 1;
+	} else if (argc < 3) {
+		cout << "Too few arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. " << endl << endl;
+		return 1;
+	} else {
 
-	Detector::instance()->set_plane_properties();
+		// Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
+		try {
+			Detector::instance()->set_uniform_file(argv[1]);
+			Detector::instance()->set_gaussian_file(argv[2]);
+		} catch (ios_base::failure& e) {
+			cerr << "Filestream exception caught: " << e.what() << endl;
+			cerr << "Please ensure valid filenames are specified!" << endl;
+			return 1;
+		}
+	
+	}
+
+	try {
+		Detector::instance()->set_plane_properties();
+	} catch (invalid_argument& e) {
+		cerr << "Invalid argument error! " << e.what() << endl;
+	}
 
 	// Name and properties of binary output file
 	string binary_file_name = "mp2tst1_c.bin";

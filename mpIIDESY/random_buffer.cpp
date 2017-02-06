@@ -49,6 +49,9 @@ RandomBuffer* RandomBuffer::instance() {
    @param uniform_filename String of filename for the file of random numbers.
  */
 void RandomBuffer::open_uniform_file(string uniform_filename) {
+
+	uniform_file.exceptions(ifstream::failbit | ifstream::badbit);
+
 	cout << "Opened file of uniform randoms - " << uniform_filename << endl;
 	uniform_file.open(uniform_filename.c_str());
 }
@@ -59,6 +62,9 @@ void RandomBuffer::open_uniform_file(string uniform_filename) {
    @param gaussian_filename String of filename for the file of random numbers.
  */
 void RandomBuffer::open_gaussian_file(string gaussian_filename) {
+
+	gaussian_file.exceptions(ifstream::failbit | ifstream::badbit);
+
 	cout << "Opened file of gaussian randoms - " << gaussian_filename << endl;
 	gaussian_file.open(gaussian_filename.c_str());
 }
@@ -73,9 +79,11 @@ float RandomBuffer::get_uniform_number() {
 
 	// Test if file open, then read and return random number if it is. Otherwise, throw exception.
 	if (uniform_file.is_open()) {
-		string rand_num;
+
+		float rand_num;
 		uniform_file >> rand_num;
-		return stof(rand_num);
+		return rand_num;
+
 	} else {
 		throw "Please open file of uniform random numbers.";
 	}
@@ -90,10 +98,13 @@ float RandomBuffer::get_uniform_number() {
 float RandomBuffer::get_gaussian_number() {
 
 	// Test if file is open, then read and return random number if it is. Otherwise, throw exception.
+
 	if (gaussian_file.is_open()) {
-		string rand_num;
+
+		float rand_num;
 		gaussian_file >> rand_num;
-		return stof(rand_num);
+		return rand_num;
+
 	} else {
 		throw "Please open file of gaussian random numbers";
 	}

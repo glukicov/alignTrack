@@ -16,6 +16,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 #include "random_buffer.h"
 
@@ -74,6 +75,11 @@ class Detector {
 	void set_plane_properties(); // Sets up plane position, velocity deviations, using random number generator. 
 
 	void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
+
+	void set_uniform_file(std::string); // Set filename for uniform random numbers
+
+	void set_gaussian_file(std::string); // Set filename for gaussian random numbers
+
 
 	//
 	// Getter methods

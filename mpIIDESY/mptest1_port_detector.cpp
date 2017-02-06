@@ -16,11 +16,9 @@ using namespace std;
 Detector* Detector::s_instance = NULL; 
 
 /** 
-	Constructor for detector class, which opens plaintext files containing randomly generated numbers.
+	Empty constructor for detector class.
  */
 Detector::Detector() {
-	RandomBuffer::instance()->open_uniform_file("uniform_ran.txt");
-	RandomBuffer::instance()->open_gaussian_file("gaussian_ran.txt");
 }
 
 /** 
@@ -164,3 +162,24 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 		}	
 	}
 }
+
+
+/**
+   Set filename to read uniform random numbers from.
+
+   @param uniform_filename String for filename of file of uniform random numbers.
+ */
+void Detector::set_uniform_file(string uniform_filename) {
+	RandomBuffer::instance()->open_uniform_file(uniform_filename);
+}
+
+
+/**
+   Set filename to read gaussian random numbers from.
+
+   @param uniform_filename String for filename of file of gaussian random numbers.
+ */
+void Detector::set_gaussian_file(string gaussian_filename) {
+	RandomBuffer::instance()->open_gaussian_file(gaussian_filename);
+}
+

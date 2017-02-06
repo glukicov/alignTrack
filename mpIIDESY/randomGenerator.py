@@ -56,6 +56,8 @@ for opt, arg in opts:
             gaussian = True
         elif arg == "False":
             gaussian = False
+    elif opt in ("-n", "--count"):
+        count = int(arg)
 
 
 if (uniform and gaussian):
