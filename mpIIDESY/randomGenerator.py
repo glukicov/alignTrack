@@ -12,6 +12,7 @@ import sys
 import getopt
 import os
 import random
+import matplotlib.pyplot as plt
 
 
 # Get system arguments, define string showing help message
@@ -82,14 +83,26 @@ random.seed(seednum)
 # Open output file
 output_file = open(output_filename, "w")
 
+generated_randoms = []
+
 # Generate specified count of random numbers, writing to output file
 for i in xrange(count):
     
+    generated_random = 0.0;
+
     # Check if using uniform of gaussian distribution, writing appropriate random number to file
     if (uniform):
-        output_file.write(str(random.random()) + "\n")
+        generated_random = random.random()
     elif (gaussian):
-        output_file.write(str(random.normalvariate(0, 1)) + "\n")
+        generated_random = random.normalvariate(0, 1)
+    
+    output_file.write(str(generated_random) + "\n")
+    generated_randoms.append(generated_random)
 
 # Close output file
 output_file.close()
+
+
+plt.hist(generated_randoms, 100)
+plt.title("Generated Randoms Sanity Histogram\n" + str(len(generated_randoms)) + " Numbers Generated, With Seed " + str(seednum))
+plt.show()
