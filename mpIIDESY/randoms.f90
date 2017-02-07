@@ -141,17 +141,27 @@ END SUBROUTINE gbrtim
 REAL(mps) FUNCTION uran()     ! U(0,1)
     USE mpdef
 
-    IMPLICIT NONE
-    INTEGER(mpi) :: indx
-    INTEGER(mpi) :: ndim
+    ! IMPLICIT NONE
+    ! INTEGER(mpi) :: indx
+    ! INTEGER(mpi) :: ndim
 
-    PARAMETER (ndim=100)
-    REAL(mps) :: buffer(ndim)
-    DATA indx/ndim/
-    SAVE indx,buffer
-    indx=MOD(indx,ndim)+1
-    IF(indx == 1) CALL gbrshi(ndim,buffer)
-    uran=buffer(indx)
+    ! PARAMETER (ndim=100)
+    ! REAL(mps) :: buffer(ndim)
+    ! DATA indx/ndim/
+    ! SAVE indx,buffer
+    ! indx=MOD(indx,ndim)+1
+    ! IF(indx == 1) CALL gbrshi(ndim,buffer)
+    ! uran=buffer(indx)
+
+    IMPLICIT NONE
+
+    REAL(mps) :: unif_rand_in
+
+    READ(42,*) unif_rand_in
+    !WRITE(*,*) unif_rand_in
+
+    uran = unif_rand_in
+
 END FUNCTION uran
 
 !> Gauss random number.
@@ -161,39 +171,50 @@ END FUNCTION uran
 REAL(mps) FUNCTION gran()     ! N(0,1)
     USE mpdef
 
-    IMPLICIT NONE
-    REAL(mps) :: al
-    REAL(mps) :: cs
-    INTEGER(mpi) :: indx
-    INTEGER(mpi) :: kn
-    INTEGER(mpi) :: ndim
-    REAL(mps) :: radsq
-    REAL(mps) :: rn1
-    REAL(mps) :: rn2
-    REAL(mps) :: sn
+!     IMPLICIT NONE
+!     REAL(mps) :: al
+!     REAL(mps) :: cs
+!     INTEGER(mpi) :: indx
+!     INTEGER(mpi) :: kn
+!     INTEGER(mpi) :: ndim
+!     REAL(mps) :: radsq
+!     REAL(mps) :: rn1
+!     REAL(mps) :: rn2
+!     REAL(mps) :: sn
 
-    PARAMETER (ndim=100)
-    REAL(mps) :: buffer(ndim)
-    DATA indx/ndim/,kn/1/
-    SAVE indx,buffer,kn,cs,al
-    !     ...
-    IF(kn <= 1) THEN
-        !        two U(-1,+1) random numbers
-10      indx=MOD(indx,ndim)+2
-        IF(indx == 2) CALL gbrshi(ndim,buffer)
-        rn1=buffer(indx-1)-1.0+buffer(indx-1)
-        rn2=buffer(indx  )-1.0+buffer(indx)
-        radsq=rn1*rn1+rn2*rn2
-        IF(radsq > 1.0) GO TO 10 ! test point inside circle?
-        !        sine and cosine for random phi
-        sn=rn1/SQRT(radsq)
-        cs=rn2/SQRT(radsq)
-        !        transform to gaussians
-        al=SQRT(-2.0*LOG(radsq))
-        kn =2
-        gran=sn*al
-    ELSE
-        kn =1
-        gran=cs*al
-    END IF
+!     PARAMETER (ndim=100)
+!     REAL(mps) :: buffer(ndim)
+!     DATA indx/ndim/,kn/1/
+!     SAVE indx,buffer,kn,cs,al
+!     !     ...
+!     IF(kn <= 1) THEN
+!         !        two U(-1,+1) random numbers
+! 10      indx=MOD(indx,ndim)+2
+!         IF(indx == 2) CALL gbrshi(ndim,buffer)
+!         rn1=buffer(indx-1)-1.0+buffer(indx-1)
+!         rn2=buffer(indx  )-1.0+buffer(indx)
+!         radsq=rn1*rn1+rn2*rn2
+!         IF(radsq > 1.0) GO TO 10 ! test point inside circle?
+!         !        sine and cosine for random phi
+!         sn=rn1/SQRT(radsq)
+!         cs=rn2/SQRT(radsq)
+!         !        transform to gaussians
+!         al=SQRT(-2.0*LOG(radsq))
+!         kn =2
+!         gran=sn*al
+!     ELSE
+!         kn =1
+!         gran=cs*al
+!    END IF
+
+    IMPLICIT NONE
+
+    REAL(mps) :: gaus_rand_in
+
+    READ(43,*) gaus_rand_in
+    !WRITE(*,*) gaus_rand_in
+
+    gran = gaus_rand_in
+
+
 END FUNCTION gran

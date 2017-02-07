@@ -136,6 +136,9 @@ SUBROUTINE mptest
     OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2test1_true_params_fortran.txt')
 
+    OPEN(UNIT=42,FILE="uniform_ran.txt")
+    OPEN(UNIT=43,FILE="gaussian_ran.txt")
+
     DO i=1,nplan
         eff(i)=effp          ! plane efficiency
         sgm(i)=sgmp          ! measurement sigma
@@ -307,6 +310,10 @@ SUBROUTINE mptest
     REWIND (51)
     CLOSE  (51)
 
+    CLOSE (42)
+    CLOSE (43)
+    
+
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
     !      DO I=1,NPLAN
@@ -349,6 +356,7 @@ SUBROUTINE genlin(ip)
     !     ...
     ynull=0.5*heit+0.1*heit*(uran()-0.5)   ! uniform vertex
     slope=(uran()-0.5)*heit/(REAL(nplan-1,mps)*disx)
+
     IF(ip /= 0) THEN
         WRITE(*,*) ' '
     !         WRITE(*,*) 'YNULL=',YNULL,'    SLOPE=',SLOPE
