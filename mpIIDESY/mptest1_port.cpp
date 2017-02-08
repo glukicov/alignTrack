@@ -1,130 +1,31 @@
 /**
- * Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable
- * plane offset and drift velocity. Writes global and local derivatives to a binary file,
- * and writes appropriate steering and constraint files.
- *
- * John Smeaton 14/01/2017
- *
- **/
-
-
+   mptest1_port.cpp
+   
+   Purpose: Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable plane offset and drift velocity. Writes global and local derivatives to a binary file, and writes appropriate steering and constraint files. This source file defines the main function, and a structure used to define a TTree structure, allowing parameter values to be output.
+  
+   @author John Smeaton
+   @version 01/02/2017
+ 
+ */
 
 #include "mptest1_port.h"
 
-
 using namespace std;
 
-// Number of planes and tracks.
-const int plane_count = 100;
-int track_count = 10000;
-
-// Parameters for detector plane properties 
-float plane_x_begin = 10.0; // Beginning of detector
-float plane_x_sep = 10.0; // Separation between planes
-float plane_thickness = 2.0; // Thickness of planes
-float plane_height = 100.0; // Height of planes
-float plane_eff = 0.90; // Default efficiency of planes
-float meas_sigma = 0.0150; // Default resolution of planes
-	
-// Standard deviations of distributions of plane displacement and drift velocity.
-float displ_sigma = 0.1;
-float drift_sigma = 0.02;
-
-// Arrays of the plane displacement and velocity deviations.
-float plane_pos_devs[plane_count];
-float drift_vel_devs[plane_count];
-
-// Arrays of the plane efficiencies and resolutions
-float true_plane_effs[plane_count];
-float true_meas_sigmas[plane_count];
-
-// Structure to contain data of a generated line, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
-struct Line_data {
-	int hit_count;
-	vector<float> x_hits;
-	vector<float> y_hits;
-	vector<float> hit_sigmas;
-	vector<float> y_drifts;
-	vector<int> i_hits;
-};
-
-// Structure for parameter values to be written to root file.
+/**
+   Structure used to write data to TTree, with variable for each branch in tree.
+ */
 struct Parameter_data {
-	int label;
-	int fitType;
-	float paramValue;
-	float paramError;
+	int label; /** Parameter label, ranging from 12-210 for plane displacements, and 501-600 for velocity deviations.*/
+	int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */ 
+	float paramValue; /** Value of parameter */
+	float paramError; /** Error on parameter value (zero for true parameters) */
 };
 
 
-// Random devices for seeding
-random_device uniform_device;
-random_device gaus_device;
-
-// Distributions for random numbers
-uniform_real_distribution<float> uniform_dist(0.0, 1.0);
-normal_distribution<float> gaus_dist(0.0, 1.0);
-
-// Declare random number generator, with seed
-int seed = 453032763;
-TRandom3* rand_gen;
-
-
-// Function to simulate a linear track through the detector, returning data about detector hits.
-Line_data genlin() {
-
-	// Set up new container for track data, with hit count set to zero
-	Line_data line;
-	line.hit_count = 0;
-
-	// Generate random values of track intercept and gradient.
-	float y_intercept = (0.5 * plane_height) + (0.1 * plane_height * (rand_gen->Rndm() - 0.5));
-	float gradient = ((rand_gen->Rndm() - 0.5) * plane_height) / ((plane_count - 1) * plane_x_sep);
-	   
-	// Iterate across planes
-	for (int i=0; i < plane_count; i++) {
-
-		// Get position of plane
-		float x = plane_x_begin + (i * plane_x_sep);
-
-		// Check if hit is registered, due to limited plane efficiency.
-		if (rand_gen->Rndm() < true_plane_effs[i]) {
-			
-			// Calculate true value of y where line intercects plane, and biased value where hit is recorded, due to plane displacement
-			float true_y = y_intercept + (gradient * x);
-			float biased_y = true_y - plane_pos_devs[i];
-			
-			// Calculate number of struck wire. Do not continue simulating this track if it passes outside range of wire values.
-			int wire_num = int(1 + (biased_y / 4));
-			if(wire_num <= 0 || wire_num > 25) break;		
-
-			// Record x-position, and plane number, of hit.
-			line.x_hits.push_back(x);
-			line.i_hits.push_back(i);
-
-			// Calculate smear value from detector resolution.
-			float smear_y = true_meas_sigmas[i] * rand_gen->Gaus(0,1); 
-
-			// Calculate y-position of hit wire, then calculate drift distance.
-			float y_wire = (float) (wire_num * 4.0) - 2.0;
-			line.y_drifts.push_back(biased_y - y_wire);			
-
-			// Calculate deviation in recorded y position due to drift velocity deviation
-			float y_dvds = line.y_drifts[line.hit_count] * drift_vel_devs[i];
-
-			// Calculate recorded hit y-position, with deviations due to smearing and drift velocity deviation.
-			line.y_hits.push_back(biased_y + smear_y - y_dvds);
-
-			// Record uncertainty in hit y-position, and increment number of hits.
-			line.hit_sigmas.push_back(true_meas_sigmas[i]);
-			line.hit_count++;
-
-		}
-	} 
-	return line; // Return data from simulated track
-}
-
-
+/**
+   Main function for test data generation. Simulates tracks passing through plane detector, then writing data to a binary file, and generating appropriate constraint and steering files so plane displacements and drift velocity deviations may be fitted using the pede executable
+ */
 int main(int argc, char* argv[]) {
 
 	cout << endl;
@@ -137,7 +38,9 @@ int main(int argc, char* argv[]) {
     cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
 	cout << endl; 
 
-	
+	// Get default seed from Detector class
+	int seed = Detector::instance()->get_seed();
+
 	// Get seed from console argument, if given.
 	if (argc >= 2) {
 		try {
@@ -152,13 +55,11 @@ int main(int argc, char* argv[]) {
 		cout << "Too many arguments. Please specify one seed, if desired." << endl;
 		cout << endl;
 		return 1;
-	}
-	
-	cout << "Seed: " << seed << endl;
+	}	
 
-	
-	// Define random number generator, with seed
-	rand_gen = new TRandom3(seed);
+	// Set up random number generator for Detector, and set up randomised plane properties.
+	Detector::instance()->reseed(seed);
+	Detector::instance()->set_plane_properties();
 
 	// Name and properties of binary output file
 	string binary_file_name = "mp2tst1_c.bin";
@@ -181,26 +82,6 @@ int main(int argc, char* argv[]) {
 	ofstream steering_file(steering_file_name);
 	ofstream true_params_file(true_params_file_name);
 
-	// Iterate across planes, setting plane efficiencies, resolutions, deviations in position and drift velocity.
-	for (int i=0; i<plane_count; i++) {
-		true_plane_effs[i] = plane_eff;
-		true_meas_sigmas[i] = meas_sigma;
-
-		plane_pos_devs[i] = displ_sigma * rand_gen->Gaus(0,1);
-		drift_vel_devs[i] = drift_sigma * rand_gen->Gaus(0,1);
-
-	}
-
-	true_params_file << endl; // Insert blank line
-
-	// To constrain measurement
-	plane_pos_devs[9] = 0.0;
-	plane_pos_devs[89] = 0.0;
-				
-	// Set bad plane, with poor efficiency and resolution.
-	true_plane_effs[6] = 0.1;
-	true_meas_sigmas[6] = 0.0400;
-	
 	// Initialise structure to hold TTree data
 	Parameter_data true_params;
 
@@ -214,33 +95,37 @@ int main(int argc, char* argv[]) {
 	t.Branch("paramValue", &true_params.paramValue, "paramValue/F");
 	t.Branch("paramError", &true_params.paramError, "paramError/F");
 
+	true_params_file << endl; // Insert blank line
 
 	// Print plane labels, and plane displacements to file
-	for (int i=0; i<plane_count; i++) { 
-		true_params_file << 10 + (2 * (i + 1)) << " " << -plane_pos_devs[i] << endl;
+	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
+		true_params_file << 10 + (2 * (i + 1)) << " " << -Detector::instance()->get_plane_pos_devs()[i] << endl;
 		
 		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
 		true_params.fitType = 0;
 		true_params.paramError = 0;
 		true_params.label = 10 + (2 * (i + 1));
-		true_params.paramValue = -plane_pos_devs[i];
+		true_params.paramValue = -Detector::instance()->get_plane_pos_devs()[i];
 		t.Fill();
 	}
 
 	// Print drift velocity labels, and drift velocity displacements to file.
-	for (int i=0; i<plane_count; i++) { 
-		true_params_file << 500 + i + 1 << " " << -drift_vel_devs[i] << endl; 
+	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
+		true_params_file << 500 + i + 1 << " " << -Detector::instance()->get_drift_vel_devs()[i] << endl; 
 
 		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
 		true_params.fitType = 0;
 		true_params.label = 500 + i + 1;
-		true_params.paramValue = -drift_vel_devs[i];
+		true_params.paramValue = -Detector::instance()->get_drift_vel_devs()[i];
 		true_params.paramError = 0;
 		t.Fill();
 	}
 
 	// Write values to TTree.
 	t.Write();
+
+	// Write constraint file, for use with pede
+	Detector::instance()->write_constraint_file(constraint_file);
 
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {
@@ -278,32 +163,6 @@ int main(int argc, char* argv[]) {
  
 	}	
 
-	// Check constraints file is open, then write. [Note - Don't yet understand these]
-	if (constraint_file.is_open()) {
-		
-		cout << "Writing constraint file..." << endl;
-
-		constraint_file << "Constraint 0.0" << endl;
-		for (int i=0; i<plane_count; i++) {
-			int labelt = 10 + (i + 1) * 2;
-			constraint_file << labelt << " " << fixed << setprecision(7) << 1.0 << endl;
-		}
-
-
-		float d_bar = 0.5 * (plane_count - 1) * plane_x_sep; 
-		float x_bar = plane_x_begin + (0.5 * (plane_count - 1) * plane_x_sep);
-		constraint_file << "Constraint 0.0" << endl;
-		for (int i=0; i<plane_count; i++) {
-			
-			int labelt = 10 + (i + 1) * 2;
-			
-			float x = plane_x_begin + (i * plane_x_sep);
-			float ww = (x - x_bar) / d_bar;
-
-			constraint_file << labelt << " " << fixed << setprecision(7) << ww << endl;
-		}	
-	
-	}
 
 	cout << "Generating tracks, writing hit data to binary..." << endl;
 	
@@ -312,12 +171,12 @@ int main(int argc, char* argv[]) {
 	int all_record_count = 0;
 
 	// Iterate over number of tracks
-	for (int i=0; i<track_count; i++) {
+	for (int i=0; i<Detector::instance()->get_track_count(); i++) {
 
-		if (i==0) true_params_file << endl;
+		if (i==0) true_params_file << endl; // For readability
 
 		// Simulate track, and get data
-		Line_data generated_line = genlin();
+		LineData generated_line = Detector::instance()->gen_lin();
 		
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {
@@ -329,12 +188,14 @@ int main(int argc, char* argv[]) {
 			// Labels for plane displacement, and velcity deviation. 
 			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
 			
+			// Number of local, global derivatives for use in mille.
 			int local_deriv_count = 2;
 			int global_deriv_count = 2;
 
 			// Write to binary file.
 			m.mille(2, local_derivs, 2, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
 
+			// For debugging
 			if (i==0) {
 				true_params_file << "Hit " << j << endl 
 								 << "Local: " << local_derivs[0] << " " << local_derivs[1] << endl
@@ -344,10 +205,8 @@ int main(int argc, char* argv[]) {
 								 << "Sigma: " << generated_line.hit_sigmas[j] << endl << endl;
 
 			}
-				
 
 			all_hit_count++; // Increment total number of recorded hits
-
 		}
 
 		m.end(); // End of this record
@@ -356,7 +215,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	cout << " " << endl;
-	cout << track_count << " tracks generated with " << all_hit_count << " hits." << endl;
+	cout << Detector::instance()->get_track_count() << " tracks generated with " << all_hit_count << " hits." << endl;
 	cout << all_record_count << " records written." << endl;
 	cout << " " << endl; 
 
@@ -364,8 +223,6 @@ int main(int argc, char* argv[]) {
 	constraint_file.close();
 	steering_file.close();
 	true_params_file.close();
-
-	delete rand_gen; // Cleaning up
 
 	// Terminate program.
 	return 0;
