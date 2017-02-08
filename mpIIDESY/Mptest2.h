@@ -17,6 +17,7 @@
 #include <TH2D.h> //1D Histo Root class
 #include <TFile.h> // data records for ROOT 
 #include <TRandom3.h> // rnd generator class for ROOT
+#include <TTree.h>
 
 std::vector<float> genlin2(int&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<int>&);
 
