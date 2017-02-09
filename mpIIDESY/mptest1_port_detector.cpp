@@ -4,7 +4,7 @@
 	Purpose: Simulate linear tracks passing through a plane drift chamber detector, with misaligned plane positions uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions and drift velocities to be calculated using pede. This source file contains definitions of various functions in Detector class. 
 
 	@author John Smeaton
-	@version 01/02/2017
+	@version 03/02/2017
 
  */
 
@@ -12,22 +12,19 @@
 
 using namespace std;
 
-// Set up empty pointer for instance of class
+// Set up empty pointer for instance of class.
 Detector* Detector::s_instance = NULL; 
 
 /** 
-	Empty constructor for detector class
+	Empty constructor for detector class.
  */
 Detector::Detector() {
-	// Empty constructor
 }
 
 /** 
-	Destructor for detector class. Deletes random number generator pointer.
+	Empty destructor for detector class.
 */
 Detector::~Detector() {
-	// Delete random generator
-	delete rand_gen;
 }
 
 
@@ -56,8 +53,8 @@ LineData Detector::gen_lin() {
 	line.hit_count = 0;
 
 	// Generate random values of track intercept and gradient.
-	float y_intercept = (0.5 * PLANE_HEIGHT) + (0.1 * PLANE_HEIGHT * (rand_gen->Rndm() - 0.5)); 
-	float gradient = ((rand_gen->Rndm() - 0.5) * PLANE_HEIGHT) / ((PLANE_COUNT - 1) * PLANE_X_SEP);
+	float y_intercept = (0.5 * PLANE_HEIGHT) + (0.1 * PLANE_HEIGHT * (RandomBuffer::instance()->get_uniform_number() - 0.5)); 
+	float gradient = ((RandomBuffer::instance()->get_uniform_number() - 0.5) * PLANE_HEIGHT) / ((PLANE_COUNT - 1) * PLANE_X_SEP);
 
 	// Iterate across planes
 	for (int i=0; i<PLANE_COUNT; i++) {
@@ -66,7 +63,7 @@ LineData Detector::gen_lin() {
 		float x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
 
 		// Check if hit is registered, due to limited plane efficiency.
-		if (rand_gen->Rndm() < true_plane_effs[i]) {
+		if (RandomBuffer::instance()->get_uniform_number() < true_plane_effs[i]) {
 
 			// Calculate true value of y where line intercects plane, and biased value where hit is recorded, due to plane displacement
 			float y_true = y_intercept + (gradient * x);
@@ -81,7 +78,7 @@ LineData Detector::gen_lin() {
 			line.i_hits.push_back(i);
 
 			// Calculate smear value from detector resolution.			
-			float y_smear = true_meas_sigmas[i] * rand_gen->Gaus(0,1);
+			float y_smear = true_meas_sigmas[i] * RandomBuffer::instance()->get_gaussian_number();
 
 			// Calculate y-position of hit wire, then calculate drift distance.
 			float y_wire = (float) (wire_num * 4.0) - 2.0;
@@ -104,20 +101,6 @@ LineData Detector::gen_lin() {
 
 
 /**
-   Set seed for random number generator.
-
-   @param new_seed The seed to be used for random number generation
- */
-void Detector::reseed(int new_seed) {
-	
-	// Set random number seed, then set up a random number generator using this seed.
-	seed = new_seed;
-	rand_gen = new TRandom3(seed);
-	cout << "New Seed Set: " << seed << endl;
-}
-
-
-/**
    Set up plane position deviations, and fractional drift velocity deviations, using random gaussian distributions.
  */
 void Detector::set_plane_properties() {
@@ -130,8 +113,8 @@ void Detector::set_plane_properties() {
 		true_meas_sigmas.push_back(MEAS_SIGMA);
 
 		// Set up random plane position deviations, and velocity deviations
-		plane_pos_devs.push_back(DISPL_SIGMA * rand_gen->Gaus(0,1));
-		drift_vel_devs.push_back(DRIFT_SIGMA * rand_gen->Gaus(0,1));
+		plane_pos_devs.push_back(DISPL_SIGMA * RandomBuffer::instance()->get_gaussian_number());
+		drift_vel_devs.push_back(DRIFT_SIGMA * RandomBuffer::instance()->get_gaussian_number());
 	}
 
 	// Set up bad plane with low efficiency, and bad resolution.
@@ -179,3 +162,24 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 		}	
 	}
 }
+
+
+/**
+   Set filename to read uniform random numbers from.
+
+   @param uniform_filename String for filename of file of uniform random numbers.
+ */
+void Detector::set_uniform_file(string uniform_filename) {
+	RandomBuffer::instance()->open_uniform_file(uniform_filename);
+}
+
+
+/**
+   Set filename to read gaussian random numbers from.
+
+   @param uniform_filename String for filename of file of gaussian random numbers.
+ */
+void Detector::set_gaussian_file(string gaussian_filename) {
+	RandomBuffer::instance()->open_gaussian_file(gaussian_filename);
+}
+

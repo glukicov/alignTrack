@@ -1,7 +1,7 @@
 #make file for Mptest2.cpp (translation to C++ from mptest2.f90)
 
 PROGNAME      = MpTest1
-SOURCES       = mptest1_port.cpp mptest1_port_detector.cpp 
+SOURCES       = mptest1_port.cpp mptest1_port_detector.cpp random_buffer.cpp
 INCLUDES      = 
 OBJECTS       = $(patsubst %.cpp, %.o, $(SOURCES))
 ROOTCFLAGS   := $(shell root-config --cflags)

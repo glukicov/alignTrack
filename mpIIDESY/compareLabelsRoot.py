@@ -3,7 +3,7 @@
 # between these values, normalised by the fitted parameter uncertainty, against
 # the label number of these parameters.
 #
-# John Smeaton 27/01/2017
+# John Smeaton 07/02/2017
 #  
 
 import ROOT
@@ -17,7 +17,7 @@ import millepede_utils
 
 # Get system arguments, define string showing help message
 argv = sys.argv[1:]
-helpstring = "compareMethodsRoot.py -i <input_file> -o <output_dir>"
+helpstring = "compareLabelsRoot.py -i <input_file> -o <output_dir>"
 
 input_filename = "" # Define filename string
 
@@ -74,6 +74,9 @@ fit_error_vel_dev = []
 label_plane_disp = []
 label_vel_dev = []
 
+true_vel_dev = []
+true_plane_disp = []
+
 
 # Loop across all recorded parameter labels
 for label in param_true_vals.iterkeys():
@@ -82,11 +85,28 @@ for label in param_true_vals.iterkeys():
     # values to appropriate lists
     if label < 500:
         label_plane_disp.append(label)
+        true_plane_disp.append(param_true_vals[label])
         fit_error_plane_disp.append((param_fit_vals[label] - param_true_vals[label]) / param_errors[label])
     else:
         label_vel_dev.append(label)
+        true_vel_dev.append(param_true_vals[label])
         fit_error_vel_dev.append((param_fit_vals[label] - param_true_vals[label]) / param_errors[label])
         
+
+# Plot scatter graph of plane displacements against parameter label
+plt.plot(label_plane_disp, true_plane_disp, 'b.')
+plt.title("True Plane Displacement Parameter Values")
+plt.ylabel("Parameter Value")
+plt.xlabel("Parameter Label")
+plt.show()
+
+# Plot scatter graph of plane displacements against parameter label
+plt.plot(label_vel_dev, true_vel_dev, 'b.')
+plt.title("True Velocity Deviation Parameter Values")
+plt.ylabel("Parameter Value")
+plt.xlabel("Parameter Label")
+plt.show()
+
 
 # Plot scatter graph of plane displacement differences against parameter label
 plt.plot(label_plane_disp, fit_error_plane_disp, 'b.')
@@ -94,7 +114,6 @@ plt.title("Differences Between Fitted, True Plane Displacement Parameters, \n Di
 plt.ylabel("Normalised Difference")
 plt.xlabel("Parameter Label")
 plt.show()
-
 
 # Plot scatter graph of velocity deviation differences against parameter label
 plt.plot(label_vel_dev, fit_error_vel_dev, 'b.')
