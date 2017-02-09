@@ -1,4 +1,4 @@
-import toytraceback as ttb
+import toytracebackthreemod as ttb
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import matplotlib.patches as mpatches
@@ -7,19 +7,24 @@ import random
 import sys
 import math
 import scipy.stats as stats
+import time
 from scipy.optimize import curve_fit 
+
+start_time = time.time()
 
 # Number of tracks to fit
 track_count = 50
 
 # Whether to include smearing of residuals, and finite straw size
 detector_smear = True
-detector_finite_straws = False
+detector_finite_straws = True
 
 # Set up detector, and change alignment of first module
-module_alignment = 1.5
+module_1_alignment = 1.5
+module_2_alignment = -1.2
 true_detector = ttb.Detector(smearing=detector_smear, finite_straws=detector_finite_straws)
-true_detector.set_module_x_align(1, module_alignment)
+true_detector.set_module_x_align(1, module_1_alignment)
+true_detector.set_module_x_align(2, module_2_alignment)
 
 # Get wire coordinates
 x_true_wires = true_detector.get_wires_x()
@@ -62,10 +67,11 @@ for event in events:
 
 wire_keys = fitting_detector.get_hit_keys()
 
-guess = [0.0 for i in xrange((2 * track_count) + 1)] # Initial guess for fitted track gradient and intercept, and module alignment (spurious convergence without this)
+guess = [0.0 for i in xrange((2 * track_count) + 2)] # Initial guess for fitted track gradient and intercept, and module alignment (spurious convergence without this)
 
 print ""
-print "True Alignment:", module_alignment, "mm"
+print "True Alignment (Module 1):", module_1_alignment, "mm"
+print "True Alignment (Module 2):", module_2_alignment, "mm"
 print ""
 print "Fitting:"
 
@@ -76,13 +82,17 @@ popt, pcov = curve_fit(fitting_detector.get_hit_radius, wire_keys, hit_rads, p0=
 print "Complete"
 print ""
 
-print "Fitted Alignment:", popt[-1], "mm"
+print "Fitted Alignment (Module 1):", popt[-2], "mm"
+print "Fitted Al. Unc. (1):", pcov[-2][-2], "mm"
+print "Fitted Alignment (Module 2):", popt[-1], "mm"
+print "Fitted Al. Unc. (2):", pcov[-1][-1], "mm"
 
 # Calculate residuals and chi-squared for residuals, to test goodness of fit.
 residuals = np.array(hit_rads) - np.array(fitting_detector.get_hit_radius(wire_keys, popt)) / 1.0
 deg_freedom = len(residuals) - len(popt)
 chi_squared = np.sum((residuals / fit_sigmas)**2)
 
+print residuals
 
 # Print stats for all residuals
 print ""
@@ -142,11 +152,13 @@ plt.ylabel("y-position / mm")
 
 hits_patch = mpatches.Patch(color='none', label=("Hits: " + str(len(residuals))))
 chi_squared_patch = mpatches.Patch(color='none', label=("$\chi^2_{red}$: " + str(chi_squared / deg_freedom)))
-true_align_patch = mpatches.Patch(color='none', label=("True al.: " + str(module_alignment)))
-fit_align_patch = mpatches.Patch(color='none', label=("Fit al.: " + str(popt[-1])))
+true_align_patch_1 = mpatches.Patch(color='none', label=("True al. (1): " + str(module_1_alignment)))
+true_align_patch_2 = mpatches.Patch(color='none', label=("True al. (2): " + str(module_2_alignment)))
+fit_align_patch_1= mpatches.Patch(color='none', label=("Fit al. (1): " + str(popt[-2])))
+fit_align_patch_2= mpatches.Patch(color='none', label=("Fit al. (2): " + str(popt[-1])))
 
-diag_handles = [hits_patch, chi_squared_patch, true_align_patch, fit_align_patch]
-diag_labels = [hits_patch.get_label(), chi_squared_patch.get_label(), true_align_patch.get_label(), fit_align_patch.get_label()]
+diag_handles = [hits_patch, chi_squared_patch, true_align_patch_1, fit_align_patch_1, true_align_patch_2, fit_align_patch_2]
+diag_labels = [hits_patch.get_label(), chi_squared_patch.get_label(), true_align_patch_1.get_label(), fit_align_patch_1.get_label(), true_align_patch_2.get_label(), fit_align_patch_2.get_label()]
 
 plt.legend(diag_handles, diag_labels, loc='best', frameon=False)
 
@@ -191,6 +203,10 @@ chi_squared_fitted_gauss = np.sum(((res_fun_bin_contents - res_obs_bin_contents)
 print "Number of bins used for test:", len(res_obs_bin_contents)
 print "Reduced Chi-squared of measured residuals to fitted gaussian:", chi_squared_fitted_gauss / len(res_obs_bin_contents)
 print "P(chi^2):", 1 - stats.chi2.cdf(chi_squared_fitted_gauss, len(res_obs_bin_contents))
+print ""
+
+end_time = time.time()
+print "Completed in " + str(end_time - start_time) + "s."
 print ""
 
 # Patches to show chi-squared, number of entries in legend
