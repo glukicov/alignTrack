@@ -1,6 +1,6 @@
 // TODOs: 
 //TODO move random intialisation outside of the genlin2() function, oterwise might get the same numbers...
-// 0) FIX: Warning: insufficient constraint equations
+// 0) FIX:  Warning: insufficient constraint equations
 // A) Generate RND to txt file and use from there
 // B) See example code for improvements: encasulation, C++ design, classess [with private and public vars/methods], 
 // Maps, Histogramm class, [singelton] Parametrs::Instance();   
