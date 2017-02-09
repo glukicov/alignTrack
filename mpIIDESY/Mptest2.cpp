@@ -4,7 +4,7 @@
 // A) Generate RND to txt file and use from there
 // B) See example code for improvements: encasulation, C++ design, classess [with private and public vars/methods], 
 // Maps, Histogramm class, [singelton] Parametrs::Instance();   
-// 1) add logger from gm2trackerdaq
+// 1) add logger from gm2trackerdaq  
 // 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <].
 // 3) add [iModel=0], generate .bin file from Fortran for simplest case and compare.
 // 4) extend to broken-lines, scattering etc.

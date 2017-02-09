@@ -12,7 +12,7 @@ import sys
 import getopt
 import os
 import random
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 # Get system arguments, define string showing help message
@@ -103,6 +103,6 @@ for i in xrange(count):
 output_file.close()
 
 
-plt.hist(generated_randoms, 100)
-plt.title("Generated Randoms Sanity Histogram\n" + str(len(generated_randoms)) + " Numbers Generated, With Seed " + str(seednum))
-plt.show()
+#plt.hist(generated_randoms, 100)
+#plt.title("Generated Randoms Sanity Histogram\n" + str(len(generated_randoms)) + " Numbers Generated, With Seed " + str(seednum))
+#plt.show()
