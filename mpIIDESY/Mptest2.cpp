@@ -82,6 +82,16 @@
 
 using namespace std; 
 
+/**
+   Structure used to write data to TTree, with variable for each branch in tree.
+ */
+struct Parameter_data {
+    int label; /** Parameter label, ranging from 12-210 for plane displacements, and 501-600 for velocity deviations.*/
+    int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */ 
+    float paramValue; /** Value of parameter */
+    float paramError; /** Error on parameter value (zero for true parameters) */
+};
+
 //// -- Initialising logger staff -- /// 
 //add logger methods here
 const unsigned int logLevel = 4; // DEBUG
@@ -90,9 +100,9 @@ const unsigned int logLevel = 4; // DEBUG
 
 
 //////----Variable Intialisation-------///////////
+//TODO rewrite as arguments 
 int imodel = 0;  //XXX Model type (see above)
 int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX
-int track_count = 10000; // = number of generated tracks (recods) ///XXX
 
 //arguments for Mille constructor:
 const char* outFileName = "Mptest2.bin";
@@ -108,8 +118,13 @@ TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double
 
 
 /////************MAIN***************/////////////
+//TODO add arguments option 
+//int main(int argc, int* argv[]){
 int main(){
 
+    // XXX can be used oustide of main? 
+    Detector::instance()->set_uniform_file("Mp2_uniform_ran.txt");
+    Detector::instance()->set_gaussian_file("Mp2_gaussian_ran.txt");
         
     // Millepede courtesy of John 
    cout << endl;
@@ -122,6 +137,27 @@ int main(){
     cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
     cout << endl; 
 
+#if 0
+    // Check if correct number of arguments specified, exiting if not
+    if (argc > 3) {
+        cout << "Too many arguments - please specify model and verbosity flag. (e.g. 0 0 by default)" << endl << endl;
+        return 1;
+    } else if (argc < 3) {
+        cout << "Too few arguments - please specify model and verbosity flag. (e.g. 0 0 by default) " << endl << endl;
+        return 1;
+    } else {
+
+        // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
+        try {
+            imodel = argv[1];
+            ip = argv[2];
+        } catch  {
+            cerr << "Arguments to Mptest2.cpp failed" << e.what() << endl;
+            return 1;
+        }
+    
+    }
+#endif 
        
    // Creating .bin, steering, constrating and ROOT files here:
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -130,54 +166,18 @@ int main(){
     cout << "Generating test data for Mp II...";
     cout << "" << endl; 
 
-    //Random number generator
-    //int seed = 12345; 
-    //TRandom3* rand_gen = new TRandom3(seed); // TODO fix this! (segmentation fault if taken outstide the fucntion)
-
     // fstreams for str and cons files 
     ofstream constraint_file(conFileName);
     ofstream steering_file(strFileName);
     
-    float s=arcLength_Plane1;
-    int i_counter = 0;
-    float sign = 1.0;
-
-    // Geometry of detecor arrangement 
-    for (int layer_i=1; layer_i<=10; layer_i++){
-        i_counter++;
-        layer[i_counter] = layer_i;  // layer
-        arcLength[i_counter] = s;  //arclength
-        resolutionLayer[i_counter] = resolution; //resolution
-        projection[1][i_counter]=1.0;  // x
-        projection[2][i_counter]=0.0;  // y
-        //taking care of stereo modules 
-        if ((layer_i % 3) == 1){
-            i_counter++;
-            layer[i_counter] = layer_i;  // layer
-            arcLength[i_counter] = s+offset;  //arclength
-            resolutionLayer[i_counter] = resolution; //resolution
-            projection[1][i_counter]=sqrt(1.0-pow(stereoTheta,2));  // x
-            projection[2][i_counter]=stereoTheta*sign;  // y
-            sign=-sign;
-        }
-        s=s+planeDistance;  // incrimenting distance between detecors 
-    }  // end of looping over layers
-
+    // GEOMETRY
+    Detector::instance()->setGeometry();
+    
     // XXX: definition of broken lines here in the future
 
-    //Now misaligning detecors
-    float dispX = 0.01; // module displacement in Y .05 mm * N(0,1)
-    float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
-
-    //so we are only displacing 9/10 detectors? XXX
-    for (int i=0; i<detectorN-1; i++){   /// XXX
-        for(int k=0; k<=moduleYN-1; k++){
-            for(int l=1; l<=moduleXN; l++){
-                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * rand_gen -> Gaus(0,1);  //XXX where is that used in imodel=0?? 
-                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * rand_gen -> Gaus(0,1);         
-            } // // end of number of modules in x
-        } // end of number of modules in y 
-    } // end of layers
+    
+    // MISALIGNMENT
+    Detector::instance()->misalign(); 
 
     
     //Now writing steering and constraint files
@@ -221,61 +221,29 @@ int main(){
         << "*matiter      3  ! recalculate matrix in iterations" << endl
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
-    } 
-
-
-    int ncx = (moduleXN+1)/2; 
-    int moduleXYN=0;
-    int lunt = 9;
-    float one = 1.0;
-
-    if (constraint_file.is_open()) {
-        cout << "" << endl;
-        cout << "Writing Constraint File" << endl;
-        cout << "" << endl;
-
-        //Evaluation of constraints
-        
-        moduleXYN = moduleXN*moduleYN; 
-        
-        for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX coorect implimentation of DO i=1,nlyr,nlyr-1
-            constraint_file << "Constraint 0.0" << endl;
-            for (int k=0; k<=moduleYN-1; k++){
-                int labelt=(i*moduleYN+k)*moduleXN+ncx-1;
-                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevX[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0;      // fix center modules at 0.
-            } // end of y loop
-            constraint_file << "Constraint 0.0" << endl;
-            for(int k=0; k<=moduleYN-1; k++){
-                int labelt=(i*moduleYN+k)*moduleXN+ncx+1000-1;
-                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevY[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0; // fix center modules at 0.
-            } // end of x loop
-        } // end of detecors loop 
-
-    } //end of constraints
-   
+    } // end of str file  
 
     //Set up counters for hits and records (tracks)
     int hitsN = 0;
     int recordN=0;
+    float scatterError = 0; // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
     // track_count is set manually 
-    for (int icount=0; icount<track_count; icount++){
-        float p=pow(10.0, 1+rand_gen->Rndm());
-        scatterError=sqrt(width)*0.014/p;
+    for (int icount=0; icount<Detector::instance()->get_track_count(); icount++){
+        float p=pow(10.0, 1+RandomBuffer::instance()->get_uniform_number());
+        scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
         //Generating hits for N=track_count
         
         //TODO fix *** Break *** illegal instruction
 
-        Line_data generated_line = genlin2();
+        LineData generated_line = Detector::instance()->genlin2();
 
         for (int i=0; i<generated_line.hit_count; i++){
             //simple straight line
-            int lyr = generated_line.i_hits[i]/moduleXYN+1;
-            int im = generated_line.i_hits[i]%moduleXYN;
+            int lyr = generated_line.i_hits[i]/Detector::instance()->getModuleXYN()+1;
+            int im = generated_line.i_hits[i]%Detector::instance()->getModuleXYN();
             const int nalc = 4; // XXX  number of LC paremeters? 
             const int nagl = 2; //XXX  number of GL paremeters? 
             
@@ -289,8 +257,8 @@ int main(){
             float dgl2 = projection[2][lyr];
             float dergl[nagl] = {dgl1, dgl2};  
             
-            int l1 = im+moduleXYN*layer[lyr];
-            int l2 = im+moduleXYN*layer[lyr]+1000;
+            int l1 = im+Detector::instance()->getModuleXYN()*layer[lyr];
+            int l2 = im+Detector::instance()->getModuleXYN()*layer[lyr]+1000;
             int label[nalc] = {l1, l2};  ///XXX
             
             //multiple scattering errors (no correlations) (for imodel == 1)
@@ -317,7 +285,7 @@ int main(){
 
 
     cout << " " << endl;
-    cout << track_count << " tracks generated with " << hitsN << " hits." << endl;
+    cout << Detector::instance()->get_track_count() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl;
@@ -327,6 +295,5 @@ int main(){
     //ROOT stuff
     file->Write();
     file->Close(); //good habit!
-    delete rand_gen; // Cleaning up 
     return 0; 
 } //end of main 

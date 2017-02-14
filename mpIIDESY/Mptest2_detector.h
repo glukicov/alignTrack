@@ -34,15 +34,16 @@ class Detector {
 
 	static Detector* s_instance; // Pointer to instance of class
 
-	const int TRACK_COUNT = 10000; /** Number of tracks to be simulated passing through detector */
+	const int track_count = 10000; /** Number of tracks to be simulated passing through detector */
 
 	///initialsing physics varibles
-	const int detectorN = 10; //number of detector layers
-	const int layerN = 14; //number of measurement layers   //XXX why 14 is to do with stereo-angles for 1,4,7,10
-	const int moduleXN = 10; //number of modules in x direction
-	const int moduleYN = 5; //number of modules in y direction   //total 50 modules moduleXN * moduleYN = 50
+	static const int detectorN = 10; //number of detector layers
+	static const int layerN = 14; //number of measurement layers   //XXX why 14 is to do with stereo-angles for 1,4,7,10
+	static const int moduleXN = 10; //number of modules in x direction
+	static const int moduleYN = 5; //number of modules in y direction   //total 50 modules moduleXN * moduleYN = 50
+	static const int moduleXYN = moduleXN*moduleYN;
 
-	const int modulesTotalN=detectorN*moduleYN*moduleXN; //total number of modules
+	static const int modulesTotalN=detectorN*moduleYN*moduleXN; //total number of modules
 	//  define detector geometry
 	float arcLength_Plane1= 10.0; // arclength of first plane
 	float planeDistance= 10.0; // distance between planes //cm / Pede works in cm
@@ -52,35 +53,32 @@ class Detector {
 	float layerSize= 20.0; //size of layers  //cm 
 	float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
 
-	float scatterError = 0; // multiple scattering error
-	
-/// XXX rewrite those as vectors? 
 
-	int layer[layerN];// (detector) layer
-	float sdevX[modulesTotalN];// shift in x (alignment parameter)
-	float sdevY[modulesTotalN] ; //shift in y (alignment GLOBAL parameter)
-	float arcLength[layerN];  // arc length
-	float resolutionLayer[layerN];   //resolution
-	float projection[2][layerN]; //projection of measurent direction in (XY)
 	
-	
-	std::vector<float> plane_pos_devs; /** Vector of plane position deviations */
-	std::vector<float> drift_vel_devs; /** Vector of plane drift velocity fractional deviations */
-
-	std::vector<float> true_plane_effs; /** Vector of plane efficiencies */
-	std::vector<float> true_meas_sigmas; /** Vector of plane resolutions */
-
 	// Class constructor and destructor
 	Detector();
 	~Detector();
 
  public:
 
+ 	// putting by hand until fix TODO 
+	/// TODO rewrite those as vectors for detector class 
+    int layer[14];// (detector) layer
+    float sdevX[500];// shift in x (alignment parameter)
+    float sdevY[500] ; //shift in y (alignment GLOBAL parameter)
+    float arcLength[14];  // arc length
+    float resolutionLayer[14];   //resolution
+    float projection[2][14]; //projection of measurent direction in (XY)
+
 /// XXX need more methods? 
 
 	static Detector* instance(); // Function to return pointer to class instance
 
 	LineData genlin2(); // Function to simulate a track through the detector, then return data for plane hits. 
+
+	void setGeometry(); //Geometry of detecor arrangement 
+
+	void misalign(); // MC misalignment of detecors 
 		
     void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
 
@@ -98,16 +96,29 @@ class Detector {
 
 	   @return Number of tracks.
 	 */
-	int get_track_count() {return TRACK_COUNT;}
+	int get_track_count() {
+		return track_count;
+	}
 
+	int getWidth() {
+		return width;
+	}
 
-	/**
-	   Get the number of planes in the detector.
+	int getLayerN() {
+		return layerN;
+	}
 
-	   @return Detector plane count.
-	 */
-	int get_plane_count() {return PLANE_COUNT;}
+	int getModuleXYN() {
+		return moduleXYN;
+	}
 
+	int getModulesTotalN() {
+		return modulesTotalN;
+	}
+
+	
+	// XXX more getter methods!!!
+	
 
 
 };
