@@ -13,6 +13,7 @@
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
+#include <cmath> //math class`
 
 /**
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
@@ -52,23 +53,25 @@ class Detector {
 	float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
 	float layerSize= 20.0; //size of layers  //cm 
 	float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
-
-
+	float scatterError = 0; // multiple scattering error
+	
+	
+    std::vector<int> layer; 
+    std::vector<float> projectionX; //projection of measurent direction in (XY)
+    std::vector<float> projectionY; //projection of measurent direction in (XY)
+    /// TODO rewrite those as vectors for detector class 
+    float sdevX[moduleXYN];// shift in x (alignment parameter)
+    float sdevY[moduleXYN] ; //shift in y (alignment GLOBAL parameter)
+    float arcLength[layerN];  // arc length
+    float resolutionLayer[layerN];   //resolution
 	
 	// Class constructor and destructor
 	Detector();
 	~Detector();
 
  public:
-
- 	// putting by hand until fix TODO 
-	/// TODO rewrite those as vectors for detector class 
-    int layer[14];// (detector) layer
-    float sdevX[500];// shift in x (alignment parameter)
-    float sdevY[500] ; //shift in y (alignment GLOBAL parameter)
-    float arcLength[14];  // arc length
-    float resolutionLayer[14];   //resolution
-    float projection[2][14]; //projection of measurent direction in (XY)
+ 	
+    
 
 /// XXX need more methods? 
 
@@ -90,6 +93,18 @@ class Detector {
 	//
 	// Getter methods
 	//
+
+	std::vector<int> getLayer() {
+		return layer;
+	}
+	
+	std::vector<float> getProjectionX() {
+		return projectionX;
+	}
+
+	std::vector<float> getProjectionY() {
+		return projectionY;
+	}
 
 	/**
 	   Get the number of tracks to be generated in the detector.

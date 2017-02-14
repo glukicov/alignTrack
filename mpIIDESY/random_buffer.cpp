@@ -54,6 +54,7 @@ void RandomBuffer::open_uniform_file(string uniform_filename) {
 
 	cout << "Opened file of uniform randoms - " << uniform_filename << endl;
 	uniform_file.open(uniform_filename.c_str());
+	cout << "uniform ok" << endl;
 }
 
 /**
@@ -67,6 +68,7 @@ void RandomBuffer::open_gaussian_file(string gaussian_filename) {
 
 	cout << "Opened file of gaussian randoms - " << gaussian_filename << endl;
 	gaussian_file.open(gaussian_filename.c_str());
+	cout << "gauss ok" << endl;
 }
 
 

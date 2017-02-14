@@ -99,35 +99,13 @@ const unsigned int logLevel = 4; // DEBUG
 //Logger l (logLevel); 
 
 
-//////----Variable Intialisation-------///////////
-//TODO rewrite as arguments 
-int imodel = 0;  //XXX Model type (see above)
-int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX
-
-//arguments for Mille constructor:
-const char* outFileName = "Mptest2.bin";
-bool asBinary = true; 
-bool writeZero = false;
-string conFileName = "Mp2con.txt";
-string strFileName = "Mp2str.txt";
-//output ROOT file
-TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
- // Book histograms
-TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -0.002, 0.004); // D=double bins, name, title, nBins, Min, Max
-TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max
-
-
 /////************MAIN***************/////////////
 //TODO add arguments option 
 //int main(int argc, int* argv[]){
 int main(){
 
-    // XXX can be used oustide of main? 
-    Detector::instance()->set_uniform_file("Mp2_uniform_ran.txt");
-    Detector::instance()->set_gaussian_file("Mp2_gaussian_ran.txt");
-        
     // Millepede courtesy of John 
-   cout << endl;
+    cout << endl;
     cout << "********************************************" << endl;
     cout << "*                 MPTEST 2                 *" << endl;
     cout << "********************************************" << endl;
@@ -135,9 +113,43 @@ int main(){
     cout << "    _____________________________  \\  /" << endl;
     cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
     cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
-    cout << endl; 
+    cout << endl;
 
-#if 0
+    try {
+        Detector::instance()->set_uniform_file("Mp2_uniform_ran.txt");
+   
+        Detector::instance()->set_gaussian_file("Mp2_gaussian_ran.txt");
+        
+        } 
+        
+    catch (ios_base::failure& e) {
+        cerr << "Filestream exception caught: " << e.what() << endl;
+        cerr << "Please ensure valid filenames are specified!" << endl;
+        return 1;
+        } 
+
+
+    //////----Variable Intialisation-------///////////
+    //TODO rewrite as arguments 
+    int imodel = 0;  //XXX Model type (see above)
+    int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX
+
+    //arguments for Mille constructor:
+    const char* outFileName = "Mptest2.bin";
+    bool asBinary = true; 
+    bool writeZero = false;
+    string conFileName = "Mp2con.txt";
+    string strFileName = "Mp2str.txt";
+    //output ROOT file
+    TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+     // Book histograms
+    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -0.002, 0.004); // D=double bins, name, title, nBins, Min, Max
+    TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max
+
+    
+          
+    
+/*
     // Check if correct number of arguments specified, exiting if not
     if (argc > 3) {
         cout << "Too many arguments - please specify model and verbosity flag. (e.g. 0 0 by default)" << endl << endl;
@@ -157,29 +169,35 @@ int main(){
         }
     
     }
-#endif 
-       
+*/
+    
    // Creating .bin, steering, constrating and ROOT files here:
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
     
-    cout << "" << endl;
-    cout << "Generating test data for Mp II...";
-    cout << "" << endl; 
-
+    cout << "Generating test data for Mp II.." << endl;
+   
+   
     // fstreams for str and cons files 
     ofstream constraint_file(conFileName);
+
     ofstream steering_file(strFileName);
+
+
     
     // GEOMETRY
     Detector::instance()->setGeometry();
+
+
     
     // XXX: definition of broken lines here in the future
 
-    
+   
     // MISALIGNMENT
     Detector::instance()->misalign(); 
 
-    
+    // Write constraint file, for use with pede
+    Detector::instance()->write_constraint_file(constraint_file);
+
     //Now writing steering and constraint files
     if(steering_file.is_open()){
 
@@ -192,7 +210,7 @@ int main(){
         << "Cfiles ! following bin files are Cfiles" << endl   // XXX 
         << "Mp2con.txt   ! constraints text file " << endl
         << "Mptest2.bin   ! binary data file" << endl
-       // << "Cfiles       ! following bin files are Cfiles" << endl
+        << "fortranfiles ! following bin files are fortran" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
         << "*hugecut 50.0     !cut factor in iteration 0" << endl
@@ -226,6 +244,8 @@ int main(){
     //Set up counters for hits and records (tracks)
     int hitsN = 0;
     int recordN=0;
+    
+    //TODO fix this is already defined in detector 
     float scatterError = 0; // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
@@ -247,18 +267,18 @@ int main(){
             const int nalc = 4; // XXX  number of LC paremeters? 
             const int nagl = 2; //XXX  number of GL paremeters? 
             
-            float dlc1=projection[1][lyr];
-            float dlc2=projection[2][lyr];
-            float dlc3=generated_line.x_hits[i]*projection[1][lyr];
-            float dlc4=generated_line.x_hits[i]*projection[2][lyr];  //XXX xhits again? 
+            float dlc1=Detector::instance()->getProjectionX()[lyr];
+            float dlc2=Detector::instance()->getProjectionY()[lyr];
+            float dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
+            float dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  //XXX xhits again? 
             float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
             
-            float dgl1 = projection[1][lyr];
-            float dgl2 = projection[2][lyr];
+            float dgl1 = Detector::instance()->getProjectionX()[lyr];
+            float dgl2 = Detector::instance()->getProjectionY()[lyr];
             float dergl[nagl] = {dgl1, dgl2};  
             
-            int l1 = im+Detector::instance()->getModuleXYN()*layer[lyr];
-            int l2 = im+Detector::instance()->getModuleXYN()*layer[lyr]+1000;
+            int l1 = im+Detector::instance()->getModuleXYN()*Detector::instance()->getLayer()[lyr];
+            int l2 = im+Detector::instance()->getModuleXYN()*Detector::instance()->getLayer()[lyr]+1000;
             int label[nalc] = {l1, l2};  ///XXX
             
             //multiple scattering errors (no correlations) (for imodel == 1)

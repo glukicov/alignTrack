@@ -58,11 +58,13 @@ LineData Detector::genlin2() {
     float x_slope=(x_1-x_1)/arcLength[layerN];
     float y_slope=(y_1-y_0)/arcLength[layerN];
      
-
+     // TODO pass this from main 
+        #if 0
     if (ip != 0){
         cout << "" << endl;
         cout << "Track: " << "x0= " << x_0 << " y0= " << y_0 << "x_slope = " << x_slope << "y_slope = " << y_slope << endl;
    } 
+   #endif
     
     float x = x_0;
     float dx = x_slope;
@@ -100,16 +102,20 @@ LineData Detector::genlin2() {
         float xl=x-sdevX[ioff];
         float yl=y-sdevY[ioff];
         line.x_hits.push_back(arcLength[i]);
-        line.y_hits.push_back((xl-xs)*projection[1][i]+(yl-ys)*projection[2][i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
+        line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
         line.hit_sigmas.push_back(resolutionLayer[i]);
         line.hit_count++;
 
-        h_2 -> Fill(line.x_hits[i], line.y_hits[i]);
+        // TODO pass this as TTree or w/e from main
+        //h_2 -> Fill(line.x_hits[i], line.y_hits[i]);
 
+        // TODO pass this from main 
+        #if 0
         if (ip != 0){
             cout << "" << endl;
             cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << " Y hit =" << line.y_hits[i] << endl;
         }
+        # endif
     }// end of looping over detector layers
     
     return line; // Return data from simulated track
@@ -117,7 +123,7 @@ LineData Detector::genlin2() {
 } // end of genlin2
 
 //Geometry of detecor arrangement 
-void setGeometry(){
+void Detector::setGeometry(){
 	float s=arcLength_Plane1;
     int i_counter = 0;
     float sign = 1.0;
@@ -125,19 +131,19 @@ void setGeometry(){
     // Geometry of detecor arrangement 
     for (int layer_i=1; layer_i<=10; layer_i++){
         i_counter++;
-        layer[i_counter] = layer_i;  // layer
+        layer.push_back(layer_i);  // layer
         arcLength[i_counter] = s;  //arclength
         resolutionLayer[i_counter] = resolution; //resolution
-        projection[1][i_counter]=1.0;  // x
-        projection[2][i_counter]=0.0;  // y
+        projectionX.push_back(1.0);  // x
+        projectionY.push_back(0.0);  // y
         //taking care of stereo modules 
         if ((layer_i % 3) == 1){
             i_counter++;
-            layer[i_counter] = layer_i;  // layer
+            layer.push_back(layer_i);  // layer
             arcLength[i_counter] = s+offset;  //arclength
             resolutionLayer[i_counter] = resolution; //resolution
-            projection[1][i_counter]=sqrt(1.0-pow(stereoTheta,2));  // x
-            projection[2][i_counter]=stereoTheta*sign;  // y
+            projectionX.push_back(std::sqrt(1.0-std::pow(stereoTheta,2)));  // x
+            projectionY.push_back(stereoTheta*sign);  // y
             sign=-sign;
         }
         s=s+planeDistance;  // incrimenting distance between detecors 
@@ -147,7 +153,7 @@ void setGeometry(){
 } // end of geom
 
 // MC misalignment of detecors 
-void misalign(){
+void Detector::misalign(){
 	//Now misaligning detecors
     float dispX = 0.01; // module displacement in Y .05 mm * N(0,1)
     float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
@@ -156,8 +162,12 @@ void misalign(){
     for (int i=0; i<detectorN-1; i++){   /// XXX
         for(int k=0; k<=moduleYN-1; k++){
             for(int l=1; l<=moduleXN; l++){
-                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number();  //XXX where is that used in imodel=0?? 
-                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
+                
+                //TODO fix Segmentation fault
+
+                //sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number();  //XXX where is that used in imodel=0?? 
+                //sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
+            
             } // // end of number of modules in x
         } // end of number of modules in y 
     } // end of layers
