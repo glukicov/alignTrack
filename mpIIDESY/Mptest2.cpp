@@ -106,124 +106,6 @@ TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if
 TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -0.002, 0.004); // D=double bins, name, title, nBins, Min, Max
 TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max
 
-///initialsing physics varibles
-const int detectorN = 10; //number of detector layers
-const int layerN = 14; //number of measurement layers   //XXX why 14 is to do with stereo-angles for 1,4,7,10
-const int moduleXN = 10; //number of modules in x direction
-const int moduleYN = 5; //number of modules in y direction   //total 50 modules moduleXN * moduleYN = 50
-
-const int modulesTotalN=detectorN*moduleYN*moduleXN; //total number of modules
-//  define detector geometry
-float arcLength_Plane1= 10.0; // arclength of first plane
-float planeDistance= 10.0; // distance between planes //cm / Pede works in cm
-float width= 0.02; //thickness/width of plane (X0)
-float offset=  0.5;  // offset of stereo modules
-float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
-float layerSize= 20.0; //size of layers  //cm 
-float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
-
-float scatterError = 0; // multiple scattering error
-int layer[layerN];// (detector) layer
-float sdevX[modulesTotalN];// shift in x (alignment parameter)
-float sdevY[modulesTotalN] ; //shift in y (alignment GLOBAL parameter)
-float arcLength[layerN];  // arc length
-float resolutionLayer[layerN];   //resolution
-float projection[2][layerN]; //projection of measurent direction in (XY)
-//float sigma[layerN];    // measurement sigma (hit) //XXX passed from genlin2(hit_sigmas)
-
-// Structure to contain data of a generated line, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
-struct Line_data {
-    int hit_count;  // number of hits
-    vector<float> x_hits;
-    vector<float> y_hits; 
-    vector<float> hit_sigmas; // measurment sigma 
-    vector<int> i_hits;   //mdoule number 
-};
-
-
-///////----------Function Defenition--------------------- ///// 
-//Source code for genlin courtesy of John. 
-// Function to simulate a linear track through the detector, returning data about detector hits.
-
-Line_data genlin2() {
-    
-     // TODO fix this! (segmentation fault if taken outstide the fucntion)
-    //int seed = 123456;  //pseudorandom 
-    //Mersenne Twister generator TR3 root class: 
-    //TRandom3* rand_gen = new TRandom3(seed);  // ran->Rndm(); // uniform in [0,1] TRandom::Rndm 
-
-
-    Line_data line;
-    line.hit_count = 0;
-
-    // Track parameters for rand-generated line
-    float x_0 = layerSize * (rand_gen->Rndm()-0.5); //uniform vertex
-    float y_0 = layerSize * (rand_gen->Rndm()-0.5); //uniform vertex 
-    float x_1 = layerSize * (rand_gen->Rndm()-0.5); //uniform exit point: so fitting a line to these two points
-    float y_1 = layerSize * (rand_gen->Rndm()-0.5); //uniform exit point: 
-    float x_slope=(x_1-x_1)/arcLength[layerN];
-    float y_slope=(y_1-y_0)/arcLength[layerN];
-     
-
-    if (ip != 0){
-        cout << "" << endl;
-        cout << "Track: " << "x0= " << x_0 << " y0= " << y_0 << "x_slope = " << x_slope << "y_slope = " << y_slope << endl;
-   } 
-    
-    float x = x_0;
-    float dx = x_slope;
-    float y = y_0;
-    float dy = y_slope;
-    float sold = 0.0;  // XXX ??? 
-    
-    for(int i=0; i<layerN; i++){
-        float ds = arcLength[i] - sold;
-        sold = arcLength[i];
-
-        //position with parameters 1. hit
-        float xs=x_0 + arcLength[i] * x_slope;
-        float ys=y_0 + arcLength[i] * y_slope;
-        
-        //true track position
-        x=x+dx*ds;
-        y=y+dy*ds;
-
-        //multiple scattering
-        dx = dx+ rand_gen-> Gaus(0,1) * scatterError;
-        dy = dy+ rand_gen -> Gaus(0,1) * scatterError;
-
-        // TODO understand purpose of this part properly 
-        float imx=int(x+layerSize*0.5)/layerSize*float(moduleXN);
-        if (imx < 0. || imx >= moduleXN) continue;
-        float imy=int(y+layerSize*0.5)/layerSize*float(moduleYN);
-        if (imy < 0. || imy >= moduleYN) continue;      
-
-        
-        int ihit= ((i)*moduleYN+imy)*moduleXN; // XXX i from 0 to 14
-        int ioff=((layer[i]-1)*moduleYN+imy)*moduleXN*imx+1;
-        //line.i_hits.push_back(ihit);
-        line.i_hits.push_back(i); //XXX which one do we need?
-        float xl=x-sdevX[ioff];
-        float yl=y-sdevY[ioff];
-        line.x_hits.push_back(arcLength[i]);
-        line.y_hits.push_back((xl-xs)*projection[1][i]+(yl-ys)*projection[2][i]+ rand_gen -> Gaus(0,1)*resolutionLayer[i]);
-        line.hit_sigmas.push_back(resolutionLayer[i]);
-        line.hit_count++;
-
-        h_2 -> Fill(line.x_hits[i], line.y_hits[i]);
-
-        if (ip != 0){
-            cout << "" << endl;
-            cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << " Y hit =" << line.y_hits[i] << endl;
-        }
-    }// end of looping over detector layers
-    
-    return line; // Return data from simulated track
-
-} // end of genlin2
-
-
-
 
 /////************MAIN***************/////////////
 int main(){
@@ -232,7 +114,7 @@ int main(){
     // Millepede courtesy of John 
    cout << endl;
     cout << "********************************************" << endl;
-    cout << "*                 MPTEST 1                 *" << endl;
+    cout << "*                 MPTEST 2                 *" << endl;
     cout << "********************************************" << endl;
     cout << endl;
     cout << "    _____________________________  \\  /" << endl;
