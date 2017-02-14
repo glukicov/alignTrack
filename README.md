@@ -51,3 +51,13 @@ e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines]
 1.  ` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
 
 
+### To run PEDE algorithm for Fortran version of Mptest2 ###
+1. ` ./pede -t=track-model `
+where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
+
+e.g. ./pede -t=track-model -SL0 -imodel=0 [check the correct parameters, aslo option for flag -ip] 
+
+### Generating Random Numbers ###
+` python randomGenerator.py -g True `  [Gaussian (mean=0, std=1)]
+` python randomGenerator.py -g True  ` [Uniform (0,1)]
+
