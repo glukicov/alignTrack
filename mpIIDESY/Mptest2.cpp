@@ -1,7 +1,7 @@
 // TODOs: 
-//TODO move random intialisation outside of the genlin2() function, oterwise might get the same numbers...
+
 // 0) FIX:  Warning: insufficient constraint equations
-// A) Generate RND to txt file and use from there
+
 // B) See example code for improvements: encasulation, C++ design, classess [with private and public vars/methods], 
 // Maps, Histogramm class, [singelton] Parametrs::Instance();   
 // 1) add logger from gm2trackerdaq  
@@ -25,7 +25,7 @@
 !!
 !! \author Claus Kleinwort, DESY, 2009
 
-                              TODO impliment passing arguments to the executable
+                              
 
 !! No B-field, straight tracks. Selected with command line option '-t=track-model'
 !! The \a track-models differ in the implementation of multiple scattering (errors):
@@ -48,7 +48,7 @@
 !! - 10 silicon detector layers
 !! - 50 modules per layer (1*2cm)
 !! - 10 cm spacing, no B-field
-!! - layers 1,4,7,10 have additional +/-5deg stereo modules   TODO simplify this (all detectors the same for now)
+!! - layers 1,4,7,10 have additional +/-5deg stereo modules   
 !! - intrinsic resolution 20mu, 2% X0 per strip module
 !! - uniform track offsets/slopes
 !! - momentum: log10(p) 10..100 GeV uniform
@@ -67,7 +67,7 @@
 //
 // \param [in] imodel track model
 //
-//           0: 'straight line', ignoring multiple scattering // XXX using this explicitly for now 
+//           0: 'straight line', ignoring multiple scattering 
 //           1: 'straight line', using diagonal of m.s. error matrix
 //           2: 'break points'
 //           3: 'broken lines', fine
@@ -201,11 +201,8 @@ int main(){
     //Now writing steering and constraint files
     if(steering_file.is_open()){
 
-        cout << "" << endl;
         cout<< "Writing the steering file" << endl;
-        cout << "" << endl;
-
-
+        
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl   // XXX 
         << "Mp2con.txt   ! constraints text file " << endl
@@ -261,7 +258,7 @@ int main(){
         LineData generated_line = Detector::instance()->genlin2();
 
         for (int i=0; i<generated_line.hit_count; i++){
-            //simple straight line
+            //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
             int lyr = generated_line.i_hits[i]/Detector::instance()->getModuleXYN()+1;
             int im = generated_line.i_hits[i]%Detector::instance()->getModuleXYN();
             const int nalc = 4; // XXX  number of LC paremeters? 

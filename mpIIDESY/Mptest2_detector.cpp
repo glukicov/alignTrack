@@ -55,7 +55,7 @@ LineData Detector::genlin2() {
     float y_0 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform vertex 
     float x_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: so fitting a line to these two points
     float y_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: 
-    float x_slope=(x_1-x_1)/arcLength[layerN];
+    float x_slope=(x_1-x_0)/arcLength[layerN];
     float y_slope=(y_1-y_0)/arcLength[layerN];
      
      // TODO pass this from main 
@@ -70,17 +70,18 @@ LineData Detector::genlin2() {
     float dx = x_slope;
     float y = y_0;
     float dy = y_slope;
-    float sold = 0.0;  // XXX ??? 
+    float s_old = 0.0;  // previous position in "z"
     
     for(int i=0; i<layerN; i++){
-        float ds = arcLength[i] - sold;
-        sold = arcLength[i];
+        //distance between cons. layers 
+        float ds = arcLength[i] - s_old;
+        s_old = arcLength[i];
 
-        //position with parameters 1. hit
+        //positions on the detector plane  
         float xs=x_0 + arcLength[i] * x_slope;
         float ys=y_0 + arcLength[i] * y_slope;
         
-        //true track position
+        //true track position [for MS]
         x=x+dx*ds;
         y=y+dy*ds;
 
@@ -88,21 +89,26 @@ LineData Detector::genlin2() {
         dx = dx+ RandomBuffer::instance()->get_gaussian_number() * scatterError;
         dy = dy+ RandomBuffer::instance()->get_gaussian_number() * scatterError;
 
-        // TODO understand purpose of this part properly 
+         
+        // which pixel was hit [0,5 Y; 0,10 X] C++ casting truncation
         float imx=int(x+layerSize*0.5)/layerSize*float(moduleXN);
         if (imx < 0. || imx >= moduleXN) continue;
         float imy=int(y+layerSize*0.5)/layerSize*float(moduleYN);
         if (imy < 0. || imy >= moduleYN) continue;      
 
         
-        int ihit= ((i)*moduleYN+imy)*moduleXN; // XXX i from 0 to 14
-        int ioff=((layer[i]-1)*moduleYN+imy)*moduleXN*imx+1;
-        //line.i_hits.push_back(ihit);
-        line.i_hits.push_back(i); //XXX which one do we need?
-        float xl=x-sdevX[ioff];
+        int ihit= ((i)*moduleYN+imy)*moduleXN; // i from 0 to 13 (incl.)
+        int ioff=((layer[i]-1)*moduleYN+imy)*moduleXN+imx+1;
+        line.i_hits.push_back(ihit); // vector of planes that were actually hit
+        float xl=x-sdevX[ioff]; //misalign. 
         float yl=y-sdevY[ioff];
+        // we seem to now redefine the coordinates so that x is now the arc length and y is a measure of the residual
         line.x_hits.push_back(arcLength[i]);
-        line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
+        // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
+        float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i];
+        //line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
+        line.y_hits.push_back(yhit);
+        cout << "y hits = " << yhit << ", yl = " << yl << ", ys = " << ys << ", y = " << y << ", sdevY = " << sdevY[ioff] << ", ioff = " << ioff << endl;
         line.hit_sigmas.push_back(resolutionLayer[i]);
         line.hit_count++;
 
@@ -155,18 +161,18 @@ void Detector::setGeometry(){
 // MC misalignment of detecors 
 void Detector::misalign(){
 	//Now misaligning detecors
-    float dispX = 0.01; // module displacement in Y .05 mm * N(0,1)
+    float dispX = 0.01; // module displacement in X .05 mm * N(0,1)
     float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
 
-    //so we are only displacing 9/10 detectors? XXX
-    for (int i=0; i<detectorN-1; i++){   /// XXX
+    
+    for (int i=0; i<detectorN-1; i++){   
         for(int k=0; k<=moduleYN-1; k++){
             for(int l=1; l<=moduleXN; l++){
                 
-                //TODO fix Segmentation fault
+                //TODO  fix this [array out of bounds?]
 
-                //sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number();  //XXX where is that used in imodel=0?? 
-                //sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
+                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
+                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
             
             } // // end of number of modules in x
         } // end of number of modules in y 
@@ -183,12 +189,12 @@ void Detector::misalign(){
 void Detector::write_constraint_file(ofstream& constraint_file) {
 //TODO fix constraint file 
 
+    // ! constraints: fix center modules in first/last layer
 	// Check constraints file is open, then write. [Note - Don't yet understand these]
 	if (constraint_file.is_open()) {
 		
-		cout << "" << endl;
 		cout << "Writing constraint file..." << endl;
-		cout << "" << endl;
+		
 
 		//Evaluation of constraints
     	int ncx = (moduleXN+1)/2; 

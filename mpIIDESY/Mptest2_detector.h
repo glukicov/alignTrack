@@ -57,11 +57,11 @@ class Detector {
 	
 	
     std::vector<int> layer; 
-    std::vector<float> projectionX; //projection of measurent direction in (XY)
-    std::vector<float> projectionY; //projection of measurent direction in (XY)
+    std::vector<float> projectionX; //projection of measurent direction in (X)
+    std::vector<float> projectionY; //projection of measurent direction in (Y)
     /// TODO rewrite those as vectors for detector class 
-    float sdevX[moduleXYN];// shift in x (alignment parameter)
-    float sdevY[moduleXYN] ; //shift in y (alignment GLOBAL parameter)
+    float sdevX[moduleXYN*detectorN];// shift in x (alignment parameter)
+    float sdevY[moduleXYN*detectorN] ; //shift in y (alignment GLOBAL parameter)
     float arcLength[layerN];  // arc length
     float resolutionLayer[layerN];   //resolution
 	
