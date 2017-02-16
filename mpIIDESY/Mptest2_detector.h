@@ -39,7 +39,7 @@ class Detector {
 
 	///initialsing physics varibles
 	static const int detectorN = 10; //number of detector layers
-	static const int layerN = 14; //number of measurement layers   //XXX why 14 is to do with stereo-angles for 1,4,7,10
+	static const int layerN = 14; //number of measurement layers  
 	static const int moduleXN = 10; //number of modules in x direction
 	static const int moduleYN = 5; //number of modules in y direction   //total 50 modules moduleXN * moduleYN = 50
 	static const int moduleXYN = moduleXN*moduleYN;
@@ -55,11 +55,10 @@ class Detector {
 	float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
 	float scatterError = 0; // multiple scattering error
 	
-	
     std::vector<int> layer; 
     std::vector<float> projectionX; //projection of measurent direction in (X)
     std::vector<float> projectionY; //projection of measurent direction in (Y)
-    /// TODO rewrite those as vectors for detector class 
+   
     float sdevX[moduleXYN*detectorN];// shift in x (alignment parameter)
     float sdevY[moduleXYN*detectorN] ; //shift in y (alignment GLOBAL parameter)
     float arcLength[layerN];  // arc length
@@ -70,10 +69,6 @@ class Detector {
 	~Detector();
 
  public:
- 	
-    
-
-/// XXX need more methods? 
 
 	static Detector* instance(); // Function to return pointer to class instance
 
@@ -131,9 +126,9 @@ class Detector {
 		return modulesTotalN;
 	}
 
-	
-	// XXX more getter methods!!!
-	
+	int getScatterError() {
+		return scatterError;
+	}
 
 
 };

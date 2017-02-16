@@ -50,7 +50,7 @@ LineData Detector::genlin2() {
 	LineData line;
     line.hit_count = 0;
 
-    // Track parameters for rand-generated line
+    // Track parameters for rand-generated line MC 
     float x_0 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform vertex
     float y_0 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform vertex 
     float x_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: so fitting a line to these two points
@@ -96,7 +96,7 @@ LineData Detector::genlin2() {
         float imy=int(y+layerSize*0.5)/layerSize*float(moduleYN);
         if (imy < 0. || imy >= moduleYN) continue;      
 
-        
+        //TODO rewrite for sdev[detector plane][y pixel][x pixel]
         int ihit= ((i)*moduleYN+imy)*moduleXN; // i from 0 to 13 (incl.)
         int ioff=((layer[i]-1)*moduleYN+imy)*moduleXN+imx+1;
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
@@ -108,7 +108,7 @@ LineData Detector::genlin2() {
         float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i];
         //line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
         line.y_hits.push_back(yhit);
-        cout << "y hits = " << yhit << ", yl = " << yl << ", ys = " << ys << ", y = " << y << ", sdevY = " << sdevY[ioff] << ", ioff = " << ioff << endl;
+        //cout << "y hits = " << yhit << ", yl = " << yl << ", ys = " << ys << ", y = " << y << ", sdevY = " << sdevY[ioff] << ", ioff = " << ioff << endl;
         line.hit_sigmas.push_back(resolutionLayer[i]);
         line.hit_count++;
 

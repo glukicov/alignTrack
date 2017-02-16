@@ -78,25 +78,15 @@
 **/
 
 #include "Mptest2.h"
-//#include "Logger.cc" //XXX - need to specicfy debug level and ouput file 
+//#include "Logger.hh"  // XXX add Logger.cpp to makefile
 
 using namespace std; 
 
-/**
-   Structure used to write data to TTree, with variable for each branch in tree.
- */
-struct Parameter_data {
-    int label; /** Parameter label, ranging from 12-210 for plane displacements, and 501-600 for velocity deviations.*/
-    int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */ 
-    float paramValue; /** Value of parameter */
-    float paramError; /** Error on parameter value (zero for true parameters) */
-};
 
 //// -- Initialising logger staff -- /// 
-//add logger methods here
+// TODO add logger methods here
 const unsigned int logLevel = 4; // DEBUG
-//Logger l; XXX 
-//Logger l (logLevel); 
+
 
 
 /////************MAIN***************/////////////
@@ -130,7 +120,7 @@ int main(){
 
 
     //////----Variable Intialisation-------///////////
-    //TODO rewrite as arguments 
+    //TODO rewrite as arguments to main
     int imodel = 0;  //XXX Model type (see above)
     int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX
 
@@ -144,10 +134,7 @@ int main(){
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
     TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -0.002, 0.004); // D=double bins, name, title, nBins, Min, Max
-    TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max
-
-    
-          
+    TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max        
     
 /*
     // Check if correct number of arguments specified, exiting if not
@@ -171,31 +158,23 @@ int main(){
     }
 */
     
-   // Creating .bin, steering, constrating and ROOT files here:
+   // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-    
     cout << "Generating test data for Mp II.." << endl;
-   
    
     // fstreams for str and cons files 
     ofstream constraint_file(conFileName);
-
     ofstream steering_file(strFileName);
-
-
-    
+   
     // GEOMETRY
     Detector::instance()->setGeometry();
-
-
     
     // XXX: definition of broken lines here in the future
-
    
     // MISALIGNMENT
     Detector::instance()->misalign(); 
 
-    // Write constraint file, for use with pede
+    // Write constraint file, for use with pede TODO fix this 
     Detector::instance()->write_constraint_file(constraint_file);
 
     //Now writing steering and constraint files
@@ -204,10 +183,10 @@ int main(){
         cout<< "Writing the steering file" << endl;
         
         steering_file <<  "*            Default test steering file" << endl
-        << "Cfiles ! following bin files are Cfiles" << endl   // XXX 
-        << "Mp2con.txt   ! constraints text file " << endl
-        << "Mptest2.bin   ! binary data file" << endl
         << "fortranfiles ! following bin files are fortran" << endl
+        << "Mp2con.txt   ! constraints text file " << endl
+        << "Cfiles ! following bin files are Cfiles" << endl  
+        << "Mptest2.bin   ! binary data file" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
         << "*hugecut 50.0     !cut factor in iteration 0" << endl
@@ -242,8 +221,8 @@ int main(){
     int hitsN = 0;
     int recordN=0;
     
-    //TODO fix this is already defined in detector 
-    float scatterError = 0; // multiple scattering error
+    
+    float scatterError = Detector::instance()->getScatterError(); // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
     // track_count is set manually 
@@ -252,8 +231,6 @@ int main(){
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
         //Generating hits for N=track_count
-        
-        //TODO fix *** Break *** illegal instruction
 
         LineData generated_line = Detector::instance()->genlin2();
 
@@ -261,22 +238,23 @@ int main(){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
             int lyr = generated_line.i_hits[i]/Detector::instance()->getModuleXYN()+1;
             int im = generated_line.i_hits[i]%Detector::instance()->getModuleXYN();
-            const int nalc = 4; // XXX  number of LC paremeters? 
-            const int nagl = 2; //XXX  number of GL paremeters? 
+            const int nalc = 4; 
+            const int nagl = 2;  
             
+            //Local derivatives
             float dlc1=Detector::instance()->getProjectionX()[lyr];
             float dlc2=Detector::instance()->getProjectionY()[lyr];
             float dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
             float dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  //XXX xhits again? 
             float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
-            
+            //Global derivatives
             float dgl1 = Detector::instance()->getProjectionX()[lyr];
             float dgl2 = Detector::instance()->getProjectionY()[lyr];
             float dergl[nagl] = {dgl1, dgl2};  
-            
+            //Labels 
             int l1 = im+Detector::instance()->getModuleXYN()*Detector::instance()->getLayer()[lyr];
             int l2 = im+Detector::instance()->getModuleXYN()*Detector::instance()->getLayer()[lyr]+1000;
-            int label[nalc] = {l1, l2};  ///XXX
+            int label[nalc] = {l1, l2}; 
             
             //multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)
@@ -285,6 +263,7 @@ int main(){
             float rMeas_mp2 =  generated_line.y_hits[i]; 
             float sigma_mp2 = generated_line.hit_sigmas[i]; 
 
+            //Sanity Plots 
             h_1 -> Fill(sigma_mp2);
             
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
