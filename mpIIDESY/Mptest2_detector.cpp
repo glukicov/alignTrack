@@ -44,6 +44,7 @@ Detector* Detector::instance() {
 */
 //Source code for genlin courtesy of John. 
 // Function to simulate a linear track through the detector, returning data about detector hits.
+
 LineData Detector::genlin2() {
 
 	// Set up new container for track data, with hit count set to zero`
@@ -55,8 +56,8 @@ LineData Detector::genlin2() {
     float y_0 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform vertex 
     float x_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: so fitting a line to these two points
     float y_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: 
-    float x_slope=(x_1-x_0)/arcLength[layerN];
-    float y_slope=(y_1-y_0)/arcLength[layerN];
+    float x_slope=(x_1-x_0)/distance[layerN];
+    float y_slope=(y_1-y_0)/distance[layerN];
      
      // TODO pass this from main 
         #if 0
@@ -74,12 +75,12 @@ LineData Detector::genlin2() {
     
     for(int i=0; i<layerN; i++){
         //distance between cons. layers 
-        float ds = arcLength[i] - s_old;
-        s_old = arcLength[i];
+        float ds = distance[i] - s_old;
+        s_old = distance[i];
 
         //positions on the detector plane  
-        float xs=x_0 + arcLength[i] * x_slope;
-        float ys=y_0 + arcLength[i] * y_slope;
+        float xs=x_0 + distance[i] * x_slope;
+        float ys=y_0 + distance[i] * y_slope;
         
         //true track position [for MS]
         x=x+dx*ds;
@@ -96,40 +97,40 @@ LineData Detector::genlin2() {
         float imy=int(y+layerSize*0.5)/layerSize*float(pixelYN);
         if (imy < 0. || imy >= pixelYN) continue;
 
-        cout << "imx= " << imx << endl;
-        cout << "imy= " << imy << endl;
-
-
         //TODO rewrite for sdev[detector plane][y pixel][x pixel]
         int ihit= ((i)*pixelYN+imy)*pixelXN; // i from 0 to 13 (incl.)
-        int ioff=((layer[i]-1)*pixelYN+imy)*pixelXN+imx+1;
+        //int ioff=((layer[i]-1)*pixelYN+imy)*pixelXN+imx+1; // delete this
 
-        cout << "ihit= " << ihit << endl;
-        cout << "ioff= " << ioff << endl;
+        int imxC = int(imx);
+        int imyC = int(imy);
 
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
-        float xl=x-sdevX[ioff]; //misalign. 
-        float yl=y-sdevY[ioff];
-        // we seem to now redefine the coordinates so that x is now the arc length and y is a measure of the residual
-        line.x_hits.push_back(arcLength[i]);
+
+        //TODO
+        float xl=x-sdevX[layer[i]-1][imyC][imxC]; //misalign. 
+        float yl=y-sdevY[layer[i]-1][imyC][imxC];
+       
+        // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
+        line.x_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
         float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i];
         //line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
         line.y_hits.push_back(yhit);
-        //cout << "y hits = " << yhit << ", yl = " << yl << ", ys = " << ys << ", y = " << y << ", sdevY = " << sdevY[ioff] << ", ioff = " << ioff << endl;
         line.hit_sigmas.push_back(resolutionLayer[i]);
-        line.hit_count++;
+        line.hit_count++;  
+
+        //cout << "yhit= " << yhit << "on " << i  << " plane" << endl; 
 
         // TODO pass this as TTree or w/e from main
         //h_2 -> Fill(line.x_hits[i], line.y_hits[i]);
 
         // TODO pass this from main 
-        #if 0
-        if (ip != 0){
+        
+        if (0){
             cout << "" << endl;
             cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << " Y hit =" << line.y_hits[i] << endl;
         }
-        # endif
+        
     }// end of looping over detector layers
     
     return line; // Return data from simulated track
@@ -146,7 +147,7 @@ void Detector::setGeometry(){
     for (int layer_i=1; layer_i<=10; layer_i++){
         i_counter++;
         layer.push_back(layer_i);  // layer
-        arcLength[i_counter] = s;  //arclength
+        distance[i_counter] = s;  //distance between planes  [14] 
         resolutionLayer[i_counter] = resolution; //resolution
         projectionX.push_back(1.0);  // x
         projectionY.push_back(0.0);  // y
@@ -154,7 +155,7 @@ void Detector::setGeometry(){
         if ((layer_i % 3) == 1){
             i_counter++;
             layer.push_back(layer_i);  // layer
-            arcLength[i_counter] = s+offset;  //arclength
+            distance[i_counter] = s+offset;  //distance between planes  [14]
             resolutionLayer[i_counter] = resolution; //resolution
             projectionX.push_back(std::sqrt(1.0-std::pow(stereoTheta,2)));  // x
             projectionY.push_back(stereoTheta*sign);  // y
@@ -179,8 +180,10 @@ void Detector::misalign(){
                 
                 //TODO  fix this [array out of bounds?]
 
-                sdevX[(i*pixelYN+k)*pixelXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
-                sdevY[(i*pixelYN+k)*pixelXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
+                sdevX[i][k][l] = dispX * RandomBuffer::instance()->get_gaussian_number();
+                sdevY[i][k][l] = dispY * RandomBuffer::instance()->get_gaussian_number();
+                //sdevX[(i*pixelYN+k)*pixelXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
+                //sdevY[(i*pixelYN+k)*pixelXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
             
             } // // end of number of modules in x
         } // end of number of pixels in y 
@@ -215,13 +218,15 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
             for (int k=0; k<=pixelYN-1; k++){
                 int labelt=(i*pixelYN+k)*pixelXN+ncx-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevX[((i-1)*pixelYN+k)*pixelXN+ncx]=0.0;      // fix center pixels at 0.
+                sdevX[detectorN][pixelYN][pixelXN]=0.0;      // fix center pixels at 0.
             } // end of y loop
             constraint_file << "Constraint 0.0" << endl;
             for(int k=0; k<=pixelYN-1; k++){
                 int labelt=(i*pixelYN+k)*pixelXN+ncx+1000-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevY[((i-1)*pixelYN+k)*pixelXN+ncx]=0.0; // fix center pixels at 0.
+                //sdevY[((i-1)*pixelYN+k)*pixelXN+ncx]=0.0; // fix center pixels at 0.
+                sdevX[detectorN][pixelYN][pixelXN]=0.0;
+
             } // end of x loop
         } // end of detecors loop 
 

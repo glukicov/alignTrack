@@ -35,7 +35,7 @@ class Detector {
 
 	static Detector* s_instance; // Pointer to instance of class
 
-	const int trackCount = 100; /** Number of tracks to be simulated passing through detector */
+	const int trackCount = 10000; /** Number of tracks to be simulated passing through detector */
 
 	///initialsing physics varibles
 	static const int detectorN = 10; //number of detector layers
@@ -59,9 +59,9 @@ class Detector {
     std::vector<float> projectionX; //projection of measurent direction in (X)
     std::vector<float> projectionY; //projection of measurent direction in (Y)
    
-    float sdevX[pixelXYN*detectorN];// shift in x (alignment parameter)
-    float sdevY[pixelXYN*detectorN] ; //shift in y (alignment GLOBAL parameter)
-    float arcLength[layerN];  // arc length
+    float sdevX[detectorN][pixelYN][pixelXN];// shift in x (alignment parameter)
+    float sdevY[detectorN][pixelYN][pixelXN] ; //shift in y (alignment GLOBAL parameter)
+    float distance[layerN];  // arc length
     float resolutionLayer[layerN];   //resolution
 	
 	// Class constructor and destructor

@@ -133,8 +133,8 @@ int main(){
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
-    TH1F* h_1 = new TH1F("h_1", "Test",  1000,  -0.002, 0.004); // D=double bins, name, title, nBins, Min, Max
-    TH2F* h_2 = new TH2F("h_2", "Test",  100,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max        
+    TH1F* h_1 = new TH1F("h_1", "Test",  20,  0, 50); // D=double bins, name, title, nBins, Min, Max
+    TH2F* h_2 = new TH2F("h_2", "Test",  50,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max        
     
 /*
     // Check if correct number of arguments specified, exiting if not
@@ -234,8 +234,11 @@ int main(){
 
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
-            int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN()+1;
-            int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();
+            int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN()+1;  // [1-14]
+            int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();  // [0-49]
+            
+            //cout << "lyr= " << lyr << " im= " << im << endl;
+
             const int nalc = 4; 
             const int nagl = 2;  
             
@@ -262,7 +265,7 @@ int main(){
             float sigma_mp2 = generated_line.hit_sigmas[i]; 
 
             //Sanity Plots 
-            h_1 -> Fill(sigma_mp2);
+            h_1 -> Fill(im);
             
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
             hitsN++; //count hits
