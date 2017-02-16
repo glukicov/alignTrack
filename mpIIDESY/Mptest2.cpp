@@ -46,7 +46,7 @@
 !!
 !! MC for simple silicon strip tracker:
 !! - 10 silicon detector layers
-!! - 50 modules per layer (1*2cm)
+!! - 50 pixels per layer (1*2cm)
 !! - 10 cm spacing, no B-field
 !! - layers 1,4,7,10 have additional +/-5deg stereo modules   
 !! - intrinsic resolution 20mu, 2% X0 per strip module
@@ -225,19 +225,17 @@ int main(){
     float scatterError = Detector::instance()->getScatterError(); // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
-    // track_count is set manually 
-    for (int icount=0; icount<Detector::instance()->get_track_count(); icount++){
+       for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
         float p=pow(10.0, 1+RandomBuffer::instance()->get_uniform_number());
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
-        //Generating hits for N=track_count
-
+        //Generating tracks 
         LineData generated_line = Detector::instance()->genlin2();
 
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
-            int lyr = generated_line.i_hits[i]/Detector::instance()->getModuleXYN()+1;
-            int im = generated_line.i_hits[i]%Detector::instance()->getModuleXYN();
+            int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN()+1;
+            int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();
             const int nalc = 4; 
             const int nagl = 2;  
             
@@ -252,8 +250,8 @@ int main(){
             float dgl2 = Detector::instance()->getProjectionY()[lyr];
             float dergl[nagl] = {dgl1, dgl2};  
             //Labels 
-            int l1 = im+Detector::instance()->getModuleXYN()*Detector::instance()->getLayer()[lyr];
-            int l2 = im+Detector::instance()->getModuleXYN()*Detector::instance()->getLayer()[lyr]+1000;
+            int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr];
+            int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000;
             int label[nalc] = {l1, l2}; 
             
             //multiple scattering errors (no correlations) (for imodel == 1)
@@ -281,7 +279,7 @@ int main(){
 
 
     cout << " " << endl;
-    cout << Detector::instance()->get_track_count() << " tracks generated with " << hitsN << " hits." << endl;
+    cout << Detector::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl;

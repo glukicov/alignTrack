@@ -35,21 +35,21 @@ class Detector {
 
 	static Detector* s_instance; // Pointer to instance of class
 
-	const int track_count = 10000; /** Number of tracks to be simulated passing through detector */
+	const int trackCount = 100; /** Number of tracks to be simulated passing through detector */
 
 	///initialsing physics varibles
 	static const int detectorN = 10; //number of detector layers
-	static const int layerN = 14; //number of measurement layers  
-	static const int moduleXN = 10; //number of modules in x direction
-	static const int moduleYN = 5; //number of modules in y direction   //total 50 modules moduleXN * moduleYN = 50
-	static const int moduleXYN = moduleXN*moduleYN;
+	static const int layerN = 14; //number of measurement layers  [extra modules at 1, 4 ,7 10]
+	static const int pixelXN = 10; //number of pixels in x direction
+	static const int pixelYN = 5; //number of pixels in y direction   //total 50 pixels pixelXN * pixelYN = 50
+	static const int pixelXYN = pixelXN*pixelYN;
 
-	static const int modulesTotalN=detectorN*moduleYN*moduleXN; //total number of modules
+	static const int pixelTotalN=detectorN*pixelYN*pixelXN; //total number of pixels extra modules at 1, 4 ,7 10 have no pixels]
 	//  define detector geometry
-	float arcLength_Plane1= 10.0; // arclength of first plane
+	float startingDistancePlane1= 10.0; // arclength of first plane
 	float planeDistance= 10.0; // distance between planes //cm / Pede works in cm
 	float width= 0.02; //thickness/width of plane (X0)
-	float offset=  0.5;  // offset of stereo modules
+	float offset=  0.5;  // offset of stereo pixels
 	float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
 	float layerSize= 20.0; //size of layers  //cm 
 	float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
@@ -59,8 +59,8 @@ class Detector {
     std::vector<float> projectionX; //projection of measurent direction in (X)
     std::vector<float> projectionY; //projection of measurent direction in (Y)
    
-    float sdevX[moduleXYN*detectorN];// shift in x (alignment parameter)
-    float sdevY[moduleXYN*detectorN] ; //shift in y (alignment GLOBAL parameter)
+    float sdevX[pixelXYN*detectorN];// shift in x (alignment parameter)
+    float sdevY[pixelXYN*detectorN] ; //shift in y (alignment GLOBAL parameter)
     float arcLength[layerN];  // arc length
     float resolutionLayer[layerN];   //resolution
 	
@@ -106,8 +106,8 @@ class Detector {
 
 	   @return Number of tracks.
 	 */
-	int get_track_count() {
-		return track_count;
+	int getTrackCount() {
+		return trackCount;
 	}
 
 	int getWidth() {
@@ -118,12 +118,12 @@ class Detector {
 		return layerN;
 	}
 
-	int getModuleXYN() {
-		return moduleXYN;
+	int getPixelXYN() {
+		return pixelXYN;
 	}
 
-	int getModulesTotalN() {
-		return modulesTotalN;
+	int getPixelTotalN() {
+		return pixelTotalN;
 	}
 
 	int getScatterError() {

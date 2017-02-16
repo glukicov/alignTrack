@@ -91,14 +91,22 @@ LineData Detector::genlin2() {
 
          
         // which pixel was hit [0,5 Y; 0,10 X] C++ casting truncation
-        float imx=int(x+layerSize*0.5)/layerSize*float(moduleXN);
-        if (imx < 0. || imx >= moduleXN) continue;
-        float imy=int(y+layerSize*0.5)/layerSize*float(moduleYN);
-        if (imy < 0. || imy >= moduleYN) continue;      
+        float imx=int(x+layerSize*0.5)/layerSize*float(pixelXN);
+        if (imx < 0. || imx >= pixelXN) continue;
+        float imy=int(y+layerSize*0.5)/layerSize*float(pixelYN);
+        if (imy < 0. || imy >= pixelYN) continue;
+
+        cout << "imx= " << imx << endl;
+        cout << "imy= " << imy << endl;
+
 
         //TODO rewrite for sdev[detector plane][y pixel][x pixel]
-        int ihit= ((i)*moduleYN+imy)*moduleXN; // i from 0 to 13 (incl.)
-        int ioff=((layer[i]-1)*moduleYN+imy)*moduleXN+imx+1;
+        int ihit= ((i)*pixelYN+imy)*pixelXN; // i from 0 to 13 (incl.)
+        int ioff=((layer[i]-1)*pixelYN+imy)*pixelXN+imx+1;
+
+        cout << "ihit= " << ihit << endl;
+        cout << "ioff= " << ioff << endl;
+
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
         float xl=x-sdevX[ioff]; //misalign. 
         float yl=y-sdevY[ioff];
@@ -130,7 +138,7 @@ LineData Detector::genlin2() {
 
 //Geometry of detecor arrangement 
 void Detector::setGeometry(){
-	float s=arcLength_Plane1;
+	float s=startingDistancePlane1;
     int i_counter = 0;
     float sign = 1.0;
 
@@ -142,7 +150,7 @@ void Detector::setGeometry(){
         resolutionLayer[i_counter] = resolution; //resolution
         projectionX.push_back(1.0);  // x
         projectionY.push_back(0.0);  // y
-        //taking care of stereo modules 
+        //taking care of stereo planes [have no pixels] 
         if ((layer_i % 3) == 1){
             i_counter++;
             layer.push_back(layer_i);  // layer
@@ -161,21 +169,21 @@ void Detector::setGeometry(){
 // MC misalignment of detecors 
 void Detector::misalign(){
 	//Now misaligning detecors
-    float dispX = 0.01; // module displacement in X .05 mm * N(0,1)
-    float dispY = 0.01; // module displacement in Y .05 mm * N(0,1)
+    float dispX = 0.01; // plane displacement in X .05 mm * N(0,1)
+    float dispY = 0.01; // plane displacement in Y .05 mm * N(0,1)
 
     
     for (int i=0; i<detectorN-1; i++){   
-        for(int k=0; k<=moduleYN-1; k++){
-            for(int l=1; l<=moduleXN; l++){
+        for(int k=0; k<=pixelYN-1; k++){
+            for(int l=1; l<=pixelXN; l++){
                 
                 //TODO  fix this [array out of bounds?]
 
-                sdevX[(i*moduleYN+k)*moduleXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
-                sdevY[(i*moduleYN+k)*moduleXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
+                sdevX[(i*pixelYN+k)*pixelXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
+                sdevY[(i*pixelYN+k)*pixelXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
             
             } // // end of number of modules in x
-        } // end of number of modules in y 
+        } // end of number of pixels in y 
     } // end of layers
 
 }//end of misalign
@@ -189,7 +197,7 @@ void Detector::misalign(){
 void Detector::write_constraint_file(ofstream& constraint_file) {
 //TODO fix constraint file 
 
-    // ! constraints: fix center modules in first/last layer
+    // ! constraints: fix center pixels in first/last layer
 	// Check constraints file is open, then write. [Note - Don't yet understand these]
 	if (constraint_file.is_open()) {
 		
@@ -197,23 +205,23 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 		
 
 		//Evaluation of constraints
-    	int ncx = (moduleXN+1)/2; 
+    	int ncx = (pixelXN+1)/2; 
     	int lunt = 9;
     	float one = 1.0;
          
 
 		for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX coorect implimentation of DO i=1,nlyr,nlyr-1
             constraint_file << "Constraint 0.0" << endl;
-            for (int k=0; k<=moduleYN-1; k++){
-                int labelt=(i*moduleYN+k)*moduleXN+ncx-1;
+            for (int k=0; k<=pixelYN-1; k++){
+                int labelt=(i*pixelYN+k)*pixelXN+ncx-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevX[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0;      // fix center modules at 0.
+                sdevX[((i-1)*pixelYN+k)*pixelXN+ncx]=0.0;      // fix center pixels at 0.
             } // end of y loop
             constraint_file << "Constraint 0.0" << endl;
-            for(int k=0; k<=moduleYN-1; k++){
-                int labelt=(i*moduleYN+k)*moduleXN+ncx+1000-1;
+            for(int k=0; k<=pixelYN-1; k++){
+                int labelt=(i*pixelYN+k)*pixelXN+ncx+1000-1;
                 constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
-                sdevY[((i-1)*moduleYN+k)*moduleXN+ncx]=0.0; // fix center modules at 0.
+                sdevY[((i-1)*pixelYN+k)*pixelXN+ncx]=0.0; // fix center pixels at 0.
             } // end of x loop
         } // end of detecors loop 
 

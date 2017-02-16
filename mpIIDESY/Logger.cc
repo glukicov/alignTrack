@@ -4,9 +4,9 @@
 #include "DateTime.hh"
 
 // Must constructorialise the singletons/static variables here
-Logger* Logger::_instance = 0;   //XXX 
-unsigned int Logger::_logLevel = 0;    /// 4
-unsigned int Logger::_style = 0;  // XXX
+Logger* Logger::_instance = 0;
+unsigned int Logger::_logLevel = 0;
+unsigned int Logger::_style = 0;
 DateTime Logger::_time;
 std::mutex Logger::_mutex;
 string Logger::_opFileName;
