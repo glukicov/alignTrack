@@ -133,8 +133,11 @@ int main(){
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
-    TH1F* h_1 = new TH1F("h_1", "Test",  20,  0, 50); // D=double bins, name, title, nBins, Min, Max
-    TH2F* h_2 = new TH2F("h_2", "Test",  50,  -2, 99, 100, -0.1 , 0.1); // D=double bins, name, title, nBins, Min, Max        
+    TH1F* h_sigma = new TH1F("h_sigma", "Sigma",  100,  0, 0.004); // D=double bins, name, title, nBins, Min, Max
+    TH1F* h_Xhits = new TH1F("h_Xhits", "X Hits",  100,  -20, 20); // D=double bins, name, title, nBins, Min, Max
+    TH1F* h_Yhits = new TH1F("h_Yhits", "Y Hits",  100,  -20, 20); // D=double bins, name, title, nBins, Min, Max
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits",  100, -0.05, 0.05); // D=double bins, name, title, nBins, Min, Max
+            
     
 /*
     // Check if correct number of arguments specified, exiting if not
@@ -232,7 +235,7 @@ int main(){
 
         //Generating tracks 
         LineData generated_line = Detector::instance()->genlin2();
-
+        debug << "Track # " << icount+1 << endl;
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
             int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN()+1;  // [1-14]
@@ -266,25 +269,32 @@ int main(){
             float sigma_mp2 = generated_line.hit_sigmas[i]; 
 
             //Sanity Plots 
-            h_1 -> Fill(im);
+            h_sigma -> Fill(sigma_mp2);
+           // h_Xhits-> Fill (); /TODO return from genlin2 as a new container vector<array[4]> ? 
+           // h_Yhits-> Fill ();
+            h_hits_MP2 -> Fill (rMeas_mp2); 
+
             
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
             // For debugging
             if (1==1) {
-                debug << "Track # " << icount << endl
-                                <<  "Hit #: " << i << endl
-                                 << "Local: " << derlc[0] << " " << derlc[1] << " " << derlc[2] << " " << derlc[3] << endl
-                                 << "Global: " << dergl[0] << " " << dergl[1] << endl
-                                 << "Label: " << label[0] << " " << label[1] << endl
-                                 << "Hit= " << rMeas_mp2 << endl
-                                 << "Sigma= " << sigma_mp2 << endl << endl;
+                
+                            debug<< "nhits: " << generated_line.hit_count << endl
+                                 <<  "Hit #: " << i+1 << endl
+                                 <<  "ihit: " << generated_line.i_hits[i] << endl
+                                 << "x= " << generated_line.x_true[i] << "y= " << generated_line.y_true[i] << endl
+                                // << "Local: " << derlc[0] << " " << derlc[1] << " " << derlc[2] << " " << derlc[3] << endl
+                                // << "Global: " << dergl[0] << " " << dergl[1] << endl
+                                // << "Label: " << label[0] << " " << label[1] << endl
+                                  << "xhits = " << generated_line.x_hits[i] << endl
+                                 << "yhits Hit= " << rMeas_mp2 << endl
+                                 << "Sigma= " << sigma_mp2 << endl << endl;            }
 
-            }
 
-            hitsN++; //count hits
+        hitsN++; //count hits
         } // end of hits loop
-
+         debug << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
         // XXX additional measurements from MS IF (imodel == 2) THEN
 
         //IF (imodel >= 3) THEN
@@ -292,8 +302,9 @@ int main(){
         //cout << "Recored passed to bin file" << endl; 
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records;
+       
     } // end of rack count
-    debug << "--------------------------------" <<  endl;
+   
 
     cout << " " << endl;
     cout << Detector::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;

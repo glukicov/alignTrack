@@ -85,6 +85,8 @@ LineData Detector::genlin2() {
         //true track position [for MS]
         x=x+dx*ds;
         y=y+dy*ds;
+        line.x_true.push_back(x);
+        line.y_true.push_back(y);
 
         //multiple scattering
         dx = dx+ RandomBuffer::instance()->get_gaussian_number() * scatterError;
@@ -114,6 +116,7 @@ LineData Detector::genlin2() {
         line.x_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
         // float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]; //XXX
+        // XXX TODO projection Y is always 0 for non-stero modules??
         float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolution; 
         //line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
         line.y_hits.push_back(yhit);
@@ -149,21 +152,23 @@ void Detector::setGeometry(){
     //TODO fix i_counter for arrays 
     for (int layer_i=1; layer_i<=10; layer_i++){
         i_counter++;
-        cout << "i_counter " << i_counter << " layer_i " << layer_i << "distance[i_counter-1]= " << distance[i_counter-1] << endl;   
+           
         layer.push_back(layer_i);  // layer
         distance[i_counter-1] = s;  //distance between planes  [14]
         resolutionLayer[i_counter-1] = resolution; //resolution
         projectionX.push_back(1.0);  // x
         projectionY.push_back(0.0);  // y
+        //cout << "i_counter " << i_counter << " layer_i " << layer_i << "distance[i_counter-1]= " << distance[i_counter-1] << endl;
         //taking care of stereo planes [have no pixels] 
         if ((layer_i % 3) == 1){
             i_counter++;
-            cout << "STR i_counter " << i_counter << "layer_i " << layer_i << "STR distance[i_counter-1]= " << distance[i_counter-1] << endl;
+            
             layer.push_back(layer_i);  // layer
             distance[i_counter-1] = s+offset;  //distance between planes  [14]
             resolutionLayer[i_counter-1] = resolution; //resolution
             projectionX.push_back(std::sqrt(1.0-std::pow(stereoTheta,2)));  // x
             projectionY.push_back(stereoTheta*sign);  // y
+            //cout << "STR i_counter " << i_counter << "layer_i " << layer_i << " STR distance[i_counter-1]= " << distance[i_counter-1] << endl;
             sign=-sign;
             
         }
