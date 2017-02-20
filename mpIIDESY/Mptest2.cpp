@@ -1,6 +1,5 @@
 // TODOs: 
 
-// 0) FIX:  Warning: insufficient constraint equations
 
 // B) See example code for improvements: encasulation, C++ design, classess [with private and public vars/methods], 
 // Maps, Histogramm class, [singelton] Parametrs::Instance();   
@@ -130,6 +129,7 @@ int main(){
     bool writeZero = false;
     string conFileName = "Mp2con.txt";
     string strFileName = "Mp2str.txt";
+    string debugFileName = "Mp2debug.txt";
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
@@ -165,6 +165,7 @@ int main(){
     // fstreams for str and cons files 
     ofstream constraint_file(conFileName);
     ofstream steering_file(strFileName);
+    ofstream debug(debugFileName);
    
     // GEOMETRY
     Detector::instance()->setGeometry();
@@ -183,22 +184,22 @@ int main(){
         cout<< "Writing the steering file" << endl;
         
         steering_file <<  "*            Default test steering file" << endl
-        << "fortranfiles ! following bin files are fortran" << endl
-        << "Mp2con.txt   ! constraints text file " << endl
         << "Cfiles ! following bin files are Cfiles" << endl  
+        << "Mp2con.txt   ! constraints text file " << endl
         << "Mptest2.bin   ! binary data file" << endl
+        << "fortranfiles ! following bin files are fortran" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
         << "*hugecut 50.0     !cut factor in iteration 0" << endl
         << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
         << "*entries  10 ! lower limit on number of entries/parameter" << endl
-        << "" << endl 
+        //<< "" << endl 
         << "*pairentries 10 ! lower limit on number of parameter pairs"  << endl
         << "                ! (not yet!)"            << endl
         << "*printrecord   1  2      ! debug printout for records" << endl
-        << "" << endl
+       // << "" << endl
         << "*printrecord  -1 -1      ! debug printout for bad data records" << endl
-        << "" << endl
+        //<< "" << endl
         << "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
         << "*dwfractioncut      0.2  ! 0 < value < 0.5"<< endl
         << "*presigma           0.01 ! default value for presigma"<< endl
@@ -268,6 +269,19 @@ int main(){
             h_1 -> Fill(im);
             
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
+
+            // For debugging
+            if (1==1) {
+                debug << "Track # " << icount << endl
+                                <<  "Hit #: " << i << endl
+                                 << "Local: " << derlc[0] << " " << derlc[1] << " " << derlc[2] << " " << derlc[3] << endl
+                                 << "Global: " << dergl[0] << " " << dergl[1] << endl
+                                 << "Label: " << label[0] << " " << label[1] << endl
+                                 << "Hit= " << rMeas_mp2 << endl
+                                 << "Sigma= " << sigma_mp2 << endl << endl;
+
+            }
+
             hitsN++; //count hits
         } // end of hits loop
 
@@ -278,8 +292,8 @@ int main(){
         //cout << "Recored passed to bin file" << endl; 
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records;
-    } // end of N trials (track count)
-
+    } // end of rack count
+    debug << "--------------------------------" <<  endl;
 
     cout << " " << endl;
     cout << Detector::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
@@ -288,7 +302,10 @@ int main(){
     cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl;
     cout << "Sanity Plots: root -l Mptest2.root" << endl; 
 
-
+    // Close text files
+    constraint_file.close();
+    steering_file.close();
+    debug.close();
     //ROOT stuff
     file->Write();
     file->Close(); //good habit!

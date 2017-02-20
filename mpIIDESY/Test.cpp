@@ -17,11 +17,13 @@ int main() {
 
 		//Send an INFO message with a number in it (make the string using a stringstream)
 		std::stringstream msg;
-		msg << "5 + 5 = " << (5+5);
+		msg << "5.0 + 5.0 = " << (5.0+5.0);
 		Logger::Instance()->write(Logger::INFO,msg.str());
 
 		//Another way to send an INFO message with a number, using std::to_string to turn a number into a string
-		Logger::Instance()->write(Logger::INFO,"1 + 6 = " + std::to_string(1+6));
+		long double a = 1.0;
+		long double b = 6.0;
+		Logger::Instance()->write(Logger::INFO,"1.0 + 6.0 = " + std::to_string(a+b));
 
 		//Send an ERROR message, this will terminate the program
 		Logger::Instance()->write(Logger::ERROR,"Something terrible happened");

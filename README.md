@@ -55,7 +55,7 @@ e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines]
 1. ` ./pede -t=track-model `
 where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
 
-e.g. ./pede -t=track-model -SL0 -imodel=0 [check the correct parameters, aslo option for flag -ip] 
+e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
 
 ### Generating Random Numbers ###
 ` python randomGenerator.py -g True `  [Gaussian (mean=0, std=1)]

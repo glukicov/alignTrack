@@ -198,10 +198,9 @@ void Detector::misalign(){
     @param constraint_file Reference to ofstream to write constraint file to. 
  */
 void Detector::write_constraint_file(ofstream& constraint_file) {
-//TODO fix constraint file 
 
-    // ! constraints: fix center pixels in first/last layer
-	// Check constraints file is open, then write. [Note - Don't yet understand these]
+    // constraints: fix center pixels in first/last layer
+	// Check constraints file is open, then write. 
 	if (constraint_file.is_open()) {
 		
 		cout << "Writing constraint file..." << endl;
@@ -213,17 +212,17 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
     	float one = 1.0;
          
 
-		for (int i = 1; i <= detectorN; i=i+(detectorN-1)){  //XXX coorect implimentation of DO i=1,nlyr,nlyr-1
+		for (int i = 1; i <= detectorN; i=i+(detectorN-1)){ 
             constraint_file << "Constraint 0.0" << endl;
             for (int k=0; k<=pixelYN-1; k++){
                 int labelt=(i*pixelYN+k)*pixelXN+ncx-1;
-                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
+                constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
                 sdevX[detectorN][pixelYN][pixelXN]=0.0;      // fix center pixels at 0.
             } // end of y loop
             constraint_file << "Constraint 0.0" << endl;
             for(int k=0; k<=pixelYN-1; k++){
                 int labelt=(i*pixelYN+k)*pixelXN+ncx+1000-1;
-                constraint_file << labelt << " " << fixed << setprecision(7) << one<< endl;
+                constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
                 //sdevY[((i-1)*pixelYN+k)*pixelXN+ncx]=0.0; // fix center pixels at 0.
                 sdevX[detectorN][pixelYN][pixelXN]=0.0;
 
