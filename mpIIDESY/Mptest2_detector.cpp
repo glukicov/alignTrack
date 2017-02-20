@@ -56,8 +56,8 @@ LineData Detector::genlin2() {
     float y_0 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform vertex 
     float x_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: so fitting a line to these two points
     float y_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: 
-    float x_slope=(x_1-x_0)/distance[layerN];
-    float y_slope=(y_1-y_0)/distance[layerN];
+    float x_slope=(x_1-x_0)/distance[layerN-1]; //first element is zero
+    float y_slope=(y_1-y_0)/distance[layerN-1];
      
      // TODO pass this from main 
         #if 0
@@ -113,10 +113,12 @@ LineData Detector::genlin2() {
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
-        float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i];
+        // float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]; //XXX
+        float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolution; 
         //line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
         line.y_hits.push_back(yhit);
-        line.hit_sigmas.push_back(resolutionLayer[i]);
+        //line.hit_sigmas.push_back(resolutionLayer[i]); // XXX 
+        line.hit_sigmas.push_back(resolution);
         line.hit_count++;  
 
         //cout << "yhit= " << yhit << "on " << i  << " plane" << endl; 
@@ -144,25 +146,29 @@ void Detector::setGeometry(){
     float sign = 1.0;
 
     // Geometry of detecor arrangement 
+    //TODO fix i_counter for arrays 
     for (int layer_i=1; layer_i<=10; layer_i++){
-        i_counter++; 
+        i_counter++;
+        cout << "i_counter " << i_counter << " layer_i " << layer_i << "distance[i_counter-1]= " << distance[i_counter-1] << endl;   
         layer.push_back(layer_i);  // layer
-        distance[i_counter] = s;  //distance between planes  [14] 
-        resolutionLayer[i_counter] = resolution; //resolution
+        distance[i_counter-1] = s;  //distance between planes  [14]
+        resolutionLayer[i_counter-1] = resolution; //resolution
         projectionX.push_back(1.0);  // x
         projectionY.push_back(0.0);  // y
         //taking care of stereo planes [have no pixels] 
         if ((layer_i % 3) == 1){
             i_counter++;
+            cout << "STR i_counter " << i_counter << "layer_i " << layer_i << "STR distance[i_counter-1]= " << distance[i_counter-1] << endl;
             layer.push_back(layer_i);  // layer
-            distance[i_counter] = s+offset;  //distance between planes  [14]
-            resolutionLayer[i_counter] = resolution; //resolution
+            distance[i_counter-1] = s+offset;  //distance between planes  [14]
+            resolutionLayer[i_counter-1] = resolution; //resolution
             projectionX.push_back(std::sqrt(1.0-std::pow(stereoTheta,2)));  // x
             projectionY.push_back(stereoTheta*sign);  // y
             sign=-sign;
+            
         }
         s=s+planeDistance;  // incrimenting distance between detecors
-
+    
     }  // end of looping over layers
 
 
