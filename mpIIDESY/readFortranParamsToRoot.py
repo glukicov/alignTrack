@@ -11,9 +11,10 @@ import os
 # Names of filenames for fitted parameter results, and steering file
 fitted_params_filename="millepede.res"
 steering_filename="mp2str.txt"
+root_filename="mptest1_parameters_fortran.root"
 
 # Set up instance of utilities class
-m_utils = millepede_utils.MillepedeRootSaving(root_filename="mptest1_parameters_fortran.root", steering_filename=steering_filename)
+m_utils = millepede_utils.MillepedeRootSaving(root_filename=root_filename, steering_filename=steering_filename)
 
 # Remove old versions of steering file, root output
 try:
