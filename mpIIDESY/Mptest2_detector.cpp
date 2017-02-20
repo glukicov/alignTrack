@@ -145,7 +145,7 @@ void Detector::setGeometry(){
 
     // Geometry of detecor arrangement 
     for (int layer_i=1; layer_i<=10; layer_i++){
-        i_counter++;
+        i_counter++; 
         layer.push_back(layer_i);  // layer
         distance[i_counter] = s;  //distance between planes  [14] 
         resolutionLayer[i_counter] = resolution; //resolution
@@ -161,7 +161,8 @@ void Detector::setGeometry(){
             projectionY.push_back(stereoTheta*sign);  // y
             sign=-sign;
         }
-        s=s+planeDistance;  // incrimenting distance between detecors 
+        s=s+planeDistance;  // incrimenting distance between detecors
+
     }  // end of looping over layers
 
 
