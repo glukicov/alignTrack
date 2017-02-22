@@ -48,21 +48,21 @@ e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines]
 3. Fit data by running `./pede Mp2str.txt`.
 
 ### To run PEDE algorithm in general ###
-1.  ` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
+1.  ` ./pede str.txt` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
 
 
 ### To run PEDE algorithm for Fortran version of Mptest2 ###
-1. ` ./pede -t=track-model `
+1. ` ./pede -t=track-model`
 where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
 
 e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
 
 ### Generating Random Numbers ###
-` python randomGenerator.py -g True `  [Gaussian (mean=0, std=1)]
-` python randomGenerator.py -g True  ` [Uniform (0,1)]
+` python randomGenerator.py -g True`  [Gaussian (mean=0, std=1)]
+` python randomGenerator.py -g True` [Uniform (0,1)]
 
 ### Reading Pede Histograms ###
 ` root -l `
-` root [0] .L readPedeHists.C+ `
-` gStyle->SetOptStat(1111111) ` [to see Under/Overflows and Integrals]
-` root [1] readPedeHists() ` [possible options inisde () "write" "nodraw" "print"] 
+` root [0] .L readPedeHists.C+`
+` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
+` root [1] readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
