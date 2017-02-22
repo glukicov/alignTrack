@@ -61,3 +61,8 @@ e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip]
 ` python randomGenerator.py -g True `  [Gaussian (mean=0, std=1)]
 ` python randomGenerator.py -g True  ` [Uniform (0,1)]
 
+### Reading Pede Histograms ###
+` root -l `
+` root [0] .L readPedeHists.C+ `
+` gStyle->SetOptStat(1111111) ` [to see Under/Overflows and Integrals]
+` root [1] readPedeHists() ` [possible options inisde () "write" "nodraw" "print"] 
