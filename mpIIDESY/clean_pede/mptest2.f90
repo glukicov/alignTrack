@@ -183,10 +183,10 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     OPEN(UNIT=51,ACCESS='SEQUENTIAL',FORM='UNFORMATTED', FILE='mp2tst.bin')
 
     OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='mp2test2_debug')  !!! TODO   WRITE(11,*)   [see example from mptest1.f90 + readFortranParmsToRoot.py + Millepede_utils.py]
+        FILE='mp2test2_debug.txt')  !!! TODO   WRITE(11,*)   [see example from mptest1.f90 + readFortranParmsToRoot.py + Millepede_utils.py]
 
     OPEN(UNIT=12,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='mp2test2_mp2_debug')
+        FILE='mp2test2_mp2_debug.txt')
 
     OPEN(UNIT=42,FILE="uniform_ran.txt")
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
