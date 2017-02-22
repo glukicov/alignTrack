@@ -127,9 +127,13 @@ int main(){
     const char* outFileName = "Mptest2.bin";
     bool asBinary = true; 
     bool writeZero = false;
+
+    bool debugBool = true; // print out to debug files 
+
     string conFileName = "Mp2con.txt";
     string strFileName = "Mp2str.txt";
-    string debugFileName = "Mp2debug.txt";
+    string debugFileName = "Mp2debug.txt"; 
+    string mp2_debugFileName = "Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
@@ -169,6 +173,7 @@ int main(){
     ofstream constraint_file(conFileName);
     ofstream steering_file(strFileName);
     ofstream debug(debugFileName);
+    ofstream debug_mp2(mp2_debugFileName);
    
     // GEOMETRY
     Detector::instance()->setGeometry();
@@ -235,7 +240,10 @@ int main(){
 
         //Generating tracks 
         LineData generated_line = Detector::instance()->genlin2();
-        debug << "Track # " << icount+1 << endl;
+        if (debugBool){
+            debug << "Track # " << icount+1 << endl;
+            debug_mp2 << "Track # " << icount+1 << endl;
+        }
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
             int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN()+1;  // [1-14]
@@ -278,7 +286,14 @@ int main(){
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
             // For debugging
-            if (1==1) {
+            if (debugBool){
+                debug_mp2 << "LC #: " << nalc << " LC1 : " << derlc[0] << " LC2 : " << derlc[1] << " LC3 : " << derlc[2] << " LC4 : " << derlc[3] << endl
+                          << " GL #: " << nagl << " GL1 : " << dergl[0] << " GL2 : " << dergl[1] << endl
+                          << " LB1 : " << label[0] << " LB2 : " << label[1] << " Y Hit: " << rMeas_mp2 << " Sigma : " << sigma_mp2 << endl;
+            }
+
+
+            if (debugBool) {
                 
                             debug<< "nhits: " << generated_line.hit_count << endl
                                  <<  "Hit #: " << i+1 << endl
@@ -294,7 +309,10 @@ int main(){
 
         hitsN++; //count hits
         } // end of hits loop
-         debug << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+         if (debugBool){
+            debug << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+            debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+        }
         // XXX additional measurements from MS IF (imodel == 2) THEN
 
         //IF (imodel >= 3) THEN
@@ -317,6 +335,7 @@ int main(){
     constraint_file.close();
     steering_file.close();
     debug.close();
+    debug_mp2.close();
     //ROOT stuff
     file->Write();
     file->Close(); //good habit!

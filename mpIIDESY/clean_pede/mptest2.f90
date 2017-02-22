@@ -57,6 +57,7 @@
 MODULE mptest2
     USE mpdef
 
+
     IMPLICIT NONE
     SAVE
 
@@ -148,6 +149,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     INTEGER(mpi) :: nrecds
     INTEGER(mpi) :: nthits
 
+    INTEGER(mpi), PARAMETER :: debug=1            !< 1=debug mode, 0=normal
     INTEGER(mpi), INTENT(IN)                      :: imodel
 
     REAL(mps) :: derlc(nmlyr*2+3)
@@ -182,6 +184,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2test2_debug')  !!! TODO   WRITE(11,*)   [see example from mptest1.f90 + readFortranParmsToRoot.py + Millepede_utils.py]
+
+    OPEN(UNIT=12,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test2_mp2_debug')
 
     OPEN(UNIT=42,FILE="uniform_ran.txt")
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
@@ -317,7 +322,11 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         !       IF (ICOUNT.LE.3) IP=1
         CALL genln2(ip)      ! generate hits
   
-  
+        IF (debug .EQ. 1) THEN
+            WRITE(11,*) 'Track # ', icount
+            WRITE(12,*) 'Track # ', icount
+        END IF
+        
         DO i=1,nhits
             ! simple straight line
             lyr=ihits(i)/nmxy+1
@@ -332,13 +341,13 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             label(1)=im+nmxy*islyr(lyr)
             label(2)=im+nmxy*islyr(lyr)+1000
             ! add multiple scattering errors (no correlations)
-            IF (imodel == 1) THEN
+            IF (imodel .EQ. 1) THEN
                 DO j=i,nhits
                     sigma(j)=SQRT(sigma(j)**2+((xhits(j)-xhits(i))*the0)**2)
                 END DO
             END IF
             ! add 'break points' for multiple scattering
-            IF (imodel == 2.AND.i > 1) THEN
+            IF (imodel .EQ. 2.AND.i > 1) THEN
                 DO j=1,i-1
                     ! 2 scattering angles from each layer in front of current
                     nalc=nalc+1
@@ -360,6 +369,14 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             END IF
 
             CALL mille(nalc,derlc,2,dergl,label,yhits(i),sigma(i))
+            IF (debug .EQ. 1) THEN
+                WRITE(12,*) ' '
+                WRITE(12,*) ' LC #: ', nalc ,' LC1 : ', derlc(1) , ' LC2 : ' , derlc(2) , ' LC3 : ' , &
+                    derlc(3) , ' LC4 : ' , derlc(4)
+                WRITE(12,*) ' GL #: ' , 2 , ' GL1 : ' , dergl(1) , ' GL2 : ' , dergl(2) 
+                WRITE(12,*) ' LB1 : ' , label(1) , ' LB2 : ' , label(2) ,  '  Y Hit: ' , yhits(i) , & 
+                    ' Sigma : ' , sigma(i) 
+            END IF
             nthits=nthits+1  ! count hits
         END DO
         ! additional measurements from MS
@@ -409,6 +426,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     CLOSE (42)
     CLOSE (43)
+
+    CLOSE (11)
+    CLOSE (12)
 
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
@@ -460,7 +480,7 @@ SUBROUTINE genln2(ip)
     REAL(mps) :: ys
     REAL(mps) :: yslop
 
-
+    INTEGER(mpi), PARAMETER :: debug=1            !< 1=debug mode, 0=normal
     INTEGER(mpi), INTENT(IN)                      :: ip
 
     !     track parameters
@@ -470,7 +490,7 @@ SUBROUTINE genln2(ip)
     yexit=sizel*(uran()-0.5)   ! uniform exit point
     xslop=(xexit-xnull)/sarc(nmlyr)
     yslop=(yexit-ynull)/sarc(nmlyr)
-    IF(ip /= 0) THEN
+    IF(debug == 1) THEN
         WRITE(11,*) ' '
         WRITE(11,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
         WRITE(11,*) ' Track ', xnull, ynull, xslop, yslop
@@ -511,7 +531,7 @@ SUBROUTINE genln2(ip)
         yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gran()*ssig(i)
         sigma(nhits)=ssig(i)
             
-        IF(ip /= 0) THEN
+        IF(debug .EQ. 1) THEN
             WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits)   
         END IF
     END DO

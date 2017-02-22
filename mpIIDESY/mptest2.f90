@@ -170,8 +170,8 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     WRITE(*,*) 'Generating test data for mp II...'
     WRITE(*,*) ' '
     !     file management
-    IF(ex1) CALL system('rm mp2str.txt')
-    IF(ex1) CALL system('rm mp2con.txt')
+    !IF(ex1) CALL system('rm mp2str.txt')
+    !IF(ex1) CALL system('rm mp2con.txt')
     IF(ex3) CALL system('rm mp2tst.bin')   ! remove old file
 
     IF(.NOT.ex1) OPEN(UNIT=7,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
@@ -407,6 +407,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     REWIND (51)
     CLOSE  (51)
 
+    CLOSE (42)
+    CLOSE (43)
+
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
     !      DO I=1,NPLAN
@@ -468,9 +471,9 @@ SUBROUTINE genln2(ip)
     xslop=(xexit-xnull)/sarc(nmlyr)
     yslop=(yexit-ynull)/sarc(nmlyr)
     IF(ip /= 0) THEN
-       ! WRITE(*,*) ' '
-       !  WRITE(*,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
-       ! WRITE(*,*) ' Track ', xnull, ynull, xslop, yslop
+        WRITE(11,*) ' '
+        WRITE(11,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
+        WRITE(11,*) ' Track ', xnull, ynull, xslop, yslop
     END IF
 
     nhits=0
@@ -479,7 +482,7 @@ SUBROUTINE genln2(ip)
     dx=xslop
     dy=yslop
     sold=0.0
-   ! WRITE(*,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' , ' yhits(nhits) ', ' sigma(nhits) '
+    WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' , ' yhits(nhits) ', ' sigma(nhits) '
     DO  i=1,nmlyr
         ds=sarc(i)-sold
         sold=sarc(i)
@@ -509,7 +512,7 @@ SUBROUTINE genln2(ip)
         sigma(nhits)=ssig(i)
             
         IF(ip /= 0) THEN
-           ! WRITE(*,101) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits)   
+            WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits)   
         END IF
     END DO
 101 FORMAT(3I3,5F8.4)
