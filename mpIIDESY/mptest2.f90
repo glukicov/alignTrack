@@ -170,6 +170,8 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     WRITE(*,*) 'Generating test data for mp II...'
     WRITE(*,*) ' '
     !     file management
+    IF(ex1) CALL system('rm mp2str.txt')
+    IF(ex1) CALL system('rm mp2con.txt')
     IF(ex3) CALL system('rm mp2tst.bin')   ! remove old file
 
     IF(.NOT.ex1) OPEN(UNIT=7,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
@@ -177,6 +179,12 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     IF(.NOT.ex2) OPEN(UNIT=9,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2con.txt')
     OPEN(UNIT=51,ACCESS='SEQUENTIAL',FORM='UNFORMATTED', FILE='mp2tst.bin')
+
+    OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test2_debug')  !!! TODO   WRITE(11,*)   [see example from mptest1.f90 + readFortranParmsToRoot.py + Millepede_utils.py]
+
+    OPEN(UNIT=42,FILE="uniform_ran.txt")
+    OPEN(UNIT=43,FILE="gaussian_ran.txt")
 
     s=dets
     i=0
@@ -305,7 +313,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         !      10..100 GeV
         p=10.0**(1.+uran())
         the0=SQRT(thck)*0.014/p
-        ip=0
+        ip=1  ! change verbosity 
         !       IF (ICOUNT.LE.3) IP=1
         CALL genln2(ip)      ! generate hits
   
@@ -410,6 +418,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     WRITE(*,*) ' '
     WRITE(*,*) ncount,' tracks generated with ',nthits,' hits.'
     WRITE(*,*) nrecds,' records written.'
+
     WRITE(*,*) ' '
 101 FORMAT(a)
     ! 102  FORMAT(I6,2F10.5)
@@ -459,8 +468,9 @@ SUBROUTINE genln2(ip)
     xslop=(xexit-xnull)/sarc(nmlyr)
     yslop=(yexit-ynull)/sarc(nmlyr)
     IF(ip /= 0) THEN
-        WRITE(*,*) ' '
-        WRITE(*,*) ' Track ', xnull, ynull, xslop, yslop
+       ! WRITE(*,*) ' '
+       !  WRITE(*,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
+       ! WRITE(*,*) ' Track ', xnull, ynull, xslop, yslop
     END IF
 
     nhits=0
@@ -469,7 +479,7 @@ SUBROUTINE genln2(ip)
     dx=xslop
     dy=yslop
     sold=0.0
-
+   ! WRITE(*,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' , ' yhits(nhits) ', ' sigma(nhits) '
     DO  i=1,nmlyr
         ds=sarc(i)-sold
         sold=sarc(i)
@@ -497,9 +507,9 @@ SUBROUTINE genln2(ip)
         xhits(nhits)=sarc(i)
         yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gran()*ssig(i)
         sigma(nhits)=ssig(i)
-  
+            
         IF(ip /= 0) THEN
-            WRITE(*,101) nhits,i,ihit,x,y,xhits(nhits), yhits(nhits),sigma(nhits)
+           ! WRITE(*,101) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits)   
         END IF
     END DO
 101 FORMAT(3I3,5F8.4)
