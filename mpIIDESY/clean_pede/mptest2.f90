@@ -323,8 +323,12 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         CALL genln2(ip)      ! generate hits
   
         IF (debug .EQ. 1) THEN
-            WRITE(11,*) 'Track # ', icount
-            WRITE(12,*) 'Track # ', icount
+            WRITE(11,*) ''
+            WRITE(11,*) '--------------------------------------------------------------------------'
+            WRITE(11,*) 'Track # (F)', icount
+            WRITE(12,*) ''
+            WRITE(12,*) '--------------------------------------------------------------------------'
+            WRITE(12,*) 'Track # (F)', icount
         END IF
         
         DO i=1,nhits
@@ -374,8 +378,8 @@ SUBROUTINE mptst2(imodel)         ! generate test files
                 WRITE(12,*) ' LC #: ', nalc ,' LC1 : ', derlc(1) , ' LC2 : ' , derlc(2) , ' LC3 : ' , &
                     derlc(3) , ' LC4 : ' , derlc(4)
                 WRITE(12,*) ' GL #: ' , 2 , ' GL1 : ' , dergl(1) , ' GL2 : ' , dergl(2) 
-                WRITE(12,*) ' LB1 : ' , label(1) , ' LB2 : ' , label(2) ,  '  Y Hit: ' , yhits(i) , & 
-                    ' Sigma : ' , sigma(i) 
+                WRITE(12,*) ' LB1 : ' , label(1) , ' LB2 : ' , label(2)     ,     '     Y Hit: ' , yhits(i) ,   &   
+                    '   Sigma : ' ,sigma(i) 
             END IF
             nthits=nthits+1  ! count hits
         END DO

@@ -241,8 +241,12 @@ int main(){
         //Generating tracks 
         LineData generated_line = Detector::instance()->genlin2();
         if (debugBool){
-            debug << "Track # " << icount+1 << endl;
-            debug_mp2 << "Track # " << icount+1 << endl;
+            debug << endl; 
+            debug_mp2 << endl; 
+            debug << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+            debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+            debug << "Track # (C)        " << icount+1 << endl;
+            debug_mp2 << "Track # (C)        " << icount+1 << endl;
         }
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
@@ -287,9 +291,11 @@ int main(){
 
             // For debugging
             if (debugBool){
-                debug_mp2 << "LC #: " << nalc << " LC1 : " << derlc[0] << " LC2 : " << derlc[1] << " LC3 : " << derlc[2] << " LC4 : " << derlc[3] << endl
-                          << " GL #: " << nagl << " GL1 : " << dergl[0] << " GL2 : " << dergl[1] << endl
-                          << " LB1 : " << label[0] << " LB2 : " << label[1] << " Y Hit: " << rMeas_mp2 << " Sigma : " << sigma_mp2 << endl;
+                debug_mp2 << endl; 
+                debug_mp2 << " LC #:              " << nalc << "     LC1 :     " << derlc[0] << "        LC2 :  " << derlc[1] << "       LC3 :    " << derlc[2] << "   LC4 :     " << derlc[3] << endl
+                          << " GL #:              " << nagl << "     GL1 :     " << dergl[0] << "       GL2 :  " << dergl[1] << endl
+                          << " LB1 :              " << label[0] << "    LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
+                //debug_mp2 << endl; 
             }
 
 
@@ -309,10 +315,7 @@ int main(){
 
         hitsN++; //count hits
         } // end of hits loop
-         if (debugBool){
-            debug << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-            debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-        }
+         
         // XXX additional measurements from MS IF (imodel == 2) THEN
 
         //IF (imodel >= 3) THEN
