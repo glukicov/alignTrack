@@ -77,14 +77,14 @@
 **/
 
 #include "Mptest2.h"
-//#include "Logger.hh"  // XXX add Logger.cpp to makefile
+#include "Logger.hh"  
 
 using namespace std; 
 
 
 //// -- Initialising logger staff -- /// 
 // TODO add logger methods here
-const unsigned int logLevel = 4; // DEBUG
+//const unsigned int logLevel = 4; // DEBUG
 
 
 
@@ -92,6 +92,46 @@ const unsigned int logLevel = 4; // DEBUG
 //TODO add arguments option 
 //int main(int argc, int* argv[]){
 int main(){
+
+    //////////////////////////////LOGGER EXPERIMENTING /////////////
+    try {
+
+        //Tell the logger to only show message at INFO level or above
+        Logger::Instance()->setLogLevel(Logger::INFO); 
+    
+        //Tell the logger to throw exceptions when ERROR messages are received
+        Logger::Instance()->enableCriticalErrorThrow();
+
+        //Send an INFO message (messages are just strings)
+        Logger::Instance()->write(Logger::INFO,"Hello from Logger");
+
+        //Send an INFO message with a number in it (make the string using a stringstream)
+        std::stringstream msg;
+        msg << "5.0 + 5.0 = " << (5.0+5.0);
+        Logger::Instance()->write(Logger::INFO,msg.str());
+
+        //Another way to send an INFO message with a number, using std::to_string to turn a number into a string
+        long double a = 1.0;
+        long double b = 6.0;
+        Logger::Instance()->write(Logger::INFO,"1.0 + 6.0 = " + std::to_string(a+b));
+
+        //Send an ERROR message, this will terminate the program
+        Logger::Instance()->write(Logger::ERROR,"Something terrible happened");
+
+    }
+
+    //Catch Logger exceptions
+    catch (CriticalError& e) {
+        std::cerr << "A critical error occurred, exiting" << std::endl;
+        //return -1; //Exit program wth an error code
+    }
+
+
+
+    //////////////////////////////////////////////////////////////////
+
+
+
 
     // Millepede courtesy of John 
     cout << endl;
@@ -292,9 +332,9 @@ int main(){
             // For debugging
             if (debugBool){
                 debug_mp2 << endl; 
-                debug_mp2 << " LC #:              " << nalc << "     LC1 :     " << derlc[0] << "        LC2 :  " << derlc[1] << "       LC3 :    " << derlc[2] << "   LC4 :     " << derlc[3] << endl
-                          << " GL #:              " << nagl << "     GL1 :     " << dergl[0] << "       GL2 :  " << dergl[1] << endl
-                          << " LB1 :              " << label[0] << "    LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
+                debug_mp2 << " LC #:              " << nalc << "          LC1 :     " << derlc[0] << "        LC2 :  " << derlc[1] << "       LC3 :    " << derlc[2] << "   LC4 :     " << derlc[3] << endl
+                          << " GL #:              " << nagl << "          GL1 :     " << dergl[0] << "       GL2 :  " << dergl[1] << endl
+                          << " LB1 :              " << label[0] << "         LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
                 //debug_mp2 << endl; 
             }
 
