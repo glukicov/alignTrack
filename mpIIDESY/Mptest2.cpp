@@ -1,13 +1,6 @@
 // TODOs: 
-
-
-// B) See example code for improvements: encasulation, C++ design, classess [with private and public vars/methods], 
 // Maps, Histogramm class, [singelton] Parametrs::Instance();   
-// 1) add logger from gm2trackerdaq  
-// 2) Plot hits in ROOT - sanity plots  [check for loops for <= vs <].
-// 3) add [iModel=0], generate .bin file from Fortran for simplest case and compare.
-// 4) extend to broken-lines, scattering etc.
-
+// extend to broken-lines, scattering etc.
 /*
 * 
 * Translation into C++11 of mptest2.f90 (original description below) 
@@ -23,8 +16,6 @@
 !! MC for simple 10 layer silicon strip tracker.
 !!
 !! \author Claus Kleinwort, DESY, 2009
-
-                              
 
 !! No B-field, straight tracks. Selected with command line option '-t=track-model'
 !! The \a track-models differ in the implementation of multiple scattering (errors):
@@ -93,22 +84,26 @@ using namespace std;
 //int main(int argc, int* argv[]){
 int main(){
 
-    //////////////////////////////LOGGER EXPERIMENTING /////////////
-    try {
-
         //Tell the logger to only show message at INFO level or above
         Logger::Instance()->setLogLevel(Logger::INFO); 
     
         //Tell the logger to throw exceptions when ERROR messages are received
-        Logger::Instance()->enableCriticalErrorThrow();
+       // Logger::Instance()->enableCriticalErrorThrow();
 
+        Logger::Instance()->setUseColor(true);
+
+    //////////////////////////////LOGGER EXPERIMENTING /////////////
+    try {
+//#if 0   
+
+        
         //Send an INFO message (messages are just strings)
-        Logger::Instance()->write(Logger::INFO,"Hello from Logger");
+        Logger::Instance()->write(Logger::WARNING,"Hello from Logger");
 
         //Send an INFO message with a number in it (make the string using a stringstream)
         std::stringstream msg;
         msg << "5.0 + 5.0 = " << (5.0+5.0);
-        Logger::Instance()->write(Logger::INFO,msg.str());
+        Logger::Instance()->write(Logger::NOTE,msg.str());
 
         //Another way to send an INFO message with a number, using std::to_string to turn a number into a string
         long double a = 1.0;
@@ -116,13 +111,12 @@ int main(){
         Logger::Instance()->write(Logger::INFO,"1.0 + 6.0 = " + std::to_string(a+b));
 
         //Send an ERROR message, this will terminate the program
-        Logger::Instance()->write(Logger::ERROR,"Something terrible happened");
-
+        Logger::Instance()->write(Logger::ERROR,"Something terrible happened");  
+//#endif
     }
-
     //Catch Logger exceptions
-    catch (CriticalError& e) {
-        std::cerr << "A critical error occurred, exiting" << std::endl;
+   catch (CriticalError& e) {
+     //   std::cerr << "A critical error occurred, exiting" << std::endl;
         //return -1; //Exit program wth an error code
     }
 
@@ -130,8 +124,8 @@ int main(){
 
     //////////////////////////////////////////////////////////////////
 
-
-
+    Logger::red(); // << "ok" << endl;
+    Logger::Instance()->write(3, "OK");
 
     // Millepede courtesy of John 
     cout << endl;
@@ -141,7 +135,9 @@ int main(){
     cout << endl;
     cout << "    _____________________________  \\  /" << endl;
     cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
+    //std::stringstream msg_red;
     cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
+    //Logger::Instance()->write(Logger::ERROR,msg_red.str()); 
     cout << endl;
 
     try {
@@ -309,8 +305,8 @@ int main(){
             float dgl2 = Detector::instance()->getProjectionY()[lyr];
             float dergl[nagl] = {dgl1, dgl2};  
             //Labels 
-            int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]-1;
-            int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000-1;
+            int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]-1;  // -1 is a HACK XXX
+            int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000-1;  // -1 is a HACK XXX
             int label[nalc] = {l1, l2}; 
             
             //multiple scattering errors (no correlations) (for imodel == 1)

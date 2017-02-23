@@ -105,6 +105,8 @@ void Logger::write(unsigned int level_, const std::string & message_, const std:
       std::stringstream colorMsg;
       if( level_ == Logger::ERROR ) colorMsg << _red;
       else if( level_ == Logger::WARNING ) colorMsg << _yel;
+      else if( level_ == Logger::NOTE ) colorMsg << _green;
+      else if( level_ == Logger::INFO ) colorMsg << _yel;
       else colorMsg << _def;
       colorMsg << msg.str() << _def << std::endl;
       std::cout << colorMsg.str();
