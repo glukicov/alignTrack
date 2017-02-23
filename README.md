@@ -58,11 +58,11 @@ where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf]
 e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
 
 ### Generating Random Numbers ###
-1. ` python randomGenerator.py -g True`  [Gaussian (mean=0, std=1)]
-2. ` python randomGenerator.py -g True` [Uniform (0,1)]
+1. ` python randomGenerator.py -n 5000000 -g True -o gaussian_ran.txt -s 123456789 `
+2. ` python randomGenerator.py -n 5000000 -u True -o uniform_ran.txt -s 987654321 ` 
 
 ### Reading Pede Histograms ### 
 1. ` root -l `
-2. ` root [0] .L readPedeHists.C+`
-3. ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
-4. ` root [1] readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
+2. root [0]  ` .L readPedeHists.C+`
+3. root [1] ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
+4. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
