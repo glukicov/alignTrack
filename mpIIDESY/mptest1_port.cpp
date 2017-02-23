@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
 	Parameter_data true_params;
 
 	// Create file, tree for parameters
-	TFile f ("mptest1_parameters.root", "recreate");
+	TFile f ("mptest1_parameters_c.root", "recreate");
 	TTree t ("paramTree", "Tree to contain true, fitted parameter values");
 
 	// Set up tree branches
@@ -103,16 +103,17 @@ int main(int argc, char* argv[]) {
 
 	// Print plane labels, and plane displacements to file
 	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
-		true_params_file << 10 + (2 * (i + 1)) << " " << -Detector::instance()->get_plane_pos_devs()[i] << endl;
+		true_params_file << 10 + (2 * (i + 1)) << " " << -Detector::instance()->get_plane_pos_y_devs()[i] << endl;
 		
 		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
 		true_params.fitType = 0;
 		true_params.paramError = 0;
 		true_params.label = 10 + (2 * (i + 1));
-		true_params.paramValue = -Detector::instance()->get_plane_pos_devs()[i];
+		true_params.paramValue = -Detector::instance()->get_plane_pos_y_devs()[i];
 		t.Fill();
 	}
 
+		
 	// Print drift velocity labels, and drift velocity displacements to file.
 	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
 		true_params_file << 500 + i + 1 << " " << -Detector::instance()->get_drift_vel_devs()[i] << endl; 
@@ -128,7 +129,7 @@ int main(int argc, char* argv[]) {
 	// Write values to TTree.
 	t.Write();
 
-	// Write constraint file, for use with pede
+	// Write constraint file, and initial parameter file, for use with pede
 	Detector::instance()->write_constraint_file(constraint_file);
 
 	// Check steering file is open, then write
@@ -177,19 +178,21 @@ int main(int argc, char* argv[]) {
 	// Iterate over number of tracks
 	for (int i=0; i<Detector::instance()->get_track_count(); i++) {
 
-		if (i==0) true_params_file << endl; // For readability
-
 		// Simulate track, and get data
 		LineData generated_line = Detector::instance()->gen_lin();
+
+		// Get local gradient of this track, from recorded hit distances
+		float local_gradient = generated_line.gradient; // (generated_line.y_hits.back() - generated_line.y_hits[0]) / (generated_line.x_hits.back() - generated_line.x_hits[0]);
+
 		
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {
-			
+						
 			// Create arrays of local and global derivatives.
 			float local_derivs[2] {1.0, generated_line.x_hits[j]};
 			float global_derivs[2] {1.0, generated_line.y_drifts[j]};
 
-			// Labels for plane displacement, and velcity deviation. 
+			// Labels for plane displacements, and velcity deviation. 
 			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
 			
 			// Number of local, global derivatives for use in mille.
@@ -197,7 +200,7 @@ int main(int argc, char* argv[]) {
 			int global_deriv_count = 2;
 
 			// Write to binary file.
-			m.mille(2, local_derivs, 2, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
+			m.mille(local_deriv_count, local_derivs, global_deriv_count, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
 
 			// For debugging
 			if (i==0) {

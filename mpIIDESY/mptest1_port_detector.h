@@ -1,7 +1,12 @@
 /** 
 	mptest1_port_detector.h
 
-	Purpose: Simulate linear tracks passing through a plane drift chamber detector, with misaligned plane positions uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions and drift velocities to be calculated using pede. This header file contains definitions of constant variables used in Detector class, as well as function declarations, and definitions of some inline functions. 
+	Purpose: Simulate linear tracks passing through a plane drift chamber 
+	detector, with misaligned plane positions uncalibrated drift velocities, 
+	in order to generate the necessary data for the correct plane positions 
+	and drift velocities to be calculated using pede. This header file 
+	contains definitions of constant variables used in Detector class, as well 
+	as function declarations, and definitions of some inline functions. 
 
 	@author John Smeaton
 	@version 03/02/2017
@@ -21,10 +26,13 @@
 #include "random_buffer.h"
 
 /**
-   Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
+   Structure to contain data of a generated track, with the number of hits, 
+   their positions, the uncertainty in the positions, and the plane number hit.
 */
 struct LineData {
 	int hit_count; /** Number of hits in detector */
+	float gradient; /** Gradient of this track */
+	float y_intercept; /** y-intercept of this track */ 
 	std::vector<float> x_hits; /** X-positions of hits in detector */
 	std::vector<float> y_hits; /** Y-positions of hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
@@ -56,7 +64,8 @@ class Detector {
 	const float DISPL_SIGMA = 0.1; /** Standard deviation of plane hit displacement distribution */
 	const float DRIFT_SIGMA = 0.02; /** Standard deviation of plane drift velocity fractional deviation distribution */
 
-	std::vector<float> plane_pos_devs; /** Vector of plane position deviations */
+	std::vector<float> plane_pos_y_devs; /** Vector of plane position deviations in y-direction */
+	std::vector<float> plane_pos_x_devs; /** Vector of plane position deviations in x-direction */
 	std::vector<float> drift_vel_devs; /** Vector of plane drift velocity fractional deviations */
 
 	std::vector<float> true_plane_effs; /** Vector of plane efficiencies */
@@ -75,6 +84,7 @@ class Detector {
 	void set_plane_properties(); // Sets up plane position, velocity deviations, using random number generator. 
 
 	void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
+	void write_parameter_file(std::ofstream&); // Writes initial parameter file to the provided file stream, for use with pede. 
 
 	void set_uniform_file(std::string); // Set filename for uniform random numbers
 
@@ -110,11 +120,21 @@ class Detector {
 
 
 	/**
-	   Get the plane position deviations from zero for the detector planes.
+	   Get the plane position deviations in y-direction from zero for the 
+	   detector planes.
 
 	   @return Vector of plane position deviations.
 	 */
-	std::vector<float> get_plane_pos_devs() {return plane_pos_devs;}
+	std::vector<float> get_plane_pos_y_devs() {return plane_pos_y_devs;}
+
+
+	/**
+	   Get the plane position deviations in x-direction from zero for the 
+	   detector planes.
+
+	   @return Vector of plane position deviations.
+	 */
+	std::vector<float> get_plane_pos_x_devs() {return plane_pos_x_devs;}
 
 };
 
