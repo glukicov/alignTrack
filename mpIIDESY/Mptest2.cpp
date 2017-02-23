@@ -145,9 +145,9 @@ int main(){
     cout << endl;
 
     try {
-        Detector::instance()->set_uniform_file("Mp2_uniform_ran.txt");
+        Detector::instance()->set_uniform_file("uniform_ran.txt");
    
-        Detector::instance()->set_gaussian_file("Mp2_gaussian_ran.txt");
+        Detector::instance()->set_gaussian_file("gaussian_ran.txt");
         
         } 
         
@@ -290,7 +290,7 @@ int main(){
         }
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
-            int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN()+1;  // [1-14]
+            int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN();  // [1-14]
             int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();  // [0-49]
             
             //cout << "lyr= " << lyr << " im= " << im << endl;
@@ -309,8 +309,8 @@ int main(){
             float dgl2 = Detector::instance()->getProjectionY()[lyr];
             float dergl[nagl] = {dgl1, dgl2};  
             //Labels 
-            int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr];
-            int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000;
+            int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]-1;
+            int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000-1;
             int label[nalc] = {l1, l2}; 
             
             //multiple scattering errors (no correlations) (for imodel == 1)
