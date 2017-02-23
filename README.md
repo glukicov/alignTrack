@@ -16,10 +16,10 @@ to build the pede executable
 (should give a terminal output [last 2 lines]:
  Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
  Peak dynamic memory allocation:    0.100512 GB
-5. `make -f handler.mk`
-This build my handler code from MilleHandler.cpp (requires C++11) 
-It has root capabilities for future testing/integration 
-6. `Run the above with  ./MilleHandler`
+       
+       Generating Random Numbers 
+5. ` python randomGenerator.py -n 5000000 -g True -o gaussian_ran.txt -s 123456789 `
+6 ` python randomGenerator.py -n 5000000 -u True -o uniform_ran.txt -s 987654321 ` `
 This produces test.bin and test.root
 7. To check the binary file do `python readMilleBinary.py "FILENAME" "N of line"`
 e.g. `python readMilleBinary.py test.bin -1` [reads our binary for all lines] 
@@ -56,10 +56,6 @@ e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines]
 where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
 
 e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
-
-### Generating Random Numbers ###
-1. ` python randomGenerator.py -n 5000000 -g True -o gaussian_ran.txt -s 123456789 `
-2. ` python randomGenerator.py -n 5000000 -u True -o uniform_ran.txt -s 987654321 ` 
 
 ### Reading Pede Histograms ### 
 1. ` root -l `
