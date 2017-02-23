@@ -17,10 +17,10 @@ to build the pede executable
  Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
  Peak dynamic memory allocation:    0.100512 GB
        
-       Generating Random Numbers 
+   Generating Random Numbers 
 5. ` python randomGenerator.py -n 5000000 -g True -o gaussian_ran.txt -s 123456789 `
 6 ` python randomGenerator.py -n 5000000 -u True -o uniform_ran.txt -s 987654321 ` `
-This produces test.bin and test.root
+
 7. To check the binary file do `python readMilleBinary.py "FILENAME" "N of line"`
 e.g. `python readMilleBinary.py test.bin -1` [reads our binary for all lines] 
 e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines] 
