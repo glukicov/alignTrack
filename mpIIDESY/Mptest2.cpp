@@ -3,11 +3,8 @@
 // extend to broken-lines, scattering etc.
 /*
 * 
-* Translation into C++11 of mptest2.f90 (original description below) 
-* pass data as number of local and global parameters, and their derivatives, and residual and their sigma (smearing/accuracy)
-* Mille will then pack this in .bin to be used by PEDE routine.
-*
-* Gleb Lukicov 11 Jan 2017
+* Translation into C++11 of mptest2.f90 (see original description below) 
+* by Gleb Lukicov (g.lukicov@ucl.ac.uk) 24 Feb 2017
 -----------------------------------------------------
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2012-03-16  Time: 11:08:55
@@ -62,8 +59,6 @@
 //           2: 'break points'
 //           3: 'broken lines', fine
 //           4: 'broken lines', coarse (stereo layers combined)
-//
-
 !!
 **/
 
