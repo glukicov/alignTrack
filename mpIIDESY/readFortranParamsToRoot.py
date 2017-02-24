@@ -37,6 +37,6 @@ m_utils.save_to_root(0)
 for i in m_utils.fit_type_dict.iterkeys():
 
     # Change steering file to carry out this type of fit, then run pede and save results to root.
-    m_utils.modify_steering_file(i)
+    m_utils.modify_steering_file_fit(i)
     os.system("./pede " + steering_filename)
     m_utils.save_to_root(i)

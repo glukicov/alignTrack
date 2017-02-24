@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	// If critical error occurs, then terminate programme.
+	// If critical error occurs in block above, then terminate program.
 	catch (CriticalError& e) {
 		cerr << "Terminating..." << endl;
 		return 1;
@@ -249,5 +249,3 @@ int main(int argc, char* argv[]) {
 	// Terminate program.
 	return 0;
 }
-
-									   

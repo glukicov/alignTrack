@@ -95,8 +95,46 @@ class MillepedeRootSaving:
         f.close()
 
 
+    # Function to set whether steering file uses a given input file. Takes arguments of boolean for whether to read file, and what filename to toggle.
+    def set_input_file_reading(self, to_read, filename_to_toggle):
+        
+        # New steering file to write lines to
+        new_steering_f = open(self.steering_filename + ".tmp", "w")
+        
+        # Iterate across lines of original steering file
+        with open(self.steering_filename, 'r') as steering_f:
+            for line in steering_f.readlines():
+
+                # Split line into items, delimiting by spaces
+                items = line.split()
+
+                # Skip line if empty
+                if (len(items)) == 0:
+                    new_steering_f.write(line)
+                    continue
+
+                # Check if this line is the filename to toggle. Comment out line if don't want to read this input file.
+                if ((items[0] == filename_to_toggle) and not (to_read)):
+                    items[0] = "*" + filename_to_toggle
+                    newline = ' '.join(items) + "\n"
+                    new_steering_f.write(newline)
+                    
+                # Check if this line is filename commented out. Uncomment if want to read this input file.
+                elif ((items[0] == "*" + filename_to_toggle) and to_read):
+                    items[0] = filename_to_toggle
+                    newline = ' '.join(items) + "\n"
+                    new_steering_f.write(newline)
+
+                # Otherwise, write line to new steering file
+                else:
+                    new_steering_f.write(line)
+
+        # Move new steering file to old steering filename.
+        shutil.move(self.steering_filename + ".tmp", self.steering_filename)
+
+
     # Function to modify the pede steering file, so it carries out the specified fit type.
-    def modify_steering_file(self, fit_type):
+    def modify_steering_file_fit(self, fit_type):
         
         # New steering file to write lines to
         new_steering_f = open(self.steering_filename + ".tmp", "w")
@@ -133,4 +171,32 @@ class MillepedeRootSaving:
         shutil.move(self.steering_filename + ".tmp", self.steering_filename)
 
 
+    # Function to remove a given constraint from the constraint file.
+    def remove_constraint(self, constraint_filename, constraint_number):
 
+        # New constraint file
+        new_constraint_file = open(constraint_filename + ".tmp", "w")
+
+        # Number of constraints previously seen in file
+        constraints_seen = 0
+
+        with open(constraint_filename, "r") as constraint_file:
+            for line in constraint_file:
+
+                items = line.split()
+
+                # Check line long enough to process. If not, write old line to new file
+                if (len(items) < 0):
+                    new_constraint_file.write(line)
+                    continue
+
+                # If line corresponds to new constraint, increment number of constraints seen
+                if (items[0] == "Constraint"):
+                    constraints_seen += 1
+
+                # If number of constraints seen corresponds to number of constraints previously seen, don't copy this line
+                if not (constraints_seen == constraint_number):
+                    new_constraint_file.write(line)
+
+        # Move new constraint file to old constraint filename.
+        shutil.move(constraint_filename + ".tmp", constraint_filename)
