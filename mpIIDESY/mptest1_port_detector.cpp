@@ -118,7 +118,6 @@ void Detector::set_plane_properties() {
 
 		// Set up random plane position deviations, and velocity deviations
 		plane_pos_y_devs.push_back(DISPL_SIGMA * RandomBuffer::instance()->get_gaussian_number());
-		//		plane_pos_x_devs.push_back(DISPL_SIGMA * RandomBuffer::instance()->get_gaussian_number());
 		drift_vel_devs.push_back(DRIFT_SIGMA * RandomBuffer::instance()->get_gaussian_number());
 	}
 

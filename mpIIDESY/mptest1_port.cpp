@@ -197,8 +197,7 @@ int main(int argc, char* argv[]) {
 		LineData generated_line = Detector::instance()->gen_lin();
 
 		// Get local gradient of this track, from recorded hit distances
-		float local_gradient = generated_line.gradient; // (generated_line.y_hits.back() - generated_line.y_hits[0]) / (generated_line.x_hits.back() - generated_line.x_hits[0]);
-
+		float local_gradient = generated_line.gradient;
 		
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {
@@ -236,6 +235,7 @@ int main(int argc, char* argv[]) {
 		all_record_count++; // Increment total number of records
 	}
 
+	// Log final information
 	Logger::Instance()->write(Logger::INFO, "");
 	Logger::Instance()->write(Logger::INFO, to_string(Detector::instance()->get_track_count()) + " tracks generated with " + to_string(all_hit_count) + " hits.");
 	Logger::Instance()->write(Logger::INFO, to_string(all_record_count) + " records written.");

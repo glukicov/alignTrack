@@ -67,7 +67,6 @@ class Detector {
 	const float DRIFT_SIGMA = 0.02; /** Standard deviation of plane drift velocity fractional deviation distribution */
 
 	std::vector<float> plane_pos_y_devs; /** Vector of plane position deviations in y-direction */
-	std::vector<float> plane_pos_x_devs; /** Vector of plane position deviations in x-direction */
 	std::vector<float> drift_vel_devs; /** Vector of plane drift velocity fractional deviations */
 
 	std::vector<float> true_plane_effs; /** Vector of plane efficiencies */
@@ -129,14 +128,6 @@ class Detector {
 	 */
 	std::vector<float> get_plane_pos_y_devs() {return plane_pos_y_devs;}
 
-
-	/**
-	   Get the plane position deviations in x-direction from zero for the 
-	   detector planes.
-
-	   @return Vector of plane position deviations.
-	 */
-	std::vector<float> get_plane_pos_x_devs() {return plane_pos_x_devs;}
 
 };
 
