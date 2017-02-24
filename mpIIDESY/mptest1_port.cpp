@@ -28,73 +28,56 @@ struct Parameter_data {
  */
 int main(int argc, char* argv[]) {
 
+	// Minimum level of log entries to show - set to preference
+	Logger::Instance()->setLogLevel(Logger::NOTE);
+
+	// Allow logger to throw critical errors
+	Logger::Instance()->enableCriticalErrorThrow();
+
+	// Write program header
+	Logger::Instance()->write(Logger::NOTE, "");
+	Logger::Instance()->write(Logger::NOTE, "********************************************");
+	Logger::Instance()->write(Logger::NOTE, "*                 MPTEST 1                 *");
+	Logger::Instance()->write(Logger::NOTE, "********************************************");
+	Logger::Instance()->write(Logger::NOTE, "");
+	Logger::Instance()->write(Logger::NOTE, "    _____________________________  \\  /");
+	Logger::Instance()->write(Logger::NOTE, "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) ");
+    Logger::Instance()->write(Logger::NOTE, "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
+	Logger::Instance()->write(Logger::NOTE, ""); 
+
+
 	try {
-		//Tell the logger to only show message at INFO level or above
-		Logger::Instance()->setLogLevel(Logger::INFO); 
-	
-		//Tell the logger to throw exceptions when ERROR messages are received
-		Logger::Instance()->enableCriticalErrorThrow();
 
-		//Send an INFO message (messages are just strings)
-		Logger::Instance()->write(Logger::INFO,"Hello from Logger");
+		// Check if correct number of arguments specified, logging error if not
+		if (argc > 3) {
+			Logger::Instance()->write(Logger::ERROR, "Too many arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. ");
+		} else if (argc < 3) {
+			Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. ");
+		} else {
 
-		//Send an INFO message with a number in it (make the string using a stringstream)
-		std::stringstream msg;
-		msg << "5.0 + 5.0 = " << (5.0+5.0);
-		Logger::Instance()->write(Logger::INFO,msg.str());
-
-		//Another way to send an INFO message with a number, using std::to_string to turn a number into a string
-		long double a = 1.0;
-		long double b = 6.0;
-		Logger::Instance()->write(Logger::INFO,"1.0 + 6.0 = " + std::to_string(a+b));
-
-		//Send an ERROR message, this will terminate the program
-		Logger::Instance()->write(Logger::ERROR,"Something terrible happened");
-
-	}
-
-	//Catch Logger exceptions
-	catch (CriticalError& e) {
-		std::cerr << "A critical error occurred, exiting" << std::endl;
-	}
-
-
-	cout << endl;
-	cout << "********************************************" << endl;
-	cout << "*                 MPTEST 1                 *" << endl;
-	cout << "********************************************" << endl;
-	cout << endl;
-	cout << "    _____________________________  \\  /" << endl;
-	cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
-    cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
-	cout << endl; 
-
-	// Check if correct number of arguments specified, exiting if not
-	if (argc > 3) {
-		cout << "Too many arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. " << endl << endl;
-		return 1;
-	} else if (argc < 3) {
-		cout << "Too few arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. " << endl << endl;
-		return 1;
-	} else {
-
-		// Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
-		try {
-			Detector::instance()->set_uniform_file(argv[1]);
-			Detector::instance()->set_gaussian_file(argv[2]);
-		} catch (ios_base::failure& e) {
-			cerr << "Filestream exception caught: " << e.what() << endl;
-			cerr << "Please ensure valid filenames are specified!" << endl;
-			return 1;
+			// Set filenames to read random numbers from, using arguments. Log error if files don't exist.
+			try {
+				Detector::instance()->set_uniform_file(argv[1]);
+				Detector::instance()->set_gaussian_file(argv[2]);
+			} catch (ios_base::failure& e) {
+				Logger::Instance()->write(Logger::ERROR, "Filestream exception caught: " + string(e.what()) + "\nPlease ensure valid filenames are specified!");
+			}	
 		}
+
+		// Try to set plane properties, logging error if exception is caught.
+		try {
+			Detector::instance()->set_plane_properties();
+		} catch (invalid_argument& e) {
+			Logger::Instance()->write(Logger::ERROR, "Invalid argument error! " + string(e.what()));
+		}
+	}
 	
+	// If critical error occurs, then terminate programme.
+	catch (CriticalError& e) {
+		cerr << "Terminating..." << endl;
+		return 1;
 	}
 
-	try {
-		Detector::instance()->set_plane_properties();
-	} catch (invalid_argument& e) {
-		cerr << "Invalid argument error! " << e.what() << endl;
-	}
 
 	// Name and properties of binary output file
 	string binary_file_name = "mp2tst1_c.bin";
@@ -109,8 +92,9 @@ int main(int argc, char* argv[]) {
 	string steering_file_name = "mp2test1str_c.txt";
 	string true_params_file_name = "mp2test1_true_params_c.txt";
 
-	cout << "" << endl;
-	cout << "Generating test parameters..." << endl;
+	// Write to log
+	Logger::Instance()->write(Logger::INFO, "");
+	Logger::Instance()->write(Logger::INFO, "Generating test parameters...");
 
 	// Open file streams for constraint and steering files, overwriting any original files
 	ofstream constraint_file(constraint_file_name);
@@ -166,7 +150,7 @@ int main(int argc, char* argv[]) {
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {
 
-		cout << "Writing steering file..." << endl;
+		Logger::Instance()->write(Logger::INFO, "Writing steering file...");
 
 		steering_file << "*            Default test steering file" << endl
 					  << "fortranfiles ! following bin files are fortran" << endl
@@ -200,7 +184,7 @@ int main(int argc, char* argv[]) {
 	}	
 
 
-	cout << "Generating tracks, writing hit data to binary..." << endl;
+	Logger::Instance()->write(Logger::INFO, "Generating tracks, writing hit data to binary...");
 	
 	// Set up counters for number of hits, and tracks
 	int all_hit_count = 0;
@@ -252,10 +236,10 @@ int main(int argc, char* argv[]) {
 		all_record_count++; // Increment total number of records
 	}
 
-	cout << " " << endl;
-	cout << Detector::instance()->get_track_count() << " tracks generated with " << all_hit_count << " hits." << endl;
-	cout << all_record_count << " records written." << endl;
-	cout << " " << endl; 
+	Logger::Instance()->write(Logger::INFO, "");
+	Logger::Instance()->write(Logger::INFO, to_string(Detector::instance()->get_track_count()) + " tracks generated with " + to_string(all_hit_count) + " hits.");
+	Logger::Instance()->write(Logger::INFO, to_string(all_record_count) + " records written.");
+	Logger::Instance()->write(Logger::INFO, "");
 
 	// Close text files
 	constraint_file.close();

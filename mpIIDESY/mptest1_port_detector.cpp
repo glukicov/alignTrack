@@ -143,7 +143,7 @@ void Detector::write_parameter_file(ofstream& parameter_file) {
 	
 	if (parameter_file.is_open()) {
 
-		cout << "Writing parameter file..." << endl;
+		Logger::Instance()->write(Logger::INFO, "Writing parameter file...");
 		
 		parameter_file << "Parameter" << endl;
 		parameter_file << (10 + (9 + 1) * 2) << " " << 0.0 << " " << 1.0 << endl;
@@ -165,7 +165,7 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 	// Check constraints file is open, then write. [Note - Don't yet understand these]
 	if (constraint_file.is_open()) {
 		
-		cout << "Writing constraint file..." << endl;
+		Logger::Instance()->write(Logger::INFO, "Writing constraint file...");
 
 		// Constrains overall detector y-displacement (in theory)
 		constraint_file << "Constraint 0.0" << endl;

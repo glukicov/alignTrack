@@ -25,6 +25,8 @@
 
 #include "random_buffer.h"
 
+#include "Logger.hh"
+
 /**
    Structure to contain data of a generated track, with the number of hits, 
    their positions, the uncertainty in the positions, and the plane number hit.
