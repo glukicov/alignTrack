@@ -84,4 +84,9 @@ This script will plot the eigenspectrum for the matrix, showing the eigenvalue a
 #### To run PEDE algorithm in general ####
 1.  ` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
 
+### Reading Pede Histograms ### 
+1. ` root -l `
+2. root [0]  ` .L readPedeHists.C+`
+3. root [1] ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
+4. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
 
