@@ -188,6 +188,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     OPEN(UNIT=12,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2test2_mp2_debug.txt')
 
+    OPEN(UNIT=13,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test2_temp_debug.txt')
+
     OPEN(UNIT=42,FILE="uniform_ran.txt")   !! this is not being used from randoms,f90 now....
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
 
@@ -329,12 +332,22 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             WRITE(12,*) ''
             WRITE(12,*) '--------------------------------------------------------------------------'
             WRITE(12,*) 'Track # (F)', icount
+            WRITE(13,*) ''
+            WRITE(13,*) '--------------------------------------------------------------------------'
+            WRITE(13,*) 'Track # (F)', icount
         END IF
         
         DO i=1,nhits
             ! simple straight line
+
             lyr=ihits(i)/nmxy+1
             im =MOD(ihits(i),nmxy)
+
+            IF (debug .EQ. 1) THEN
+                WRITE(13,*) "lyr= " , lyr , "  im= " , im , "Plane with hit: "  , ihits(i)
+                !WRITE(13,*) ' '  
+            END IF
+
             nalc=4
             derlc(1)=spro(1,lyr)
             derlc(2)=spro(2,lyr)

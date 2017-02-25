@@ -63,15 +63,9 @@
 **/
 
 #include "Mptest2.h"
-#include "Logger.hh"  
+
 
 using namespace std; 
-
-
-//// -- Initialising logger staff -- /// 
-// TODO add logger methods here
-//const unsigned int logLevel = 4; // DEBUG
-
 
 
 /////************MAIN***************/////////////
@@ -79,61 +73,25 @@ using namespace std;
 //int main(int argc, int* argv[]){
 int main(){
 
-        //Tell the logger to only show message at INFO level or above
-        Logger::Instance()->setLogLevel(Logger::INFO); 
+    //Tell the logger to only show message at INFO level or above
+    // Logger courtesy of Tom 
+    Logger::Instance()->setLogLevel(Logger::NOTE); 
+
+    //Tell the logger to throw exceptions when ERROR messages are received
+    Logger::Instance()->enableCriticalErrorThrow();
+
+    //Logger::Instance()->setUseColor(true);  // TODO 
     
-        //Tell the logger to throw exceptions when ERROR messages are received
-       // Logger::Instance()->enableCriticalErrorThrow();
-
-        Logger::Instance()->setUseColor(true);
-
-    //////////////////////////////LOGGER EXPERIMENTING /////////////
-    try {
-//#if 0   
-
-        
-        //Send an INFO message (messages are just strings)
-        Logger::Instance()->write(Logger::WARNING,"Hello from Logger");
-
-        //Send an INFO message with a number in it (make the string using a stringstream)
-        std::stringstream msg;
-        msg << "5.0 + 5.0 = " << (5.0+5.0);
-        Logger::Instance()->write(Logger::NOTE,msg.str());
-
-        //Another way to send an INFO message with a number, using std::to_string to turn a number into a string
-        long double a = 1.0;
-        long double b = 6.0;
-        Logger::Instance()->write(Logger::INFO,"1.0 + 6.0 = " + std::to_string(a+b));
-
-        //Send an ERROR message, this will terminate the program
-        Logger::Instance()->write(Logger::ERROR,"Something terrible happened");  
-//#endif
-    }
-    //Catch Logger exceptions
-   catch (CriticalError& e) {
-     //   std::cerr << "A critical error occurred, exiting" << std::endl;
-        //return -1; //Exit program wth an error code
-    }
-
-
-
-    //////////////////////////////////////////////////////////////////
-
-    Logger::red(); // << "ok" << endl;
-    Logger::Instance()->write(3, "OK");
-
     // Millepede courtesy of John 
-    cout << endl;
-    cout << "********************************************" << endl;
-    cout << "*                 MPTEST 2                 *" << endl;
-    cout << "********************************************" << endl;
-    cout << endl;
-    cout << "    _____________________________  \\  /" << endl;
-    cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
-    //std::stringstream msg_red;
-    cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
-    //Logger::Instance()->write(Logger::ERROR,msg_red.str()); 
-    cout << endl;
+    Logger::Instance()->write(Logger::NOTE, "");
+    Logger::Instance()->write(Logger::NOTE, "********************************************");
+    Logger::Instance()->write(Logger::WARNING, "*                 MPTEST 2                 *");
+    Logger::Instance()->write(Logger::NOTE, "********************************************");
+    Logger::Instance()->write(Logger::NOTE, "");
+    Logger::Instance()->write(Logger::WARNING, "    _____________________________  \\  /");
+    Logger::Instance()->write(Logger::WARNING, "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) ");
+    Logger::Instance()->write(Logger::WARNING, "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
+    Logger::Instance()->write(Logger::NOTE, ""); 
 
     try {
         Detector::instance()->set_uniform_file("uniform_ran.txt");
@@ -165,6 +123,7 @@ int main(){
     string strFileName = "Mp2str.txt";
     string debugFileName = "Mp2debug.txt"; 
     string mp2_debugFileName = "Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
+    string temp_debugFileName = "Mp2debug_tmp.txt";  // for looking at parameters going to CALL MILLE
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
@@ -205,6 +164,7 @@ int main(){
     ofstream steering_file(strFileName);
     ofstream debug(debugFileName);
     ofstream debug_mp2(mp2_debugFileName);
+    ofstream debug_tmp(temp_debugFileName);
    
     // GEOMETRY
     Detector::instance()->setGeometry();
@@ -278,11 +238,20 @@ int main(){
             debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
             debug << "Track # (C)        " << icount+1 << endl;
             debug_mp2 << "Track # (C)        " << icount+1 << endl;
+            debug_tmp << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+            debug_tmp << "Track # (C)        " << icount+1 << endl;
         }
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
-            int lyr = generated_line.i_hits[i]/Detector::instance()->getPixelXYN();  // [1-14]
-            int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();  // [0-49]
+            // PixelXYN is 50 
+            int lyr = (generated_line.i_hits[i]/Detector::instance()->getPixelXYN())+1;  // [1-14] //This the layer id
+            int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();  // [0-49] //This the pixel id
+            //  computes the remainder of the division of plane (e.g. MOD(693, 50) = 693 - 50*13 = 43) 
+
+            if (debugBool) {
+                debug_tmp << "lyr= " << lyr << "  im= " << im << " Module with hit: "  << generated_line.i_hits[i] << endl; 
+                //debug_tmp << endl; 
+            }
             
             //cout << "lyr= " << lyr << " im= " << im << endl;
 

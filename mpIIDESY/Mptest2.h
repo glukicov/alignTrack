@@ -7,6 +7,7 @@
 #include "Mille.h"
 #include "Mille.cc"
 #include "Mptest2_detector.h"
+#include "Logger.hh"  // Logger courtesy of Tom 
 
 #include <iostream>
 #include <fstream> 
