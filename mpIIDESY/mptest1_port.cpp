@@ -28,42 +28,56 @@ struct Parameter_data {
  */
 int main(int argc, char* argv[]) {
 
-	cout << endl;
-	cout << "********************************************" << endl;
-	cout << "*                 MPTEST 1                 *" << endl;
-	cout << "********************************************" << endl;
-	cout << endl;
-	cout << "    _____________________________  \\  /" << endl;
-	cout << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << endl;
-    cout << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << endl;
-	cout << endl; 
+	// Minimum level of log entries to show - set to preference
+	Logger::Instance()->setLogLevel(Logger::NOTE);
 
-	// Check if correct number of arguments specified, exiting if not
-	if (argc > 3) {
-		cout << "Too many arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. " << endl << endl;
-		return 1;
-	} else if (argc < 3) {
-		cout << "Too few arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. " << endl << endl;
-		return 1;
-	} else {
+	// Allow logger to throw critical errors
+	Logger::Instance()->enableCriticalErrorThrow();
 
-		// Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
-		try {
-			Detector::instance()->set_uniform_file(argv[1]);
-			Detector::instance()->set_gaussian_file(argv[2]);
-		} catch (ios_base::failure& e) {
-			cerr << "Filestream exception caught: " << e.what() << endl;
-			cerr << "Please ensure valid filenames are specified!" << endl;
-			return 1;
-		}
-	
-	}
+	// Write program header
+	Logger::Instance()->write(Logger::NOTE, "");
+	Logger::Instance()->write(Logger::NOTE, "********************************************");
+	Logger::Instance()->write(Logger::NOTE, "*                 MPTEST 1                 *");
+	Logger::Instance()->write(Logger::NOTE, "********************************************");
+	Logger::Instance()->write(Logger::NOTE, "");
+	Logger::Instance()->write(Logger::NOTE, "    _____________________________  \\  /");
+	Logger::Instance()->write(Logger::NOTE, "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) ");
+    Logger::Instance()->write(Logger::NOTE, "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
+	Logger::Instance()->write(Logger::NOTE, ""); 
+
 
 	try {
-		Detector::instance()->set_plane_properties();
-	} catch (invalid_argument& e) {
-		cerr << "Invalid argument error! " << e.what() << endl;
+
+		// Check if correct number of arguments specified, logging error if not
+		if (argc > 3) {
+			Logger::Instance()->write(Logger::ERROR, "Too many arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. ");
+		} else if (argc < 3) {
+			Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify filename for file of uniform random numbers, followed by filename for file of gaussian random numbers. ");
+		} else {
+
+			// Set filenames to read random numbers from, using arguments. Log error if files don't exist.
+			try {
+				Detector::instance()->set_uniform_file(argv[1]);
+				Detector::instance()->set_gaussian_file(argv[2]);
+			} catch (ios_base::failure& e) {
+				Logger::Instance()->write(Logger::ERROR, "Filestream exception caught: " + string(e.what()) + "\nPlease ensure valid filenames are specified!");
+			}	
+		}
+
+		// Try to set plane properties, logging error if exception is caught.
+		try {
+			Detector::instance()->set_plane_properties();
+		} catch (invalid_argument& e) {
+			Logger::Instance()->write(Logger::ERROR, "Invalid argument error! " + string(e.what()));
+		}
 	}
+	
+	// If critical error occurs in block above, then terminate program.
+	catch (CriticalError& e) {
+		cerr << "Terminating..." << endl;
+		return 1;
+	}
+
 
 	// Name and properties of binary output file
 	string binary_file_name = "mp2tst1_c.bin";
@@ -78,8 +92,9 @@ int main(int argc, char* argv[]) {
 	string steering_file_name = "mp2test1str_c.txt";
 	string true_params_file_name = "mp2test1_true_params_c.txt";
 
-	cout << "" << endl;
-	cout << "Generating test parameters..." << endl;
+	// Write to log
+	Logger::Instance()->write(Logger::INFO, "");
+	Logger::Instance()->write(Logger::INFO, "Generating test parameters...");
 
 	// Open file streams for constraint and steering files, overwriting any original files
 	ofstream constraint_file(constraint_file_name);
@@ -90,7 +105,7 @@ int main(int argc, char* argv[]) {
 	Parameter_data true_params;
 
 	// Create file, tree for parameters
-	TFile f ("mptest1_parameters.root", "recreate");
+	TFile f ("mptest1_parameters_c.root", "recreate");
 	TTree t ("paramTree", "Tree to contain true, fitted parameter values");
 
 	// Set up tree branches
@@ -103,16 +118,17 @@ int main(int argc, char* argv[]) {
 
 	// Print plane labels, and plane displacements to file
 	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
-		true_params_file << 10 + (2 * (i + 1)) << " " << -Detector::instance()->get_plane_pos_devs()[i] << endl;
+		true_params_file << 10 + (2 * (i + 1)) << " " << -Detector::instance()->get_plane_pos_y_devs()[i] << endl;
 		
 		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
 		true_params.fitType = 0;
 		true_params.paramError = 0;
 		true_params.label = 10 + (2 * (i + 1));
-		true_params.paramValue = -Detector::instance()->get_plane_pos_devs()[i];
+		true_params.paramValue = -Detector::instance()->get_plane_pos_y_devs()[i];
 		t.Fill();
 	}
 
+		
 	// Print drift velocity labels, and drift velocity displacements to file.
 	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
 		true_params_file << 500 + i + 1 << " " << -Detector::instance()->get_drift_vel_devs()[i] << endl; 
@@ -128,13 +144,13 @@ int main(int argc, char* argv[]) {
 	// Write values to TTree.
 	t.Write();
 
-	// Write constraint file, for use with pede
+	// Write constraint file, and initial parameter file, for use with pede
 	Detector::instance()->write_constraint_file(constraint_file);
 
 	// Check steering file is open, then write
 	if (steering_file.is_open()) {
 
-		cout << "Writing steering file..." << endl;
+		Logger::Instance()->write(Logger::INFO, "Writing steering file...");
 
 		steering_file << "*            Default test steering file" << endl
 					  << "fortranfiles ! following bin files are fortran" << endl
@@ -168,7 +184,7 @@ int main(int argc, char* argv[]) {
 	}	
 
 
-	cout << "Generating tracks, writing hit data to binary..." << endl;
+	Logger::Instance()->write(Logger::INFO, "Generating tracks, writing hit data to binary...");
 	
 	// Set up counters for number of hits, and tracks
 	int all_hit_count = 0;
@@ -177,19 +193,20 @@ int main(int argc, char* argv[]) {
 	// Iterate over number of tracks
 	for (int i=0; i<Detector::instance()->get_track_count(); i++) {
 
-		if (i==0) true_params_file << endl; // For readability
-
 		// Simulate track, and get data
 		LineData generated_line = Detector::instance()->gen_lin();
+
+		// Get local gradient of this track, from recorded hit distances
+		float local_gradient = generated_line.gradient;
 		
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {
-			
+						
 			// Create arrays of local and global derivatives.
 			float local_derivs[2] {1.0, generated_line.x_hits[j]};
 			float global_derivs[2] {1.0, generated_line.y_drifts[j]};
 
-			// Labels for plane displacement, and velcity deviation. 
+			// Labels for plane displacements, and velcity deviation. 
 			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
 			
 			// Number of local, global derivatives for use in mille.
@@ -197,7 +214,7 @@ int main(int argc, char* argv[]) {
 			int global_deriv_count = 2;
 
 			// Write to binary file.
-			m.mille(2, local_derivs, 2, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
+			m.mille(local_deriv_count, local_derivs, global_deriv_count, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
 
 			// For debugging
 			if (i==0) {
@@ -218,10 +235,11 @@ int main(int argc, char* argv[]) {
 		all_record_count++; // Increment total number of records
 	}
 
-	cout << " " << endl;
-	cout << Detector::instance()->get_track_count() << " tracks generated with " << all_hit_count << " hits." << endl;
-	cout << all_record_count << " records written." << endl;
-	cout << " " << endl; 
+	// Log final information
+	Logger::Instance()->write(Logger::INFO, "");
+	Logger::Instance()->write(Logger::INFO, to_string(Detector::instance()->get_track_count()) + " tracks generated with " + to_string(all_hit_count) + " hits.");
+	Logger::Instance()->write(Logger::INFO, to_string(all_record_count) + " records written.");
+	Logger::Instance()->write(Logger::INFO, "");
 
 	// Close text files
 	constraint_file.close();
@@ -231,5 +249,3 @@ int main(int argc, char* argv[]) {
 	// Terminate program.
 	return 0;
 }
-
-									   

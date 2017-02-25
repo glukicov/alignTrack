@@ -23,7 +23,7 @@ input_filename = "" # Define filename string
 
 # Get options, arguments
 try:
-    opts, args = getopt.getopt(argv, "h:i:o:", ["help", "input_file", "output_dir"])
+    opts, args = getopt.getopt(argv, "h:i:", ["help", "input_file"])
 except getopt.GetoptError:
     print helpstring
     sys.exit(2)
@@ -67,15 +67,21 @@ for i in xrange(fit_tree.GetEntries()):
 
 # Lists of normalised parameter differences for plane displacements, and for 
 # velocity deviations
-fit_error_plane_disp = []
+fit_error_plane_y_disp = []
 fit_error_vel_dev = []
 
 # Lists for parameter labels, matched to differences stored above
-label_plane_disp = []
+label_plane_y_disp = []
 label_vel_dev = []
 
+# Lists for true parameter values
+true_plane_y_disp = []
 true_vel_dev = []
-true_plane_disp = []
+
+# Lists for fitted parameter values
+fit_plane_y_disp = []
+fit_vel_dev = []
+
 
 
 # Loop across all recorded parameter labels
@@ -84,18 +90,21 @@ for label in param_true_vals.iterkeys():
     # Check label value, then calculate normalised parameter difference, adding 
     # values to appropriate lists
     if label < 500:
-        label_plane_disp.append(label)
-        true_plane_disp.append(param_true_vals[label])
-        fit_error_plane_disp.append((param_fit_vals[label] - param_true_vals[label]) / param_errors[label])
+        label_plane_y_disp.append(label)
+        true_plane_y_disp.append(param_true_vals[label])
+        fit_plane_y_disp.append(param_fit_vals[label])
+        fit_error_plane_y_disp.append((param_fit_vals[label] - param_true_vals[label]) / param_errors[label])
     else:
         label_vel_dev.append(label)
         true_vel_dev.append(param_true_vals[label])
+        fit_vel_dev.append(param_fit_vals[label])
         fit_error_vel_dev.append((param_fit_vals[label] - param_true_vals[label]) / param_errors[label])
-        
+
+
 
 # Plot scatter graph of plane displacements against parameter label
-plt.plot(label_plane_disp, true_plane_disp, 'b.')
-plt.title("True Plane Displacement Parameter Values")
+plt.plot(label_plane_y_disp, true_plane_y_disp, 'b.')
+plt.title("True Plane Y-Displacement Parameter Values")
 plt.ylabel("Parameter Value")
 plt.xlabel("Parameter Label")
 plt.show()
@@ -108,9 +117,39 @@ plt.xlabel("Parameter Label")
 plt.show()
 
 
+# Plot scatter graph of plane displacements against parameter label
+plt.plot(label_plane_y_disp, fit_plane_y_disp, 'b.')
+plt.title("Fitted Plane Y-Displacement Parameter Values")
+plt.ylabel("Parameter Value")
+plt.xlabel("Parameter Label")
+plt.show()
+
+# Plot scatter graph of plane displacements against parameter label
+plt.plot(label_vel_dev, fit_vel_dev, 'b.')
+plt.title("Fitted Velocity Deviation Parameter Values")
+plt.ylabel("Parameter Value")
+plt.xlabel("Parameter Label")
+plt.show()
+
+
+# Plot scatter graph of plane displacements against parameter label
+plt.plot(label_plane_y_disp, np.array(fit_plane_y_disp) - np.array(true_plane_y_disp), 'b.')
+plt.title("Unnormalised Differences Between Fitted, True \n Plane Y-Displacement Parameter Values")
+plt.ylabel("Parameter Value")
+plt.xlabel("Parameter Label")
+plt.show()
+
+# Plot scatter graph of plane displacements against parameter label
+plt.plot(label_vel_dev, np.array(fit_vel_dev) - np.array(true_vel_dev), 'b.')
+plt.title("Unnormalised Differences Between Fitted, True \n Velocity Deviation Parameter Values")
+plt.ylabel("Parameter Value")
+plt.xlabel("Parameter Label")
+plt.show()
+
+
 # Plot scatter graph of plane displacement differences against parameter label
-plt.plot(label_plane_disp, fit_error_plane_disp, 'b.')
-plt.title("Differences Between Fitted, True Plane Displacement Parameters, \n Divided by Fitted Parameter Uncertainty")
+plt.plot(label_plane_y_disp, fit_error_plane_y_disp, 'b.')
+plt.title("Differences Between Fitted, True Plane Y-Displacement Parameters, \n Divided by Fitted Parameter Uncertainty")
 plt.ylabel("Normalised Difference")
 plt.xlabel("Parameter Label")
 plt.show()

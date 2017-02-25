@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Logger.hh"
 
 /**
    Singleton class to provide random numbers to Detector class, reading numbers from file.

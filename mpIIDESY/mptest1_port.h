@@ -25,6 +25,8 @@
 
 #include "mptest1_port_detector.h"
 
+#include "Logger.hh"
+
 #include "Mille.h"
 #include "Mille.cc"
 

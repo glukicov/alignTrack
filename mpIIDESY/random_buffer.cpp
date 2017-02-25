@@ -52,7 +52,7 @@ void RandomBuffer::open_uniform_file(string uniform_filename) {
 
 	uniform_file.exceptions(ifstream::failbit | ifstream::badbit);
 
-	cout << "Opened file of uniform randoms - " << uniform_filename << endl;
+	Logger::Instance()->write(Logger::INFO, "Opened file of uniform randoms - " + uniform_filename);
 	uniform_file.open(uniform_filename.c_str());
 	cout << "uniform ok" << endl;
 }
@@ -66,7 +66,7 @@ void RandomBuffer::open_gaussian_file(string gaussian_filename) {
 
 	gaussian_file.exceptions(ifstream::failbit | ifstream::badbit);
 
-	cout << "Opened file of gaussian randoms - " << gaussian_filename << endl;
+	Logger::Instance()->write(Logger::INFO, "Opened file of gaussian randoms - " + gaussian_filename);
 	gaussian_file.open(gaussian_filename.c_str());
 	cout << "gauss ok" << endl;
 }
