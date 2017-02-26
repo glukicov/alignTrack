@@ -60,11 +60,13 @@ class Detector {
     std::vector<int> layer; 
     std::vector<float> projectionX; //projection of measurent direction in (X)
     std::vector<float> projectionY; //projection of measurent direction in (Y)
+
+    std::vector<float> distance;  // arc length/distance between planes 
+    std::vector<float> resolutionLayer;   //resolution
    
     float sdevX[detectorN][pixelYN][pixelXN];// shift in x (alignment parameter)
     float sdevY[detectorN][pixelYN][pixelXN] ; //shift in y (alignment GLOBAL parameter)
-    float distance[layerN];  // arc length
-    float resolutionLayer[layerN];   //resolution
+    
 	
 	// Class constructor and destructor
 	Detector();
@@ -74,11 +76,11 @@ class Detector {
 
 	static Detector* instance(); // Function to return pointer to class instance
 
-	LineData genlin2(std::ofstream&); // Function to simulate a track through the detector, then return data for plane hits. 
+	LineData genlin2(std::ofstream&, bool); // Function to simulate a track through the detector, then return data for plane hits. 
 
-	void setGeometry(); //Geometry of detecor arrangement 
+	void setGeometry(std::ofstream&, bool); //Geometry of detecor arrangement 
 
-	void misalign(std::ofstream&); // MC misalignment of detecors 
+	void misalign(std::ofstream&, bool); // MC misalignment of detecors 
 		
     void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
 

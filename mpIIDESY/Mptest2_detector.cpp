@@ -45,9 +45,9 @@ Detector* Detector::instance() {
 //Source code for genlin courtesy of John. 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 
-LineData Detector::genlin2(ofstream& debug_calc) {
+LineData Detector::genlin2(ofstream& debug_calc, bool debugBool) {
 
-    bool debugBool = true; // print out to debug files 
+    //bool debugBool = true; // print out to debug files 
      
 	// Set up new container for track data, with hit count set to zero`
 	LineData line;
@@ -168,7 +168,7 @@ LineData Detector::genlin2(ofstream& debug_calc) {
 } // end of genlin2
 
 //Geometry of detecor arrangement 
-void Detector::setGeometry(){
+void Detector::setGeometry(ofstream& debug_geom, bool debugBool){
 	float s=startingDistancePlane1;
     int i_counter = 0;
     float sign = 1.0;
@@ -176,38 +176,47 @@ void Detector::setGeometry(){
     // Geometry of detecor arrangement 
     //TODO fix i_counter for arrays 
     for (int layer_i=1; layer_i<=10; layer_i++){
-        i_counter++;
-           
-        layer.push_back(layer_i);  // layer
-        distance[i_counter-1] = s;  //distance between planes  [14]
-        resolutionLayer[i_counter-1] = resolution; //resolution
+        
+        layer.push_back(layer_i);  // layer [starting from 1st layer]
+        distance.push_back(s);  //distance between planes  [14]
+        resolutionLayer.push_back(resolution); //resolution
         projectionX.push_back(1.0);  // x
         projectionY.push_back(0.0);  // y
-        //cout << "i_counter " << i_counter << " layer_i " << layer_i << "distance[i_counter-1]= " << distance[i_counter-1] << endl;
-        //taking care of stereo planes [have no pixels] 
-        if ((layer_i % 3) == 1){
-            i_counter++;
-            
+        if (debugBool){
+               debug_geom << "layer_i= " << layer_i << " layer[i_counter]= " << layer[i_counter]  << endl;
+               debug_geom << "i_counter= " << i_counter << " distance[i_counter] " << distance[i_counter] << endl;
+               debug_geom << "projectionX= " << projectionX[i_counter] << " projectionY= " << projectionY[i_counter] << endl;
+               debug_geom << endl; 
+        } 
+        i_counter++; 
+        //taking care of stereo planes [have no pixels] 1, 4, 7, 10
+        if (((layer_i) % 3) == 1){
             layer.push_back(layer_i);  // layer
-            distance[i_counter-1] = s+offset;  //distance between planes  [14]
-            resolutionLayer[i_counter-1] = resolution; //resolution
+            distance.push_back(s+offset);  //distance between planes  [14]
+            resolutionLayer.push_back(resolution); //resolution
             projectionX.push_back(std::sqrt(1.0-std::pow(stereoTheta,2)));  // x
             projectionY.push_back(stereoTheta*sign);  // y
-            //cout << "STR i_counter " << i_counter << "layer_i " << layer_i << " STR distance[i_counter-1]= " << distance[i_counter-1] << endl;
+            if (debugBool){
+               debug_geom << "S_layer_i= " << layer_i << " layer[i_counter]= " << layer[i_counter]  << endl;
+               debug_geom << "i_counter= " << i_counter << " distance[i_counter] " << distance[i_counter] << endl;
+               debug_geom << "projectionX= " << projectionX[i_counter] << " projectionY= " << projectionY[i_counter] << endl;
+               debug_geom << endl; 
+            }  
             sign=-sign;
-            
+            i_counter++;    
         }
+
         s=s+planeDistance;  // incrimenting distance between detecors
-    
+
     }  // end of looping over layers
 
 
 } // end of geom
 
 // MC misalignment of detecors 
-void Detector::misalign(ofstream& debug_mis){
+void Detector::misalign(ofstream& debug_mis, bool debugBool){
 
-    bool debugBool = true; // print out to debug files 
+    //bool debugBool = true; // print out to debug files 
     int counterMis = 0;
 	//Now misaligning detecors
     float dispX = 0.01; // plane displacement in X .05 mm * N(0,1)
@@ -225,10 +234,10 @@ void Detector::misalign(ofstream& debug_mis){
                 counterMis++;
 
                 if (debugBool){
-               debug_mis << "i= " << i << " k= " << k << " l= " << l << endl;
-               debug_mis << "sdevX[i][k][l]= " << sdevX[i][k][l] << " sdevY[i][k][l]= " << sdevY[i][k][l] << endl;  
-               debug_mis << endl; 
-            }  
+                    debug_mis << "i= " << i << " k= " << k << " l= " << l << endl;
+                    debug_mis << "sdevX[i][k][l]= " << sdevX[i][k][l] << " sdevY[i][k][l]= " << sdevY[i][k][l] << endl;  
+                    debug_mis << endl; 
+                }  
 
                 //sdevX[(i*pixelYN+k)*pixelXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
                 //sdevY[(i*pixelYN+k)*pixelXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         

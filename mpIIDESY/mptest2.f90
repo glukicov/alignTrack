@@ -199,6 +199,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     OPEN(UNIT=15,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2test2_mis_debug.txt')
 
+    OPEN(UNIT=16,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test2_geom_debug.txt')
+
     OPEN(UNIT=42,FILE="uniform_ran.txt")   !! this is not being used from randoms,f90 now....
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
 
@@ -212,6 +215,14 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         ssig(i)=sigl         ! resolution
         spro(1,i)=1.0        ! module measures 'X'
         spro(2,i)=0.0
+        
+       IF (debug .EQ. 1) THEN
+               WRITE(16,*) 'layer_i= ',layer,' layer[i_counter]= ',islyr(i) 
+               WRITE(16,*) 'i_counter= ',i,' distance[i_counter] ',sarc(i)
+               WRITE(16,*) 'projectionX= ',spro(1,i),' projectionY= ',spro(2,i)
+               WRITE(16,*) ' ' 
+       END IF
+
         IF (MOD(layer,3) == 1) THEN
             i=i+1
             islyr(i)=layer       ! layer
@@ -220,6 +231,12 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             spro(1,i)=SQRT(1.0-stereo**2)
             spro(2,i)=stereo*sgn ! module measures both 'X' and 'Y'
             sgn=-sgn             ! stereo orientation
+            IF (debug .EQ. 1) THEN
+               WRITE(16,*) 'layer_i= ',layer,' layer[i_counter]= ',islyr(i) 
+               WRITE(16,*) 'i_counter= ',i,' distance[i_counter] ',sarc(i)
+               WRITE(16,*) 'projectionX= ',spro(1,i),' projectionY= ',spro(2,i)
+               WRITE(16,*) ' ' 
+            END IF
         END IF
         s=s+diss
     END DO
@@ -469,6 +486,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     CLOSE (13)
     CLOSE (14)
     CLOSE (15)
+    CLOSE (16)
 
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'

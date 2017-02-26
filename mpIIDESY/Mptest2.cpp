@@ -70,9 +70,37 @@ using namespace std;
 
 /////************MAIN***************/////////////
 //TODO add arguments option 
-//int main(int argc, int* argv[]){
-int main(){
+int main(int argc, char* argv[]){
 
+    //this is passed to Detector functions, with debug file names
+    bool debugBool = false;
+    string compareStr = argv[1];
+    if (compareStr=="debug"){
+    debugBool = true; // print out to debug files
+    cout << "DEBUG MODE";
+    }
+
+    /*
+    // Check if correct number of arguments specified, exiting if not
+    if (argc > 3) {
+        cout << "Too many arguments - please specify model and verbosity flag. (e.g. 0 0 by default)" << endl << endl;
+        return 1;
+    } else if (argc < 3) {
+        cout << "Too few arguments - please specify model and verbosity flag. (e.g. 0 0 by default) " << endl << endl;
+        return 1;
+    } else {
+
+        // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
+        try {
+            imodel = argv[1];
+            ip = argv[2];
+        } catch  {
+            cerr << "Arguments to Mptest2.cpp failed" << e.what() << endl;
+            return 1;
+        }
+    
+    }
+*/
     //Tell the logger to only show message at INFO level or above
     // Logger courtesy of Tom 
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -116,46 +144,23 @@ int main(){
     const char* outFileName = "Mptest2.bin";
     bool asBinary = true; 
     bool writeZero = false;
-
-    bool debugBool = true; // print out to debug files 
-
+    
     string conFileName = "Mp2con.txt";
     string strFileName = "Mp2str.txt";
     string debugFileName = "Mp2debug.txt"; 
     string mp2_debugFileName = "Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
-    string temp_debugFileName = "Mp2debug_tmp.txt";  // for looking at parameters going to CALL MILLE
+    string temp_debugFileName = "Mp2debug_tmp.txt";  // 
     string cacl_debugFileName = "Mp2debug_calc.txt";  //
     string mis_debugFileName = "Mp2debug_mis.txt";  //
+    string geom_debugFileName = "Mp2debug_geom.txt";  //
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma",  100,  0, 0.004); // D=double bins, name, title, nBins, Min, Max
     TH1F* h_Xhits = new TH1F("h_Xhits", "X Hits",  100,  -20, 20); // D=double bins, name, title, nBins, Min, Max
     TH1F* h_Yhits = new TH1F("h_Yhits", "Y Hits",  100,  -20, 20); // D=double bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits",  100, -0.05, 0.05); // D=double bins, name, title, nBins, Min, Max
-            
-    
-/*
-    // Check if correct number of arguments specified, exiting if not
-    if (argc > 3) {
-        cout << "Too many arguments - please specify model and verbosity flag. (e.g. 0 0 by default)" << endl << endl;
-        return 1;
-    } else if (argc < 3) {
-        cout << "Too few arguments - please specify model and verbosity flag. (e.g. 0 0 by default) " << endl << endl;
-        return 1;
-    } else {
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits",  100, -0.05, 0.05); // D=double bins, name, title, nBins, Min, Max  
 
-        // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
-        try {
-            imodel = argv[1];
-            ip = argv[2];
-        } catch  {
-            cerr << "Arguments to Mptest2.cpp failed" << e.what() << endl;
-            return 1;
-        }
-    
-    }
-*/
     
    // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -169,15 +174,15 @@ int main(){
     ofstream debug_tmp(temp_debugFileName);
     ofstream debug_calc(cacl_debugFileName);
     ofstream debug_mis(mis_debugFileName);
-    
+    ofstream debug_geom(geom_debugFileName);
    
     // GEOMETRY
-    Detector::instance()->setGeometry();
+    Detector::instance()->setGeometry(debug_geom, debugBool);
     
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
-    Detector::instance()->misalign(debug_mis); 
+    Detector::instance()->misalign(debug_mis, debugBool); 
 
     // Write constraint file, for use with pede TODO fix this 
     Detector::instance()->write_constraint_file(constraint_file);
@@ -235,7 +240,7 @@ int main(){
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
         //Generating tracks 
-        LineData generated_line = Detector::instance()->genlin2(debug_calc);
+        LineData generated_line = Detector::instance()->genlin2(debug_calc, debugBool);
         if (debugBool){
             debug << endl; 
             debug_mp2 << endl; 
@@ -249,7 +254,7 @@ int main(){
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
             // PixelXYN is 50 
-            int lyr = (generated_line.i_hits[i]/Detector::instance()->getPixelXYN())+1;  // [1-14] //This the layer id
+            int lyr = (generated_line.i_hits[i]/Detector::instance()->getPixelXYN());  // [1-14] //This the layer id
             int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();  // [0-49] //This the pixel id
             //  computes the remainder of the division of plane (e.g. MOD(693, 50) = 693 - 50*13 = 43) 
 
@@ -274,8 +279,8 @@ int main(){
             float dgl2 = Detector::instance()->getProjectionY()[lyr];
             float dergl[nagl] = {dgl1, dgl2};  
             //Labels 
-            int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]-1;  // -1 is a HACK XXX
-            int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000-1;  // -1 is a HACK XXX
+            int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr];  
+            int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000; 
             int label[nalc] = {l1, l2}; 
             
             //multiple scattering errors (no correlations) (for imodel == 1)
@@ -347,6 +352,7 @@ int main(){
     debug_tmp.close();
     debug_calc.close();
     debug_mis.close();
+    debug_geom.close();
     //ROOT stuff
     file->Write();
     file->Close(); //good habit!

@@ -26,7 +26,6 @@
 #include <TRandom3.h> // rnd generator class for ROOT
 #include <TTree.h>
 
-//int main(int argc, int* argv[]); TODO 
-int main();
+int main(int argc, char* argv[]);  
 
 #endif
