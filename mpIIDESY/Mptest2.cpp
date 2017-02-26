@@ -72,39 +72,36 @@ using namespace std;
 //TODO add arguments option 
 int main(int argc, char* argv[]){
 
-    //this is passed to Detector functions, with debug file names
+    string compareStr;
     bool debugBool = false;
-    string compareStr = argv[1];
+
+    // Check if correct number of arguments specified, exiting if not
+    if (argc > 2) {
+        Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug or align)");
+        
+    } else if (argc < 2) {
+        Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. debug or align)");
+        
+    } else {
+    
+    // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
+    try {
+        compareStr = argv[1];
+        } 
+        catch (ios_base::failure& e)  {
+           Logger::Instance()->write(Logger::ERROR, "Filestream exception caught: " + string(e.what()) + "\nPlease ensure valid filenames are specified!");
+        }
+    }
+
+    //this is passed to Detector functions, with debug file names
     if (compareStr=="debug"){
     debugBool = true; // print out to debug files
-    cout << "DEBUG MODE";
+    Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE");
     }
     else{
     debugBool = false; // print out to debug files
-    cout << "NORMAL MODE";
     }
 
-    /*
-    // Check if correct number of arguments specified, exiting if not
-    if (argc > 3) {
-        cout << "Too many arguments - please specify model and verbosity flag. (e.g. 0 0 by default)" << endl << endl;
-        return 1;
-    } else if (argc < 3) {
-        cout << "Too few arguments - please specify model and verbosity flag. (e.g. 0 0 by default) " << endl << endl;
-        return 1;
-    } else {
-
-        // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
-        try {
-            imodel = argv[1];
-            ip = argv[2];
-        } catch  {
-            cerr << "Arguments to Mptest2.cpp failed" << e.what() << endl;
-            return 1;
-        }
-    
-    }
-*/
     //Tell the logger to only show message at INFO level or above
     // Logger courtesy of Tom 
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -201,7 +198,7 @@ int main(int argc, char* argv[]){
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl  
         << "Mp2con.txt   ! constraints text file " << endl
-        << "Mptest2.bin   ! binary data file" << endl
+        << "Mp2tst.bin   ! binary data file" << endl
         << "fortranfiles ! following bin files are fortran" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
