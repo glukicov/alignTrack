@@ -79,6 +79,10 @@ int main(int argc, char* argv[]){
     debugBool = true; // print out to debug files
     cout << "DEBUG MODE";
     }
+    else{
+    debugBool = false; // print out to debug files
+    cout << "NORMAL MODE";
+    }
 
     /*
     // Check if correct number of arguments specified, exiting if not
@@ -141,7 +145,7 @@ int main(int argc, char* argv[]){
     int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX
 
     //arguments for Mille constructor:
-    const char* outFileName = "Mptest2.bin";
+    const char* outFileName = "Mp2tst.bin";
     bool asBinary = true; 
     bool writeZero = false;
     

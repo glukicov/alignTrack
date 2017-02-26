@@ -107,12 +107,12 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         dx = dx+ RandomBuffer::instance()->get_gaussian_number() * scatterError;
         dy = dy+ RandomBuffer::instance()->get_gaussian_number() * scatterError;
 
-         
+         // TODO in C there is no rejection! Precision problems? 
         // which pixel was hit [0,5 Y; 0,10 X] C++ casting truncation
         int imx=int((x+layerSize*0.5)/layerSize*float(pixelXN));
-        if (imx == 10){cout << "Missed X Hit at" << line.hit_count << endl;}
+       // if (imx == 10 || imx < 0){cout << "Missed X Hit at" << line.hit_count << endl;}
         if (imx < 0 || imx >= pixelXN){ //[between (0,10] ]
-            cout << "Missed X Hit at" << line.hit_count << endl;
+            
             if (debugBool){ 
                 debug_off << "Missed X Hit at" << line.hit_count << endl; 
                 
@@ -121,17 +121,18 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
             //goto missedHit;
         } 
         int imy=int((y+layerSize*0.5)/layerSize*float(pixelYN));
-        if (imy == 5){cout << "Missed Y Hit at" << line.hit_count << endl;}
+       // if (imy == 5 | imy < 0){cout << "Missed Y Hit at" << line.hit_count << endl;}
         if (imy < 0 || imy >= pixelYN){  //[between (0,5] ]
-            cout << "Missed X Hit at" << line.hit_count << endl;
+            
             if (debugBool){
             debug_off << "Missed Y Hit at" << line.hit_count << endl; 
             }
             continue;
             //goto missedHit;
         }
+       
        //int imxC = int(imx);
-        //int imyC = int(imy);
+       //int imyC = int(imy);
 
         //TODO rewrite for sdev[detector plane][y pixel][x pixel]
         int ihit= ((i)*pixelYN+imy)*pixelXN+imx; // i from 0 to 13 (incl.)
