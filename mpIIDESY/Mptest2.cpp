@@ -124,6 +124,8 @@ int main(){
     string debugFileName = "Mp2debug.txt"; 
     string mp2_debugFileName = "Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
     string temp_debugFileName = "Mp2debug_tmp.txt";  // for looking at parameters going to CALL MILLE
+    string cacl_debugFileName = "Mp2debug_calc.txt";  //
+    string mis_debugFileName = "Mp2debug_mis.txt";  //
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
@@ -165,6 +167,9 @@ int main(){
     ofstream debug(debugFileName);
     ofstream debug_mp2(mp2_debugFileName);
     ofstream debug_tmp(temp_debugFileName);
+    ofstream debug_calc(cacl_debugFileName);
+    ofstream debug_mis(mis_debugFileName);
+    
    
     // GEOMETRY
     Detector::instance()->setGeometry();
@@ -172,7 +177,7 @@ int main(){
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
-    Detector::instance()->misalign(); 
+    Detector::instance()->misalign(debug_mis); 
 
     // Write constraint file, for use with pede TODO fix this 
     Detector::instance()->write_constraint_file(constraint_file);
@@ -230,7 +235,7 @@ int main(){
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
         //Generating tracks 
-        LineData generated_line = Detector::instance()->genlin2();
+        LineData generated_line = Detector::instance()->genlin2(debug_calc);
         if (debugBool){
             debug << endl; 
             debug_mp2 << endl; 
@@ -339,6 +344,9 @@ int main(){
     steering_file.close();
     debug.close();
     debug_mp2.close();
+    debug_tmp.close();
+    debug_calc.close();
+    debug_mis.close();
     //ROOT stuff
     file->Write();
     file->Close(); //good habit!

@@ -45,11 +45,19 @@ Detector* Detector::instance() {
 //Source code for genlin courtesy of John. 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 
-LineData Detector::genlin2() {
+LineData Detector::genlin2(ofstream& debug_calc) {
 
+    bool debugBool = true; // print out to debug files 
+     
 	// Set up new container for track data, with hit count set to zero`
 	LineData line;
     line.hit_count = 0;
+
+   if (debugBool){
+           debug_calc << "Track # (C)        " << line.hit_count << endl;
+           debug_calc << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+           debug_calc << endl; 
+       }
 
     // Track parameters for rand-generated line MC 
     float x_0 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform vertex
@@ -61,10 +69,10 @@ LineData Detector::genlin2() {
      
      // TODO pass this from main 
         #if 0
-    if (ip != 0){
-        cout << "" << endl;
-        cout << "Track: " << "x0= " << x_0 << " y0= " << y_0 << "x_slope = " << x_slope << "y_slope = " << y_slope << endl;
-   } 
+   //  if (ip != 0){
+   //      cout << "" << endl;
+   //      cout << "Track: " << "x0= " << x_0 << " y0= " << y_0 << "x_slope = " << x_slope << "y_slope = " << y_slope << endl;
+   // } 
    #endif
     
     float x = x_0;
@@ -72,6 +80,13 @@ LineData Detector::genlin2() {
     float y = y_0;
     float dy = y_slope;
     float s_old = 0.0;  // previous position in "z"
+
+    if (debugBool){
+               debug_calc << "x_0= "<< x_0<< " y_0= "<< y_0 << " x_1= "<< x_1<< " y_1= "<< y_1 << endl; 
+               debug_calc << "x_slope= "<< x_slope<< " y_slope= "<< y_slope << endl;
+               debug_calc << endl; 
+                 }
+
     
     for(int i=0; i<layerN; i++){
         //distance between cons. layers 
@@ -99,13 +114,13 @@ LineData Detector::genlin2() {
         float imy=int(y+layerSize*0.5)/layerSize*float(pixelYN);
         if (imy < 0. || imy >= pixelYN) continue;
 
-        //TODO rewrite for sdev[detector plane][y pixel][x pixel]
-        int ihit= ((i)*pixelYN+imy)*pixelXN; // i from 0 to 13 (incl.)
-        //int ioff=((layer[i]-1)*pixelYN+imy)*pixelXN+imx+1; // delete this
-
         int imxC = int(imx);
         int imyC = int(imy);
 
+        //TODO rewrite for sdev[detector plane][y pixel][x pixel]
+        int ihit= ((i)*pixelYN+imyC)*pixelXN+imxC; // i from 0 to 13 (incl.)
+        //int ioff=((layer[i]-1)*pixelYN+imy)*pixelXN+imx+1; // delete this
+       
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
 
         //TODO
@@ -122,7 +137,16 @@ LineData Detector::genlin2() {
         line.y_hits.push_back(yhit);
         //line.hit_sigmas.push_back(resolutionLayer[i]); // XXX 
         line.hit_sigmas.push_back(resolution);
-        line.hit_count++;  
+        line.hit_count++;
+
+       if (debugBool){
+               debug_calc << "xs= " << xs << "  ys= " << ys << "  x= " << x << "  y= " << y << endl;
+               debug_calc << "imx= " << imx << "  imy= " << imy << "  imxC= " << imxC << "  imyC= " << imyC << endl;
+               debug_calc << "ihit= " << ihit << "  xl= " << xl << "  yl= " << yl << "  xhit= " << distance[i]  << "  yhit= " << yhit << endl;
+               debug_calc << "sdevX[layer[i]-1][imyC][imxC]= " << sdevX[layer[i]-1][imyC][imxC] << " sdevX[layer[i]-1][imyC][imxC]= " << sdevY[layer[i]-1][imyC][imxC] << endl; 
+               debug_calc << "projectionX[i]= " << projectionX[i] << " projectionY[i]= " << projectionY[i] << endl; 
+               debug_calc << endl; 
+            }  
 
         //cout << "yhit= " << yhit << "on " << i  << " plane" << endl; 
 
@@ -139,6 +163,7 @@ LineData Detector::genlin2() {
     }// end of looping over detector layers
     
     return line; // Return data from simulated track
+    
 
 } // end of genlin2
 
@@ -180,27 +205,38 @@ void Detector::setGeometry(){
 } // end of geom
 
 // MC misalignment of detecors 
-void Detector::misalign(){
+void Detector::misalign(ofstream& debug_mis){
+
+    bool debugBool = true; // print out to debug files 
+    int counterMis = 0;
 	//Now misaligning detecors
     float dispX = 0.01; // plane displacement in X .05 mm * N(0,1)
     float dispY = 0.01; // plane displacement in Y .05 mm * N(0,1)
 
     
-    for (int i=0; i<detectorN-1; i++){   
+    for (int i=0; i<=detectorN-1; i++){   
         for(int k=0; k<=pixelYN-1; k++){
-            for(int l=1; l<=pixelXN; l++){
+            for(int l=0; l<=pixelXN-1; l++){
                 
                 //TODO  fix this [array out of bounds?]
 
                 sdevX[i][k][l] = dispX * RandomBuffer::instance()->get_gaussian_number();
                 sdevY[i][k][l] = dispY * RandomBuffer::instance()->get_gaussian_number();
+                counterMis++;
+
+                if (debugBool){
+               debug_mis << "i= " << i << " k= " << k << " l= " << l << endl;
+               debug_mis << "sdevX[i][k][l]= " << sdevX[i][k][l] << " sdevY[i][k][l]= " << sdevY[i][k][l] << endl;  
+               debug_mis << endl; 
+            }  
+
                 //sdevX[(i*pixelYN+k)*pixelXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
                 //sdevY[(i*pixelYN+k)*pixelXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
             
-            } // // end of number of modules in x
+            } // // end of number of pixel in x
         } // end of number of pixels in y 
     } // end of layers
-
+debug_mis << "counterMis= " << counterMis; 
 }//end of misalign
 
 

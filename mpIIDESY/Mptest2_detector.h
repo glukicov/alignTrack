@@ -74,11 +74,11 @@ class Detector {
 
 	static Detector* instance(); // Function to return pointer to class instance
 
-	LineData genlin2(); // Function to simulate a track through the detector, then return data for plane hits. 
+	LineData genlin2(std::ofstream&); // Function to simulate a track through the detector, then return data for plane hits. 
 
 	void setGeometry(); //Geometry of detecor arrangement 
 
-	void misalign(); // MC misalignment of detecors 
+	void misalign(std::ofstream&); // MC misalignment of detecors 
 		
     void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
 

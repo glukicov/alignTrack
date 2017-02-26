@@ -149,6 +149,8 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     INTEGER(mpi) :: nrecds
     INTEGER(mpi) :: nthits
 
+    INTEGER(mpi) :: misCounter = 0
+
     INTEGER(mpi), PARAMETER :: debug=1            !< 1=debug mode, 0=normal
     INTEGER(mpi), INTENT(IN)                      :: imodel
 
@@ -190,6 +192,12 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     OPEN(UNIT=13,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2test2_temp_debug.txt')
+
+    OPEN(UNIT=14,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test2_calc_debug.txt')
+
+    OPEN(UNIT=15,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test2_mis_debug.txt')
 
     OPEN(UNIT=42,FILE="uniform_ran.txt")   !! this is not being used from randoms,f90 now....
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
@@ -244,11 +252,23 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     DO i=0,nlyr-1
         DO k=0,nmy-1
             DO l=1,nmx
+
                 sdevx(((i*nmy+k)*nmx+l))=dispxm*gran()     ! shift in x
                 sdevy(((i*nmy+k)*nmx+l))=dispym*gran()     ! shift in y
+                misCounter = misCounter + 1
+                IF (debug .EQ. 1) THEN
+                WRITE(15,*) ' '
+                WRITE(15,*) 'sdevx= ', sdevx(((i*nmy+k)*nmx+l)), ' sdevy= ' , sdevy(((i*nmy+k)*nmx+l))
+                WRITE(15,*) 'i= ',i , ' k= ',k, ' l= ',l
+                
+                END IF
             END DO
         END DO
     END DO
+    IF (debug .EQ. 1) THEN
+    WRITE(15,*) 'counter= ', misCounter 
+    END IF
+
     !     write text files -------------------------------------------------
 
     IF(.NOT.ex1) THEN
@@ -446,6 +466,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     CLOSE (11)
     CLOSE (12)
+    CLOSE (13)
+    CLOSE (14)
+    CLOSE (15)
 
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
@@ -519,7 +542,18 @@ SUBROUTINE genln2(ip)
     dx=xslop
     dy=yslop
     sold=0.0
-    WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' , ' yhits(nhits) ', ' sigma(nhits) '
+    
+    IF (debug .EQ. 1) THEN
+                WRITE(14,*) ''
+                WRITE(14,*) '--------------------------------------------------------------------------'
+                WRITE(14,*) 'Track # (F)', nhits
+                WRITE(14,*) 'x_0= ',xnull, ' y_0= ',ynull , ' x_1= ',xexit, ' y_1= ',yexit , 'x_slope= ',xslop, &
+                    'y_slope= ',yslop
+                WRITE(14,*) ' '
+                WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' , ' yhits(nhits) ', ' sigma(nhits) '   
+                
+    END IF
+
     DO  i=1,nmlyr
         ds=sarc(i)-sold
         sold=sarc(i)
@@ -547,6 +581,15 @@ SUBROUTINE genln2(ip)
         xhits(nhits)=sarc(i)
         yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gran()*ssig(i)
         sigma(nhits)=ssig(i)
+
+        IF (debug .EQ. 1) THEN
+                WRITE(14,*) 'xs= ',xs,' ys= ',ys,' x= ',x ,' y= ',y
+                WRITE(14,*) 'imx= ',imx,'imy= ',imy,' ioff= ',ioff
+                WRITE(14,*) 'ihit= ',ihit, ' xl= ' ,xl, ' yl= ' ,yl, ' xhits= ',xhits(nhits), 'yhits= ' ,yhits(nhits)
+                WRITE(14,*) 'sdevx(ioff)= ',sdevx(ioff),' sdevy(ioff)= ',sdevy(ioff) 
+                WRITE(14,*) 'spro(1,i)= ',spro(1,i), ' spro(2,i)= ',spro(2,i)  
+                WRITE(14,*) ' '    
+        END IF
             
         IF(debug .EQ. 1) THEN
             WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits)   
