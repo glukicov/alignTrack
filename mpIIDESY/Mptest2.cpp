@@ -153,6 +153,7 @@ int main(int argc, char* argv[]){
     string cacl_debugFileName = "Mp2debug_calc.txt";  //
     string mis_debugFileName = "Mp2debug_mis.txt";  //
     string geom_debugFileName = "Mp2debug_geom.txt";  //
+    string off_debugFileName = "Mp2debug_off.txt";  //
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
@@ -175,6 +176,7 @@ int main(int argc, char* argv[]){
     ofstream debug_calc(cacl_debugFileName);
     ofstream debug_mis(mis_debugFileName);
     ofstream debug_geom(geom_debugFileName);
+    ofstream debug_off(off_debugFileName); 
    
     // GEOMETRY
     Detector::instance()->setGeometry(debug_geom, debugBool);
@@ -240,7 +242,7 @@ int main(int argc, char* argv[]){
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
         //Generating tracks 
-        LineData generated_line = Detector::instance()->genlin2(debug_calc, debugBool);
+        LineData generated_line = Detector::instance()->genlin2(debug_calc, debug_off, debugBool);
         if (debugBool){
             debug << endl; 
             debug_mp2 << endl; 
@@ -353,6 +355,7 @@ int main(int argc, char* argv[]){
     debug_calc.close();
     debug_mis.close();
     debug_geom.close();
+    debug_off.close();
     //ROOT stuff
     file->Write();
     file->Close(); //good habit!

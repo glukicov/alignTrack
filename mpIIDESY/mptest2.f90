@@ -202,6 +202,10 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     OPEN(UNIT=16,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2test2_geom_debug.txt')
 
+
+    OPEN(UNIT=17,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2test2_off_debug.txt')
+
     OPEN(UNIT=42,FILE="uniform_ran.txt")   !! this is not being used from randoms,f90 now....
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
 
@@ -376,6 +380,13 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         
         DO i=1,nhits
             ! simple straight line
+            IF (debug .EQ. 1) THEN
+                IF (nhits .NE. 14) THEN
+                    WRITE(17,*) ''
+                    WRITE(17,*) 'Missed hit at', icount
+                END IF
+            END IF
+
 
             lyr=ihits(i)/nmxy+1
             im =MOD(ihits(i),nmxy)
@@ -487,6 +498,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     CLOSE (14)
     CLOSE (15)
     CLOSE (16)
+    CLOSE (17)
 
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
@@ -586,10 +598,24 @@ SUBROUTINE genln2(ip)
         dy=dy+gran()*the0
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
-        IF (imx < 0.OR.imx >= nmx) CYCLE
+        IF (imx < 0.OR.imx >= nmx) THEN
+            
+             IF (debug .EQ. 1) THEN
+                WRITE(17,*) 'Missed X hit at ', nhits, " imx= ",imx
+             END IF
+
+            CYCLE
+        END IF
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
-        IF (imy < 0.OR.imy >= nmy) CYCLE
-  
+        IF (imy < 0.OR.imy >= nmy) THEN
+            
+            IF (debug .EQ. 1) THEN
+                WRITE(17,*) 'Missed Y hit at ', nhits,  " imy= ",imy
+            END IF
+
+            CYCLE
+        END IF
+
         ihit=((i-1)*nmy+imy)*nmx+imx
         ioff=((islyr(i)-1)*nmy+imy)*nmx+imx+1
         nhits=nhits+1

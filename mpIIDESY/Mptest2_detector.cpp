@@ -45,7 +45,7 @@ Detector* Detector::instance() {
 //Source code for genlin courtesy of John. 
 // Function to simulate a linear track through the detector, returning data about detector hits.
 
-LineData Detector::genlin2(ofstream& debug_calc, bool debugBool) {
+LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debugBool) {
 
     //bool debugBool = true; // print out to debug files 
      
@@ -64,7 +64,7 @@ LineData Detector::genlin2(ofstream& debug_calc, bool debugBool) {
     float y_0 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform vertex 
     float x_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: so fitting a line to these two points
     float y_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: 
-    float x_slope=(x_1-x_0)/distance[layerN-1]; //first element is zero
+    float x_slope=(x_1-x_0)/distance[layerN-1]; 
     float y_slope=(y_1-y_0)/distance[layerN-1];
      
      // TODO pass this from main 
@@ -109,23 +109,39 @@ LineData Detector::genlin2(ofstream& debug_calc, bool debugBool) {
 
          
         // which pixel was hit [0,5 Y; 0,10 X] C++ casting truncation
-        float imx=int(x+layerSize*0.5)/layerSize*float(pixelXN);
-        if (imx < 0. || imx >= pixelXN) continue;
-        float imy=int(y+layerSize*0.5)/layerSize*float(pixelYN);
-        if (imy < 0. || imy >= pixelYN) continue;
-
-        int imxC = int(imx);
-        int imyC = int(imy);
+        int imx=int((x+layerSize*0.5)/layerSize*float(pixelXN));
+        if (imx == 10){cout << "Missed X Hit at" << line.hit_count << endl;}
+        if (imx < 0 || imx >= pixelXN){ //[between (0,10] ]
+            cout << "Missed X Hit at" << line.hit_count << endl;
+            if (debugBool){ 
+                debug_off << "Missed X Hit at" << line.hit_count << endl; 
+                
+            }
+            continue;
+            //goto missedHit;
+        } 
+        int imy=int((y+layerSize*0.5)/layerSize*float(pixelYN));
+        if (imy == 5){cout << "Missed Y Hit at" << line.hit_count << endl;}
+        if (imy < 0 || imy >= pixelYN){  //[between (0,5] ]
+            cout << "Missed X Hit at" << line.hit_count << endl;
+            if (debugBool){
+            debug_off << "Missed Y Hit at" << line.hit_count << endl; 
+            }
+            continue;
+            //goto missedHit;
+        }
+       //int imxC = int(imx);
+        //int imyC = int(imy);
 
         //TODO rewrite for sdev[detector plane][y pixel][x pixel]
-        int ihit= ((i)*pixelYN+imyC)*pixelXN+imxC; // i from 0 to 13 (incl.)
+        int ihit= ((i)*pixelYN+imy)*pixelXN+imx; // i from 0 to 13 (incl.)
         //int ioff=((layer[i]-1)*pixelYN+imy)*pixelXN+imx+1; // delete this
        
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
 
         //TODO
-        float xl=x-sdevX[layer[i]-1][imyC][imxC]; //misalign. 
-        float yl=y-sdevY[layer[i]-1][imyC][imxC];
+        float xl=x-sdevX[layer[i]-1][imy][imx]; //misalign. 
+        float yl=y-sdevY[layer[i]-1][imy][imx];
        
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
@@ -141,9 +157,9 @@ LineData Detector::genlin2(ofstream& debug_calc, bool debugBool) {
 
        if (debugBool){
                debug_calc << "xs= " << xs << "  ys= " << ys << "  x= " << x << "  y= " << y << endl;
-               debug_calc << "imx= " << imx << "  imy= " << imy << "  imxC= " << imxC << "  imyC= " << imyC << endl;
+               debug_calc << "imx= " << imx << "  imy= " << imy << endl;
                debug_calc << "ihit= " << ihit << "  xl= " << xl << "  yl= " << yl << "  xhit= " << distance[i]  << "  yhit= " << yhit << endl;
-               debug_calc << "sdevX[layer[i]-1][imyC][imxC]= " << sdevX[layer[i]-1][imyC][imxC] << " sdevX[layer[i]-1][imyC][imxC]= " << sdevY[layer[i]-1][imyC][imxC] << endl; 
+               debug_calc << "sdevX[layer[i]-1][imy][imx]= " << sdevX[layer[i]-1][imy][imx] << " sdevX[layer[i]-1][imy][imx]= " << sdevY[layer[i]-1][imy][imx] << endl; 
                debug_calc << "projectionX[i]= " << projectionX[i] << " projectionY[i]= " << projectionY[i] << endl; 
                debug_calc << endl; 
             }  
@@ -159,7 +175,7 @@ LineData Detector::genlin2(ofstream& debug_calc, bool debugBool) {
             cout << "" << endl;
             cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << " Y hit =" << line.y_hits[i] << endl;
         }
-        
+   // missedHit:
     }// end of looping over detector layers
     
     return line; // Return data from simulated track

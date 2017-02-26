@@ -76,7 +76,7 @@ class Detector {
 
 	static Detector* instance(); // Function to return pointer to class instance
 
-	LineData genlin2(std::ofstream&, bool); // Function to simulate a track through the detector, then return data for plane hits. 
+	LineData genlin2(std::ofstream&, std::ofstream&, bool); // Function to simulate a track through the detector, then return data for plane hits. 
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detecor arrangement 
 
