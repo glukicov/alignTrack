@@ -24,8 +24,12 @@ struct LineData {
 	std::vector<float> y_hits; /** Y-positions of hits in detector */
 	std::vector<float> x_true; /** X-positions of hits in detector */
 	std::vector<float> y_true; /** Y-positions of hits in detector */
+	std::vector<float> x_det; /** X-positions of hits in detector */
+	std::vector<float> y_det; /** Y-positions of hits in detector */
+	std::vector<float> x_mis; /** X-positions of hits in detector */
+	std::vector<float> y_mis; /** Y-positions of hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
-	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at zero, and increasing by one for each adjacent plane */
+	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
 };
 
 /**

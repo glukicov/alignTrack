@@ -137,10 +137,9 @@ int main(int argc, char* argv[]){
 
 
     //////----Variable Intialisation-------///////////
-    //TODO rewrite as arguments to main
+    //TODO rewrite as arguments to main when using MS, BRL etc.. 
     int imodel = 0;  //XXX Model type (see above)
-    int ip = 0;  // verbosity level of genlin2 [0= none, 1=verbose output] XXX
-
+    
     //arguments for Mille constructor:
     const char* outFileName = "Mp2tst.bin";
     bool asBinary = true; 
@@ -149,19 +148,22 @@ int main(int argc, char* argv[]){
     string conFileName = "Mp2con.txt";
     string strFileName = "Mp2str.txt";
     string debugFileName = "Mp2debug.txt"; 
+    //Debug files
     string mp2_debugFileName = "Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
     string temp_debugFileName = "Mp2debug_tmp.txt";  // 
     string cacl_debugFileName = "Mp2debug_calc.txt";  //
     string mis_debugFileName = "Mp2debug_mis.txt";  //
     string geom_debugFileName = "Mp2debug_geom.txt";  //
     string off_debugFileName = "Mp2debug_off.txt";  //
+    
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
-    TH1F* h_sigma = new TH1F("h_sigma", "Sigma",  100,  0, 0.004); // D=double bins, name, title, nBins, Min, Max
-    TH1F* h_Xhits = new TH1F("h_Xhits", "X Hits",  100,  -20, 20); // D=double bins, name, title, nBins, Min, Max
-    TH1F* h_Yhits = new TH1F("h_Yhits", "Y Hits",  100,  -20, 20); // D=double bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits",  100, -0.05, 0.05); // D=double bins, name, title, nBins, Min, Max  
+    TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // D=double bins, name, title, nBins, Min, Max
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06); // D=double bins, name, title, nBins, Min, Max
+    TH2F* h_true_hits = new TH2F("h_true_hits", "True X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
+    TH2F* h_det_hits = new TH2F("h_det_hits", "Detector X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
+    TH2F* h_mis_hits = new TH2F("h_mis_hits", "Misaligned X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
 
     
    // Creating .bin, steering, and constrain files
@@ -255,8 +257,7 @@ int main(int argc, char* argv[]){
             debug_tmp << "Track # (C)        " << icount+1 << endl;
         }
         for (int i=0; i<generated_line.hit_count; i++){
-            //calculating the layer and pixel from the hit number - TODO make this more readable by adding extra variables/containers 
-            // PixelXYN is 50 
+            //calculating the layer and pixel from the hit number 
             int lyr = (generated_line.i_hits[i]/Detector::instance()->getPixelXYN());  // [1-14] //This the layer id
             int im = generated_line.i_hits[i]%Detector::instance()->getPixelXYN();  // [0-49] //This the pixel id
             //  computes the remainder of the division of plane (e.g. MOD(693, 50) = 693 - 50*13 = 43) 
@@ -266,8 +267,6 @@ int main(int argc, char* argv[]){
                 //debug_tmp << endl; 
             }
             
-            //cout << "lyr= " << lyr << " im= " << im << endl;
-
             const int nalc = 4; 
             const int nagl = 2;  
             
@@ -275,7 +274,7 @@ int main(int argc, char* argv[]){
             float dlc1=Detector::instance()->getProjectionX()[lyr];
             float dlc2=Detector::instance()->getProjectionY()[lyr];
             float dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
-            float dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  //XXX xhits again? 
+            float dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  
             float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
             //Global derivatives
             float dgl1 = Detector::instance()->getProjectionX()[lyr];
@@ -295,11 +294,17 @@ int main(int argc, char* argv[]){
 
             //Sanity Plots 
             h_sigma -> Fill(sigma_mp2);
-           // h_Xhits-> Fill (); /TODO return from genlin2 as a new container vector<array[4]> ? 
-           // h_Yhits-> Fill ();
             h_hits_MP2 -> Fill (rMeas_mp2); 
-
             
+            h_true_hits ->  Fill(generated_line.x_true[i], generated_line.y_true[i]);
+            h_true_hits->Draw("surf1");
+            
+            h_det_hits ->  Fill(generated_line.x_det[i], generated_line.y_det[i]);
+            h_det_hits->Draw("surf1");
+            
+            h_mis_hits ->  Fill(generated_line.x_mis[i], generated_line.y_mis[i]);
+            h_mis_hits->Draw("surf1");
+                      
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
             // For debugging
@@ -310,7 +315,6 @@ int main(int argc, char* argv[]){
                           << " LB1 :              " << label[0] << "         LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
                 //debug_mp2 << endl; 
             }
-
 
             if (debugBool) {
                 
@@ -333,19 +337,27 @@ int main(int argc, char* argv[]){
 
         //IF (imodel >= 3) THEN
 
-        //cout << "Recored passed to bin file" << endl; 
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records;
        
-    } // end of rack count
+    } // end of track count
    
-
     cout << " " << endl;
     cout << Detector::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl;
-    cout << "Sanity Plots: root -l Mptest2.root" << endl; 
+    cout << "Sanity Plots: root -l Mptest2.root" << endl;
+
+    if (debugBool) {
+    Logger::Instance()->write(Logger::WARNING, "The following debug files produced:");
+    Logger::Instance()->write(Logger::WARNING, "Mp2debug_mp2.txt - computed inputs into pede"); 
+    Logger::Instance()->write(Logger::WARNING, "Mp2debug_calc.txt - line and hits calculation (verbose)");  
+    Logger::Instance()->write(Logger::WARNING, "Mp2debug_mis.txt - MISALIGNMENT");  
+    Logger::Instance()->write(Logger::WARNING, "Mp2debug_geom.txt - GEOMETRY ");  
+    Logger::Instance()->write(Logger::WARNING, "Mp2debug_off.txt - rejected/missed hits");  
+    Logger::Instance()->write(Logger::WARNING, "Mp2debug_tmp.txt - a debug file for quick checks and development");  
+    }
 
     // Close text files
     constraint_file.close();
@@ -357,8 +369,10 @@ int main(int argc, char* argv[]){
     debug_mis.close();
     debug_geom.close();
     debug_off.close();
+    
     //ROOT stuff
     file->Write();
     file->Close(); //good habit!
+   
     return 0; 
 } //end of main 

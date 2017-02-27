@@ -66,15 +66,7 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
     float y_1 = layerSize * (RandomBuffer::instance()->get_uniform_number()-0.5); //uniform exit point: 
     float x_slope=(x_1-x_0)/distance[layerN-1]; 
     float y_slope=(y_1-y_0)/distance[layerN-1];
-     
-     // TODO pass this from main 
-        #if 0
-   //  if (ip != 0){
-   //      cout << "" << endl;
-   //      cout << "Track: " << "x0= " << x_0 << " y0= " << y_0 << "x_slope = " << x_slope << "y_slope = " << y_slope << endl;
-   // } 
-   #endif
-    
+       
     float x = x_0;
     float dx = x_slope;
     float y = y_0;
@@ -96,6 +88,8 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         //positions on the detector plane  
         float xs=x_0 + distance[i] * x_slope;
         float ys=y_0 + distance[i] * y_slope;
+        line.x_det.push_back(xs);
+        line.y_det.push_back(ys);
         
         //true track position [for MS]
         x=x+dx*ds;
@@ -107,7 +101,7 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         dx = dx+ RandomBuffer::instance()->get_gaussian_number() * scatterError;
         dy = dy+ RandomBuffer::instance()->get_gaussian_number() * scatterError;
 
-         // TODO in C there is no rejection! Precision problems? 
+         // TODO in C there is no rejection! Precision problems? (goes away with different prec. of rands. - needs more testing)
         // which pixel was hit [0,5 Y; 0,10 X] C++ casting truncation
         int imx=int((x+layerSize*0.5)/layerSize*float(pixelXN));
        // if (imx == 10 || imx < 0){cout << "Missed X Hit at" << line.hit_count << endl;}
@@ -118,7 +112,7 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
                 
             }
             continue;
-            //goto missedHit;
+            //goto missedHit; // XXX correct implementation 
         } 
         int imy=int((y+layerSize*0.5)/layerSize*float(pixelYN));
        // if (imy == 5 | imy < 0){cout << "Missed Y Hit at" << line.hit_count << endl;}
@@ -128,11 +122,9 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
             debug_off << "Missed Y Hit at" << line.hit_count << endl; 
             }
             continue;
-            //goto missedHit;
+            //goto missedHit; // XXX correct implementation 
         }
        
-       //int imxC = int(imx);
-       //int imyC = int(imy);
 
         //TODO rewrite for sdev[detector plane][y pixel][x pixel]
         int ihit= ((i)*pixelYN+imy)*pixelXN+imx; // i from 0 to 13 (incl.)
@@ -143,12 +135,14 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         //TODO
         float xl=x-sdevX[layer[i]-1][imy][imx]; //misalign. 
         float yl=y-sdevY[layer[i]-1][imy][imx];
+        line.x_mis.push_back(xl);
+        line.y_mis.push_back(yl);
        
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
         // float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]; //XXX
-        // XXX TODO projection Y is always 0 for non-stero modules??
+        // XXX TODO projection Y is always 0 for non-stero modules?? what is the motivation? 
         float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolution; 
         //line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
         line.y_hits.push_back(yhit);
@@ -163,20 +157,8 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
                debug_calc << "sdevX[layer[i]-1][imy][imx]= " << sdevX[layer[i]-1][imy][imx] << " sdevX[layer[i]-1][imy][imx]= " << sdevY[layer[i]-1][imy][imx] << endl; 
                debug_calc << "projectionX[i]= " << projectionX[i] << " projectionY[i]= " << projectionY[i] << endl; 
                debug_calc << endl; 
-            }  
-
-        //cout << "yhit= " << yhit << "on " << i  << " plane" << endl; 
-
-        // TODO pass this as TTree or w/e from main
-        //h_2 -> Fill(line.x_hits[i], line.y_hits[i]);
-
-        // TODO pass this from main 
-        
-        if (0){
-            cout << "" << endl;
-            cout << "Generated Line data: " <<  "Sigma= " << line.hit_sigmas[i] << " X hit= "<< line.x_hits[i] << " Y hit =" << line.y_hits[i] << endl;
-        }
-   // missedHit:
+            }      
+   
     }// end of looping over detector layers
     
     return line; // Return data from simulated track
@@ -244,8 +226,6 @@ void Detector::misalign(ofstream& debug_mis, bool debugBool){
         for(int k=0; k<=pixelYN-1; k++){
             for(int l=0; l<=pixelXN-1; l++){
                 
-                //TODO  fix this [array out of bounds?]
-
                 sdevX[i][k][l] = dispX * RandomBuffer::instance()->get_gaussian_number();
                 sdevY[i][k][l] = dispY * RandomBuffer::instance()->get_gaussian_number();
                 counterMis++;
@@ -255,9 +235,6 @@ void Detector::misalign(ofstream& debug_mis, bool debugBool){
                     debug_mis << "sdevX[i][k][l]= " << sdevX[i][k][l] << " sdevY[i][k][l]= " << sdevY[i][k][l] << endl;  
                     debug_mis << endl; 
                 }  
-
-                //sdevX[(i*pixelYN+k)*pixelXN+l] = dispX * RandomBuffer::instance()->get_gaussian_number(); 
-                //sdevY[(i*pixelYN+k)*pixelXN+l] = dispY * RandomBuffer::instance()->get_gaussian_number();         
             
             } // // end of number of pixel in x
         } // end of number of pixels in y 
