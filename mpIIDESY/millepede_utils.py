@@ -186,7 +186,7 @@ class MillepedeRootSaving:
                 items = line.split()
 
                 # Check line long enough to process. If not, write old line to new file
-                if (len(items) < 0):
+                if (len(items) == 0):
                     new_constraint_file.write(line)
                     continue
 
