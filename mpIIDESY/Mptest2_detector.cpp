@@ -154,7 +154,7 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
                debug_calc << "xs= " << xs << "  ys= " << ys << "  x= " << x << "  y= " << y << endl;
                debug_calc << "imx= " << imx << "  imy= " << imy << endl;
                debug_calc << "ihit= " << ihit << "  xl= " << xl << "  yl= " << yl << "  xhit= " << distance[i]  << "  yhit= " << yhit << endl;
-               debug_calc << "sdevX[layer[i]-1][imy][imx]= " << sdevX[layer[i]-1][imy][imx] << " sdevX[layer[i]-1][imy][imx]= " << sdevY[layer[i]-1][imy][imx] << endl; 
+               debug_calc << "sdevX[layer[i]-1][imy][imx]= " << sdevX[layer[i]-1][imy][imx] << " sdevY[layer[i]-1][imy][imx]= " << sdevY[layer[i]-1][imy][imx] << endl; 
                debug_calc << "projectionX[i]= " << projectionX[i] << " projectionY[i]= " << projectionY[i] << endl; 
                debug_calc << endl; 
             }      

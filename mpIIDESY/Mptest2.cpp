@@ -72,8 +72,15 @@ using namespace std;
 //TODO add arguments option 
 int main(int argc, char* argv[]){
 
+    
     string compareStr;
     bool debugBool = false;
+    //Tell the logger to only show message at INFO level or above
+    // Logger courtesy of Tom 
+    Logger::Instance()->setLogLevel(Logger::NOTE); 
+
+    //Tell the logger to throw exceptions when ERROR messages are received
+    Logger::Instance()->enableCriticalErrorThrow();
 
     // Check if correct number of arguments specified, exiting if not
     if (argc > 2) {
@@ -102,25 +109,28 @@ int main(int argc, char* argv[]){
     debugBool = false; // print out to debug files
     }
 
-    //Tell the logger to only show message at INFO level or above
-    // Logger courtesy of Tom 
-    Logger::Instance()->setLogLevel(Logger::NOTE); 
-
-    //Tell the logger to throw exceptions when ERROR messages are received
-    Logger::Instance()->enableCriticalErrorThrow();
-
-    //Logger::Instance()->setUseColor(true);  // TODO 
     
+    
+    Logger::Instance()->setUseColor(false); // will be reabled below
     // Millepede courtesy of John 
+    std::stringstream msg0, msg01, msg02, msg1, msg2, msg3, msg4;
     Logger::Instance()->write(Logger::NOTE, "");
-    Logger::Instance()->write(Logger::NOTE, "********************************************");
-    Logger::Instance()->write(Logger::WARNING, "*                 MPTEST 2                 *");
-    Logger::Instance()->write(Logger::NOTE, "********************************************");
+    msg0 << Logger::blue() <<  "********************************************" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg0.str());
+    msg01 << Logger::blue() << "*                 MPTEST 2                 *" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg01.str());
+    msg1 << Logger::blue() <<  "********************************************" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->write(Logger::NOTE, "");
-    Logger::Instance()->write(Logger::WARNING, "    _____________________________  \\  /");
-    Logger::Instance()->write(Logger::WARNING, "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) ");
-    Logger::Instance()->write(Logger::WARNING, "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
+    msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg2.str());
+    msg3 << Logger::yellow() << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg3.str());
+    msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg4.str());
     Logger::Instance()->write(Logger::NOTE, ""); 
+    
+    Logger::Instance()->setUseColor(true); // back to deafault colours 
 
     try {
         Detector::instance()->set_uniform_file("uniform_ran.txt");
@@ -141,21 +151,23 @@ int main(int argc, char* argv[]){
     int imodel = 0;  //XXX Model type (see above)
     
     //arguments for Mille constructor:
-    const char* outFileName = "Mp2tst.bin";
+    const char* outFileName = "C_Mp2tst.bin";
     bool asBinary = true; 
     bool writeZero = false;
     
-    string conFileName = "Mp2con.txt";
-    string strFileName = "Mp2str.txt";
-    string debugFileName = "Mp2debug.txt"; 
+    string conFileName = "C_Mp2con.txt";
+    string strFileName = "C_Mp2str.txt";
+    string debugFileName = "C_Mp2debug.txt"; 
     //Debug files
-    string mp2_debugFileName = "Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
-    string temp_debugFileName = "Mp2debug_tmp.txt";  // 
-    string cacl_debugFileName = "Mp2debug_calc.txt";  //
-    string mis_debugFileName = "Mp2debug_mis.txt";  //
-    string geom_debugFileName = "Mp2debug_geom.txt";  //
-    string off_debugFileName = "Mp2debug_off.txt";  //
+    string mp2_debugFileName = "C_Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
+    string temp_debugFileName = "C_Mp2debug_tmp.txt";  // 
+    string cacl_debugFileName = "C_Mp2debug_calc.txt";  //
+    string mis_debugFileName = "C_Mp2debug_mis.txt";  //
+    string geom_debugFileName = "C_Mp2debug_geom.txt";  //
+    string off_debugFileName = "C_Mp2debug_off.txt";  //
+    string hitsOnly_debugFileName = "C_Mp2debug_hitsOnly.txt";
     
+    // TODO TTree -> seperate Macro for plotting [see Mark's suggested code: check correct motivationimplmenation for future] 
     //output ROOT file
     TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
      // Book histograms
@@ -179,7 +191,18 @@ int main(int argc, char* argv[]){
     ofstream debug_calc(cacl_debugFileName);
     ofstream debug_mis(mis_debugFileName);
     ofstream debug_geom(geom_debugFileName);
-    ofstream debug_off(off_debugFileName); 
+    ofstream debug_off(off_debugFileName);
+    ofstream debug_hits_only(hitsOnly_debugFileName);
+
+    std::cout << std::setprecision(8) << std::scientific;
+    debug << std::setprecision(8)<< std::scientific;
+    debug_mp2 << std::setprecision(8)<< std::scientific;
+    debug_tmp << std::setprecision(8)<< std::scientific;
+    debug_calc << std::setprecision(8)<< std::scientific;
+    debug_mis << std::setprecision(8)<< std::scientific;
+    debug_geom << std::setprecision(8)<< std::scientific;
+    debug_off << std::setprecision(8)<< std::scientific;
+    debug_hits_only << std::setprecision(8)<< std::scientific;
    
     // GEOMETRY
     Detector::instance()->setGeometry(debug_geom, debugBool);
@@ -199,8 +222,8 @@ int main(int argc, char* argv[]){
         
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl  
-        << "Mp2con.txt   ! constraints text file " << endl
-        << "Mp2tst.bin   ! binary data file" << endl
+        << "C_Mp2con.txt   ! constraints text file " << endl
+        << "C_Mp2tst.bin   ! binary data file" << endl
         << "fortranfiles ! following bin files are fortran" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
@@ -297,13 +320,15 @@ int main(int argc, char* argv[]){
             h_hits_MP2 -> Fill (rMeas_mp2); 
             
             h_true_hits ->  Fill(generated_line.x_true[i], generated_line.y_true[i]);
-            h_true_hits->Draw("surf1");
+            //h_true_hits->SetContour(ncol);
+            //gStyle->SetPalette(100,colors);
+            h_true_hits->Draw("colz");
             
             h_det_hits ->  Fill(generated_line.x_det[i], generated_line.y_det[i]);
-            h_det_hits->Draw("surf1");
+            h_det_hits->Draw("colz");
             
             h_mis_hits ->  Fill(generated_line.x_mis[i], generated_line.y_mis[i]);
-            h_mis_hits->Draw("surf1");
+            h_mis_hits->Draw("colz");
                       
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
@@ -327,7 +352,9 @@ int main(int argc, char* argv[]){
                                 // << "Label: " << label[0] << " " << label[1] << endl
                                   << "xhits = " << generated_line.x_hits[i] << endl
                                  << "yhits Hit= " << rMeas_mp2 << endl
-                                 << "Sigma= " << sigma_mp2 << endl << endl;            }
+                                 << "Sigma= " << sigma_mp2 << endl << endl;            
+                              debug_hits_only << rMeas_mp2 << endl;
+                             }
 
 
         hitsN++; //count hits
@@ -346,17 +373,17 @@ int main(int argc, char* argv[]){
     cout << Detector::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
-    cout << "Ready for PEDE alogrithm: ./pede Mp2str.txt" << endl;
+    cout << "Ready for PEDE alogrithm: ./pede C_Mp2str.txt" << endl;
     cout << "Sanity Plots: root -l Mptest2.root" << endl;
 
     if (debugBool) {
     Logger::Instance()->write(Logger::WARNING, "The following debug files produced:");
-    Logger::Instance()->write(Logger::WARNING, "Mp2debug_mp2.txt - computed inputs into pede"); 
-    Logger::Instance()->write(Logger::WARNING, "Mp2debug_calc.txt - line and hits calculation (verbose)");  
-    Logger::Instance()->write(Logger::WARNING, "Mp2debug_mis.txt - MISALIGNMENT");  
-    Logger::Instance()->write(Logger::WARNING, "Mp2debug_geom.txt - GEOMETRY ");  
-    Logger::Instance()->write(Logger::WARNING, "Mp2debug_off.txt - rejected/missed hits");  
-    Logger::Instance()->write(Logger::WARNING, "Mp2debug_tmp.txt - a debug file for quick checks and development");  
+    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_mp2.txt - computed inputs into pede"); 
+    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_calc.txt - line and hits calculation (verbose)");  
+    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_mis.txt - MISALIGNMENT");  
+    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_geom.txt - GEOMETRY ");  
+    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_off.txt - rejected/missed hits");  
+    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_tmp.txt - a debug file for quick checks and development");  
     }
 
     // Close text files

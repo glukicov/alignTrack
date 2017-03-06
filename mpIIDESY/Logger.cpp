@@ -17,6 +17,7 @@ bool Logger::_useColor;
 Color::Modifier Logger::_red(Color::FG_RED);
 Color::Modifier Logger::_yel(Color::FG_YELLOW);
 Color::Modifier Logger::_green(Color::FG_GREEN);
+Color::Modifier Logger::_blue(Color::FG_BLUE);
 Color::Modifier Logger::_def(Color::FG_DEFAULT);
 std::string Logger::_prevMsg;
 

@@ -202,6 +202,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     OPEN(UNIT=16,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2test2_geom_debug.txt')
 
+    OPEN(UNIT=17,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='mp2debug_hitsonly.txt')
+
     OPEN(UNIT=42,FILE="uniform_ran.txt")   !! this is not being used from randoms,f90 now....
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
 
@@ -431,6 +434,10 @@ SUBROUTINE mptst2(imodel)         ! generate test files
                 WRITE(12,*) ' LB1 : ' , label(1) , ' LB2 : ' , label(2)     ,     '     Y Hit: ' , yhits(i) ,   &   
                     '   Sigma : ' ,sigma(i) 
             END IF
+            IF (debug .EQ. 1) THEN
+                WRITE(17,*) yhits(i)
+                
+            END IF
             nthits=nthits+1  ! count hits
         END DO
         ! additional measurements from MS
@@ -487,6 +494,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     CLOSE (14)
     CLOSE (15)
     CLOSE (16)
+    CLOSE (17)
 
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
