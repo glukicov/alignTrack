@@ -93,9 +93,9 @@ output_file = open(output_filename, "w")
 
 
 if (gaussian):
-    output_file.write("Gaussian" + str(gaussian_generation_stdev) + "\n")
+    output_file.write("Gaussian " + str(gaussian_generation_stdev) + "\n")
 elif (uniform):
-    output_file.write("Uniform" + str(min_4_bit) + " " + str(max_4_bit) + "\n")
+    output_file.write("Uniform " + str(min_4_bit) + " " + str(max_4_bit) + "\n")
     
 
 generated_randoms = []
