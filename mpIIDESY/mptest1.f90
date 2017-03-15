@@ -39,35 +39,35 @@ MODULE mptest1
     IMPLICIT NONE
     SAVE
 
-    INTEGER(mpi), PARAMETER :: nplan=100
+    INTEGER(mpl), PARAMETER :: nplan=100
 
     !     define detector geometry
-    REAL(mps), PARAMETER :: detx= 10.0      !< x-value of first plane
-    REAL(mps), PARAMETER :: disx= 10.0      !< distance between planes
-    REAL(mps), PARAMETER :: thck=  2.0      !< thickness of plane
-    REAL(mps), PARAMETER :: heit=100.0      !< height of detector plane
-    REAL(mps), PARAMETER :: effp=0.90       !< plane efficiency
-    REAL(mps), PARAMETER :: sgmp=0.0150     !< measurement sigma
+    REAL(mpd), PARAMETER :: detx= 10.0      !< x-value of first plane
+    REAL(mpd), PARAMETER :: disx= 10.0      !< distance between planes
+    REAL(mpd), PARAMETER :: thck=  2.0      !< thickness of plane
+    REAL(mpd), PARAMETER :: heit=100.0      !< height of detector plane
+    REAL(mpd), PARAMETER :: effp=0.90       !< plane efficiency
+    REAL(mpd), PARAMETER :: sgmp=0.0150     !< measurement sigma
 
     ! misalignment
-    REAL(mps), DIMENSION(nplan) :: del      !< shift (position deviation) (alignment parameter)
-    REAL(mps), DIMENSION(nplan) :: dvd      !< rel. drift velocity deviation (calibration parameter)
+    REAL(mpd), DIMENSION(nplan) :: del      !< shift (position deviation) (alignment parameter)
+    REAL(mpd), DIMENSION(nplan) :: dvd      !< rel. drift velocity deviation (calibration parameter)
     ! track parameter
-    REAL(mps) :: ynull                      !< track position at vertex
-    REAL(mps) :: slope                      !< track slope
+    REAL(mpd) :: ynull                      !< track position at vertex
+    REAL(mpd) :: slope                      !< track slope
 
-    INTEGER(mpi) :: nhits                   !< number of hits
-    INTEGER(mpi), DIMENSION(nplan) :: ihits !< plane numbers (planes with hits)
-    REAL(mps), DIMENSION(nplan) :: eff      !< plane efficiency
-    REAL(mps), DIMENSION(nplan) :: sgm      !< measurement sigma (plane)
+    INTEGER(mpl) :: nhits                   !< number of hits
+    INTEGER(mpl), DIMENSION(nplan) :: ihits !< plane numbers (planes with hits)
+    REAL(mpd), DIMENSION(nplan) :: eff      !< plane efficiency
+    REAL(mpd), DIMENSION(nplan) :: sgm      !< measurement sigma (plane)
     REAL(mps), DIMENSION(nplan) :: ydrft    !< signed drift length
     REAL(mps), DIMENSION(nplan) :: xhits    !< position perp. to plane (hit)
     REAL(mps), DIMENSION(nplan) :: yhits    !< measured position in plane (hit)
     REAL(mps), DIMENSION(nplan) :: sigma    !< measurement sigma (hit)
 
-    INTEGER(mpi) :: uniform_ran_max
-    INTEGER(mpi) :: uniform_ran_min
-    INTEGER(mpi) :: gaussian_ran_stdev
+    INTEGER(mpl) :: uniform_ran_max
+    INTEGER(mpl) :: uniform_ran_min
+    INTEGER(mpl) :: gaussian_ran_stdev
     CHARACTER(LEN=10) foobar
 
 END MODULE mptest1
@@ -85,28 +85,28 @@ SUBROUTINE mptest
     USE mptest1
 
     IMPLICIT NONE
-    REAL(mps) :: dbar
-    REAL(mps) :: det
-    REAL(mps) :: displ
-    REAL(mps) :: drift
-    REAL(mps) :: eps
-    REAL(mps) :: eta
-    REAL(mps) :: gran
-    REAL(mps) :: one
-    REAL(mps) :: ww
-    REAL(mps) :: x
-    REAL(mps) :: xbar
-    INTEGER(mpi) :: i
-    INTEGER(mpi) :: icount
-    INTEGER(mpi) :: ios
-    INTEGER(mpi) :: ip
-    INTEGER(mpi) :: ipl
-    INTEGER(mpi) :: labelt
-    INTEGER(mpi) :: luns
-    INTEGER(mpi) :: lunt
-    INTEGER(mpi) :: ncount
-    INTEGER(mpi) :: nrecds
-    INTEGER(mpi) :: nthits
+    REAL(mpd) :: dbar
+    REAL(mpd) :: det
+    REAL(mpd) :: displ
+    REAL(mpd) :: drift
+    REAL(mpd) :: eps
+    REAL(mpd) :: eta
+    INTEGER(mpl) :: gran
+    REAL(mpd) :: one
+    REAL(mpd) :: ww
+    REAL(mpd) :: x
+    REAL(mpd) :: xbar
+    INTEGER(mpl) :: i
+    INTEGER(mpl) :: icount
+    INTEGER(mpl) :: ios
+    INTEGER(mpl) :: ip
+    INTEGER(mpl) :: ipl
+    INTEGER(mpl) :: labelt
+    INTEGER(mpl) :: luns
+    INTEGER(mpl) :: lunt
+    INTEGER(mpl) :: ncount
+    INTEGER(mpl) :: nrecds
+    INTEGER(mpl) :: nthits
 
     REAL(mpd) :: s1
     REAL(mpd) :: s2
@@ -120,6 +120,8 @@ SUBROUTINE mptest
     LOGICAL :: ex1
     LOGICAL :: ex2
     LOGICAL :: ex3
+
+    REAL(mpd) :: gausnum
 
     !     ...
     !CC      CALL RNTIME
@@ -174,8 +176,13 @@ SUBROUTINE mptest
     displ=0.1                        ! displacement 1 mm * N(0,1)
     drift=0.02                       ! Vdrift deviation 2 %  * N(0,1)
     DO i=1,nplan
-        del(i)=displ*(gran() / gaussian_ran_stdev)             ! shift
-        dvd(i)=drift*(gran() / gaussian_ran_stdev)           ! rel. drift velocitu deviation
+
+       gausnum = 1.0 * gran() / gaussian_ran_stdev
+       WRITE(71,*) gausnum
+        del(i)=displ*gausnum             ! shift
+       gausnum = 1.0 * gran() / gaussian_ran_stdev
+       WRITE(71,*) gausnum
+        dvd(i)=drift*gausnum           ! rel. drift velocitu deviation
     END DO
     del(10)=0.0                      ! no shift
     del(90)=0.0                      ! no shift
@@ -236,7 +243,7 @@ SUBROUTINE mptest
     IF(.NOT.ex2) WRITE(lunt,*) 'Constraint  0.0'
     DO i=1,nplan
         labelt=10+i*2
-        x=detx+REAL(i-1,mps)*disx+0.5*thck
+        x=detx+REAL(i-1,mpd)*disx+0.5*thck
         IF(.NOT.ex2) WRITE(lunt,103) labelt,one
     END DO
 
@@ -245,11 +252,11 @@ SUBROUTINE mptest
     s1=0.0_mpd
     s2=0.0_mpd
     IF(.NOT.ex2) WRITE(lunt,*) 'Constraint 0.0'   ! write
-    dbar=0.5*REAL(nplan-1,mps)*disx
-    xbar=detx+0.5*REAL(nplan-1,mps)*disx! +0.5*THCK
+    dbar=0.5*REAL(nplan-1,mpd)*disx
+    xbar=detx+0.5*REAL(nplan-1,mpd)*disx! +0.5*THCK
     DO i=1,nplan
         labelt=10+i*2
-        x=detx+REAL(i-1,mps)*disx          !+0.5*THCK
+        x=detx+REAL(i-1,mpd)*disx          !+0.5*THCK
         ww=(x-xbar)/dbar
         IF(.NOT.ex2) WRITE(lunt,103) labelt,ww          ! write
         s1=s1+del(i)
@@ -259,11 +266,11 @@ SUBROUTINE mptest
     END DO
 
 
-    det=REAL(REAL(nplan,mpd)*sv-sw*sw,mps)
-    eps=REAL(sv*s1-sw*s2,mps)/det
-    eta=REAL(REAL(nplan,mpd)*s2-sw*s1,mps)/det
+    det=REAL(REAL(nplan,mpd)*sv-sw*sw,mpd)
+    eps=REAL(sv*s1-sw*s2,mpd)/det
+    eta=REAL(REAL(nplan,mpd)*s2-sw*s1,mpd)/det
     DO i=1,nplan
-        x=detx+REAL(i-1,mps)*disx
+        x=detx+REAL(i-1,mpd)*disx
         ww=(x-xbar)/dbar
         del(i)=del(i)-eps-eta*ww        ! correct displacement ...
     END DO                           ! ... for constraints
@@ -272,7 +279,7 @@ SUBROUTINE mptest
     sum2=0.0
     DO i=1,nplan
         sum1=sum1+del(i)
-        x=detx+REAL(i-1,mps)*disx          !+0.5*THCK
+        x=detx+REAL(i-1,mpd)*disx          !+0.5*THCK
         ww=(x-xbar)/dbar
         sum2=sum2+del(i)*ww
     END DO
@@ -359,20 +366,20 @@ SUBROUTINE genlin(ip)
     USE mptest1
 
     IMPLICIT NONE
-    REAL(mps) :: gr
-    REAL(mps) :: gran
-    REAL(mps) :: uran
-    REAL(mps) :: x
-    REAL(mps) :: ybias
-    REAL(mps) :: ydvds
-    REAL(mps) :: ylin
-    REAL(mps) :: ymeas
-    REAL(mps) :: ywire
-    INTEGER(mpi) :: i
-    INTEGER(mpi) :: nwire
-    REAL(mps) :: rannum
+    INTEGER(mpl) :: gran
+    INTEGER(mpl) :: uran
+    REAL(mpd) :: x
+    REAL(mpd) :: ybias
+    REAL(mpd) :: ydvds
+    REAL(mpd) :: ylin
+    REAL(mpd) :: ymeas
+    REAL(mpd) :: ywire
+    INTEGER(mpl) :: i
+    INTEGER(mpl) :: nwire
+    REAL(mpd) :: rannum
+    REAL(mpd) :: gausnum
 
-    INTEGER(mpi), INTENT(IN)                      :: ip
+    INTEGER(mpl), INTENT(IN)                      :: ip
 
     !     ...
     
@@ -382,7 +389,7 @@ SUBROUTINE genlin(ip)
 
     rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
     WRITE(70,*) rannum    
-    slope=(rannum-0.5)*heit/(REAL(nplan-1,mps)*disx)
+    slope=(rannum-0.5)*heit/(REAL(nplan-1,mpd)*disx)
 
     IF(ip /= 0) THEN
         WRITE(*,*) ' '
@@ -390,23 +397,23 @@ SUBROUTINE genlin(ip)
     END IF
     nhits=0
     DO i=1,nplan
-        x=detx+REAL(i-1,mps)*disx  !  +0.5*THCK
+        x=detx+REAL(i-1,mpd)*disx  !  +0.5*THCK
         rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
         WRITE(70,*) rannum
         IF(rannum < eff(i)) THEN
             ylin        =ynull+slope*x             ! true y value
             ybias       =ylin-del(i)               ! biased value
-            nwire=INT(1.0+ybias/4.0,mpi)               ! wire number
+            nwire=INT(1.0+ybias/4.0,mpl)               ! wire number
             IF(nwire <= 0.OR.nwire > 25) EXIT      ! check wire number
             nhits=nhits+1                          ! track hits the plane
             xhits(nhits)=x
             ihits(nhits)=i
-            gr=gran() / gaussian_ran_stdev
-            WRITE(71,*) gr
-            ymeas=sgm(i)*gr
+       gausnum = 1.0 * gran() / gaussian_ran_stdev
+       WRITE(71,*) gausnum
+            ymeas=sgm(i)*gausnum
             ydvds=0.0
             yhits(nhits)=ybias+ymeas+ydvds     ! measured
-            ywire=REAL(nwire,mps)*4.0-2.0
+            ywire=REAL(nwire,mpd)*4.0-2.0
             ydrft(nhits)=ybias-ywire           ! signed drift length
             ydvds=ydrft(nhits)*dvd(i)
             yhits(nhits)=ybias+ymeas-ydvds     ! measured

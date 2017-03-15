@@ -138,7 +138,7 @@
 !!
 !! \return   random number U(0,1)
 
-REAL(mpi) FUNCTION uran()     ! U(0,1)
+INTEGER(mpl) FUNCTION uran()     ! U(0,1)
     USE mpdef
 
     ! IMPLICIT NONE
@@ -155,7 +155,7 @@ REAL(mpi) FUNCTION uran()     ! U(0,1)
 
     IMPLICIT NONE
 
-    REAL(mpi) :: unif_rand_in
+    INTEGER(mpl) :: unif_rand_in
 
     READ(42,*) unif_rand_in
     ! WRITE(*,*) unif_rand_in
@@ -168,7 +168,7 @@ END FUNCTION uran
 !!
 !! \return   random number N(0,1)
 
-REAL(mpi) FUNCTION gran()     ! N(0,1)
+INTEGER(mpl) FUNCTION gran()     ! N(0,1)
     USE mpdef
 
 !     IMPLICIT NONE
@@ -209,7 +209,7 @@ REAL(mpi) FUNCTION gran()     ! N(0,1)
 
     IMPLICIT NONE
 
-    REAL(mpi) :: gaus_rand_in
+    INTEGER(mpl) :: gaus_rand_in
 
     READ(43,*) gaus_rand_in
     ! WRITE(*,*) gaus_rand_in
