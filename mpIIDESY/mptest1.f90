@@ -65,6 +65,11 @@ MODULE mptest1
     REAL(mps), DIMENSION(nplan) :: yhits    !< measured position in plane (hit)
     REAL(mps), DIMENSION(nplan) :: sigma    !< measurement sigma (hit)
 
+    INTEGER(mpi) :: uniform_ran_max
+    INTEGER(mpi) :: uniform_ran_min
+    INTEGER(mpi) :: gaussian_ran_stdev
+    CHARACTER(LEN=10) foobar
+
 END MODULE mptest1
 
 !> Generate test files.
@@ -115,6 +120,7 @@ SUBROUTINE mptest
     LOGICAL :: ex1
     LOGICAL :: ex2
     LOGICAL :: ex3
+
     !     ...
     !CC      CALL RNTIME
     INQUIRE(FILE='mp2str.txt',IOSTAT=ios,EXIST=ex1) ! keep, if existing
@@ -139,6 +145,21 @@ SUBROUTINE mptest
     OPEN(UNIT=42,FILE="uniform_ran.txt")
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
 
+    OPEN(UNIT=70,FILE="uniform_read.txt")
+    OPEN(UNIT=71,FILE="gaus_read.txt")
+
+    ! READ(42,*) foobar, uniform_ran_min, uniform_ran_max
+    ! READ(43,*) foobar, gaussian_ran_stdev
+
+    uniform_ran_min = -2147483648
+    uniform_ran_max = 2147483647
+    gaussian_ran_stdev = 357913941
+
+    WRITE(*,*) "min", uniform_ran_min
+    WRITE(*,*) "max", uniform_ran_max
+    WRITE(*,*) "std", gaussian_ran_stdev
+
+
     DO i=1,nplan
         eff(i)=effp          ! plane efficiency
         sgm(i)=sgmp          ! measurement sigma
@@ -154,8 +175,8 @@ SUBROUTINE mptest
     displ=0.1                        ! displacement 1 mm * N(0,1)
     drift=0.02                       ! Vdrift deviation 2 %  * N(0,1)
     DO i=1,nplan
-        del(i)=displ*gran()             ! shift
-        dvd(i)=drift*gran()             ! rel. drift velocitu deviation
+        del(i)=displ*(gran() / gaussian_ran_stdev)             ! shift
+        dvd(i)=drift*(gran() / gaussian_ran_stdev)           ! rel. drift velocitu deviation
     END DO
     del(10)=0.0                      ! no shift
     del(90)=0.0                      ! no shift
@@ -350,12 +371,19 @@ SUBROUTINE genlin(ip)
     REAL(mps) :: ywire
     INTEGER(mpi) :: i
     INTEGER(mpi) :: nwire
+    REAL(mps) :: rannum
 
     INTEGER(mpi), INTENT(IN)                      :: ip
 
     !     ...
-    ynull=0.5*heit+0.1*heit*(uran()-0.5)   ! uniform vertex
-    slope=(uran()-0.5)*heit/(REAL(nplan-1,mps)*disx)
+    
+    rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
+    WRITE(70,*) rannum
+    ynull=0.5*heit+0.1*heit*(rannum-0.5)   ! uniform vertex
+
+    rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
+    WRITE(70,*) rannum    
+    slope=(rannum-0.5)*heit/(REAL(nplan-1,mps)*disx)
 
     IF(ip /= 0) THEN
         WRITE(*,*) ' '
@@ -364,7 +392,9 @@ SUBROUTINE genlin(ip)
     nhits=0
     DO i=1,nplan
         x=detx+REAL(i-1,mps)*disx  !  +0.5*THCK
-        IF(uran() < eff(i)) THEN
+        rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
+        WRITE(70,*) rannum
+        IF(rannum < eff(i)) THEN
             ylin        =ynull+slope*x             ! true y value
             ybias       =ylin-del(i)               ! biased value
             nwire=INT(1.0+ybias/4.0,mpi)               ! wire number
@@ -372,7 +402,8 @@ SUBROUTINE genlin(ip)
             nhits=nhits+1                          ! track hits the plane
             xhits(nhits)=x
             ihits(nhits)=i
-            gr=gran()
+            gr=gran() / gaussian_ran_stdev
+            WRITE(71,*) gr
             ymeas=sgm(i)*gr
             ydvds=0.0
             yhits(nhits)=ybias+ymeas+ydvds     ! measured

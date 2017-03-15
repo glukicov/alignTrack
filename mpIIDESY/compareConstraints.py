@@ -109,11 +109,18 @@ plane_deviations_no_cons = read_plane_deviations(fitted_params_filename)
 # Generate array of plane displacement labels
 labels = np.arange(12, 212, 2)
 
+
+lower_tolerance = np.array([-0.015 for i in labels])
+upper_tolerance = np.array([0.015 for i in labels])
+
 # Plot parameter differences
+plt.fill_between(labels, lower_tolerance, upper_tolerance, color="yellow", alpha=0.5, label="1$\sigma$ Tolerance")
 plt.plot(labels, plane_deviations_all_cons - plane_deviations_true, 'b.', label="All Constraints")
 plt.plot(labels, plane_deviations_no_shift_cons - plane_deviations_true, 'g.', label="No Shift Constraint")
 plt.plot(labels, plane_deviations_no_shear_cons - plane_deviations_true, 'm.', label="No Shear Constraint")
 plt.plot(labels, plane_deviations_no_cons - plane_deviations_true, 'r.', label="No Constraints")
+
+plt.xlim([12,210])
 
 # Label plot
 plt.title("Unnormalised Differences Between Fitted, True \n Plane Displacements for Different Constraints")
