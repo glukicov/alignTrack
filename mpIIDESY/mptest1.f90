@@ -132,6 +132,9 @@ SUBROUTINE mptest
     WRITE(*,*) 'Generating test data for mp II...'
     WRITE(*,*) ' '
     !     file management
+    
+    IF(ex1) CALL system('rm mp2str.txt')
+    IF(ex1) CALL system('rm mp2con.txt')
     IF(ex3) CALL system('rm mp2tst.bin')   ! remove old file
 
     IF(.NOT.ex1) OPEN(UNIT=7,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &

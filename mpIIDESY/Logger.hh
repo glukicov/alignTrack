@@ -81,6 +81,7 @@ public:
   static Color::Modifier& red() { return _red; }
   static Color::Modifier& yellow() { return _yel; }
   static Color::Modifier& green() { return _green; }
+  static Color::Modifier& blue() { return _blue; }
   static Color::Modifier& def() { return _def; }
 
   //static void setOutstream(const std::ostream & o ) { _outstream = o; }
@@ -112,6 +113,7 @@ private:
 
   //Color handling
   static bool _useColor;
+  static Color::Modifier _blue;
   static Color::Modifier _red;
   static Color::Modifier _yel;
   static Color::Modifier _green;

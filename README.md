@@ -16,15 +16,9 @@ to build the pede executable
 (should give a terminal output [last 2 lines]:
  Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
  Peak dynamic memory allocation:    0.100512 GB
-5. `make -f handler.mk`
-This build my handler code from MilleHandler.cpp (requires C++11) 
-It has root capabilities for future testing/integration 
-6. `Run the above with  ./MilleHandler`
-This produces test.bin and test.root
-7. To check the binary file do `python readMilleBinary.py "FILENAME" "N of line"`
+5. To check the binary file do `python readMilleBinary.py "FILENAME" "N of line"`
 e.g. `python readMilleBinary.py test.bin -1` [reads our binary for all lines] 
 e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines] 
-
 
 #### Random Number Generation ####
 Plaintext files of random numbers must be generated in order to run the C++ port of *Test 1*, and modified versions of the Fortran original. This allows random number seeding to be controlled, and for the outputs of the C++ and Fortran code to be compared. A Python script is supplied to generate these random numbers. One file of random numbers must be uniformly distributed between 0 and 1, and the other must consist of normally distributed random numbers, with a mean of 0 and a standard deviation of 1. The script is used as follows:
@@ -83,5 +77,11 @@ This script will plot the eigenspectrum for the matrix, showing the eigenvalue a
 
 #### To run PEDE algorithm in general ####
 1.  ` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
+
+### Reading Pede Histograms ### 
+1. ` root -l `
+2. root [0]  ` .L readPedeHists.C+`
+3. root [1] ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
+4. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
 
 
