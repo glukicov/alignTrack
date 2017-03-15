@@ -1,7 +1,7 @@
-#make file for mptest1_port.cpp (translation to C++ from mptest1.f90)
+# Makefile for MpTest1 (translation to C++ from mptest1.f90)
 
-PROGNAME = mptest1_port
-SOURCES =  Logger.cpp mptest1_port_detector.cpp random_buffer.cpp 
+PROGNAME = MpTest1
+SOURCES =  Logger.cpp mptest1_port_detector.cpp random_buffer.cpp mptest1_port.cpp
 OBJECTS = $(patsubst %.cpp, %.o, $(SOURCES))
 
 ROOTCFLAGS   := $(shell root-config --cflags)
@@ -26,8 +26,8 @@ LDFLAGS       = -O
 
 all : $(PROGNAME)
 
-$(PROGNAME) : $(OBJECTS) $(PROGNAME).o
-	$(CPP) -o $@ $(OBJECTS) $(PROGNAME).o $(LDFLAGS) $(LIBS)
+$(PROGNAME) : $(OBJECTS)
+	$(CPP) -o $@ $(OBJECTS) $(LDFLAGS) $(LIBS)
 
 %.o : %.cpp
 	$(CPP) $(CPPFLAGS) -o $@ -c $<

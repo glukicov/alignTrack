@@ -54,7 +54,9 @@ void RandomBuffer::open_uniform_file(string uniform_filename) {
 
 	Logger::Instance()->write(Logger::INFO, "Opened file of uniform randoms - " + uniform_filename);
 	uniform_file.open(uniform_filename.c_str());
-  
+
+	string test;
+	uniform_file >> test >> uniform_ran_min >> uniform_ran_max;  
 }
 
 /**
@@ -69,6 +71,8 @@ void RandomBuffer::open_gaussian_file(string gaussian_filename) {
 	Logger::Instance()->write(Logger::INFO, "Opened file of gaussian randoms - " + gaussian_filename);
 	gaussian_file.open(gaussian_filename.c_str());
 
+	string test;
+	gaussian_file >> test >> gaussian_ran_stdev;
 }
 
 

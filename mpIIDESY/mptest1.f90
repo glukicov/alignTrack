@@ -151,12 +151,8 @@ SUBROUTINE mptest
     OPEN(UNIT=70,FILE="uniform_read.txt")
     OPEN(UNIT=71,FILE="gaus_read.txt")
 
-    ! READ(42,*) foobar, uniform_ran_min, uniform_ran_max
-    ! READ(43,*) foobar, gaussian_ran_stdev
-
-    uniform_ran_min = -2147483648
-    uniform_ran_max = 2147483647
-    gaussian_ran_stdev = 357913941
+    READ(42,*) foobar, uniform_ran_min, uniform_ran_max
+    READ(43,*) foobar, gaussian_ran_stdev
 
     WRITE(*,*) "min", uniform_ran_min
     WRITE(*,*) "max", uniform_ran_max

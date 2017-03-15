@@ -34,9 +34,9 @@ class RandomBuffer {
 	RandomBuffer();
 	~RandomBuffer();
 
-	long uniform_ran_min = -2147483648;
-	long uniform_ran_max = 2147483647;
-	long gaussian_ran_stdev = 357913941;
+	long uniform_ran_min;
+	long uniform_ran_max;
+	long gaussian_ran_stdev;
 
 	
  public:
