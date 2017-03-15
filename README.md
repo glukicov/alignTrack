@@ -75,6 +75,7 @@ This script will plot the eigenspectrum for the matrix, showing the eigenvalue a
    * `Mp2tst.bin`, `Mp2con.txt`, `Mp2str.txt`
 3. Fit data by running `./pede Mp2str.txt`.
 
+
 #### To run PEDE algorithm in general ####
 1.  ` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
 
@@ -85,3 +86,18 @@ This script will plot the eigenspectrum for the matrix, showing the eigenvalue a
 4. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
 
 
+### To run PEDE algorithm for Fortran version of Mptest2 ###
+1. ` ./pede -t=track-model`
+where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
+
+e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
+
+### Generating Random Numbers ###
+1. ` python randomGenerator.py -g True`  [Gaussian (mean=0, std=1)]
+2. ` python randomGenerator.py -g True` [Uniform (0,1)]
+
+### Reading Pede Histograms ### 
+1. ` root -l `
+2. ` root [0] .L readPedeHists.C+`
+3. ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
+4. ` root [1] readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
