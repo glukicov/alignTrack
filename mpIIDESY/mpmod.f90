@@ -287,4 +287,10 @@ MODULE mpmod
     INTEGER(mpi) :: nfilw  !< number of weighted binary files
     INTEGER(mpi) :: ndimbuf=10000 !< default read buffer size (I/F words, half record length)
 
+    REAL(mpi) :: uniform_ran_max
+    REAL(mpi) :: uniform_ran_min
+    REAL(mpi) :: gaussian_ran_stdev
+    CHARACTER(LEN=10) foobar
+
+
 END MODULE mpmod
