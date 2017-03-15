@@ -18,8 +18,8 @@ using namespace std;
 struct Parameter_data {
 	int label; /** Parameter label, ranging from 12-210 for plane displacements, and 501-600 for velocity deviations.*/
 	int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */ 
-	double paramValue; /** Value of parameter */
-	double paramError; /** Error on parameter value (zero for true parameters) */
+	float paramValue; /** Value of parameter */
+	float paramError; /** Error on parameter value (zero for true parameters) */
 };
 
 
@@ -108,10 +108,10 @@ int main(int argc, char* argv[]) {
 	TTree t ("paramTree", "Tree to contain true, fitted parameter values");
 
 	// Set up tree branches
-	t.Branch("fitType", &true_params.fitType, "fitType/I");
+	t.Branch("fitType", &true_params.fitType, "fitType/F");
 	t.Branch("label", &true_params.label, "label/I");
-	t.Branch("paramValue", &true_params.paramValue, "paramValue/D");
-	t.Branch("paramError", &true_params.paramError, "paramError/D");
+	t.Branch("paramValue", &true_params.paramValue, "paramValue/F");
+	t.Branch("paramError", &true_params.paramError, "paramError/F");
 
 	true_params_file << endl; // Insert blank line
 
@@ -124,8 +124,6 @@ int main(int argc, char* argv[]) {
 		true_params.paramError = 0;
 		true_params.label = 10 + (2 * (i + 1));
 		true_params.paramValue = -Detector::instance()->get_plane_pos_y_devs()[i];
-		cout << 10 + (2 * (i + 1)) << " " << -Detector::instance()->get_plane_pos_y_devs()[i] << endl;
-
 		t.Fill();
 	}
 
@@ -198,14 +196,14 @@ int main(int argc, char* argv[]) {
 		LineData generated_line = Detector::instance()->gen_lin();
 
 		// Get local gradient of this track, from recorded hit distances
-		double local_gradient = generated_line.gradient;
+		float local_gradient = generated_line.gradient;
 		
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {
 						
 			// Create arrays of local and global derivatives.
-			float local_derivs[2] {1.0, generated_line.x_hits[j]};
-			float global_derivs[2] {1.0, generated_line.y_drifts[j]};
+			double local_derivs[2] {1.0, generated_line.x_hits[j]};
+			double global_derivs[2] {1.0, generated_line.y_drifts[j]};
 
 			// Labels for plane displacements, and velcity deviation. 
 			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
