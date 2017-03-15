@@ -46,8 +46,8 @@ class RandomBuffer {
 	void open_uniform_file(std::string); // Opens filestream for file of uniform random numbers.
 	void open_gaussian_file(std::string); // Opens filestream for file of uniform random numbers.
 
-	int get_uniform_number(); // Reads and returns next number in uniform file
-	int get_gaussian_number(); // Reads and returns next number in gaussian file
+	long get_uniform_number(); // Reads and returns next number in uniform file
+	long get_gaussian_number(); // Reads and returns next number in gaussian file
 
 	long get_uniform_ran_max() {return uniform_ran_max;}
 	long get_uniform_ran_min() {return uniform_ran_min;}

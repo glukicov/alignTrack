@@ -81,12 +81,12 @@ void RandomBuffer::open_gaussian_file(string gaussian_filename) {
 
    @return Next random number in file.
  */
-int RandomBuffer::get_uniform_number() {
+long RandomBuffer::get_uniform_number() {
 
 	// Test if file open, then read and return random number if it is. Otherwise, throw exception.
 	if (uniform_file.is_open()) {
 
-		int rand_num;
+		long rand_num;
 		uniform_file >> rand_num;
 		return rand_num;
 
@@ -101,13 +101,13 @@ int RandomBuffer::get_uniform_number() {
 
    @return Next random number in file.
  */
-int RandomBuffer::get_gaussian_number() {
+long RandomBuffer::get_gaussian_number() {
 
 	// Test if file is open, then read and return random number if it is. Otherwise, throw exception.
 
 	if (gaussian_file.is_open()) {
 
-		int rand_num;
+		long rand_num;
 		gaussian_file >> rand_num;
 		return rand_num;
 
