@@ -45,7 +45,6 @@ int main(int argc, char* argv[]) {
     Logger::Instance()->write(Logger::NOTE, "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/");
 	Logger::Instance()->write(Logger::NOTE, ""); 
 
-
 	try {
 
 		// Check if correct number of arguments specified, logging error if not

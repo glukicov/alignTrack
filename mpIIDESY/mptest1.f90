@@ -65,9 +65,9 @@ MODULE mptest1
     REAL(mps), DIMENSION(nplan) :: yhits    !< measured position in plane (hit)
     REAL(mps), DIMENSION(nplan) :: sigma    !< measurement sigma (hit)
 
-    REAL(mpi) :: uniform_ran_max
-    REAL(mpi) :: uniform_ran_min
-    REAL(mpi) :: gaussian_ran_stdev
+    INTEGER(mpi) :: uniform_ran_max
+    INTEGER(mpi) :: uniform_ran_min
+    INTEGER(mpi) :: gaussian_ran_stdev
     CHARACTER(LEN=10) foobar
 
 END MODULE mptest1
@@ -148,8 +148,17 @@ SUBROUTINE mptest
     OPEN(UNIT=70,FILE="uniform_read.txt")
     OPEN(UNIT=71,FILE="gaus_read.txt")
 
-    READ(42,*) foobar, uniform_ran_min, uniform_ran_max
-    READ(43,*) foobar, gaussian_ran_stdev
+    ! READ(42,*) foobar, uniform_ran_min, uniform_ran_max
+    ! READ(43,*) foobar, gaussian_ran_stdev
+
+    uniform_ran_min = -2147483648
+    uniform_ran_max = 2147483647
+    gaussian_ran_stdev = 357913941
+
+    WRITE(*,*) "min", uniform_ran_min
+    WRITE(*,*) "max", uniform_ran_max
+    WRITE(*,*) "std", gaussian_ran_stdev
+
 
     DO i=1,nplan
         eff(i)=effp          ! plane efficiency
@@ -372,7 +381,7 @@ SUBROUTINE genlin(ip)
     WRITE(70,*) rannum
     ynull=0.5*heit+0.1*heit*(rannum-0.5)   ! uniform vertex
 
-    rannum = (uran() + uniform_ran_max) / (2 * uniform_ran_max) 
+    rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
     WRITE(70,*) rannum    
     slope=(rannum-0.5)*heit/(REAL(nplan-1,mps)*disx)
 
@@ -383,7 +392,7 @@ SUBROUTINE genlin(ip)
     nhits=0
     DO i=1,nplan
         x=detx+REAL(i-1,mps)*disx  !  +0.5*THCK
-        rannum = (uran() + uniform_ran_max) / (2 * uniform_ran_max) 
+        rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
         WRITE(70,*) rannum
         IF(rannum < eff(i)) THEN
             ylin        =ynull+slope*x             ! true y value

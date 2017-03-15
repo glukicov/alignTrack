@@ -37,7 +37,7 @@ gaussian = False
 
 # Get options, arguments
 try:
-    opts, args = getopt.getopt(argv, "h:s:o:n:u:g:p:", ["help", "seed", "output_file", "count", "uniform", "gaussian", "precision"])
+    opts, args = getopt.getopt(argv, "h:s:o:n:u:g:", ["help", "seed", "output_file", "count", "uniform", "gaussian"])
 except getopt.GetoptError:
     print helpstring
     sys.exit(2)

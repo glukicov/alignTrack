@@ -3,6 +3,7 @@ import matplotlib.mlab as mlab
 import numpy as np
 import sys
 import getopt
+import os
 
 
 # Filenames for txt outputs of true, fitted parameters
@@ -18,6 +19,7 @@ try:
     opts, args = getopt.getopt(argv, "h:t:f:", ["help", "fitted_params", "true_params"])
 except getopt.GetoptError:
     print helpstring
+    sys.exit(2)
 
 # Get fitted, true parameter filenames from arguments
 for opt, arg in opts:

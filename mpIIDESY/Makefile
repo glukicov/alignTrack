@@ -57,7 +57,7 @@ PREFIX = .
 # #################################################################
 #
 FCOMP = $(OMPP) $(GCC)
-F_FLAGS = -Wall -fautomatic -fno-backslash -O3 -cpp
+F_FLAGS = -Wall -fautomatic -fno-backslash -O3 -cpp -fno-range-check
 #
 CCOMP = $(OMPP) $(GCC) 
 C_FLAGS = -Wall -O3 -Df2cFortran

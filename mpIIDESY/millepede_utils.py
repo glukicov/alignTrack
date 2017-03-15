@@ -23,7 +23,7 @@ class ParamTree(TreeModel):
 class MillepedeRootSaving: 
 
     # Takes arguments of filename for fitted parameters, and for steering file.
-    def __init__(self, fitted_params_filename="millepede.res", steering_filename="mp2test1str_c.txt", true_params_filename="mp2test1_true_params_c.txt", root_filename="mptest1_parameters_c.root"):
+    def __init__(self, steering_filename, true_params_filename, fitted_params_filename, root_filename):
         
         # Set variables from arguments
         self.fitted_params_filename = fitted_params_filename
