@@ -53,9 +53,9 @@ class Mille
   Mille(const char *outFileName, bool asBinary = true, bool writeZero = false);
   ~Mille();
 
-  void mille(int NLC, const float *derLc, int NGL, const float *derGl,
-	     const int *label, float rMeas, float sigma);
-  void special(int nSpecial, const float *floatings, const int *integers);
+  void mille(int NLC, const double *derLc, int NGL, const double *derGl,
+	     const int *label, double rMeas, double sigma);
+  void special(int nSpecial, const double *floatings, const int *integers);
   void kill();
   void end();
 
@@ -69,7 +69,7 @@ class Mille
   /// buffer size for ints and floats
   enum {myBufferSize = 5000};  ///< buffer size for ints and floats
   int   myBufferInt[myBufferSize];   ///< to collect labels etc.
-  float myBufferFloat[myBufferSize]; ///< to collect derivatives etc.
+  double myBufferFloat[myBufferSize]; ///< to collect derivatives etc.
   int   myBufferPos; ///< position in buffer
   bool  myHasSpecial; ///< if true, special(..) already called for this record
   /// largest label allowed: 2^31 - 1

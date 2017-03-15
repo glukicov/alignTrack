@@ -75,9 +75,9 @@ Mille::~Mille()
  * \param[in]    rMeas  measurement (residuum)
  * \param[in]    sigma  error
  */
-void Mille::mille(int NLC, const float *derLc,
-		  int NGL, const float *derGl, const int *label,
-		  float rMeas, float sigma)
+void Mille::mille(int NLC, const double *derLc,
+		  int NGL, const double *derGl, const int *label,
+		  double rMeas, double sigma)
 {
   if (sigma <= 0.) return;
   if (myBufferPos == -1) this->newSet(); // start, e.g. new track
@@ -124,7 +124,7 @@ void Mille::mille(int NLC, const float *derLc,
  * \param[in]    floatings  floats
  * \param[in]    integers   ints
  */
-void Mille::special(int nSpecial, const float *floatings, const int *integers)
+void Mille::special(int nSpecial, const double *floatings, const int *integers)
 {
   if (nSpecial == 0) return;
   if (myBufferPos == -1) this->newSet(); // start, e.g. new track

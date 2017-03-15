@@ -260,11 +260,11 @@ int main(int argc, char* argv[]){
     int recordN=0;
     
     
-    float scatterError = Detector::instance()->getScatterError(); // multiple scattering error
+    double scatterError = Detector::instance()->getScatterError(); // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
        for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
-        float p=pow(10.0, 1+RandomBuffer::instance()->get_uniform_number());
+        double p=pow(10.0, 1+RandomBuffer::instance()->get_uniform_number());
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
         //Generating tracks 
@@ -294,15 +294,15 @@ int main(int argc, char* argv[]){
             const int nagl = 2;  
             
             //Local derivatives
-            float dlc1=Detector::instance()->getProjectionX()[lyr];
-            float dlc2=Detector::instance()->getProjectionY()[lyr];
-            float dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
-            float dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  
-            float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
+            double dlc1=Detector::instance()->getProjectionX()[lyr];
+            double dlc2=Detector::instance()->getProjectionY()[lyr];
+            double dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
+            double dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  
+            double derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
             //Global derivatives
-            float dgl1 = Detector::instance()->getProjectionX()[lyr];
-            float dgl2 = Detector::instance()->getProjectionY()[lyr];
-            float dergl[nagl] = {dgl1, dgl2};  
+            double dgl1 = Detector::instance()->getProjectionX()[lyr];
+            double dgl2 = Detector::instance()->getProjectionY()[lyr];
+            double dergl[nagl] = {dgl1, dgl2};  
             //Labels 
             int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr];  
             int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000; 
