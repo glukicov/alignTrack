@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "Logger.hh"
 
 /**
    Singleton class to provide random numbers to Detector class, reading numbers from file.
@@ -33,6 +34,10 @@ class RandomBuffer {
 	RandomBuffer();
 	~RandomBuffer();
 
+	long uniform_ran_min = -2147483648;
+	long uniform_ran_max = 2147483647;
+	long gaussian_ran_stdev = 357913941;
+
 	
  public:
 	
@@ -41,8 +46,13 @@ class RandomBuffer {
 	void open_uniform_file(std::string); // Opens filestream for file of uniform random numbers.
 	void open_gaussian_file(std::string); // Opens filestream for file of uniform random numbers.
 
-	float get_uniform_number(); // Reads and returns next number in uniform file
-	float get_gaussian_number(); // Reads and returns next number in gaussian file
+	int get_uniform_number(); // Reads and returns next number in uniform file
+	int get_gaussian_number(); // Reads and returns next number in gaussian file
+
+	long get_uniform_ran_max() {return uniform_ran_max;}
+	long get_uniform_ran_min() {return uniform_ran_min;}
+	long get_gaussian_ran_stdev() {return gaussian_ran_stdev;}
+
 
 };
 

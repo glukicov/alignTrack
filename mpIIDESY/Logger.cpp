@@ -4,9 +4,9 @@
 #include "DateTime.hh"
 
 // Must constructorialise the singletons/static variables here
-Logger* Logger::_instance = 0;   //XXX 
-unsigned int Logger::_logLevel = 0;    /// 4
-unsigned int Logger::_style = 0;  // XXX
+Logger* Logger::_instance = 0;
+unsigned int Logger::_logLevel = 0;
+unsigned int Logger::_style = 0;
 DateTime Logger::_time;
 std::mutex Logger::_mutex;
 string Logger::_opFileName;
@@ -17,6 +17,7 @@ bool Logger::_useColor;
 Color::Modifier Logger::_red(Color::FG_RED);
 Color::Modifier Logger::_yel(Color::FG_YELLOW);
 Color::Modifier Logger::_green(Color::FG_GREEN);
+Color::Modifier Logger::_blue(Color::FG_BLUE);
 Color::Modifier Logger::_def(Color::FG_DEFAULT);
 std::string Logger::_prevMsg;
 

@@ -12,25 +12,32 @@ import sys
 import getopt
 import os
 import random
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 # Get system arguments, define string showing help message
 argv = sys.argv[1:]
-helpstring = "randomGenerator.py -s <seed> -o <output_file> -n <count> -u <uniform> -g <gaussian> -p <precision>"
+helpstring = "randomGenerator.py -s <seed> -o <output_file> -n <count> -u <uniform> -g <gaussian>"
 
 # Initial values for output filename, random number seed, count of random numbers to generate, and number of decimal places to record random numbers to.
 output_filename = os.path.abspath("./randoms_pre_gen.txt")
 seednum = 12345678
-count = 2020200
-precision = 15
+count = 5000000
+
+max_4_bit = 2147483647 # Maximum integer value
+min_4_bit = -2147483648 # Minimum integer value
+
+gaussian_norm_width = 6 # Number of standard deviations to include in integer range.
+
+
+gaussian_generation_stdev = (max_4_bit - min_4_bit) / (2 * gaussian_norm_width)  
 
 uniform = False
 gaussian = False
 
 # Get options, arguments
 try:
-    opts, args = getopt.getopt(argv, "h:s:o:n:u:g:p:", ["help", "seed", "output_file", "count", "uniform", "gaussian", "precision"])
+    opts, args = getopt.getopt(argv, "h:s:o:n:u:g:", ["help", "seed", "output_file", "count", "uniform", "gaussian"])
 except getopt.GetoptError:
     print helpstring
     sys.exit(2)
@@ -60,8 +67,6 @@ for opt, arg in opts:
             gaussian = False
     elif opt in ("-n", "--count"):
         count = int(arg)
-    elif opt in ("-p", "--precision"):
-        precision = int(arg)
 
 
 if (uniform and gaussian):
@@ -86,6 +91,13 @@ random.seed(seednum)
 # Open output file
 output_file = open(output_filename, "w")
 
+
+if (gaussian):
+    output_file.write("Gaussian " + str(gaussian_generation_stdev) + "\n")
+elif (uniform):
+    output_file.write("Uniform " + str(min_4_bit) + " " + str(max_4_bit) + "\n")
+    
+
 generated_randoms = []
 
 # Generate specified count of random numbers, writing to output file
@@ -95,19 +107,18 @@ for i in xrange(count):
 
     # Check if using uniform of gaussian distribution, writing appropriate random number to file
     if (uniform):
-        generated_random = random.random()
+        generated_random = int(random.uniform(min_4_bit, max_4_bit))
     elif (gaussian):
-        generated_random = random.normalvariate(0, 1)
+        generated_random = int(random.normalvariate(0, gaussian_generation_stdev))
 
     # Write to specified precision.
-    output_string = "{0:." + str(precision) + "f}"
-    output_file.write(output_string.format(generated_random) + "\n")
+    output_file.write(str(generated_random) + "\n")
     generated_randoms.append(generated_random)
 
 # Close output file
 output_file.close()
 
 # Sanity plot
-#plt.hist(generated_randoms, 100)
-#plt.title("Generated Randoms Sanity Histogram\n" + str(len(generated_randoms)) + " Numbers Generated, With Seed " + str(seednum))
-#plt.show()
+plt.hist(generated_randoms, 100)
+plt.title("Generated Randoms Sanity Histogram\n" + str(len(generated_randoms)) + " Numbers Generated, With Seed " + str(seednum))
+plt.show()

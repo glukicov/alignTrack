@@ -52,22 +52,34 @@ LineData Detector::gen_lin() {
 	LineData line;
 	line.hit_count = 0;
 
+	float rand_num = 0.0;
 	// Generate random values of track intercept and gradient.
-	float y_intercept = (0.5 * PLANE_HEIGHT) + (0.1 * PLANE_HEIGHT * (RandomBuffer::instance()->get_uniform_number() - 0.5)); 
-	float gradient = ((RandomBuffer::instance()->get_uniform_number() - 0.5) * PLANE_HEIGHT) / ((PLANE_COUNT - 1) * PLANE_X_SEP);
+
+	rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
+	// cout << "number " << rand_num << endl;
+	float y_intercept = (0.5 * PLANE_HEIGHT) + (0.1 * PLANE_HEIGHT * (rand_num - 0.5)); 
+
+	rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
+ 	// cout << "number " << rand_num << endl;
+	float gradient = ((rand_num - 0.5) * PLANE_HEIGHT) / ((PLANE_COUNT - 1.0) * PLANE_X_SEP);
+
+	line.gradient = gradient;
+	line.y_intercept = y_intercept;
 
 	// Iterate across planes
 	for (int i=0; i<PLANE_COUNT; i++) {
 
 		// Get position of plane
 		float x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
-
+		//		float x_true = x_recorded - plane_pos_x_devs[i];
+		rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
+		// cout << "number " << rand_num << endl;
 		// Check if hit is registered, due to limited plane efficiency.
-		if (RandomBuffer::instance()->get_uniform_number() < true_plane_effs[i]) {
+		if (rand_num < true_plane_effs[i]) {
 
 			// Calculate true value of y where line intercects plane, and biased value where hit is recorded, due to plane displacement
 			float y_true = y_intercept + (gradient * x);
-			float y_biased = y_true - plane_pos_devs[i];
+			float y_biased = y_true - plane_pos_y_devs[i];
 
 			// Calculate number of struck wire. Do not continue simulating this track if it passes outside range of wire values.
 			int wire_num = int(1 + (y_biased / 4));
@@ -78,7 +90,7 @@ LineData Detector::gen_lin() {
 			line.i_hits.push_back(i);
 
 			// Calculate smear value from detector resolution.			
-			float y_smear = true_meas_sigmas[i] * RandomBuffer::instance()->get_gaussian_number();
+			float y_smear = true_meas_sigmas[i] * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev();
 
 			// Calculate y-position of hit wire, then calculate drift distance.
 			float y_wire = (float) (wire_num * 4.0) - 2.0;
@@ -113,8 +125,8 @@ void Detector::set_plane_properties() {
 		true_meas_sigmas.push_back(MEAS_SIGMA);
 
 		// Set up random plane position deviations, and velocity deviations
-		plane_pos_devs.push_back(DISPL_SIGMA * RandomBuffer::instance()->get_gaussian_number());
-		drift_vel_devs.push_back(DRIFT_SIGMA * RandomBuffer::instance()->get_gaussian_number());
+		plane_pos_y_devs.push_back(DISPL_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
+		drift_vel_devs.push_back(DRIFT_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
 	}
 
 	// Set up bad plane with low efficiency, and bad resolution.
@@ -122,10 +134,31 @@ void Detector::set_plane_properties() {
 	true_meas_sigmas[6] = 0.0400;
 
 	// Set two planes to have no deviation in position, to constrain fit.
-	plane_pos_devs[9] = 0.0;
-	plane_pos_devs[89] = 0.0;
+	plane_pos_y_devs[9] = 0.0;
+	plane_pos_y_devs[89] = 0.0;
 
 }
+
+/**
+   Write parameter information file to the supplied file-stream
+
+   TODO: Use abstractions instead of specifying ofstream?
+
+   @param parameter_file Reference to ofstream to write parameter file to.
+*/
+void Detector::write_parameter_file(ofstream& parameter_file) {
+	
+	if (parameter_file.is_open()) {
+
+		Logger::Instance()->write(Logger::INFO, "Writing parameter file...");
+		
+		parameter_file << "Parameter" << endl;
+		parameter_file << (10 + (9 + 1) * 2) << " " << 0.0 << " " << 1.0 << endl;
+		parameter_file << (10 + (89 + 1) * 2) << " " << 0.0 << " " << 1.0 << endl;
+
+	}
+}
+
 
 /**
    Write a constraint file to the supplied file-stream.
@@ -133,21 +166,23 @@ void Detector::set_plane_properties() {
    TODO: Use abstractions instead of specifying ofstream?
 
    @param constraint_file Reference to ofstream to write constraint file to. 
- */
+*/
 void Detector::write_constraint_file(ofstream& constraint_file) {
 
 	// Check constraints file is open, then write. [Note - Don't yet understand these]
 	if (constraint_file.is_open()) {
 		
-		cout << "Writing constraint file..." << endl;
+		Logger::Instance()->write(Logger::INFO, "Writing constraint file...");
 
+		// Constrains overall detector y-displacement (in theory)
 		constraint_file << "Constraint 0.0" << endl;
 		for (int i=0; i<PLANE_COUNT; i++) {
 			int labelt = 10 + (i + 1) * 2;
 			constraint_file << labelt << " " << fixed << setprecision(7) << 1.0 << endl;
 		}
 
-
+		
+		// Constains overall detector y-shear (in theory)
 		float d_bar = 0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP; 
 		float x_bar = PLANE_X_BEGIN + (0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP);
 		constraint_file << "Constraint 0.0" << endl;
@@ -160,6 +195,7 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 
 			constraint_file << labelt << " " << fixed << setprecision(7) << ww << endl;
 		}	
+
 	}
 }
 

@@ -52,8 +52,9 @@ void RandomBuffer::open_uniform_file(string uniform_filename) {
 
 	uniform_file.exceptions(ifstream::failbit | ifstream::badbit);
 
-	cout << "Opened file of uniform randoms - " << uniform_filename << endl;
+	Logger::Instance()->write(Logger::INFO, "Opened file of uniform randoms - " + uniform_filename);
 	uniform_file.open(uniform_filename.c_str());
+  
 }
 
 /**
@@ -65,8 +66,9 @@ void RandomBuffer::open_gaussian_file(string gaussian_filename) {
 
 	gaussian_file.exceptions(ifstream::failbit | ifstream::badbit);
 
-	cout << "Opened file of gaussian randoms - " << gaussian_filename << endl;
+	Logger::Instance()->write(Logger::INFO, "Opened file of gaussian randoms - " + gaussian_filename);
 	gaussian_file.open(gaussian_filename.c_str());
+
 }
 
 
@@ -75,12 +77,12 @@ void RandomBuffer::open_gaussian_file(string gaussian_filename) {
 
    @return Next random number in file.
  */
-float RandomBuffer::get_uniform_number() {
+int RandomBuffer::get_uniform_number() {
 
 	// Test if file open, then read and return random number if it is. Otherwise, throw exception.
 	if (uniform_file.is_open()) {
 
-		float rand_num;
+		int rand_num;
 		uniform_file >> rand_num;
 		return rand_num;
 
@@ -95,13 +97,13 @@ float RandomBuffer::get_uniform_number() {
 
    @return Next random number in file.
  */
-float RandomBuffer::get_gaussian_number() {
+int RandomBuffer::get_gaussian_number() {
 
 	// Test if file is open, then read and return random number if it is. Otherwise, throw exception.
 
 	if (gaussian_file.is_open()) {
 
-		float rand_num;
+		int rand_num;
 		gaussian_file >> rand_num;
 		return rand_num;
 
