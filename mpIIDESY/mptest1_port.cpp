@@ -18,8 +18,8 @@ using namespace std;
 struct Parameter_data {
 	int label; /** Parameter label, ranging from 12-210 for plane displacements, and 501-600 for velocity deviations.*/
 	int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */ 
-	float paramValue; /** Value of parameter */
-	float paramError; /** Error on parameter value (zero for true parameters) */
+	double paramValue; /** Value of parameter */
+	double paramError; /** Error on parameter value (zero for true parameters) */
 };
 
 
@@ -108,10 +108,10 @@ int main(int argc, char* argv[]) {
 	TTree t ("paramTree", "Tree to contain true, fitted parameter values");
 
 	// Set up tree branches
-	t.Branch("fitType", &true_params.fitType, "fitType/F");
+	t.Branch("fitType", &true_params.fitType, "fitType/I");
 	t.Branch("label", &true_params.label, "label/I");
-	t.Branch("paramValue", &true_params.paramValue, "paramValue/F");
-	t.Branch("paramError", &true_params.paramError, "paramError/F");
+	t.Branch("paramValue", &true_params.paramValue, "paramValue/D");
+	t.Branch("paramError", &true_params.paramError, "paramError/D");
 
 	true_params_file << endl; // Insert blank line
 
@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
 		LineData generated_line = Detector::instance()->gen_lin();
 
 		// Get local gradient of this track, from recorded hit distances
-		float local_gradient = generated_line.gradient;
+		double local_gradient = generated_line.gradient;
 		
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {

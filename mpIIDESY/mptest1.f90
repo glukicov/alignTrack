@@ -49,6 +49,10 @@ MODULE mptest1
     REAL(mpd), PARAMETER :: effp=0.90       !< plane efficiency
     REAL(mpd), PARAMETER :: sgmp=0.0150     !< measurement sigma
 
+    ! For random number conversion
+    REAL(mpd) :: one=1.0
+    REAL(mpd) :: two=2.0
+
     ! misalignment
     REAL(mpd), DIMENSION(nplan) :: del      !< shift (position deviation) (alignment parameter)
     REAL(mpd), DIMENSION(nplan) :: dvd      !< rel. drift velocity deviation (calibration parameter)
@@ -92,7 +96,6 @@ SUBROUTINE mptest
     REAL(mpd) :: eps
     REAL(mpd) :: eta
     INTEGER(mpl) :: gran
-    REAL(mpd) :: one
     REAL(mpd) :: ww
     REAL(mpd) :: x
     REAL(mpd) :: xbar
@@ -177,10 +180,10 @@ SUBROUTINE mptest
     drift=0.02                       ! Vdrift deviation 2 %  * N(0,1)
     DO i=1,nplan
 
-       gausnum = 1.0 * gran() / gaussian_ran_stdev
+       gausnum = one * gran() / gaussian_ran_stdev
        WRITE(71,*) gausnum
         del(i)=displ*gausnum             ! shift
-       gausnum = 1.0 * gran() / gaussian_ran_stdev
+       gausnum = one * gran() / gaussian_ran_stdev
        WRITE(71,*) gausnum
         dvd(i)=drift*gausnum           ! rel. drift velocitu deviation
     END DO
@@ -383,11 +386,11 @@ SUBROUTINE genlin(ip)
 
     !     ...
     
-    rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
+    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max) 
     WRITE(70,*) rannum
     ynull=0.5*heit+0.1*heit*(rannum-0.5)   ! uniform vertex
 
-    rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
+    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max) 
     WRITE(70,*) rannum    
     slope=(rannum-0.5)*heit/(REAL(nplan-1,mpd)*disx)
 
@@ -398,7 +401,7 @@ SUBROUTINE genlin(ip)
     nhits=0
     DO i=1,nplan
         x=detx+REAL(i-1,mpd)*disx  !  +0.5*THCK
-        rannum = (uran() + uniform_ran_max) / (2.0 * uniform_ran_max) 
+        rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max) 
         WRITE(70,*) rannum
         IF(rannum < eff(i)) THEN
             ylin        =ynull+slope*x             ! true y value
@@ -408,7 +411,7 @@ SUBROUTINE genlin(ip)
             nhits=nhits+1                          ! track hits the plane
             xhits(nhits)=x
             ihits(nhits)=i
-       gausnum = 1.0 * gran() / gaussian_ran_stdev
+       gausnum = one * gran() / gaussian_ran_stdev
        WRITE(71,*) gausnum
             ymeas=sgm(i)*gausnum
             ydvds=0.0

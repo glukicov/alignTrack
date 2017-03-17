@@ -33,12 +33,12 @@
 */
 struct LineData {
 	int hit_count; /** Number of hits in detector */
-	float gradient; /** Gradient of this track */
-	float y_intercept; /** y-intercept of this track */ 
-	std::vector<float> x_hits; /** X-positions of hits in detector */
-	std::vector<float> y_hits; /** Y-positions of hits in detector */
-	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
-	std::vector<float> y_drifts; /** Drift distance from hit position to closest wire */
+	double gradient; /** Gradient of this track */
+	double y_intercept; /** y-intercept of this track */ 
+	std::vector<double> x_hits; /** X-positions of hits in detector */
+	std::vector<double> y_hits; /** Y-positions of hits in detector */
+	std::vector<double> hit_sigmas; /** Resolution for hits in detector */
+	std::vector<double> y_drifts; /** Drift distance from hit position to closest wire */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at zero, and increasing by one for each adjacent plane */
 };
 
@@ -56,21 +56,21 @@ class Detector {
 	const int TRACK_COUNT = 10000; /** Number of tracks to be simulated passing through detector */
 	
 	// Parameters for detector plane properties 
-	const float PLANE_X_BEGIN = 10.0; /** Beginning x-position of detector */
-	const float PLANE_X_SEP = 10.0; /** Separation distance between planes */
-	const float PLANE_THICKNESS = 2.0; /** Thickness of planes (note: This is not used)*/
-	const float PLANE_HEIGHT = 100.0; /** Height of planes (distance covered by planes in y-direction) */
-	const float PLANE_EFF = 0.90; /** Default efficiency of planes (fraction of hits recorded to planes a track passes through) */
-	const float MEAS_SIGMA = 0.0150; /** Default resolution of planes (smearing distance for y-position of hits) */
+	const double PLANE_X_BEGIN = 10.0; /** Beginning x-position of detector */
+	const double PLANE_X_SEP = 10.0; /** Separation distance between planes */
+	const double PLANE_THICKNESS = 2.0; /** Thickness of planes (note: This is not used)*/
+	const double PLANE_HEIGHT = 100.0; /** Height of planes (distance covered by planes in y-direction) */
+	const double PLANE_EFF = 0.90; /** Default efficiency of planes (fraction of hits recorded to planes a track passes through) */
+	const double MEAS_SIGMA = 0.0150; /** Default resolution of planes (smearing distance for y-position of hits) */
 
-	const float DISPL_SIGMA = 0.1; /** Standard deviation of plane hit displacement distribution */
-	const float DRIFT_SIGMA = 0.02; /** Standard deviation of plane drift velocity fractional deviation distribution */
+	const double DISPL_SIGMA = 0.1; /** Standard deviation of plane hit displacement distribution */
+	const double DRIFT_SIGMA = 0.02; /** Standard deviation of plane drift velocity fractional deviation distribution */
 
-	std::vector<float> plane_pos_y_devs; /** Vector of plane position deviations in y-direction */
-	std::vector<float> drift_vel_devs; /** Vector of plane drift velocity fractional deviations */
+	std::vector<double> plane_pos_y_devs; /** Vector of plane position deviations in y-direction */
+	std::vector<double> drift_vel_devs; /** Vector of plane drift velocity fractional deviations */
 
-	std::vector<float> true_plane_effs; /** Vector of plane efficiencies */
-	std::vector<float> true_meas_sigmas; /** Vector of plane resolutions */
+	std::vector<double> true_plane_effs; /** Vector of plane efficiencies */
+	std::vector<double> true_meas_sigmas; /** Vector of plane resolutions */
 
 	// Class constructor and destructor
 	Detector();
@@ -117,7 +117,7 @@ class Detector {
 
 	   @return Vector of plane drift velocity deviations.
 	*/
-	std::vector<float> get_drift_vel_devs() {return drift_vel_devs;}
+	std::vector<double> get_drift_vel_devs() {return drift_vel_devs;}
 
 
 	/**
@@ -126,7 +126,7 @@ class Detector {
 
 	   @return Vector of plane position deviations.
 	 */
-	std::vector<float> get_plane_pos_y_devs() {return plane_pos_y_devs;}
+	std::vector<double> get_plane_pos_y_devs() {return plane_pos_y_devs;}
 
 
 };

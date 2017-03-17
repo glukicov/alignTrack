@@ -52,16 +52,16 @@ LineData Detector::gen_lin() {
 	LineData line;
 	line.hit_count = 0;
 
-	float rand_num = 0.0;
+	double rand_num = 0.0;
 	// Generate random values of track intercept and gradient.
 
 	rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
 	// cout << "number " << rand_num << endl;
-	float y_intercept = (0.5 * PLANE_HEIGHT) + (0.1 * PLANE_HEIGHT * (rand_num - 0.5)); 
+	double y_intercept = (0.5 * PLANE_HEIGHT) + (0.1 * PLANE_HEIGHT * (rand_num - 0.5)); 
 
 	rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
  	// cout << "number " << rand_num << endl;
-	float gradient = ((rand_num - 0.5) * PLANE_HEIGHT) / ((PLANE_COUNT - 1.0) * PLANE_X_SEP);
+	double gradient = ((rand_num - 0.5) * PLANE_HEIGHT) / ((PLANE_COUNT - 1.0) * PLANE_X_SEP);
 
 	line.gradient = gradient;
 	line.y_intercept = y_intercept;
@@ -70,7 +70,7 @@ LineData Detector::gen_lin() {
 	for (int i=0; i<PLANE_COUNT; i++) {
 
 		// Get position of plane
-		float x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
+		double x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
 		//		float x_true = x_recorded - plane_pos_x_devs[i];
 		rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
 		// cout << "number " << rand_num << endl;
@@ -78,8 +78,8 @@ LineData Detector::gen_lin() {
 		if (rand_num < true_plane_effs[i]) {
 
 			// Calculate true value of y where line intercects plane, and biased value where hit is recorded, due to plane displacement
-			float y_true = y_intercept + (gradient * x);
-			float y_biased = y_true - plane_pos_y_devs[i];
+			double y_true = y_intercept + (gradient * x);
+			double y_biased = y_true - plane_pos_y_devs[i];
 
 			// Calculate number of struck wire. Do not continue simulating this track if it passes outside range of wire values.
 			int wire_num = int(1 + (y_biased / 4));
@@ -90,14 +90,14 @@ LineData Detector::gen_lin() {
 			line.i_hits.push_back(i);
 
 			// Calculate smear value from detector resolution.			
-			float y_smear = true_meas_sigmas[i] * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev();
+			double y_smear = true_meas_sigmas[i] * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev();
 
 			// Calculate y-position of hit wire, then calculate drift distance.
-			float y_wire = (float) (wire_num * 4.0) - 2.0;
+			double y_wire = (double) (wire_num * 4.0) - 2.0;
 			line.y_drifts.push_back(y_biased - y_wire);
 
 			// Calculate deviation in recorded y position due to drift velocity deviation
-			float y_dvd = line.y_drifts[line.hit_count] * drift_vel_devs[i];
+			double y_dvd = line.y_drifts[line.hit_count] * drift_vel_devs[i];
 
 			// Calculate recorded hit y-position, with deviations due to smearing and drift velocity deviation.
 			line.y_hits.push_back(y_biased + y_smear - y_dvd);
@@ -183,15 +183,15 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 
 		
 		// Constains overall detector y-shear (in theory)
-		float d_bar = 0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP; 
-		float x_bar = PLANE_X_BEGIN + (0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP);
+		double d_bar = 0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP; 
+		double x_bar = PLANE_X_BEGIN + (0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP);
 		constraint_file << "Constraint 0.0" << endl;
 		for (int i=0; i<PLANE_COUNT; i++) {
 			
 			int labelt = 10 + (i + 1) * 2;
 			
-			float x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
-			float ww = (x - x_bar) / d_bar;
+			double x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
+			double ww = (x - x_bar) / d_bar;
 
 			constraint_file << labelt << " " << fixed << setprecision(7) << ww << endl;
 		}	
