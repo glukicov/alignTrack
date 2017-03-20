@@ -69,7 +69,6 @@ using namespace std;
 
 
 /////************MAIN***************/////////////
-//TODO add arguments option 
 int main(int argc, char* argv[]){
 
     
@@ -212,7 +211,7 @@ int main(int argc, char* argv[]){
     // MISALIGNMENT
     Detector::instance()->misalign(debug_mis, debugBool); 
 
-    // Write constraint file, for use with pede TODO fix this 
+    // Write constraint file, for use with pede 
     Detector::instance()->write_constraint_file(constraint_file);
 
     //Now writing steering and constraint files
@@ -312,8 +311,8 @@ int main(int argc, char* argv[]){
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
            
-            float rMeas_mp2 =  generated_line.y_hits[i]; 
-            float sigma_mp2 = generated_line.hit_sigmas[i]; 
+            float rMeas_mp2 =  generated_line.y_hits[i]; ///TODO double
+            float sigma_mp2 = generated_line.hit_sigmas[i];  //TODO double
 
             //Sanity Plots 
             h_sigma -> Fill(sigma_mp2);
