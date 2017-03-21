@@ -22,6 +22,7 @@
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
+#include <cmath>
 
 #include "random_buffer.h"
 
@@ -65,12 +66,15 @@ class Detector {
 
 	const double DISPL_SIGMA = 0.1; /** Standard deviation of plane hit displacement distribution */
 	const double DRIFT_SIGMA = 0.02; /** Standard deviation of plane drift velocity fractional deviation distribution */
+	const double ROTATE_SIGMA = 0.001; /** Standard deviation of plane rotation distribution */
 
 	std::vector<double> plane_pos_y_devs; /** Vector of plane position deviations in y-direction */
 	std::vector<double> drift_vel_devs; /** Vector of plane drift velocity fractional deviations */
+	std::vector<double> plane_rot_devs; /** Vector of plane rotations (positive clockwise, and negative anticlockwise) */
 
 	std::vector<double> true_plane_effs; /** Vector of plane efficiencies */
 	std::vector<double> true_meas_sigmas; /** Vector of plane resolutions */
+
 
 	// Class constructor and destructor
 	Detector();
@@ -121,12 +125,19 @@ class Detector {
 
 
 	/**
-	   Get the plane position deviations in y-direction from zero for the 
-	   detector planes.
+	   Get the plane position deviations in y-direction from zero for the detector planes.
 
 	   @return Vector of plane position deviations.
 	 */
 	std::vector<double> get_plane_pos_y_devs() {return plane_pos_y_devs;}
+
+
+	/**
+	   Get the plane rotation angles from vertical for the detector planes.
+
+	   @return Vector of plane rotation deviations.
+	 */
+	std::vector<double> get_plane_rot_devs() {return plane_rot_devs;}
 
 
 };

@@ -66,20 +66,23 @@ LineData Detector::gen_lin() {
 	line.gradient = gradient;
 	line.y_intercept = y_intercept;
 
+	double track_angle = atan(gradient);
+
 	// Iterate across planes
 	for (int i=0; i<PLANE_COUNT; i++) {
 
 		// Get position of plane
 		double x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
-		//		float x_true = x_recorded - plane_pos_x_devs[i];
+
 		rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
-		// cout << "number " << rand_num << endl;
 		// Check if hit is registered, due to limited plane efficiency.
 		if (rand_num < true_plane_effs[i]) {
 
 			// Calculate true value of y where line intercects plane, and biased value where hit is recorded, due to plane displacement
 			double y_true = y_intercept + (gradient * x);
-			double y_biased = y_true - plane_pos_y_devs[i];
+			double y_rotated = y_true * (sin((M_PI / 2.0) + track_angle) / sin(plane_rot_devs[i] + track_angle + (M_PI / 2.0)));
+			double y_biased = y_rotated - plane_pos_y_devs[i];
+			
 
 			// Calculate number of struck wire. Do not continue simulating this track if it passes outside range of wire values.
 			int wire_num = int(1 + (y_biased / 4));
@@ -127,6 +130,8 @@ void Detector::set_plane_properties() {
 		// Set up random plane position deviations, and velocity deviations
 		plane_pos_y_devs.push_back(DISPL_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
 		drift_vel_devs.push_back(DRIFT_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
+		plane_rot_devs.push_back(ROTATE_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
+
 	}
 
 	// Set up bad plane with low efficiency, and bad resolution.
@@ -174,7 +179,7 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 		
 		Logger::Instance()->write(Logger::INFO, "Writing constraint file...");
 
-		// Constrains overall detector y-displacement (in theory)
+		// Constrains overall detector y-displacement
 		constraint_file << "Constraint 0.0" << endl;
 		for (int i=0; i<PLANE_COUNT; i++) {
 			int labelt = 10 + (i + 1) * 2;
@@ -182,7 +187,7 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 		}
 
 		
-		// Constains overall detector y-shear (in theory)
+		// Constains overall detector y-shear
 		double d_bar = 0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP; 
 		double x_bar = PLANE_X_BEGIN + (0.5 * (PLANE_COUNT - 1) * PLANE_X_SEP);
 		constraint_file << "Constraint 0.0" << endl;
@@ -195,6 +200,15 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 
 			constraint_file << labelt << " " << fixed << setprecision(7) << ww << endl;
 		}	
+
+
+		// Constrains overall detector rotation
+		constraint_file << "Constraint 0.0" << endl;
+		for (int i=0; i<PLANE_COUNT; i++) {
+			int labelt = 1010 + (i + 1) * 2;
+			constraint_file << labelt << " " << fixed << setprecision(7) << 1.0 << endl;
+		}
+
 
 	}
 }

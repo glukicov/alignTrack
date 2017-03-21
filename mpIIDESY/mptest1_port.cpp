@@ -140,6 +140,20 @@ int main(int argc, char* argv[]) {
 		t.Fill();
 	}
 
+
+	// Print plane labels, and plane rotations to file
+	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
+		true_params_file << 1010 + (2 * (i + 1)) << " " << Detector::instance()->get_plane_rot_devs()[i] << endl;
+		
+		// Add parameters, with labels, to TTree. Should fitType = 0 denoting true parameter values.
+		true_params.fitType = 0;
+		true_params.paramError = 0;
+		true_params.label = 1010 + (2 * (i + 1));
+		true_params.paramValue = Detector::instance()->get_plane_rot_devs()[i];
+		t.Fill();
+	}
+
+
 	// Write values to TTree.
 	t.Write();
 
@@ -195,22 +209,24 @@ int main(int argc, char* argv[]) {
 		// Simulate track, and get data
 		LineData generated_line = Detector::instance()->gen_lin();
 
-		// Get local gradient of this track, from recorded hit distances
-		double local_gradient = generated_line.gradient;
+		// Get track angle from track gradient. Note that this gradient will not be known a priori in a real system, so would have to be estimated from a local track fit before alignment.
+		double track_angle = atan(generated_line.gradient);
 		
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {
 						
+			double rotation_derivative = - generated_line.y_hits[j] * (1.0 / tan(M_PI / 2.0 + track_angle));
+
 			// Create arrays of local and global derivatives.
 			double local_derivs[2] {1.0, generated_line.x_hits[j]};
-			double global_derivs[2] {1.0, generated_line.y_drifts[j]};
+			double global_derivs[3] {1.0, generated_line.y_drifts[j], rotation_derivative};
 
 			// Labels for plane displacements, and velcity deviation. 
-			int labels[2] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1};
+			int labels[3] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1, 1010 + (2 * (generated_line.i_hits[j] + 1))};
 			
 			// Number of local, global derivatives for use in mille.
 			int local_deriv_count = 2;
-			int global_deriv_count = 2;
+			int global_deriv_count = 3;
 
 			// Write to binary file.
 			m.mille(local_deriv_count, local_derivs, global_deriv_count, global_derivs, labels, generated_line.y_hits[j], generated_line.hit_sigmas[j]);
