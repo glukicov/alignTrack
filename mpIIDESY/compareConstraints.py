@@ -42,6 +42,36 @@ def read_plane_deviations(file_to_read):
     return np.array(plane_deviations)
 
 
+# Function to read errors on fitted plane deviations from a specified filename
+def read_plane_errors(file_to_read):
+
+    # List of plane errors read from file
+    plane_errors = []
+
+    # Open file, and iterate over lines
+    with open(file_to_read, "r") as params_f:
+        for line in params_f.readlines():
+        
+            # Split line into items 
+            items = line.split()        
+
+            # Test if first entry in file is a label (can cast to int). If not, continue.
+            try:
+                int(items[0])
+            except:
+                continue
+
+            # Test if label for parameter represents a plane deviation, rather than a velocity deviation
+            if int(items[0]) < 500:
+                try:
+                    plane_errors.append(float(items[4]))
+                except Exception:
+                    continue
+        
+    # Cast list to a numpy array, and return
+    return np.array(plane_errors)
+
+
 
 # Names of filenames for fitted parameter results, and steering file
 fitted_params_filename = "millepede.res"
@@ -51,7 +81,7 @@ constraint_filename = "mp2test1con_c.txt"
 root_filename = "mptest1_parameters_c.root"
 
 # Set up instance of utilities class
-m_utils = millepede_utils.MillepedeRootSaving(root_filename=root_filename, steering_filename=steering_filename, true_params_filename=true_params_filename)
+m_utils = millepede_utils.MillepedeRootSaving(root_filename=root_filename, steering_filename=steering_filename, true_params_filename=true_params_filename, fitted_params_filename=fitted_params_filename)
 
 # Remove old versions of steering file, root output
 try:
@@ -73,6 +103,7 @@ plane_deviations_true = read_plane_deviations(true_params_filename)
 # Carry out fit, then read fitted plane deviations
 os.system("./pede " + steering_filename)
 plane_deviations_all_cons = read_plane_deviations(fitted_params_filename)
+plane_errors_all_cons = read_plane_errors(fitted_params_filename)
 
 
 #
@@ -84,6 +115,7 @@ m_utils.remove_constraint(constraint_filename, 1)
 # Carry out fit, then read fitted plane deviations
 os.system("./pede " + steering_filename)
 plane_deviations_no_shift_cons = read_plane_deviations(fitted_params_filename)
+plane_errors_no_shift_cons = read_plane_errors(fitted_params_filename)
 
 
 #
@@ -96,6 +128,7 @@ m_utils.remove_constraint(constraint_filename, 2)
 # Carry out fit, then read fitted plane deviations
 os.system("./pede " + steering_filename)
 plane_deviations_no_shear_cons = read_plane_deviations(fitted_params_filename)
+plane_errors_no_shear_cons = read_plane_errors(fitted_params_filename)
 
 
 #
@@ -105,6 +138,7 @@ plane_deviations_no_shear_cons = read_plane_deviations(fitted_params_filename)
 m_utils.set_input_file_reading(False, constraint_filename)
 os.system("./pede " + steering_filename)
 plane_deviations_no_cons = read_plane_deviations(fitted_params_filename)
+plane_errors_no_cons = read_plane_errors(fitted_params_filename)
 
 # Generate array of plane displacement labels
 labels = np.arange(12, 212, 2)
@@ -115,10 +149,10 @@ upper_tolerance = np.array([0.015 for i in labels])
 
 # Plot parameter differences
 plt.fill_between(labels, lower_tolerance, upper_tolerance, color="yellow", alpha=0.5, label="1$\sigma$ Tolerance")
-plt.plot(labels, plane_deviations_all_cons - plane_deviations_true, 'b.', label="All Constraints")
-plt.plot(labels, plane_deviations_no_shift_cons - plane_deviations_true, 'g.', label="No Shift Constraint")
-plt.plot(labels, plane_deviations_no_shear_cons - plane_deviations_true, 'm.', label="No Shear Constraint")
-plt.plot(labels, plane_deviations_no_cons - plane_deviations_true, 'r.', label="No Constraints")
+plt.errorbar(labels, plane_deviations_all_cons - plane_deviations_true, color='b', fmt='.', label="All Constraints", xerr=0, yerr=plane_errors_all_cons)
+plt.errorbar(labels, plane_deviations_no_shift_cons - plane_deviations_true, color='g', fmt='.', label="No Shift Constraint", xerr=0, yerr=plane_errors_no_shift_cons)
+plt.errorbar(labels, plane_deviations_no_shear_cons - plane_deviations_true, color='m', fmt='.', label="No Shear Constraint", xerr=0, yerr=plane_errors_no_shear_cons)
+plt.errorbar(labels, plane_deviations_no_cons - plane_deviations_true, color='r', fmt='.', label="No Constraints", xerr=0, yerr=plane_errors_no_cons)
 
 plt.xlim([12,210])
 
