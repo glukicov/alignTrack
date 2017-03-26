@@ -1,10 +1,10 @@
 /**
    mptest1_port.cpp
    
-   Purpose: Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable plane offset and drift velocity. Writes global and local derivatives to a binary file, and writes appropriate steering and constraint files. This source file defines the main function, and a structure used to define a TTree structure, allowing parameter values to be output.
+   Purpose: Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable plane offset, rotation and drift velocity. Writes global and local derivatives to a binary file, and writes appropriate steering and constraint files. This source file defines the main function, and a structure used to define a TTree structure, allowing parameter values to be output.
   
    @author John Smeaton
-   @version 03/02/2017
+   @version 26/03/2017
  
  */
 
@@ -16,15 +16,15 @@ using namespace std;
    Structure used to write data to TTree, with variable for each branch in tree.
  */
 struct Parameter_data {
-	int label; /** Parameter label, ranging from 12-210 for plane displacements, and 501-600 for velocity deviations.*/
-	int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */ 
+	int label; /** Parameter label, ranging from 12-210 for plane displacements, 501-600 for velocity deviations, and 112-1210 for plane rotations.*/
+	int fitType; /** Index for type of fit, with this defined as 0 for true parameter values */
 	double paramValue; /** Value of parameter */
-	double paramError; /** Error on parameter value (zero for true parameters) */
+	double paramError; /** Error on parameter value (zero for true parameters, or when found with iterative matrix solver) */
 };
 
 
 /**
-   Main function for test data generation. Simulates tracks passing through plane detector, then writing data to a binary file, and generating appropriate constraint and steering files so plane displacements and drift velocity deviations may be fitted using the pede executable
+   Main function for test data generation. Simulates tracks passing through plane detector, then writing data to a binary file, and generating appropriate constraint and steering files so plane displacements, rotations and drift velocity deviations may be fitted using the pede executable
  */
 int main(int argc, char* argv[]) {
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 
 	true_params_file << endl; // Insert blank line
 
-	// Print plane labels, and plane displacements to file
+	// Print plane deviation labels, and plane displacements to file
 	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
 		true_params_file << 10 + (2 * (i + 1)) << " " << -Detector::instance()->get_plane_pos_y_devs()[i] << endl;
 		
@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
 	}
 
 
-	// Print plane labels, and plane rotations to file
+	// Print plane rotation labels, and plane rotations to file
 	for (int i=0; i<Detector::instance()->get_plane_count(); i++) { 
 		true_params_file << 1010 + (2 * (i + 1)) << " " << Detector::instance()->get_plane_rot_devs()[i] << endl;
 		
@@ -215,13 +215,13 @@ int main(int argc, char* argv[]) {
 		// Iterate over hits in detector
 		for (int j=0; j<generated_line.hit_count; j++) {
 						
-			double rotation_derivative = - generated_line.y_hits[j] * (1.0 / tan(M_PI / 2.0 + track_angle));
+			double rotation_derivative = generated_line.y_hits[j] * tan(track_angle);
 
 			// Create arrays of local and global derivatives.
 			double local_derivs[2] {1.0, generated_line.x_hits[j]};
 			double global_derivs[3] {1.0, generated_line.y_drifts[j], rotation_derivative};
 
-			// Labels for plane displacements, and velcity deviation. 
+			// Labels for plane displacements, and velocity deviations, and plane rotations. 
 			int labels[3] {10 + (2 * (generated_line.i_hits[j] + 1)), 500 + generated_line.i_hits[j] + 1, 1010 + (2 * (generated_line.i_hits[j] + 1))};
 			
 			// Number of local, global derivatives for use in mille.

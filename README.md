@@ -22,8 +22,8 @@ e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines]
 
 #### Random Number Generation ####
 Plaintext files of random numbers must be generated in order to run the C++ port of *Test 1*, and modified versions of the Fortran original. This allows random number seeding to be controlled, and for the outputs of the C++ and Fortran code to be compared. A Python script is supplied to generate these random numbers. One file of random numbers must be uniformly distributed between 0 and 1, and the other must consist of normally distributed random numbers, with a mean of 0 and a standard deviation of 1. The script is used as follows:
-   * `python randomGenerator.py -u True -o uniform_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
-   * `python randomGenerator.py -g True -o gaussian_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
+   * `python randomIntGenerator.py -u True -o uniform_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
+   * `python randomIntGenerator.py -g True -o gaussian_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
 Please note that the output filenames shown are the default random number files for the modified Fortran version of *Test 1*. Random numbers are generated using Python's built-in *Marsenne Twister* generator. The seeds used for uniform and gaussian random numbers should be different. Generally, ~5,000,000 random numbers in each file seems to be more than enough for the default *Test 1*.  
 
 

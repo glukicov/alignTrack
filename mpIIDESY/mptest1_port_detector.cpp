@@ -1,10 +1,10 @@
 /** 
 	mptest1_port_detector.cpp
 
-	Purpose: Simulate linear tracks passing through a plane drift chamber detector, with misaligned plane positions uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions and drift velocities to be calculated using pede. This source file contains definitions of various functions in Detector class. 
+	Purpose: Simulate linear tracks passing through a plane drift chamber detector, with misaligned plane positions uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions, rotations and drift velocities to be calculated using pede. This source file contains definitions of various functions in Detector class. 
 
 	@author John Smeaton
-	@version 03/02/2017
+	@version 26/03/2017
 
  */
 
@@ -52,20 +52,21 @@ LineData Detector::gen_lin() {
 	LineData line;
 	line.hit_count = 0;
 
-	double rand_num = 0.0;
-	// Generate random values of track intercept and gradient.
-
+	double rand_num = 0.0; // To contain random numbers
+	
+	// Get random y-intercept for track
 	rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
-	// cout << "number " << rand_num << endl;
 	double y_intercept = (0.5 * PLANE_HEIGHT) + (0.1 * PLANE_HEIGHT * (rand_num - 0.5)); 
 
+	// Get random gradient for track
 	rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
- 	// cout << "number " << rand_num << endl;
 	double gradient = ((rand_num - 0.5) * PLANE_HEIGHT) / ((PLANE_COUNT - 1.0) * PLANE_X_SEP);
 
+	// Add generated gradient and intercept to container
 	line.gradient = gradient;
 	line.y_intercept = y_intercept;
 
+	// Calculate angle of track
 	double track_angle = atan(gradient);
 
 	// Iterate across planes
@@ -74,15 +75,16 @@ LineData Detector::gen_lin() {
 		// Get position of plane
 		double x = PLANE_X_BEGIN + (i * PLANE_X_SEP);
 
+		// Get random uniform number, for plane efficiency check
 		rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
+
 		// Check if hit is registered, due to limited plane efficiency.
 		if (rand_num < true_plane_effs[i]) {
 
 			// Calculate true value of y where line intercects plane, and biased value where hit is recorded, due to plane displacement
 			double y_true = y_intercept + (gradient * x);
-			double y_rotated = y_true * (sin((M_PI / 2.0) + track_angle) / sin(plane_rot_devs[i] + track_angle + (M_PI / 2.0)));
-			double y_biased = y_rotated - plane_pos_y_devs[i];
-			
+			double y_rotated = y_true * (cos(track_angle) / cos(plane_rot_devs[i] + track_angle));
+			double y_biased = y_rotated - plane_pos_y_devs[i];			
 
 			// Calculate number of struck wire. Do not continue simulating this track if it passes outside range of wire values.
 			int wire_num = int(1 + (y_biased / 4));
@@ -127,7 +129,7 @@ void Detector::set_plane_properties() {
 		true_plane_effs.push_back(PLANE_EFF);
 		true_meas_sigmas.push_back(MEAS_SIGMA);
 
-		// Set up random plane position deviations, and velocity deviations
+		// Set up random plane position deviations, rotations, and velocity deviations
 		plane_pos_y_devs.push_back(DISPL_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
 		drift_vel_devs.push_back(DRIFT_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
 		plane_rot_devs.push_back(ROTATE_SIGMA * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev());
@@ -138,30 +140,10 @@ void Detector::set_plane_properties() {
 	true_plane_effs[6] = 0.1;
 	true_meas_sigmas[6] = 0.0400;
 
-	// Set two planes to have no deviation in position, to constrain fit.
+	// Set two planes to have no deviation in position (could use this to constrain fit).
 	plane_pos_y_devs[9] = 0.0;
 	plane_pos_y_devs[89] = 0.0;
 
-}
-
-/**
-   Write parameter information file to the supplied file-stream
-
-   TODO: Use abstractions instead of specifying ofstream?
-
-   @param parameter_file Reference to ofstream to write parameter file to.
-*/
-void Detector::write_parameter_file(ofstream& parameter_file) {
-	
-	if (parameter_file.is_open()) {
-
-		Logger::Instance()->write(Logger::INFO, "Writing parameter file...");
-		
-		parameter_file << "Parameter" << endl;
-		parameter_file << (10 + (9 + 1) * 2) << " " << 0.0 << " " << 1.0 << endl;
-		parameter_file << (10 + (89 + 1) * 2) << " " << 0.0 << " " << 1.0 << endl;
-
-	}
 }
 
 

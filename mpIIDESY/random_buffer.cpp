@@ -4,7 +4,7 @@
    Purpose: Reads plaintext files of pre-generated random numbers, with functions to read one random number at a time. This source file contains definitions of various functions in RandomBuffer class.
 
    @author John Smeaton
-   @version 03/02/2017
+   @version 26/03/2017
 
  */
 

@@ -1,12 +1,7 @@
 /** 
 	mptest1_port_detector.h
 
-	Purpose: Simulate linear tracks passing through a plane drift chamber 
-	detector, with misaligned plane positions uncalibrated drift velocities, 
-	in order to generate the necessary data for the correct plane positions 
-	and drift velocities to be calculated using pede. This header file 
-	contains definitions of constant variables used in Detector class, as well 
-	as function declarations, and definitions of some inline functions. 
+	Purpose: Simulate linear tracks passing through a plane drift chamber 	detector, with misaligned plane positions and rotations, and uncalibrated drift velocities, in order to generate the necessary data for the correct plane positions, rotations and drift velocities to be calculated using pede. This header file contains definitions of constant variables used in Detector class, as well as function declarations, and definitions of some inline functions. 
 
 	@author John Smeaton
 	@version 03/02/2017

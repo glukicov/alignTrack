@@ -1,10 +1,10 @@
 /**
    mptest1_port.h
 
-   Purpose: Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable plane offset and drift velocity. Writes global and local derivatives to a binary file, and writes appropriate steering and constraint files. This header file declares main function, imports necessary dependencies.
+   Purpose: Port of mptest1.f90 Mille test program. Simulates a plane drift chamber, with variable plane offset, rotation, and drift velocity. Writes global and local derivatives to a binary file, and writes appropriate steering and constraint files. This header file declares main function, imports necessary dependencies.
 
    @author John Smeaton
-   @version 03/02/2017
+   @version 26/03/2017
 
  */
 
