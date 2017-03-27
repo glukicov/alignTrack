@@ -76,6 +76,7 @@ popt, pcov = curve_fit(fitting_detector.get_hit_radius, wire_keys, hit_rads, p0=
 
 # Calculate residuals and chi-squared for residuals, to test goodness of fit.
 residuals = np.array(hit_rads) - np.array(fitting_detector.get_hit_radius(wire_keys, popt)) / 1.0
+
 deg_freedom = len(residuals) - len(popt)
 chi_squared = np.sum((residuals / fit_sigmas)**2)
 
@@ -123,9 +124,9 @@ plt.xlabel("x-position / mm")
 plt.ylabel("y-position / mm")
 
 hits_patch = mpatches.Patch(color='none', label=("Hits: " + str(len(residuals))))
-chi_squared_patch = mpatches.Patch(color='none', label=("$\chi^2_{red}$: " + str(chi_squared / deg_freedom)))
-true_align_patch = mpatches.Patch(color='none', label=("True al.: " + str(module_alignment)))
-fit_align_patch = mpatches.Patch(color='none', label=("Fit al.: " + str(popt[-1])))
+chi_squared_patch = mpatches.Patch(color='none', label=("$\chi^2_{red}$: " + "{0:.2f}".format(chi_squared / deg_freedom)))
+true_align_patch = mpatches.Patch(color='none', label=("True al.: " + "{0:.2f}".format(module_alignment) + " mm"))
+fit_align_patch = mpatches.Patch(color='none', label=("Fit al.: " + "{0:.2f}".format(popt[-1]) + " mm"))
 
 diag_handles = [hits_patch, chi_squared_patch, true_align_patch, fit_align_patch]
 diag_labels = [hits_patch.get_label(), chi_squared_patch.get_label(), true_align_patch.get_label(), fit_align_patch.get_label()]
@@ -162,6 +163,8 @@ for j in xrange(len(gradient)):
     params_true.append(intercept[j])
 params_true.append(module_alignment)
 
+params_fit = popt.copy()
+
 
 # Loop through test values
 for i in xrange(test_count_1d):
@@ -176,15 +179,14 @@ for i in xrange(test_count_1d):
     test_hit_rads_true = fitting_detector.get_hit_radius(wire_keys, params_true)
 
     # Calculate chi-squared value, and append to array
-    chi_sq_true.append(np.sum(((np.array(hit_rads) - np.array(test_hit_rads_true)) / np.array(fit_sigmas))**2) / len(wire_keys))
+    chi_sq_true.append(np.sum(((np.array(hit_rads) - np.array(test_hit_rads_true)) / np.array(fit_sigmas) / 1.0)**2) / (len(wire_keys) - (2 * track_count + 1)))
 
     # Get fitted parameters, and set final parameter to test alignment. Calculate hit radii
-    params_fit = popt.copy()
     params_fit[-1] = test_align
     test_hit_rads_fit = fitting_detector.get_hit_radius(wire_keys, params_fit)
 
     # Calculate chi-squared value, and append to array
-    chi_sq_fit.append(np.sum(((np.array(hit_rads) - np.array(test_hit_rads_fit)) / np.array(fit_sigmas))**2) / len(wire_keys))
+    chi_sq_fit.append(np.sum(((np.array(hit_rads) - np.array(test_hit_rads_fit)) / np.array(fit_sigmas) / 1.0)**2) / (len(wire_keys) - (2 * track_count + 1)))
 
 
 # Plot graph chi-squared values with log scale
@@ -260,8 +262,8 @@ for i in xrange(test_count_2d):
         test_hit_rads_fit = fitting_detector.get_hit_radius(wire_keys, params_fit)
         
         # Calculate value of reduced chi-squared at this point, and add to array
-        chi_sq_surf_true[i][j] = np.sum(((np.array(hit_rads) - np.array(test_hit_rads_true)) / np.array(fit_sigmas))**2 / len(wire_keys))
-        chi_sq_surf_fit[i][j] = np.sum(((np.array(hit_rads) - np.array(test_hit_rads_fit)) / np.array(fit_sigmas))**2 / len(wire_keys))
+        chi_sq_surf_true[i][j] = np.sum(((np.array(hit_rads) - np.array(test_hit_rads_true)) / np.array(fit_sigmas))**2 / (len(wire_keys) - (2 * track_count + 1)))
+        chi_sq_surf_fit[i][j] = np.sum(((np.array(hit_rads) - np.array(test_hit_rads_fit)) / np.array(fit_sigmas))**2 / (len(wire_keys) - (2 * track_count + 1)))
  
 
 minloc_true = (grad_array[np.unravel_index(chi_sq_surf_true.argmin(), chi_sq_surf_true.shape)], int_array[np.unravel_index(chi_sq_surf_true.argmin(), chi_sq_surf_true.shape)]) 
