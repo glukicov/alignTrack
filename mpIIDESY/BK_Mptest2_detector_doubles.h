@@ -20,15 +20,15 @@
 */
 struct LineData {
 	int hit_count; /** Number of hits in detector */
-	std::vector<float> x_hits; /** X-positions of hits in detector */
-	std::vector<float> y_hits; /** Y-positions of hits in detector */
-	std::vector<float> x_true; /** X-positions of hits in detector */
-	std::vector<float> y_true; /** Y-positions of hits in detector */
-	std::vector<float> x_det; /** X-positions of hits in detector */
-	std::vector<float> y_det; /** Y-positions of hits in detector */
-	std::vector<float> x_mis; /** X-positions of hits in detector */
-	std::vector<float> y_mis; /** Y-positions of hits in detector */
-	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
+	std::vector<double> x_hits; /** X-positions of hits in detector */
+	std::vector<double> y_hits; /** Y-positions of hits in detector */
+	std::vector<double> x_true; /** X-positions of hits in detector */
+	std::vector<double> y_true; /** Y-positions of hits in detector */
+	std::vector<double> x_det; /** X-positions of hits in detector */
+	std::vector<double> y_det; /** Y-positions of hits in detector */
+	std::vector<double> x_mis; /** X-positions of hits in detector */
+	std::vector<double> y_mis; /** Y-positions of hits in detector */
+	std::vector<double> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
 };
 
@@ -52,24 +52,24 @@ class Detector {
 
 	static const int pixelTotalN=detectorN*pixelYN*pixelXN; //total number of pixels extra modules at 1, 4 ,7 10 have no pixels]
 	//  define detector geometry
-	float startingDistancePlane1= 10.0; // arclength of first plane
-	float planeDistance= 10.0; // distance between planes //cm / Pede works in cm
-	float width= 0.02; //thickness/width of plane (X0)
-	float offset=  0.5;  // offset of stereo pixels
-	float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
-	float layerSize= 20.0; //size of layers  //cm 
-	float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
-	float scatterError = 0; // multiple scattering error
+	double startingDistancePlane1= 10.0; // arclength of first plane
+	double planeDistance= 10.0; // distance between planes //cm / Pede works in cm
+	double width= 0.02; //thickness/width of plane (X0)
+	double offset=  0.5;  // offset of stereo pixels
+	double stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
+	double layerSize= 20.0; //size of layers  //cm 
+	double resolution =0.002;  // <resolution  // 20um = 0.002 cm 
+	double scatterError = 0; // multiple scattering error
 	
     std::vector<int> layer; 
-    std::vector<float> projectionX; //projection of measurent direction in (X)
-    std::vector<float> projectionY; //projection of measurent direction in (Y)
+    std::vector<double> projectionX; //projection of measurent direction in (X)
+    std::vector<double> projectionY; //projection of measurent direction in (Y)
 
-    std::vector<float> distance;  // arc length/distance between planes 
-    std::vector<float> resolutionLayer;   //resolution
+    std::vector<double> distance;  // arc length/distance between planes 
+    std::vector<double> resolutionLayer;   //resolution
    
-    float sdevX[detectorN][pixelYN][pixelXN];// shift in x (alignment parameter)
-    float sdevY[detectorN][pixelYN][pixelXN] ; //shift in y (alignment GLOBAL parameter)
+    double sdevX[detectorN][pixelYN][pixelXN];// shift in x (alignment parameter)
+    double sdevY[detectorN][pixelYN][pixelXN] ; //shift in y (alignment GLOBAL parameter)
     
 	
 	// Class constructor and destructor
@@ -101,11 +101,11 @@ class Detector {
 		return layer;
 	}
 	
-	std::vector<float> getProjectionX() {
+	std::vector<double> getProjectionX() {
 		return projectionX;
 	}
 
-	std::vector<float> getProjectionY() {
+	std::vector<double> getProjectionY() {
 		return projectionY;
 	}
 

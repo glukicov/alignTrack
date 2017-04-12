@@ -53,8 +53,8 @@ class Mille
   Mille(const char *outFileName, bool asBinary = true, bool writeZero = false);
   ~Mille();
 
-  void mille(int NLC, const double *derLc, int NGL, const double *derGl,
-	     const int *label, double rMeas, double sigma);
+  void mille(int NLC, const float *derLc, int NGL, const float *derGl,
+	     const int *label, float rMeas, float sigma);
   void special(int nSpecial, const double *floatings, const int *integers);
   void kill();
   void end();

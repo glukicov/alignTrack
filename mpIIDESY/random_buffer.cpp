@@ -88,7 +88,9 @@ long RandomBuffer::get_uniform_number() {
 
 		long rand_num;
 		uniform_file >> rand_num;
+		normCounter++;
 		return rand_num;
+		
 
 	} else {
 		throw "Please open file of uniform random numbers.";
@@ -109,7 +111,9 @@ long RandomBuffer::get_gaussian_number() {
 
 		long rand_num;
 		gaussian_file >> rand_num;
+		gausCounter++;
 		return rand_num;
+		
 
 	} else {
 		throw "Please open file of gaussian random numbers";

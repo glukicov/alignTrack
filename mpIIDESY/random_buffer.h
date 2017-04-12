@@ -39,6 +39,9 @@ class RandomBuffer {
 	long uniform_ran_max;
 	long gaussian_ran_stdev;
 
+	int gausCounter = 0;
+	int normCounter = 0;
+
 	
  public:
 	
@@ -54,6 +57,9 @@ class RandomBuffer {
 	long get_uniform_ran_max() {return uniform_ran_max;}
 	long get_uniform_ran_min() {return uniform_ran_min;}
 	long get_gaussian_ran_stdev() {return gaussian_ran_stdev;}
+
+	int getNormTotal(){return normCounter;}
+	int getGausTotal(){return gausCounter;}
 
 
 };

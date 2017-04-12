@@ -1,0 +1,10 @@
+Integer test number is 2500
+ 
+ Fdiv1 = float(test/3000); =    0.0000000    
+ Fdiv2 = float(Fdiv1/14000) =    0.0000000    
+ Fmul1 = float(Fdiv2*3000) =    0.0000000    
+ Fmul2 = float(Fmul1*14000) =    0.0000000    
+ float Ddiv1 = test/3000 =    0.0000000000000000     
+ float Ddiv2 = Ddiv1/14000 =    0.0000000000000000     
+ Dmul1 = double(Ddiv2*3000) =    0.0000000000000000     
+ Dmul2 = double(dmul1*14000) =    0.0000000000000000     

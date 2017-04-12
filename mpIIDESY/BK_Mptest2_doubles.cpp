@@ -69,10 +69,9 @@ using namespace std;
 
 
 /////************MAIN***************/////////////
-//TODO add arguments option 
 int main(int argc, char* argv[]){
 
-    float rand_num; //to store random (int number from buffer + max )/(2 * max) [0, 1]   
+    
     string compareStr;
     bool debugBool = false;
     //Tell the logger to only show message at INFO level or above
@@ -194,15 +193,15 @@ int main(int argc, char* argv[]){
     ofstream debug_off(off_debugFileName);
     ofstream debug_hits_only(hitsOnly_debugFileName);
 
-    std::cout << std::setprecision(7) << std::scientific;
-    debug << std::setprecision(7)<< std::scientific;
-    debug_mp2 << std::setprecision(7)<< std::scientific;
-    debug_tmp << std::setprecision(7)<< std::scientific;
-    debug_calc << std::setprecision(7);
-    debug_mis << std::setprecision(7)<< std::scientific;
-    debug_geom << std::setprecision(7)<< std::scientific;
-    debug_off << std::setprecision(8); 
-    debug_hits_only << std::setprecision(7)<< std::scientific;
+    std::cout << std::setprecision(16) << std::scientific;
+    debug << std::setprecision(16)<< std::scientific;
+    debug_mp2 << std::setprecision(16)<< std::scientific;
+    debug_tmp << std::setprecision(16)<< std::scientific;
+    debug_calc << std::setprecision(16)<< std::scientific;
+    debug_mis << std::setprecision(16)<< std::scientific;
+    debug_geom << std::setprecision(16)<< std::scientific;
+    debug_off << std::setprecision(16)<< std::scientific;
+    debug_hits_only << std::setprecision(16)<< std::scientific;
    
     // GEOMETRY
     Detector::instance()->setGeometry(debug_geom, debugBool);
@@ -212,7 +211,7 @@ int main(int argc, char* argv[]){
     // MISALIGNMENT
     Detector::instance()->misalign(debug_mis, debugBool); 
 
-    // Write constraint file, for use with pede TODO fix this 
+    // Write constraint file, for use with pede 
     Detector::instance()->write_constraint_file(constraint_file);
 
     //Now writing steering and constraint files
@@ -260,12 +259,11 @@ int main(int argc, char* argv[]){
     int recordN=0;
     
     
-    float scatterError = Detector::instance()->getScatterError(); // multiple scattering error
+    double scatterError = Detector::instance()->getScatterError(); // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
        for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
-        rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
-        float p=pow(10.0, 1+rand_num);
+        double p=pow(10.0, 1+RandomBuffer::instance()->get_uniform_number());
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
 
         //Generating tracks 
@@ -295,15 +293,15 @@ int main(int argc, char* argv[]){
             const int nagl = 2;  
             
             //Local derivatives
-            float dlc1=Detector::instance()->getProjectionX()[lyr];
-            float dlc2=Detector::instance()->getProjectionY()[lyr];
-            float dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
-            float dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  
-            float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
+            double dlc1=Detector::instance()->getProjectionX()[lyr];
+            double dlc2=Detector::instance()->getProjectionY()[lyr];
+            double dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
+            double dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  
+            double derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
             //Global derivatives
-            float dgl1 = Detector::instance()->getProjectionX()[lyr];
-            float dgl2 = Detector::instance()->getProjectionY()[lyr];
-            float dergl[nagl] = {dgl1, dgl2};  
+            double dgl1 = Detector::instance()->getProjectionX()[lyr];
+            double dgl2 = Detector::instance()->getProjectionY()[lyr];
+            double dergl[nagl] = {dgl1, dgl2};  
             //Labels 
             int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr];  
             int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000; 
@@ -313,8 +311,8 @@ int main(int argc, char* argv[]){
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
            
-            float rMeas_mp2 =  generated_line.y_hits[i]; 
-            float sigma_mp2 = generated_line.hit_sigmas[i]; 
+            float rMeas_mp2 =  generated_line.y_hits[i]; ///TODO double
+            float sigma_mp2 = generated_line.hit_sigmas[i];  //TODO double
 
             //Sanity Plots 
             h_sigma -> Fill(sigma_mp2);
@@ -386,9 +384,6 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_off.txt - rejected/missed hits");  
     Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_tmp.txt - a debug file for quick checks and development");  
     }
-
-    cout << "Normal Randoms were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
-    cout << "Gaussian Randoms were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
 
     // Close text files
     constraint_file.close();

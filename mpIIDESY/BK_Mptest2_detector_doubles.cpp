@@ -53,9 +53,6 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
 	LineData line;
     line.hit_count = 0;
 
-    float rand_num;
-    float rand_gaus;
-
    if (debugBool){
            debug_calc << "Track # (C)        " << line.hit_count << endl;
            debug_calc << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
@@ -63,40 +60,34 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
        }
 
     // Track parameters for rand-generated line MC 
-    rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
-    float x_0 = layerSize * (rand_num-0.5); //uniform vertex
-    rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
-    float y_0 = layerSize * (rand_num-0.5); //uniform vertex 
-    rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
-    float x_1 = layerSize * (rand_num-0.5); //uniform exit point: so fitting a line to these two points
-    rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
-    float y_1 = layerSize * (rand_num-0.5); //uniform exit point: 
-    float x_slope=(x_1-x_0)/distance[layerN-1]; 
-    float y_slope=(y_1-y_0)/distance[layerN-1];
+    double x_0 = layerSize * ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max())-0.5); //uniform vertex
+    double y_0 = layerSize * ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max())-0.5); //uniform vertex 
+    double x_1 = layerSize * ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max())-0.5); //uniform exit point: so fitting a line to these two points
+    double y_1 = layerSize * ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max())-0.5); //uniform exit point: 
+    double x_slope=(x_1-x_0)/distance[layerN-1]; 
+    double y_slope=(y_1-y_0)/distance[layerN-1];
        
-    float x = x_0;
-    float dx = x_slope;
-    float y = y_0;
-    float dy = y_slope;
-    float s_old = 0.0;  // previous position in "z"
+    double x = x_0;
+    double dx = x_slope;
+    double y = y_0;
+    double dy = y_slope;
+    double s_old = 0.0;  // previous position in "z"
 
     if (debugBool){
                debug_calc << "x_0= "<< x_0<< " y_0= "<< y_0 << " x_1= "<< x_1<< " y_1= "<< y_1 << endl; 
                debug_calc << "x_slope= "<< x_slope<< " y_slope= "<< y_slope << endl;
-               debug_calc << endl;
-               debug_off << "imx  :   x    layerSize    float(pixelXN)" << endl;
-               debug_off << "imy  :   y    layerSize    float(pixelYN)" << endl;
+               debug_calc << endl; 
                  }
 
     
     for(int i=0; i<layerN; i++){
         //distance between cons. layers 
-        float ds = distance[i] - s_old;
+        double ds = distance[i] - s_old;
         s_old = distance[i];
 
         //positions on the detector plane  
-        float xs=x_0 + distance[i] * x_slope;
-        float ys=y_0 + distance[i] * y_slope;
+        double xs=x_0 + distance[i] * x_slope;
+        double ys=y_0 + distance[i] * y_slope;
         line.x_det.push_back(xs);
         line.y_det.push_back(ys);
         
@@ -107,36 +98,28 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         line.y_true.push_back(y);
 
         //multiple scattering
-        rand_gaus= RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev()) ;
-        dx = dx+ rand_gaus * scatterError;
-        rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-        dy = dy+ rand_gaus * scatterError;
+        dx = dx+ RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev() * scatterError;
+        dy = dy+ RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev() * scatterError;
 
          // TODO in C there is no rejection! Precision problems? (goes away with different prec. of rands. - needs more testing)
         // which pixel was hit [0,5 Y; 0,10 X] C++ casting truncation
-        int imx=int((x+layerSize*0.5)/layerSize*float(pixelXN));
-        
-        debug_off << imx << " " <<   x  <<  " " << layerSize << " " <<  float(pixelXN) << endl;
+        int imx=int((x+layerSize*0.5)/layerSize*double(pixelXN));
        // if (imx == 10 || imx < 0){cout << "Missed X Hit at" << line.hit_count << endl;}
         if (imx < 0 || imx >= pixelXN){ //[between (0,10] ]
             
             if (debugBool){ 
-                debug_off << "Missed X Hit at imx= " << imx << endl;
-                cout << "Missed X Hit at imx= " << imx << endl;  
+                debug_off << "Missed X Hit at" << line.hit_count << endl; 
                 
             }
             continue;
             //goto missedHit; // XXX correct implementation 
         } 
-        int imy=int((y+layerSize*0.5)/layerSize*float(pixelYN));
-        
-        debug_off << imy << " " <<   y  <<  " " << layerSize << " " <<  float(pixelYN) << endl;
+        int imy=int((y+layerSize*0.5)/layerSize*double(pixelYN));
        // if (imy == 5 | imy < 0){cout << "Missed Y Hit at" << line.hit_count << endl;}
         if (imy < 0 || imy >= pixelYN){  //[between (0,5] ]
             
             if (debugBool){
-            debug_off << "Missed Y Hit at imy= " << imy << endl;
-            cout << "Missed Y Hit at imy= " << imy << endl;    
+            debug_off << "Missed Y Hit at" << line.hit_count << endl; 
             }
             continue;
             //goto missedHit; // XXX correct implementation 
@@ -150,18 +133,17 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
 
         //TODO
-        float xl=x-sdevX[layer[i]-1][imy][imx]; //misalign. 
-        float yl=y-sdevY[layer[i]-1][imy][imx];
+        double xl=x-sdevX[layer[i]-1][imy][imx]; //misalign. 
+        double yl=y-sdevY[layer[i]-1][imy][imx];
         line.x_mis.push_back(xl);
         line.y_mis.push_back(yl);
        
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
-        // float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]; //XXX
+        // double yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]; //XXX
         // XXX TODO projection Y is always 0 for non-stero modules?? what is the motivation? 
-        rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-        float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ rand_gaus *resolution; 
+        double yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev()*resolution; 
         //line.y_hits.push_back((xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ RandomBuffer::instance()->get_gaussian_number()*resolutionLayer[i]);
         line.y_hits.push_back(yhit);
         //line.hit_sigmas.push_back(resolutionLayer[i]); // XXX 
@@ -174,7 +156,6 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
                debug_calc << "ihit= " << ihit << "  xl= " << xl << "  yl= " << yl << "  xhit= " << distance[i]  << "  yhit= " << yhit << endl;
                debug_calc << "sdevX[layer[i]-1][imy][imx]= " << sdevX[layer[i]-1][imy][imx] << " sdevY[layer[i]-1][imy][imx]= " << sdevY[layer[i]-1][imy][imx] << endl; 
                debug_calc << "projectionX[i]= " << projectionX[i] << " projectionY[i]= " << projectionY[i] << endl; 
-               debug_calc << "nhits= " << line.hit_count << endl; 
                debug_calc << endl; 
             }      
    
@@ -182,13 +163,14 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
     
     return line; // Return data from simulated track
     
+
 } // end of genlin2
 
 //Geometry of detecor arrangement 
 void Detector::setGeometry(ofstream& debug_geom, bool debugBool){
-	float s=startingDistancePlane1;
+	double s=startingDistancePlane1;
     int i_counter = 0;
-    float sign = 1.0;
+    double sign = 1.0;
 
     // Geometry of detecor arrangement 
     //TODO fix i_counter for arrays 
@@ -233,23 +215,19 @@ void Detector::setGeometry(ofstream& debug_geom, bool debugBool){
 // MC misalignment of detecors 
 void Detector::misalign(ofstream& debug_mis, bool debugBool){
 
-    float rand_gaus;
-
     //bool debugBool = true; // print out to debug files 
     int counterMis = 0;
 	//Now misaligning detecors
-    float dispX = 0.01; // plane displacement in X .05 mm * N(0,1)
-    float dispY = 0.01; // plane displacement in Y .05 mm * N(0,1)
+    double dispX = 0.01; // plane displacement in X .05 mm * N(0,1)
+    double dispY = 0.01; // plane displacement in Y .05 mm * N(0,1)
 
     
     for (int i=0; i<=detectorN-1; i++){   
         for(int k=0; k<=pixelYN-1; k++){
             for(int l=0; l<=pixelXN-1; l++){
                 
-                rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-                sdevX[i][k][l] = dispX * rand_gaus;
-                rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-                sdevY[i][k][l] = dispY * rand_gaus;
+                sdevX[i][k][l] = dispX * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev();
+                sdevY[i][k][l] = dispY * RandomBuffer::instance()->get_gaussian_number() / RandomBuffer::instance()->get_gaussian_ran_stdev();
                 counterMis++;
 
                 if (debugBool){
@@ -282,7 +260,7 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 		//Evaluation of constraints
     	int ncx = (pixelXN+1)/2; 
     	int lunt = 9;
-    	float one = 1.0;
+    	double one = 1.0;
          
 
 		for (int i = 1; i <= detectorN; i=i+(detectorN-1)){ 

@@ -37,6 +37,12 @@
 !! \param[in]   n  number of requested random number
 !! \param[out]  a  array of requested random number
 
+      !INTEGER*4 :: unif_count = 0
+      !INTEGER*4 :: gaus_count = 0
+
+      COMMON/XX/UNIF_COUNT,GAUS_COUNT
+      INTEGER*4 UNIF_COUNT,GAUS_COUNT
+
 ! SUBROUTINE gbrshi(n,a)
 !     USE mpdef
 
@@ -141,6 +147,8 @@
 INTEGER(mpl) FUNCTION uran()     ! U(0,1)
     USE mpdef
 
+    
+
     ! IMPLICIT NONE
     ! INTEGER(mpi) :: indx
     ! INTEGER(mpi) :: ndim
@@ -157,6 +165,7 @@ INTEGER(mpl) FUNCTION uran()     ! U(0,1)
 
     INTEGER(mpl) :: unif_rand_in
 
+    UNIF_COUNT=UNIF_COUNT+1
     READ(42,*) unif_rand_in
     ! WRITE(*,*) unif_rand_in
 
@@ -211,6 +220,7 @@ INTEGER(mpl) FUNCTION gran()     ! N(0,1)
 
     INTEGER(mpl) :: gaus_rand_in
 
+    GAUS_COUNT = GAUS_COUNT +1
     READ(43,*) gaus_rand_in
     ! WRITE(*,*) gaus_rand_in
 
