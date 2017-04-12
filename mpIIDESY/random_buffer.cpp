@@ -19,6 +19,8 @@ RandomBuffer* RandomBuffer::s_instance = NULL;
    Empty constructor for RandomBuffer class.
  */
 RandomBuffer::RandomBuffer() {
+	gausCounter = 0;
+	normCounter = 0;
 }
 
 /**

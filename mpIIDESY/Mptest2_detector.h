@@ -41,25 +41,25 @@ class Detector {
 
 	static Detector* s_instance; // Pointer to instance of class
 
-	const int trackCount = 10000; /** Number of tracks to be simulated passing through detector */
+	static const int trackCount=10000; /** Number of tracks to be simulated passing through detector */
 
 	///initialsing physics varibles
 	static const int detectorN = 10; //number of detector layers
 	static const int layerN = 14; //number of measurement layers  [extra modules at 1, 4 ,7 10]
-	static const int pixelXN = 10; //number of pixels in x direction
+	static const int pixelXN = 10 ; //number of pixels in x direction
 	static const int pixelYN = 5; //number of pixels in y direction   //total 50 pixels pixelXN * pixelYN = 50
 	static const int pixelXYN = pixelXN*pixelYN;
 
-	static const int pixelTotalN=detectorN*pixelYN*pixelXN; //total number of pixels extra modules at 1, 4 ,7 10 have no pixels]
+	static const int pixelTotalN = detectorN*pixelYN*pixelXN; //total number of pixels extra modules at 1, 4 ,7 10 have no pixels]
 	//  define detector geometry
-	float startingDistancePlane1= 10.0; // arclength of first plane
-	float planeDistance= 10.0; // distance between planes //cm / Pede works in cm
-	float width= 0.02; //thickness/width of plane (X0)
-	float offset=  0.5;  // offset of stereo pixels
-	float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
-	float layerSize= 20.0; //size of layers  //cm 
-	float resolution =0.002;  // <resolution  // 20um = 0.002 cm 
-	float scatterError = 0; // multiple scattering error
+	float startingDistancePlane1; // arclength of first plane
+	float planeDistance; // distance between planes //cm / Pede works in cm
+	float width; //thickness/width of plane (X0)
+	float offset;  // offset of stereo pixels
+	float stereoTheta;  // stereo angle  // radians (5 deg = 0.087.. rad)  
+	float layerSize; //size of layers  //cm 
+	float resolution;  // <resolution  // 20um = 0.002 cm 
+	float scatterError; // multiple scattering error
 	
     std::vector<int> layer; 
     std::vector<float> projectionX; //projection of measurent direction in (X)
@@ -67,10 +67,9 @@ class Detector {
 
     std::vector<float> distance;  // arc length/distance between planes 
     std::vector<float> resolutionLayer;   //resolution
-   
+    
     float sdevX[detectorN][pixelYN][pixelXN];// shift in x (alignment parameter)
     float sdevY[detectorN][pixelYN][pixelXN] ; //shift in y (alignment GLOBAL parameter)
-    
 	
 	// Class constructor and destructor
 	Detector();

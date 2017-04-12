@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
     }
 
     //this is passed to Detector functions, with debug file names
-    if (compareStr=="debug"){
+    if (compareStr=="d"){
     debugBool = true; // print out to debug files
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE");
     }

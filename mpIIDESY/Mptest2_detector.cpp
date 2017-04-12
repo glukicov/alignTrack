@@ -16,6 +16,41 @@ Detector* Detector::s_instance = NULL;
 	Empty constructor for detector class.
  */
 Detector::Detector() {
+
+    //trackCount = 10000; /** Number of tracks to be simulated passing through detector */
+
+    ///initialsing physics varibles
+    //detectorN = 10; //number of detector layers
+    //layerN = 14; //number of measurement layers  [extra modules at 1, 4 ,7 10]
+    //pixelXN = 10; //number of pixels in x direction
+    //pixelYN = 5; //number of pixels in y direction   //total 50 pixels pixelXN * pixelYN = 50
+    //pixelXYN = pixelXN*pixelYN;
+
+    //pixelTotalN=detectorN*pixelYN*pixelXN; //total number of pixels extra modules at 1, 4 ,7 10 have no pixels]
+    //  define detector geometry
+    startingDistancePlane1= 10.0; // arclength of first plane
+    planeDistance= 10.0; // distance between planes //cm / Pede works in cm
+    width= 0.02; //thickness/width of plane (X0)
+    offset=  0.5;  // offset of stereo pixels
+    stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
+    layerSize= 20.0; //size of layers  //cm 
+    resolution =0.002;  // <resolution  // 20um = 0.002 cm 
+    scatterError = 0; // multiple scattering error
+
+#if 0
+    //allocating space for vecotrs of missalignment [this way the filling is the same as for arrays]
+    sdevX.reserve(layerN);
+    sdevY.reserve(layerN);
+    for (int i=0; i<layerN; i++){
+        sdevX[i].reserve(pixelYN);
+        sdevY[i].reserve(pixelYN);
+        for (int n=0; n<pixelYN; n++){
+            sdevX[n][pixelYN].reserve(pixelXN);
+            sdevY[n][pixelXN].reserve(pixelXN);
+        }
+    }
+#endif
+
 }
 
 /** 
