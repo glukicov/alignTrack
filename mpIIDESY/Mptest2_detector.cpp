@@ -17,15 +17,6 @@ Detector* Detector::s_instance = NULL;
  */
 Detector::Detector() {
 
-    //trackCount = 10000; /** Number of tracks to be simulated passing through detector */
-
-    ///initialsing physics varibles
-    //detectorN = 10; //number of detector layers
-    //layerN = 14; //number of measurement layers  [extra modules at 1, 4 ,7 10]
-    //pixelXN = 10; //number of pixels in x direction
-    //pixelYN = 5; //number of pixels in y direction   //total 50 pixels pixelXN * pixelYN = 50
-    //pixelXYN = pixelXN*pixelYN;
-
     //pixelTotalN=detectorN*pixelYN*pixelXN; //total number of pixels extra modules at 1, 4 ,7 10 have no pixels]
     //  define detector geometry
     startingDistancePlane1= 10.0; // arclength of first plane
@@ -36,20 +27,6 @@ Detector::Detector() {
     layerSize= 20.0; //size of layers  //cm 
     resolution =0.002;  // <resolution  // 20um = 0.002 cm 
     scatterError = 0; // multiple scattering error
-
-#if 0
-    //allocating space for vecotrs of missalignment [this way the filling is the same as for arrays]
-    sdevX.reserve(layerN);
-    sdevY.reserve(layerN);
-    for (int i=0; i<layerN; i++){
-        sdevX[i].reserve(pixelYN);
-        sdevY[i].reserve(pixelYN);
-        for (int n=0; n<pixelYN; n++){
-            sdevX[n][pixelYN].reserve(pixelXN);
-            sdevY[n][pixelXN].reserve(pixelXN);
-        }
-    }
-#endif
 
 }
 
@@ -119,8 +96,8 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
                debug_calc << "x_0= "<< x_0<< " y_0= "<< y_0 << " x_1= "<< x_1<< " y_1= "<< y_1 << endl; 
                debug_calc << "x_slope= "<< x_slope<< " y_slope= "<< y_slope << endl;
                debug_calc << endl;
-               debug_off << "imx  :   x    layerSize    float(pixelXN)" << endl;
-               debug_off << "imy  :   y    layerSize    float(pixelYN)" << endl;
+               //debug_off << "imx  :   x    layerSize    float(pixelXN)" << endl;
+               //debug_off << "imy  :   y    layerSize    float(pixelYN)" << endl;
                  }
 
     
@@ -151,12 +128,13 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         // which pixel was hit [0,5 Y; 0,10 X] C++ casting truncation
         int imx=int((x+layerSize*0.5)/layerSize*float(pixelXN));
         
-        debug_off << imx << " " <<   x  <<  " " << layerSize << " " <<  float(pixelXN) << endl;
+        //debug_off << imx << " " <<   x  <<  " " << layerSize << " " <<  float(pixelXN) << endl;
+        //debug_off << "(x+layerSize*0.5)/layerSize*float(pixelXN)= " << (x+layerSize*0.5)/layerSize*float(pixelXN) << endl;
        // if (imx == 10 || imx < 0){cout << "Missed X Hit at" << line.hit_count << endl;}
         if (imx < 0 || imx >= pixelXN){ //[between (0,10] ]
             
             if (debugBool){ 
-                debug_off << "Missed X Hit at imx= " << imx << endl;
+                //debug_off << "Missed X Hit at imx= " << imx << endl;
                 cout << "Missed X Hit at imx= " << imx << endl;  
                 
             }
@@ -165,8 +143,10 @@ LineData Detector::genlin2(ofstream& debug_calc, ofstream& debug_off, bool debug
         } 
         int imy=int((y+layerSize*0.5)/layerSize*float(pixelYN));
         
-        debug_off << imy << " " <<   y  <<  " " << layerSize << " " <<  float(pixelYN) << endl;
-       // if (imy == 5 | imy < 0){cout << "Missed Y Hit at" << line.hit_count << endl;}
+        //debug_off << imy << " " <<   y  <<  " " << layerSize << " " <<  float(pixelYN) << endl;
+        //debug_off << "(y+layerSize*0.5)/layerSize*float(pixelYN)= " << (y+layerSize*0.5)/layerSize*float(pixelYN) << endl;
+        debug_off << (y+layerSize*0.5)/layerSize*float(pixelYN) << endl; 
+        //if (imy == 5 | imy < 0){cout << "Missed Y Hit at" << line.hit_count << endl;}
         if (imy < 0 || imy >= pixelYN){  //[between (0,5] ]
             
             if (debugBool){

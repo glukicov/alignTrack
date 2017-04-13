@@ -512,6 +512,7 @@
 
 !> Millepede II main program \ref sssec-stalone "Pede".
 PROGRAM mptwo
+    USE mpdef
     USE mpmod
     USE mpdalc
     USE mptest1, ONLY: nplan,del,dvd
@@ -562,6 +563,10 @@ PROGRAM mptwo
 
     SAVE
     !     ...
+
+    unif_count = 0
+    gaus_count = 0
+
     CALL etime(ta,rstp)
     CALL fdate(chdate)
 

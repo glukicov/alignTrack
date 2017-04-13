@@ -1,47 +1,13 @@
-
-! Code converted using TO_F90 by Alan Miller
-! Date: 2012-03-16  Time: 11:09:33
-
-!> \file
-!! Random numbers.
-!!
-!! \author Volker Blobel, University Hamburg, 2005-2009 (initial Fortran77 version)
-!! \author Claus Kleinwort, DESY (maintenance and developement)
-!!
-!! \copyright
-!! Copyright (c) 2009 - 2015 Deutsches Elektronen-Synchroton,
-!! Member of the Helmholtz Association, (DESY), HAMBURG, GERMANY \n\n
-!! This library is free software; you can redistribute it and/or modify
-!! it under the terms of the GNU Library General Public License as
-!! published by the Free Software Foundation; either version 2 of the
-!! License, or (at your option) any later version. \n\n
-!! This library is distributed in the hope that it will be useful,
-!! but WITHOUT ANY WARRANTY; without even the implied warranty of
-!! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!! GNU Library General Public License for more details. \n\n
-!! You should have received a copy of the GNU Library General Public
-!! License along with this program (see the file COPYING.LIB for more
-!! details); if not, write to the Free Software Foundation, Inc.,
-!! 675 Mass Ave, Cambridge, MA 02139, USA.
-!!
 !! Random number generators for Uniform and Normal distribution:
 !!
 !!     URAN() for U(0,1)
 !!     GRAN() for N(0,1)
 
-!> F.Gutbrod random number generator.
-!!
-!! Return N random numbers U(0,1) in array A(N).
-!! Initialization by entry GBRVIN.
-!!
 !! \param[in]   n  number of requested random number
 !! \param[out]  a  array of requested random number
 
       !INTEGER*4 :: unif_count = 0
       !INTEGER*4 :: gaus_count = 0
-
-      COMMON/XX/UNIF_COUNT,GAUS_COUNT
-      INTEGER*4 UNIF_COUNT,GAUS_COUNT
 
 ! SUBROUTINE gbrshi(n,a)
 !     USE mpdef
@@ -146,8 +112,6 @@
 
 INTEGER(mpl) FUNCTION uran()     ! U(0,1)
     USE mpdef
-
-    
 
     ! IMPLICIT NONE
     ! INTEGER(mpi) :: indx

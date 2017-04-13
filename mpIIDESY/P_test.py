@@ -45,7 +45,7 @@ with open("C_P_test.txt") as f:
         # (as strings)
         numbers_str = line.split()
         #convert numbers to floats
-        numbers_float = [float(x) for x in numbers_str]  #map(float,numbers_str) works too
+        numbers_float = [D(x) for x in numbers_str]  #map(float,numbers_str) works too
         C.append(numbers_float)
        # print numbers_float
 
@@ -55,7 +55,7 @@ with open("F_P_test.txt") as f:
         # (as strings)
         numbers_str = line.split()
         #convert numbers to floats
-        numbers_float = [float(x) for x in numbers_str]  #map(float,numbers_str) works too
+        numbers_float = [D(x) for x in numbers_str]  #map(float,numbers_str) works too
         F.append(numbers_float)
        # print numbers_float
 
@@ -67,8 +67,8 @@ print ""
 
 for i in range(0,4):
 
-    str_C= str(D(C[i][0]))
-    str_F= str(D(F[i][0]))
+    str_C= str(C[i][0])
+    str_F= str(F[i][0])
     
     list_C=[]
     list_F=[]

@@ -3,7 +3,7 @@
 
 !> \file
 !! MC for simple 10 layer silicon strip tracker.
-!!
+!! 
 !! \author Claus Kleinwort, DESY, 2009
 !!
 !! \copyright
@@ -56,10 +56,8 @@
 MODULE mptest2
     USE mpdef
 
-    COMMON/XX/UNIF_COUNT,GAUS_COUNT
-    INTEGER*4 UNIF_COUNT,GAUS_COUNT
-
     IMPLICIT NONE
+
     SAVE
 
     INTEGER(mpi), PARAMETER :: nlyr=10            !< number of detector layers
@@ -98,9 +96,6 @@ MODULE mptest2
     INTEGER(mpl) :: gaussian_ran_stdev
     CHARACTER(LEN=10) foobar
 
-    UNIF_COUNT = 0
-    GAUS_COUNT = 0
-
 END MODULE mptest2
 
 !> Generate test files.
@@ -126,8 +121,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     IMPLICIT NONE
     INTEGER(mpl) :: gran
     INTEGER(mpl) :: uran
-    INTEGER*4 :: unif_count
-    INTEGER*4 :: gaus_count
     REAL(mpd) :: rannum
     REAL(mpd) :: gausnum
     REAL(mps) :: cmbbrl
@@ -378,7 +371,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     !     record loop ------------------------------------------------------
 
-    ncount=10000
+    ncount=1000
     nthits=0
     nrecds=0
 
@@ -594,6 +587,7 @@ SUBROUTINE genln2(ip)
         WRITE(11,*) ' Track ', xnull, ynull, xslop, yslop
     END IF
 
+!    ip = 1
     nhits=0
     x=xnull
     y=ynull
@@ -609,8 +603,8 @@ SUBROUTINE genln2(ip)
                     'y_slope= ',yslop
                 WRITE(14,*) ' '
                 WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' , ' yhits(nhits) ', ' sigma(nhits) ' 
-                WRITE(17,*) "imx  :   x    sizel    REAL(nmx,mps),mpi)" 
-                WRITE(17,*) 'imy ,   y  ,  sizel ,  REAL(nmy,mps),mpi)'  
+                !WRITE(17,*) "imx  :   x    sizel    REAL(nmx,mps),mpi)" 
+                !WRITE(17,*) 'imy ,   y  ,  sizel ,  REAL(nmy,mps),mpi)'  
                 
     END IF
 
@@ -631,18 +625,23 @@ SUBROUTINE genln2(ip)
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
         
-        WRITE(17,*) imx,x,sizel,REAL(nmx)
+        !WRITE(17,*) imx,x,sizel,REAL(nmx)
+        !WRITE(17,*) '(x+sizel*0.5)/sizel*REAL(nmx)= ',(x+sizel*0.5)/sizel*REAL(nmx)
+        !WRITE(17,*) (x+sizel*0.5)/sizel*REAL(nmx)
         IF (imx < 0.OR.imx >= nmx) THEN
-            !WRITE(17,*) 'Missed X Hit at imx=',imx, 'last nhit=', nhits, 'last xhit=', xhits(nhits), 'last yhit=', yhits(nhits), &
-            ! 'last xs=', xs, 'last x0=', xnull
+            WRITE(*,*) 'Missed X Hit at int(imx)=',imx, 'last nhit=', nhits, 'last xhit=', xhits(nhits), &
+             'last yhit=', yhits(nhits), 'last xs=', xs, 'last x0=', xnull
             CYCLE
         END IF
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
         
-        WRITE(17,*) imy,y,sizel,REAL(nmy)
+        !WRITE(17,*) imy,y,sizel,REAL(nmy)
+        !WRITE(17,*) '(y+sizel*0.5)/sizel*REAL(nmy)= ',(y+sizel*0.5)/sizel*REAL(nmy)
+        WRITE(17,*) (y+sizel*0.5)/sizel*REAL(nmy)
         IF (imy < 0.OR.imy >= nmy) THEN
-            !WRITE(17,*) 'Missed Y Hit at imy=',imy, 'last nhit=', nhits, 'last xhit=', xhits(nhits), 'last yhit=', yhits(nhits), &
-            ! 'last xs=', xs, 'last x0=', xnull
+            WRITE(*,*) 'Missed Y Hit at imy=',imy, '*non-casted*(imx)= ', (y+sizel*0.5)/sizel*REAL(nmy), &
+             'last nhit=', nhits, 'last xhit=', xhits(nhits), 'last yhit=', yhits(nhits), &
+             'last xs=', xs, 'last x0=', xnull
             CYCLE
         END IF
   

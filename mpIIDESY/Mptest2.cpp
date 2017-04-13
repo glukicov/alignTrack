@@ -263,7 +263,8 @@ int main(int argc, char* argv[]){
     float scatterError = Detector::instance()->getScatterError(); // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
-       for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
+       //for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
+    for (int icount=0; icount<1000; icount++){
         rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
         float p=pow(10.0, 1+rand_num);
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;

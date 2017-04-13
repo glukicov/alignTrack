@@ -10,7 +10,7 @@ ROOTGLIBS    := $(shell root-config --glibs)
 ROOTLIBS     := $(shell root-config --nonew --libs)
 
 CPP = g++
-CPPFLAGS = -std=c++11
+CPPFLAGS = -std=c++0x
 CPPFLAGS += $(ROOTCFLAGS)
 
 LDD = g++

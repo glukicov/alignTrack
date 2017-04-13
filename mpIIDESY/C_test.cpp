@@ -60,8 +60,8 @@ int main(){
 	p << FResult << endl; 
 	
 	
-	debug << std::setprecision(16);
-	p << std::setprecision(16);
+	debug << std::setprecision(17);
+	p << std::setprecision(17);
 	debug<< "Doubles: precsion set to 16 decimal points " << endl;
 
 	int Dcounter = 0;
@@ -90,8 +90,8 @@ int main(){
 
 	debug<< "Floats: precsion set to 8 decimal points " << endl;
 
-	//int Fcounter = 0;
-	//float FDiv, FSub, FMul, FAdd;
+	Fcounter = 0;
+	FDiv, FSub, FMul, FAdd = 0;
 	FResult = float(test)*MUL;
 	for (int i=0; i<1000; i++){
 		FDiv = FResult/float(a);
@@ -108,12 +108,12 @@ int main(){
 	p << FResult<<endl; 
 	
 	
-	debug << std::setprecision(16);
-	p << std::setprecision(16);
+	debug << std::setprecision(17);
+	p << std::setprecision(17);
 	debug<< "Doubles: precsion set to 16 decimal points " << endl;
 
-	//int Dcounter = 0;
-	//double DDiv, DSub, DMul, DAdd;
+	Dcounter = 0;
+	DDiv, DSub, DMul, DAdd = 0;
 	DResult = double(test)*MUL;
 	for (int i=0; i<1000; i++){
 		DDiv = DResult/double(a);
