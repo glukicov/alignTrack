@@ -61,6 +61,7 @@ mpIIDESY/millepede.his~
 mpIIDESY/millepede.res~
 mptest1_port
 MpTest1
+AlignTracker
 ### files NOT to ignore 
 
 #!*.h
