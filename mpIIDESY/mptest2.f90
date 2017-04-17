@@ -669,7 +669,7 @@ SUBROUTINE genln2()
             CYCLE
         END IF
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
-        IF (imy < 0.OR.imy >= nmy) THEN
+        IF (imy < 0.OR.imy >= nmy) THEN 
             CYCLE
         END IF
   
