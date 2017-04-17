@@ -149,6 +149,8 @@ int main(int argc, char* argv[]){
     //////----Variable Intialisation-------///////////
     //TODO rewrite as arguments to main when using MS, BRL etc.. 
     int imodel = 0;  //XXX Model type (see above)
+
+    float twoR = 2.0;
     
     //arguments for Mille constructor:
     const char* outFileName = "C_Mp2tst.bin";
@@ -166,6 +168,7 @@ int main(int argc, char* argv[]){
     string geom_debugFileName = "C_Mp2debug_geom.txt";  //
     string off_debugFileName = "C_Mp2debug_off.txt";  //
     string hitsOnly_debugFileName = "C_Mp2debug_hitsOnly.txt";
+    string MC_debugFileName = "C_Mp2debug_MC.txt";
     
     // TODO TTree -> seperate Macro for plotting [see Mark's suggested code: check correct motivationimplmenation for future] 
     //output ROOT file
@@ -193,6 +196,7 @@ int main(int argc, char* argv[]){
     ofstream debug_geom(geom_debugFileName);
     ofstream debug_off(off_debugFileName);
     ofstream debug_hits_only(hitsOnly_debugFileName);
+    ofstream debug_mc(MC_debugFileName); 
 
     std::cout << std::setprecision(7) << std::scientific;
     debug << std::setprecision(7)<< std::scientific;
@@ -203,6 +207,7 @@ int main(int argc, char* argv[]){
     debug_geom << std::setprecision(7)<< std::scientific;
     debug_off << std::setprecision(8); 
     debug_hits_only << std::setprecision(7)<< std::scientific;
+    debug_mc << std::setprecision(8)<< std::scientific; 
    
     // GEOMETRY
     Detector::instance()->setGeometry(debug_geom, debugBool);
@@ -253,24 +258,26 @@ int main(int argc, char* argv[]){
         << "*matiter      3  ! recalculate matrix in iterations" << endl
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
-    } // end of str file  
+    } // end of str file    
 
     //Set up counters for hits and records (tracks)
     int hitsN = 0;
-    int recordN=0;
+    int recordN=0;      
     
     
-    float scatterError = Detector::instance()->getScatterError(); // multiple scattering error
+    float scatterError; // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
        //for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
-    for (int icount=0; icount<1000; icount++){
-        rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (2.0 * RandomBuffer::instance()->get_uniform_ran_max());
+    for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
+        rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
         float p=pow(10.0, 1+rand_num);
-        scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;
+        scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;  
+        
+        debug_tmp << "Rand= " << rand_num << " p= " << p << "width= " << Detector::instance()->getWidth() << endl; 
 
         //Generating tracks 
-        LineData generated_line = Detector::instance()->genlin2(debug_calc, debug_off, debugBool);
+        LineData generated_line = Detector::instance()->genlin2(scatterError, debug_calc, debug_off, debug_mc, debugBool);
         if (debugBool){
             debug << endl; 
             debug_mp2 << endl; 
@@ -278,8 +285,8 @@ int main(int argc, char* argv[]){
             debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
             debug << "Track # (C)        " << icount+1 << endl;
             debug_mp2 << "Track # (C)        " << icount+1 << endl;
-            debug_tmp << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-            debug_tmp << "Track # (C)        " << icount+1 << endl;
+            //debug_tmp << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+            //debug_tmp << "Track # (C)        " << icount+1 << endl;
         }
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number 
@@ -288,7 +295,7 @@ int main(int argc, char* argv[]){
             //  computes the remainder of the division of plane (e.g. MOD(693, 50) = 693 - 50*13 = 43) 
 
             if (debugBool) {
-                debug_tmp << "lyr= " << lyr << "  im= " << im << " Module with hit: "  << generated_line.i_hits[i] << endl; 
+                //debug_tmp << "lyr= " << lyr << "  im= " << im << " Module with hit: "  << generated_line.i_hits[i] << endl; 
                 //debug_tmp << endl; 
             }
             
@@ -375,7 +382,7 @@ int main(int argc, char* argv[]){
     cout << Detector::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
-    cout << "Ready for PEDE alogrithm: ./pede C_Mp2str.txt" << endl;
+    cout << "Ready for PEDE alogrithm: ./pede C_Mp2str.txt" << endl; 
     cout << "Sanity Plots: root -l Mptest2.root" << endl;
 
     if (debugBool) {
@@ -401,6 +408,7 @@ int main(int argc, char* argv[]){
     debug_mis.close();
     debug_geom.close();
     debug_off.close();
+    debug_mc.close();
     
     //ROOT stuff
     file->Write();

@@ -4,73 +4,58 @@ import os
 import string
 import time
 import decimal
-from ROOT import TCanvas, TFile, TH1F, TTree, AddressOf, gROOT, Double
+from ROOT import *
+#import numpy as np # TODO 
     
-
-D=decimal.Decimal
-
-
 C=[]  #stores all numbers 
 F=[]
 
-
+#Read file and store in lists 
 with open("C_Mp2debug_off.txt") as f:
     for line in f:  #Line is a string
-        #split the string on whitespace, return a list of numbers 
-        # (as strings)
-        number_str = line.split()
-        #convert numbers to floats
-        #numbers_float = [D(x) for x in numbers_str]  #map(float,numbers_str) works too
+        #split the string on whitespace, return a list of numbers (as strings)
+        number_str = line.split()    
         C.append(number_str[0])
-       # print numbers_float
-
+   
 with open("F_mp2test2_off_debug.txt") as f:
-    for line in f:  #Line is a string
-        #split the string on whitespace, return a list of numbers 
-        # (as strings)
+    for line in f:  
         number_str = line.split()
-        #convert numbers to floats
-        #numbers_float = [D(x) for x in numbers_str]  #map(float,numbers_str) works too
         F.append(number_str[0])
-       # print numbers_float
 
-#How much calcuations should be done by hand vs TProfile implimenation read: https://root.cern.ch/doc/master/classTProfile.html
 
-# Make a tree
-f = TFile('myTest.root','RECREATE')
-t = TTree('MyTree','My test tree')
+# Make a root file 
+f = TFile('TProfile.root','RECREATE')
+hprof  = TProfile("hprof","Profile of Normalised F-C difference wrt to C result",14,-1,16);  #name title, NbinsX, xMin, xMax 
+hprof_abs  = TProfile("hprof_abs","Profile of Absolute Normalised F-C difference wrt to C result",14,-1,16);  #name title, NbinsX, xMin, xMax
 
-# Create a struct
-gROOT.ProcessLine(\
-  "struct MyStruct{\
-    Int_t someInt;\
-    Double_t someDouble;\
-  };")
+i=int(0)  #to loop vales over 14 hits from the same line [included are also rejected "hits" so its ALWAYS 14] 
+n=0  #to loop over Fortran 
+for number in C: 
+    i=i+int(1)
+    y=(float(number)-float(F[n]))/float(number)
+    hprof.Fill(i,y)
+    hprof_abs.Fill(i,abs(y))
+    n=n+1
+    if (i==14):
+      i=0
 
-from ROOT import MyStruct
+hprof.Draw()
 
-# Create branches in the tree
-s = MyStruct()
-t.Branch('rootInt',AddressOf(s,'someInt'),'someInt/I')
-t.Branch('rootDouble',AddressOf(s,'someDouble'),'someDouble/D')
+print "Hit Enter to continue"
+test = raw_input()
 
-# Fill tree
-for i in range(100):
-  s.someInt = i
-  s.someDouble = i
-  t.Fill()
+hprof_abs.Draw()
+
+print "Hit Enter to continue"
+test = raw_input()
+
 
 f.Write()
 f.Close()
 
-#c1 = TCanvas("c1","c1",900,700)
-h1 = TH1F("h1", "", 10, 0, 10)
-for number in C:
-    print number
-    h1.Fill(float(number))
-#data.close()
 
-h1.Draw("lego")
+
+
 
 
 

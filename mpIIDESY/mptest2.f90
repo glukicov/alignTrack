@@ -75,8 +75,8 @@ MODULE mptest2
     REAL(mps), PARAMETER :: sigl =0.002           ! <resolution
 
     ! For random number conversion
-    REAL(mpd) :: Rone=1.0
-    REAL(mpd) :: two=2.0
+    REAL(mps) :: Rone=1.0
+    REAL(mps) :: two=2.0
 
     INTEGER(mpi) :: nhits                         !< number of hits
     REAL(mps) :: the0                             !< multiple scattering error
@@ -119,10 +119,10 @@ END MODULE mptest2
 SUBROUTINE mptst2(imodel)         ! generate test files
     USE mptest2
     IMPLICIT NONE
-    INTEGER(mpl) :: gran
-    INTEGER(mpl) :: uran
-    REAL(mpd) :: rannum
-    REAL(mpd) :: gausnum
+    INTEGER(mpi) :: gran
+    INTEGER(mpi) :: uran
+    REAL(mps) :: rannum
+    REAL(mps) :: gausnum
     REAL(mps) :: cmbbrl
     REAL(mps) :: dispxm
     REAL(mps) :: dispym
@@ -201,7 +201,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         FILE='F_mp2test2_mp2_debug.txt')
 
     OPEN(UNIT=13,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_temp_debug.txt')
+        FILE='F_mp2test2_tmp_debug.txt')
 
     OPEN(UNIT=14,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='F_mp2test2_calc_debug.txt')
@@ -214,6 +214,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     OPEN(UNIT=17,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='F_mp2test2_off_debug.txt')
+
+    OPEN(UNIT=18,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
+        FILE='F_mp2test2_MC_debug.txt')
 
     OPEN(UNIT=42,FILE="uniform_ran.txt")   !! this is not being used from randoms,f90 now....
     OPEN(UNIT=43,FILE="gaussian_ran.txt")
@@ -371,7 +374,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     !     record loop ------------------------------------------------------
 
-    ncount=1000
+    ncount=18000
     nthits=0
     nrecds=0
 
@@ -380,6 +383,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
         p=10.0**(1.+rannum)
         the0=SQRT(thck)*0.014/p
+        WRITE(13,*) "Rand= ", rannum," p= ",p,"width= ",thck
         ip=1  ! change verbosity 
         !       IF (ICOUNT.LE.3) IP=1
         CALL genln2(ip)      ! generate hits
@@ -391,9 +395,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             WRITE(12,*) ''
             WRITE(12,*) '--------------------------------------------------------------------------'
             WRITE(12,*) 'Track # (F)', icount
-            WRITE(13,*) ''
-            WRITE(13,*) '--------------------------------------------------------------------------'
-            WRITE(13,*) 'Track # (F)', icount
+           ! WRITE(13,*) ''
+           ! WRITE(13,*) '--------------------------------------------------------------------------'
+           ! WRITE(13,*) 'Track # (F)', icount
         END IF
         
         DO i=1,nhits
@@ -403,7 +407,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             im =MOD(ihits(i),nmxy)
 
             IF (debug .EQ. 1) THEN
-                WRITE(13,*) "lyr= " , lyr , "  im= " , im , "Plane with hit: "  , ihits(i)
+                !WRITE(13,*) "lyr= " , lyr , "  im= " , im , "Plane with hit: "  , ihits(i)
                 !WRITE(13,*) ' '  
             END IF
 
@@ -510,6 +514,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     CLOSE (15)
     CLOSE (16)
     CLOSE (17)
+    CLOSE (18)
 
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
@@ -541,10 +546,11 @@ SUBROUTINE genln2(ip)
     USE mptest2
 
     IMPLICIT NONE
-    INTEGER(mpl) :: gran
-    INTEGER(mpl) :: uran
-    REAL(mpd) :: rannum
-    REAL(mpd) :: gausnum
+    INTEGER(mpi) :: gran
+    INTEGER(mpi) :: uran
+    REAL(mps) :: tstnum
+    REAL(mps) :: rannum
+    REAL(mps) :: gausnum
     REAL(mps) :: ds
     REAL(mps) :: dx
     REAL(mps) :: dy
@@ -571,16 +577,24 @@ SUBROUTINE genln2(ip)
     INTEGER(mpi), INTENT(IN)                      :: ip
 
     !     track parameters
-    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
+    
+    tstnum = uran()
+    rannum = (tstnum + uniform_ran_max) / (two * uniform_ran_max)
+    WRITE(18,*) "tstnum= ",tstnum,"uniform_ran_max=",uniform_ran_max,"two=",two
     xnull=sizel*(rannum-0.5)   ! uniform vertex
+    WRITE(18,*) "Rand= " ,rannum, "x0= ", xnull
     rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
     ynull=sizel*(rannum-0.5)   ! uniform vertex
+    WRITE(18,*) "Rand= " ,rannum, "y0= ", ynull
     rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
     xexit=sizel*(rannum-0.5)   ! uniform exit point
+    WRITE(18,*) "Rand= " ,rannum, "x1= ", xexit
     rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
     yexit=sizel*(rannum-0.5)   ! uniform exit point
+    WRITE(18,*) "Rand= " ,rannum, "y1= ", yexit
     xslop=(xexit-xnull)/sarc(nmlyr)
     yslop=(yexit-ynull)/sarc(nmlyr)
+    WRITE(18,*) "x_slope= " ,xslop, " y_slope= ", yslop, " distance[layerN-1]= ", sarc(nmlyr)
     IF(debug == 1) THEN
         WRITE(11,*) ' '
         WRITE(11,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
@@ -594,6 +608,9 @@ SUBROUTINE genln2(ip)
     dx=xslop
     dy=yslop
     sold=0.0
+
+     WRITE(18,*) "x= " , x , " dx= " , dx , " y= " , y , " dy= " , dy , " s_old= " , sold 
+     WRITE(18,*) ""
     
     IF (debug .EQ. 1) THEN
                 WRITE(14,*) ''
@@ -620,8 +637,18 @@ SUBROUTINE genln2(ip)
         !      multiple scattering
         gausnum = Rone * gran() / gaussian_ran_stdev
         dx=dx+gausnum*the0
+        WRITE(18,*) "Rand= ",gausnum," dx= ",dx," scatterError= ",the0 
         gausnum = Rone * gran() / gaussian_ran_stdev
         dy=dy+gausnum*the0
+        WRITE(18,*) "Rand= " , gausnum , " dy= " , dy , " scatterError= " , the0 
+
+        WRITE(18,*)  "ds= " , ds , " distance[i]= " , " s_old= " , sold 
+        WRITE(18,*)  "xs= " , xs , " x_0= " ,xnull ," x_slope= " , xslop
+        WRITE(18,*)  "ys= " , ys , " y_0= " , ynull , " y_slope= " , yslop 
+
+
+        WRITE(18,*)  "x= " , x , " dx= " , dx ," ds= " ,ds 
+        WRITE(18,*)  "y= " , y ," dy= " , dy , " ds= " , ds
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
         
@@ -629,8 +656,8 @@ SUBROUTINE genln2(ip)
         !WRITE(17,*) '(x+sizel*0.5)/sizel*REAL(nmx)= ',(x+sizel*0.5)/sizel*REAL(nmx)
         !WRITE(17,*) (x+sizel*0.5)/sizel*REAL(nmx)
         IF (imx < 0.OR.imx >= nmx) THEN
-            WRITE(*,*) 'Missed X Hit at int(imx)=',imx, 'last nhit=', nhits, 'last xhit=', xhits(nhits), &
-             'last yhit=', yhits(nhits), 'last xs=', xs, 'last x0=', xnull
+           ! WRITE(*,*) 'Missed X Hit at int(imx)=',imx, 'last nhit=', nhits, 'last xhit=', xhits(nhits), &
+            ! 'last yhit=', yhits(nhits), 'last xs=', xs, 'last x0=', xnull
             CYCLE
         END IF
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
@@ -639,9 +666,9 @@ SUBROUTINE genln2(ip)
         !WRITE(17,*) '(y+sizel*0.5)/sizel*REAL(nmy)= ',(y+sizel*0.5)/sizel*REAL(nmy)
         WRITE(17,*) (y+sizel*0.5)/sizel*REAL(nmy)
         IF (imy < 0.OR.imy >= nmy) THEN
-            WRITE(*,*) 'Missed Y Hit at imy=',imy, '*non-casted*(imx)= ', (y+sizel*0.5)/sizel*REAL(nmy), &
-             'last nhit=', nhits, 'last xhit=', xhits(nhits), 'last yhit=', yhits(nhits), &
-             'last xs=', xs, 'last x0=', xnull
+            !WRITE(*,*) 'Missed Y Hit at imy=',imy, '*non-casted*(imx)= ', (y+sizel*0.5)/sizel*REAL(nmy), &
+             !'last nhit=', nhits, 'last xhit=', xhits(nhits), 'last yhit=', yhits(nhits), &
+             !'last xs=', xs, 'last x0=', xnull
             CYCLE
         END IF
   
@@ -654,6 +681,8 @@ SUBROUTINE genln2(ip)
         xhits(nhits)=sarc(i)
         gausnum = Rone * gran() / gaussian_ran_stdev
         yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gausnum*ssig(i)
+        WRITE(18,*) "yhit = " , yhits(nhits) , "rand_num= " , gausnum , &
+         " projectionY[i]= " , spro(2,i) , " projectionX[i]= " , spro(1,i), " resolution= ", ssig(i)
         sigma(nhits)=ssig(i)
 
         IF (debug .EQ. 1) THEN
@@ -669,5 +698,7 @@ SUBROUTINE genln2(ip)
             WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits)   
         END IF
     END DO
+    WRITE(18,*) "--------------------------------------------------"
+    WRITE(18,*) ""
 101 FORMAT(3I3,5F8.4)
 END SUBROUTINE genln2
