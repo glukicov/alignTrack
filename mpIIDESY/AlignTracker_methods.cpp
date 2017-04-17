@@ -278,8 +278,6 @@ void Tracker::write_constraint_file(ofstream& constraint_file) {
 	// Check constraints file is open, then write. 
 	if (constraint_file.is_open()) {
 		
-		cout << "Writing constraint file..." << endl;
-		
 
 		//Evaluation of constraints
     	int ncx = (pixelXN+1)/2; 

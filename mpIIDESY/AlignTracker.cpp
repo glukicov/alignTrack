@@ -70,21 +70,12 @@ int main(int argc, char* argv[]){
     // Millepede courtesy of John 
     std::stringstream msg0, msg01, msg02, msg1, msg2, msg3, msg4;
     Logger::Instance()->write(Logger::NOTE, "");
-    msg0 << Logger::blue() <<  "********************************************" << Logger::def();
+    msg0 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::blue() << "*              g-2  Tracker Alignment                 *" << Logger::def();
+    msg01 << Logger::yellow() << "   g-2  Tracker Alignment - Gleb Lukicov (UCL) - April 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
-    msg1 << Logger::blue() <<  "********************************************" << Logger::def();
+    msg1 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
-    Logger::Instance()->write(Logger::NOTE, "");
-    msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
-    Logger::Instance()->write(Logger::NOTE,msg2.str());
-    msg3 << Logger::yellow() << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << Logger::def();
-    Logger::Instance()->write(Logger::NOTE,msg3.str());
-    msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
-    Logger::Instance()->write(Logger::NOTE,msg4.str());
-    Logger::Instance()->write(Logger::NOTE, ""); 
-    
     Logger::Instance()->setUseColor(true); // back to deafault colours 
 
     try {
@@ -131,7 +122,7 @@ int main(int argc, char* argv[]){
     
    // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-    cout << "Generating test data for g-2 Tracker Alignment in PEDE.." << endl;
+    cout << "Generating test data for g-2 Tracker Alignment in PEDE." << endl;
    
     // fstreams for str and cons files 
     ofstream constraint_file(conFileName);
@@ -159,19 +150,18 @@ int main(int argc, char* argv[]){
    
     // GEOMETRY
     Tracker::instance()->setGeometry(debug_geom, debugBool);
-    
+    cout<< "Geometry is set!" << endl;
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
     Tracker::instance()->misalign(debug_mis, debugBool); 
-
+    cout<< "Misalignment is complete!" << endl;
     // Write constraint file, for use with pede TODO fix this 
     Tracker::instance()->write_constraint_file(constraint_file);
+    cout<< "Constraints are written!" << endl;
 
     //Now writing steering and constraint files
     if(steering_file.is_open()){
-
-        cout<< "Writing the steering file" << endl;
         
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl 
@@ -206,7 +196,8 @@ int main(int argc, char* argv[]){
         << "*matiter      3  ! recalculate matrix in iterations" << endl
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
-    } // end of str file    
+    } // end of str file 
+    cout<< "Steering file is finished." << endl;
 
     //Set up counters for hits and records (tracks)
     int hitsN = 0;
@@ -323,21 +314,29 @@ int main(int argc, char* argv[]){
         recordN++; // count records;
        
     } // end of track count
-   
+    
+    
     cout << " " << endl;
     cout << Tracker::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE alogrithm: ./pede C_Mp2str.txt" << endl; 
     cout << "Sanity Plots: root -l Mptest2.root" << endl;
-
+    Logger::Instance()->setUseColor(false); // will be reabled below
+    // Millepede courtesy of John 
+    msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg2.str());
+    msg3 << Logger::yellow() << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg3.str());
+    msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg4.str());
+    Logger::Instance()->setUseColor(true); // back to deafault colours 
     if (debugBool) {
-    Logger::Instance()->write(Logger::WARNING, "Text debug files were produced");
-    
-    }
-
     cout << "Normal Randoms were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
     cout << "Gaussian Randoms were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
+    Logger::Instance()->write(Logger::WARNING, "Text debug files were produced");
+    }
+
 
     // Close text files
     constraint_file.close();
