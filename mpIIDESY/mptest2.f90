@@ -161,7 +161,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     INTEGER(mpi) :: misCounter = 0
 
-    INTEGER(mpi), PARAMETER :: debug=0           !< 1=debug mode, 0=normal
+    INTEGER(mpi), PARAMETER :: debug=1           !< 1=debug mode, 0=normal
     INTEGER(mpi), INTENT(IN)                      :: imodel
 
     REAL(mps) :: derlc(nmlyr*2+3)
@@ -574,7 +574,7 @@ SUBROUTINE genln2()
     REAL(mps) :: ys
     REAL(mps) :: yslop
 
-    INTEGER(mpi), PARAMETER :: debug=0            !< 1=debug mode, 0=normal
+    INTEGER(mpi), PARAMETER :: debug=1            !< 1=debug mode, 0=normal
     !INTEGER(mpi), INTENT(IN)                      :: ip
 
     !     track parameters
@@ -632,10 +632,8 @@ SUBROUTINE genln2()
                 WRITE(14,*) 'x_0= ',xnull, ' y_0= ',ynull , ' x_1= ',xexit, ' y_1= ',yexit , 'x_slope= ',xslop, &
                     'y_slope= ',yslop
                 WRITE(14,*) ' '
-                WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' , ' yhits(nhits) ', ' sigma(nhits) ' 
-                !WRITE(17,*) "imx  :   x    sizel    REAL(nmx,mps),mpi)" 
-                !WRITE(17,*) 'imy ,   y  ,  sizel ,  REAL(nmy,mps),mpi)'  
-                
+                WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) ' ,
+                & ' yhits(nhits) ', ' sigma(nhits) '             
     END IF
 
     DO  i=1,nmlyr
@@ -665,10 +663,16 @@ SUBROUTINE genln2()
         END IF
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
+        IF (debug .EQ. 1) THEN
+            WRITE(17, *) (x+sizel*0.5)/sizel*REAL(nmx)
+        END IF
         IF (imx < 0.OR.imx >= nmx) THEN
             CYCLE
         END IF
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
+        IF (debug .EQ. 1) THEN
+            WRITE(17, *) (y+sizel*0.5)/sizel*REAL(nmy)
+        END IF
         IF (imy < 0.OR.imy >= nmy) THEN 
             CYCLE
         END IF

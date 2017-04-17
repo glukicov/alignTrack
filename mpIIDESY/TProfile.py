@@ -25,8 +25,8 @@ with open("F_mp2test2_off_debug.txt") as f:
 
 # Make a root file 
 f = TFile('TProfile.root','RECREATE')
-hprof  = TProfile("hprof","Profile of Normalised F-C difference wrt to C result",14,-1,16);  #name title, NbinsX, xMin, xMax 
-hprof_abs  = TProfile("hprof_abs","Profile of Absolute Normalised F-C difference wrt to C result",14,-1,16);  #name title, NbinsX, xMin, xMax
+hprof  = TProfile("hprof","Profile of Normalised F-C difference wrt to C result",14,-1,16, 's');  #name title, NbinsX, xMin, xMax 
+hprof_abs  = TProfile("hprof_abs","Profile of Absolute Normalised F-C difference wrt to C result",14,-1,16, 's');  #name title, NbinsX, xMin, xMax
 
 i=int(0)  #to loop vales over 14 hits from the same line [included are also rejected "hits" so its ALWAYS 14] 
 n=0  #to loop over Fortran 

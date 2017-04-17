@@ -1,28 +1,30 @@
 /*
 
-This source file contains definitions of various functions in the Detector class. 
+This source file contains definitions of various functions in the method class. 
 
 */  
 
-#include "Mptest2_detector.h"
+#include "AlignTracker_methods.h"
 
 using namespace std;
 
 // Set up empty pointer for instance of class.
-Detector* Detector::s_instance = NULL; 
+Tracker* Tracker::s_instance = NULL; 
 
 /** 
 	Empty constructor for detector class.
  */
-Detector::Detector() {
-    resolution = 0.002;
+Tracker::Tracker() {
+  //XXX non-static variables definition here 
+
+    resolution=0.002;  // 20um = 0.002 cm setting this in the constructor //TODO decide if this is a constant 
 
 }
 
 /** 
 	Empty destructor for detector class.
 */
-Detector::~Detector() {
+Tracker::~Tracker() {
 }
 
 
@@ -31,10 +33,10 @@ Detector::~Detector() {
 
    @return Pointer to detector instance.
  */
-Detector* Detector::instance() {
+Tracker* Tracker::instance() {
 
 	// Create pointer to class instance if one doesn't exist already, then return that pointer.
-	if (s_instance == NULL) s_instance = new Detector();
+	if (s_instance == NULL) s_instance = new Tracker();
 	return s_instance;
 }
 
@@ -43,10 +45,7 @@ Detector* Detector::instance() {
   
    @return LineData struct containing data about detector hits.
 */
-//Source code for genlin courtesy of John. 
-// Function to simulate a linear track through the detector, returning data about detector hits.
-
-LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, bool debugBool) {
+LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, bool debugBool) {
   
 	// Set up new container for track data, with hit count set to zero`
 	LineData line;
@@ -184,10 +183,10 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
     }
     return line; // Return data from simulated track
     
-} // end of genlin2
+} // end of MC
 
 //Geometry of detecor arrangement 
-void Detector::setGeometry(ofstream& debug_geom, bool debugBool){
+void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
 	float s=startingDistancePlane1;
     int i_counter = 0;
     float sign = 1.0;
@@ -232,7 +231,7 @@ void Detector::setGeometry(ofstream& debug_geom, bool debugBool){
 } // end of geom
 
 // MC misalignment of detecors 
-void Detector::misalign(ofstream& debug_mis, bool debugBool){
+void Tracker::misalign(ofstream& debug_mis, bool debugBool){
 
     float rand_gaus;
 
@@ -273,7 +272,7 @@ debug_mis << "counterMis= " << counterMis;
 
     @param constraint_file Reference to ofstream to write constraint file to. 
  */
-void Detector::write_constraint_file(ofstream& constraint_file) {
+void Tracker::write_constraint_file(ofstream& constraint_file) {
 
     // constraints: fix center pixels in first/last layer
 	// Check constraints file is open, then write. 
@@ -312,7 +311,7 @@ void Detector::write_constraint_file(ofstream& constraint_file) {
 
    @param uniform_filename String for filename of file of uniform random numbers.
  */
-void Detector::set_uniform_file(string uniform_filename) {
+void Tracker::set_uniform_file(string uniform_filename) {
 	RandomBuffer::instance()->open_uniform_file(uniform_filename);
 }
 
@@ -322,7 +321,7 @@ void Detector::set_uniform_file(string uniform_filename) {
 
    @param uniform_filename String for filename of file of gaussian random numbers.
  */
-void Detector::set_gaussian_file(string gaussian_filename) {
+void Tracker::set_gaussian_file(string gaussian_filename) {
 	RandomBuffer::instance()->open_gaussian_file(gaussian_filename);
 }
 
