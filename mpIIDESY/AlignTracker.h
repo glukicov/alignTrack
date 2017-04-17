@@ -5,7 +5,7 @@
 #include "Mille.h"  // DESY 
 #include "Mille.cc" // DESY
 #include "AlignTracker_methods.h" // Methods and fucntions for main programme
-#include "Logger.hh"  // Logger courtesy of Tom (from gm2trackdaq repository)
+#include "Logger.hh"  // Logger courtesy of Tom (from gm2trackdaq repository) 
 
 #include <iostream>
 #include <fstream> 
