@@ -140,7 +140,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     INTEGER(mpi) :: icount
     INTEGER(mpi) :: im
     INTEGER(mpi) :: ios
-    INTEGER(mpi) :: ip
+    !INTEGER(mpi) :: ip
     INTEGER(mpi) :: j
     INTEGER(mpi) :: k
     INTEGER(mpi) :: l
@@ -161,7 +161,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     INTEGER(mpi) :: misCounter = 0
 
-    INTEGER(mpi), PARAMETER :: debug=1            !< 1=debug mode, 0=normal
+    INTEGER(mpi), PARAMETER :: debug=0           !< 1=debug mode, 0=normal
     INTEGER(mpi), INTENT(IN)                      :: imodel
 
     REAL(mps) :: derlc(nmlyr*2+3)
@@ -195,7 +195,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     OPEN(UNIT=51,ACCESS='SEQUENTIAL',FORM='UNFORMATTED', FILE='mp2tst.bin')
 
     OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_debug.txt')  !!! TODO   WRITE(11,*)   [see example from mptest1.f90 + readFortranParmsToRoot.py + Millepede_utils.py]
+        FILE='F_mp2test2_debug.txt')  
 
     OPEN(UNIT=12,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='F_mp2test2_mp2_debug.txt')
@@ -374,7 +374,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     !     record loop ------------------------------------------------------
 
-    ncount=18000
+    ncount=2000
     nthits=0
     nrecds=0
 
@@ -383,10 +383,12 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
         p=10.0**(1.+rannum)
         the0=SQRT(thck)*0.014/p
-        WRITE(13,*) "Rand= ", rannum," p= ",p,"width= ",thck
-        ip=1  ! change verbosity 
+        IF (debug .EQ. 1) THEN
+            WRITE(13,*) "Rand= ", rannum," p= ",p,"width= ",thck
+        END IF
+        !ip=1  ! change verbosity 
         !       IF (ICOUNT.LE.3) IP=1
-        CALL genln2(ip)      ! generate hits
+        CALL genln2()      ! generate hits
   
         IF (debug .EQ. 1) THEN
             WRITE(11,*) ''
@@ -395,9 +397,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             WRITE(12,*) ''
             WRITE(12,*) '--------------------------------------------------------------------------'
             WRITE(12,*) 'Track # (F)', icount
-           ! WRITE(13,*) ''
-           ! WRITE(13,*) '--------------------------------------------------------------------------'
-           ! WRITE(13,*) 'Track # (F)', icount
+            WRITE(13,*) ''
+            WRITE(13,*) '--------------------------------------------------------------------------'
+            WRITE(13,*) 'Track # (F)', icount
         END IF
         
         DO i=1,nhits
@@ -542,13 +544,12 @@ END SUBROUTINE mptst2
 !!
 !! \param [in] ip print flag
 
-SUBROUTINE genln2(ip)
+SUBROUTINE genln2()
     USE mptest2
 
     IMPLICIT NONE
     INTEGER(mpi) :: gran
     INTEGER(mpi) :: uran
-    REAL(mps) :: tstnum
     REAL(mps) :: rannum
     REAL(mps) :: gausnum
     REAL(mps) :: ds
@@ -573,35 +574,45 @@ SUBROUTINE genln2(ip)
     REAL(mps) :: ys
     REAL(mps) :: yslop
 
-    INTEGER(mpi), PARAMETER :: debug=1            !< 1=debug mode, 0=normal
-    INTEGER(mpi), INTENT(IN)                      :: ip
+    INTEGER(mpi), PARAMETER :: debug=0            !< 1=debug mode, 0=normal
+    !INTEGER(mpi), INTENT(IN)                      :: ip
 
     !     track parameters
     
-    tstnum = uran()
-    rannum = (tstnum + uniform_ran_max) / (two * uniform_ran_max)
-    WRITE(18,*) "tstnum= ",tstnum,"uniform_ran_max=",uniform_ran_max,"two=",two
+    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
+    IF (debug .EQ. 1) THEN
+        WRITE(18,*) "rannum= ",rannum,"uniform_ran_max=",uniform_ran_max,"two=",two
+    END IF
     xnull=sizel*(rannum-0.5)   ! uniform vertex
-    WRITE(18,*) "Rand= " ,rannum, "x0= ", xnull
+    IF (debug .EQ. 1) THEN
+        WRITE(18,*) "Rand= " ,rannum, "x0= ", xnull
+    END IF
     rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
     ynull=sizel*(rannum-0.5)   ! uniform vertex
-    WRITE(18,*) "Rand= " ,rannum, "y0= ", ynull
+    IF (debug .EQ. 1) THEN
+        WRITE(18,*) "Rand= " ,rannum, "y0= ", ynull
+    END IF
     rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
     xexit=sizel*(rannum-0.5)   ! uniform exit point
-    WRITE(18,*) "Rand= " ,rannum, "x1= ", xexit
+    IF (debug .EQ. 1) THEN
+        WRITE(18,*) "Rand= " ,rannum, "x1= ", xexit
+    END IF
     rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
     yexit=sizel*(rannum-0.5)   ! uniform exit point
-    WRITE(18,*) "Rand= " ,rannum, "y1= ", yexit
+    IF (debug .EQ. 1) THEN
+        WRITE(18,*) "Rand= " ,rannum, "y1= ", yexit
+    END IF
     xslop=(xexit-xnull)/sarc(nmlyr)
     yslop=(yexit-ynull)/sarc(nmlyr)
-    WRITE(18,*) "x_slope= " ,xslop, " y_slope= ", yslop, " distance[layerN-1]= ", sarc(nmlyr)
-    IF(debug == 1) THEN
+    IF (debug .EQ. 1) THEN
+        WRITE(18,*) "x_slope= " ,xslop, " y_slope= ", yslop, " distance[layerN-1]= ", sarc(nmlyr)
+
         WRITE(11,*) ' '
         WRITE(11,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
         WRITE(11,*) ' Track ', xnull, ynull, xslop, yslop
     END IF
 
-!    ip = 1
+!   ip = 1
     nhits=0
     x=xnull
     y=ynull
@@ -609,8 +620,10 @@ SUBROUTINE genln2(ip)
     dy=yslop
     sold=0.0
 
-     WRITE(18,*) "x= " , x , " dx= " , dx , " y= " , y , " dy= " , dy , " s_old= " , sold 
-     WRITE(18,*) ""
+     IF (debug .EQ. 1) THEN
+         WRITE(18,*) "x= " , x , " dx= " , dx , " y= " , y , " dy= " , dy , " s_old= " , sold 
+        WRITE(18,*) ""
+     END IF
     
     IF (debug .EQ. 1) THEN
                 WRITE(14,*) ''
@@ -637,38 +650,26 @@ SUBROUTINE genln2(ip)
         !      multiple scattering
         gausnum = Rone * gran() / gaussian_ran_stdev
         dx=dx+gausnum*the0
-        WRITE(18,*) "Rand= ",gausnum," dx= ",dx," scatterError= ",the0 
+        IF (debug .EQ. 1) THEN
+            WRITE(18,*) "Rand= ",gausnum," dx= ",dx," scatterError= ",the0 
+        END IF
         gausnum = Rone * gran() / gaussian_ran_stdev
         dy=dy+gausnum*the0
-        WRITE(18,*) "Rand= " , gausnum , " dy= " , dy , " scatterError= " , the0 
-
-        WRITE(18,*)  "ds= " , ds , " distance[i]= " , " s_old= " , sold 
-        WRITE(18,*)  "xs= " , xs , " x_0= " ,xnull ," x_slope= " , xslop
-        WRITE(18,*)  "ys= " , ys , " y_0= " , ynull , " y_slope= " , yslop 
-
-
-        WRITE(18,*)  "x= " , x , " dx= " , dx ," ds= " ,ds 
-        WRITE(18,*)  "y= " , y ," dy= " , dy , " ds= " , ds
+        IF (debug .EQ. 1) THEN
+            WRITE(18,*) "Rand= " , gausnum , " dy= " , dy , " scatterError= " , the0 
+            WRITE(18,*)  "ds= " , ds , " distance[i]= " , " s_old= " , sold 
+            WRITE(18,*)  "xs= " , xs , " x_0= " ,xnull ," x_slope= " , xslop
+            WRITE(18,*)  "ys= " , ys , " y_0= " , ynull , " y_slope= " , yslop 
+            WRITE(18,*)  "x= " , x , " dx= " , dx ," ds= " ,ds 
+            WRITE(18,*)  "y= " , y ," dy= " , dy , " ds= " , ds
+        END IF
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
-        
-        !WRITE(17,*) imx,x,sizel,REAL(nmx)
-        !WRITE(17,*) '(x+sizel*0.5)/sizel*REAL(nmx)= ',(x+sizel*0.5)/sizel*REAL(nmx)
-        !WRITE(17,*) (x+sizel*0.5)/sizel*REAL(nmx)
         IF (imx < 0.OR.imx >= nmx) THEN
-           ! WRITE(*,*) 'Missed X Hit at int(imx)=',imx, 'last nhit=', nhits, 'last xhit=', xhits(nhits), &
-            ! 'last yhit=', yhits(nhits), 'last xs=', xs, 'last x0=', xnull
             CYCLE
         END IF
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
-        
-        !WRITE(17,*) imy,y,sizel,REAL(nmy)
-        !WRITE(17,*) '(y+sizel*0.5)/sizel*REAL(nmy)= ',(y+sizel*0.5)/sizel*REAL(nmy)
-        WRITE(17,*) (y+sizel*0.5)/sizel*REAL(nmy)
         IF (imy < 0.OR.imy >= nmy) THEN
-            !WRITE(*,*) 'Missed Y Hit at imy=',imy, '*non-casted*(imx)= ', (y+sizel*0.5)/sizel*REAL(nmy), &
-             !'last nhit=', nhits, 'last xhit=', xhits(nhits), 'last yhit=', yhits(nhits), &
-             !'last xs=', xs, 'last x0=', xnull
             CYCLE
         END IF
   
@@ -681,8 +682,10 @@ SUBROUTINE genln2(ip)
         xhits(nhits)=sarc(i)
         gausnum = Rone * gran() / gaussian_ran_stdev
         yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gausnum*ssig(i)
-        WRITE(18,*) "yhit = " , yhits(nhits) , "rand_num= " , gausnum , &
+        IF (debug .EQ. 1) THEN
+            WRITE(18,*) "yhit = " , yhits(nhits) , "rand_num= " , gausnum , &
          " projectionY[i]= " , spro(2,i) , " projectionX[i]= " , spro(1,i), " resolution= ", ssig(i)
+        END IF
         sigma(nhits)=ssig(i)
 
         IF (debug .EQ. 1) THEN
@@ -695,10 +698,11 @@ SUBROUTINE genln2(ip)
         END IF
             
         IF(debug .EQ. 1) THEN
-            WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits)   
+            WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits) 
+            WRITE(18,*) "--------------------------------------------------"
+            WRITE(18,*) "" 
         END IF
     END DO
-    WRITE(18,*) "--------------------------------------------------"
-    WRITE(18,*) ""
-101 FORMAT(3I3,5F8.4)
+    
+!101 FORMAT(3I3,5F8.4)
 END SUBROUTINE genln2

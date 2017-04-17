@@ -4,7 +4,7 @@
 /*
 * 
 * Translation into C++11 of mptest2.f90 (see original description below) 
-* by Gleb Lukicov (g.lukicov@ucl.ac.uk) 24 Feb 2017
+* by Gleb Lukicov (g.lukicov@ucl.ac.uk) 24 Feb 2017 
 -----------------------------------------------------
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2012-03-16  Time: 11:08:55
@@ -69,12 +69,11 @@ using namespace std;
 
 
 /////************MAIN***************/////////////
-//TODO add arguments option 
 int main(int argc, char* argv[]){
 
     float rand_num; //to store random (int number from buffer + max )/(2 * max) [0, 1]   
     string compareStr;
-    bool debugBool = false;
+    bool debugBool = false; // './Mptest2 n' - for normal, of ./Mptest2 d' - for verbose debug output
     //Tell the logger to only show message at INFO level or above
     // Logger courtesy of Tom 
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -147,10 +146,9 @@ int main(int argc, char* argv[]){
 
 
     //////----Variable Intialisation-------///////////
-    //TODO rewrite as arguments to main when using MS, BRL etc.. 
-    int imodel = 0;  //XXX Model type (see above)
+    int imodel = 0;  //Model type (see above)
 
-    float twoR = 2.0;
+    float twoR = 2.0;  //For normalisation of uniform random numbers [0,1] 
     
     //arguments for Mille constructor:
     const char* outFileName = "C_Mp2tst.bin";
@@ -226,7 +224,7 @@ int main(int argc, char* argv[]){
         cout<< "Writing the steering file" << endl;
         
         steering_file <<  "*            Default test steering file" << endl
-        << "Cfiles ! following bin files are Cfiles" << endl  
+        << "Cfiles ! following bin files are Cfiles" << endl 
         << "C_Mp2con.txt   ! constraints text file " << endl
         << "C_Mp2tst.bin   ! binary data file" << endl
         << "fortranfiles ! following bin files are fortran" << endl
@@ -264,7 +262,6 @@ int main(int argc, char* argv[]){
     int hitsN = 0;
     int recordN=0;      
     
-    
     float scatterError; // multiple scattering error
 
     //Generating particles with energies: 10..100 Gev
@@ -274,7 +271,7 @@ int main(int argc, char* argv[]){
         float p=pow(10.0, 1+rand_num);
         scatterError=sqrt(Detector::instance()->getWidth())*0.014/p;  
         
-        debug_tmp << "Rand= " << rand_num << " p= " << p << "width= " << Detector::instance()->getWidth() << endl; 
+        if (debugBool){debug_tmp << "Rand= " << rand_num << " p= " << p << "width= " << Detector::instance()->getWidth() << endl; }
 
         //Generating tracks 
         LineData generated_line = Detector::instance()->genlin2(scatterError, debug_calc, debug_off, debug_mc, debugBool);
@@ -285,8 +282,7 @@ int main(int argc, char* argv[]){
             debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
             debug << "Track # (C)        " << icount+1 << endl;
             debug_mp2 << "Track # (C)        " << icount+1 << endl;
-            //debug_tmp << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-            //debug_tmp << "Track # (C)        " << icount+1 << endl;
+            
         }
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number 

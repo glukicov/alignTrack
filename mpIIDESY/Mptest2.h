@@ -1,9 +1,7 @@
 #ifndef MPTEST2
 #define MPTEST2
 
-//This header file declares main function, imports necessary dependencies.
-
-//TODO some includes might be redundant  
+//This header file declares main function, and imports necessary dependencies.
 #include "Mille.h"
 #include "Mille.cc"
 #include "Mptest2_detector.h"
