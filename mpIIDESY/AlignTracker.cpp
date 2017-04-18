@@ -12,10 +12,12 @@ This programme uses MC methods to produce a .bin file for the
 PEDE routine, to align the tracking detector for the g-2 
 experiment.
 
+Private (for now) Git repository: https://github.com/glukicov/alignTrack [further instructions are there]
+
 *
 **/
 
-#include "AlignTracker.h"
+#include "AlignTracker.h" 
 
 
 using namespace std; 
@@ -93,8 +95,8 @@ int main(int argc, char* argv[]){
     
     //arguments for Mille constructor:
     const char* outFileName = "Tracker_data.bin";
-    bool asBinary = true; 
-    bool writeZero = false;
+    bool asBinary = true; // set true for debugging XXX
+    bool writeZero = false; // to write 0 LC/DLC labels - not accepted by pede 
     
     string conFileName = "Tacker_con.txt";
     string strFileName = "Tracker_str.txt";
