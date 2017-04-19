@@ -26,7 +26,7 @@ struct LineData {
 	std::vector<float> y_true; /** Y-positions of true hits in detector */
 	std::vector<float> x_det; /** X-positions of recorded hits in detector */
 	std::vector<float> y_det; /** Y-positions of recorded hits in detector */
-	std::vector<float> x_mis; /** X-positions of misalignment hits in detector */
+	std::vector<float> x_mis; /** X-positions of misalignment in hits in detector */
 	std::vector<float> y_mis; /** Y-positions of misalignment in hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */

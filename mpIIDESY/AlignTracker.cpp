@@ -7,7 +7,7 @@
 *
 *  Gleb Lukicov (g.lukicov@ucl.ac.uk) 17 April 2017 @ Fermilab 
 ----------------------------------------------------------------
-*Methods and fucntions containined in AlignTracker_methods.cpp (Tracker class)
+*Methods and functions contained in AlignTracker_methods.cpp (Tracker class)
 This programme uses MC methods to produce a .bin file for the 
 PEDE routine, to align the tracking detector for the g-2 
 experiment.
@@ -26,16 +26,15 @@ using namespace std;
 //***************MAIN****************//
 int main(int argc, char* argv[]){
 
-    //////----Variable Intialisation-------///////////
+    //////----Variable Initialisation-------///////////
     int imodel = 0;  //Model type (see above) TODO move this as an argument to main 
     float twoR = 2.0;  //For normalisation of uniform random numbers [0,1] 
 
     float rand_num; //to store random (int number from buffer + max )/(2 * max) [0, 1]   
     string compareStr; //for debug vs normal output as specified by the user
-    bool debugBool = false; // './Mptest2 n' - for normal, of ./Mptest2 d' - for verbose debug output
+    bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
     
     //Tell the logger to only show message at INFO level or above
-    // Logger courtesy of Tom 
     Logger::Instance()->setLogLevel(Logger::NOTE); 
 
     //Tell the logger to throw exceptions when ERROR messages are received
@@ -68,7 +67,7 @@ int main(int argc, char* argv[]){
     debugBool = false; // print out to debug files
     }
     
-    Logger::Instance()->setUseColor(false); // will be reabled below
+    Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 
     std::stringstream msg0, msg01, msg02, msg1, msg2, msg3, msg4;
     Logger::Instance()->write(Logger::NOTE, "");
@@ -78,10 +77,10 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
-    Logger::Instance()->setUseColor(true); // back to deafault colours 
+    Logger::Instance()->setUseColor(true); // back to default colours 
 
     try {
-        Tracker::instance()->set_uniform_file("uniform_ran.txt");
+        Tracker::instance()->set_uniform_file("uniform_ran.txt"); 
    
         Tracker::instance()->set_gaussian_file("gaussian_ran.txt");
         
@@ -89,19 +88,19 @@ int main(int argc, char* argv[]){
         
     catch (ios_base::failure& e) {
         cerr << "Filestream exception caught: " << e.what() << endl;
-        cerr << "Please ensure valid filenames are specified!" << endl;
+        cerr << "Please ensure valid filenames are specified!" << endl; 
         return 1;
         } 
     
     //arguments for Mille constructor:
     const char* outFileName = "Tracker_data.bin";
-    bool asBinary = true; // set true for debugging XXX
+    bool asBinary = true; // set true for debugging XXX 
     bool writeZero = false; // to write 0 LC/DLC labels - not accepted by pede 
     
-    string conFileName = "Tacker_con.txt";
+    string conFileName = "Tracker_con.txt";
     string strFileName = "Tracker_str.txt";
-    string debugFileName = "Tracker_d.txt"; 
     //Debug files
+    string debugFileName = "Tracker_d.txt"; 
     string mp2_debugFileName = "Tracker_d_mille.txt";  // for looking at parameters going to CALL MILLE
     string temp_debugFileName = "Tracker_d_tmp.txt";  // 
     string cacl_debugFileName = "Tracker_d_calc.txt";  //
@@ -111,9 +110,9 @@ int main(int argc, char* argv[]){
     string hitsOnly_debugFileName = "Tracker_d_hitsOnly.txt";
     string MC_debugFileName = "Tracker_d_MC.txt";
     
-    // TODO TTree -> seperate Macro for plotting [see Mark's suggested code: check correct motivationimplmenation for future] 
+    // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
-    TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+    TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // D=double bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06); // D=double bins, name, title, nBins, Min, Max
@@ -126,7 +125,7 @@ int main(int argc, char* argv[]){
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
     cout << "Generating test data for g-2 Tracker Alignment in PEDE." << endl;
    
-    // fstreams for str and cons files 
+    // file streams for constrain, steering, and debug files 
     ofstream constraint_file(conFileName);
     ofstream steering_file(strFileName);
     ofstream debug(debugFileName);
@@ -322,9 +321,9 @@ int main(int argc, char* argv[]){
     cout << Tracker::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
-    cout << "Ready for PEDE alogrithm: ./pede C_Mp2str.txt" << endl; 
-    cout << "Sanity Plots: root -l Mptest2.root" << endl;
-    Logger::Instance()->setUseColor(false); // will be reabled below
+    cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
+    cout << "Sanity Plots: root -l Tracker.root" << endl;
+    Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 
     msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg2.str());
@@ -332,10 +331,10 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE,msg3.str());
     msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg4.str());
-    Logger::Instance()->setUseColor(true); // back to deafault colours 
+    Logger::Instance()->setUseColor(true); // back to default colours 
     if (debugBool) {
-    cout << "Normal Randoms were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
-    cout << "Gaussian Randoms were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
+    cout << "Normal random numbers were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
+    cout << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
     Logger::Instance()->write(Logger::WARNING, "Text debug files were produced");
     }
 

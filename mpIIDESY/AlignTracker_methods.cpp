@@ -54,12 +54,6 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     float rand_num;
     float rand_gaus;
 
-   if (debugBool){
-           debug_calc << "Track # (C)        " << line.hit_count << endl;
-           debug_calc << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-           debug_calc << endl; 
-       }
-
     // Track parameters for rand-generated line MC 
     rand_num = ( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
     if (debugBool){debug_mc << "rand_num= " <<rand_num << " uniform_ran_max= "<<RandomBuffer::instance()->get_uniform_ran_max()<<" two= "<<twoR<< endl;
