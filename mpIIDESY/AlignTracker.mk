@@ -36,4 +36,4 @@ test:
 	@echo $(ROOTCFLAGS)
 
 clean :
-	-rm -f ${PROGNAME} ${OBJECTS}
+	-rm -f ${PROGNAME} ${OBJECTS} Tracker_con.txt Tracker_str.txt Tracker_data.bin

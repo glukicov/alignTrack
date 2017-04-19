@@ -54,12 +54,13 @@ class Tracker {
 
 	static const int pixelTotalN = detectorN*pixelYN*pixelXN; //total number of measurement elements 
 	//  define detector geometry
-	static const float startingDistancePlane1=10.0; // distance of first layer relative to the "beam"
-	static const float planeDistance=10.0; // distance between planes [cm] 
-	static const float width =0.02; //thickness/width of a plane (X0)
-	static const float offset=0.5;  // offset of stereo pixels
-	static const float stereoTheta=0.1309;  // stereo angle [rad]  // radians (7.5000 deg = 0.1309...rad)  
-	static const float layerSize=20.0; //length of layers  [cm] 
+	static const float startingDistancePlane1=10.0; // distance of first layer relative to the "beam" // [cm]
+	static const float planeDistance=10.0; // distance between planes //[cm] 
+	static const float width =0.02; //thickness/width of a plane (X0) // [cm]
+	static const float offset=0.5;  // offset of stereo pixels [cm] 
+	static const float stereoTheta=0.08741;  // stereo angle  // [rad] (5 deg = 0.087.. rad)
+	//static const float stereoTheta=0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX
+	static const float layerSize=20.0; //length of layers // [cm] 
 
 	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
 	

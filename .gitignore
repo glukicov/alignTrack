@@ -63,6 +63,14 @@ mpIIDESY/millepede.res~
 mptest1_port
 MpTest1
 AlignTracker
+.svn/
+WIKI
+mp2-logo.png
+tools/.svn/
+/mpIIDESY/.nfs00000000031e4b4700000010
+/mpIIDESY/.nfs000000004e8a50fe0000000e
+/mpIIDESY/.nfs00000000734129ba0000000d
+/mpIIDESY/.nfs00000000c7b9015a0000000f
 ### files NOT to ignore 
 
 #!*.h
