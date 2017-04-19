@@ -116,10 +116,10 @@ pede : 	${USER_OBJ_PEDE} Makefile
 		-o $@ ${USER_OBJ_PEDE} $(C_LIBS) 
 #
 clean:
-	rm -f *.o *~ */*.o */*~ *.mod */*.mod
+	rm -f *.o *~ */*.o */*~ *.mod */*.mod mp2tst.bin mp2con.txt mp2str.txt
 #
 clobber: clean 
-	rm -f $(EXECUTABLES)
+	rm -f $(EXECUTABLES) 
 
 install: $(EXECUTABLES) #clean
 	mkdir -p $(PREFIX)/bin

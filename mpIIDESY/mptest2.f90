@@ -374,7 +374,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     !     record loop ------------------------------------------------------
 
-    ncount=2000
+    ncount=15000
     nthits=0
     nrecds=0
 
