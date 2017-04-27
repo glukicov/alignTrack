@@ -52,37 +52,24 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
 	LineData line;
     line.hit_count = 0;
 
-    float rand_num;
+    float rand_num, rand_num1, rand_num2, rand_num3, rand_num4;
     float rand_gaus;
 
-   if (debugBool){
-           debug_calc << "Track # (C)        " << line.hit_count << endl;
-           debug_calc << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-           debug_calc << endl; 
-       }
-
     // Track parameters for rand-generated line MC 
-    rand_num = ( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
-    if (debugBool){debug_mc << "rand_num= " <<rand_num << " uniform_ran_max= "<<RandomBuffer::instance()->get_uniform_ran_max()<<" two= "<<twoR<< endl;
-    debug_mc << "Rand= " << rand_num;}
-    float x_0 = layerSize * (rand_num-0.5); //uniform vertex
-    if (debugBool){debug_mc << " x0= " << x_0 << endl;}
-    rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
-    if (debugBool){ debug_mc << " Rand= " << rand_num;}
-    float y_0 = layerSize * (rand_num-0.5); //uniform vertex 
-    if (debugBool){ debug_mc << " y0= " << y_0 << endl;}
-    rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
-    if (debugBool){ debug_mc << "Rand= " << rand_num; }
-    float x_1 = layerSize * (rand_num-0.5); //uniform exit point: so fitting a line to these two points
-    if (debugBool){debug_mc << " x1= " << x_1 << endl; }
-    rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
-    if (debugBool){debug_mc << " Rand= " << rand_num; }
-    float y_1 = layerSize * (rand_num-0.5); //uniform exit point: 
-    if (debugBool){ debug_mc << " y1= " << y_1 << endl; }
+    rand_num1 = (( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
+    rand_num1 -= 0.5;
+    float x_0 = layerSize * (rand_num1); //uniform vertex
+    rand_num2 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
+    rand_num2 -= 0.5;
+    float y_0 = layerSize * (rand_num2); //uniform vertex
+    rand_num3 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
+    rand_num3 -= 0.5;
+    float x_1 = layerSize * (rand_num3); //uniform exit point: so fitting a line to these two points
+    rand_num4 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
+    float extraRand = rand_num4;
+    float y_1 = layerSize * (extraRand - 0.5); //uniform exit point:
     float x_slope=(x_1-x_0)/distance[layerN-1];
-    if (debugBool){ debug_mc << " x_slope= " << x_slope << " distance[layerN-1]= " << distance[layerN-1] << endl; }
     float y_slope=(y_1-y_0)/distance[layerN-1];
-    if (debugBool){ debug_mc << " y_slope= " << y_slope <<  " distance[layerN-1]= " << distance[layerN-1] << endl;}
     
 
     float x = x_0;
@@ -91,13 +78,9 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
     float dy = y_slope;
     float s_old = 0.0;  // previous position in "z"
 
-    if (debugBool){debug_mc << "x= " << x << " dx= " << dx << " y= " << y << " dy= " << dy << " s_old= " << s_old << endl; 
-    debug_mc << endl; }
     if (debugBool){
-              debug_calc << "x_0= "<< x_0<< " y_0= "<< y_0 << " x_1= "<< x_1<< " y_1= "<< y_1 << endl; 
-               debug_calc << "x_slope= "<< x_slope<< " y_slope= "<< y_slope << endl;
-               debug_calc << endl;
-                }
+        debug_calc << x_0<< "  " << y_0 << " " << x_1<< " " << y_1 <<" " << x_slope<< " "<< y_slope << "  " << (rand_num1) << " " << (rand_num2) << " " << (rand_num3) << " " << (rand_num4) << " " << layerSize << " " << distance[layerN-1] << endl;
+    }
 
     
     for(int i=0; i<layerN; i++){
@@ -120,28 +103,16 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
         //multiple scattering
         rand_gaus= RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         dx = dx+ rand_gaus * scatterError;
-        if (debugBool){debug_mc << "Rand= " << rand_gaus << " dx= " << dx << " scatterError= " << scatterError << endl;}
+       
         rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         dy = dy+ rand_gaus * scatterError;
-        if (debugBool){debug_mc << "Rand= " << rand_gaus << " dy= " << dy << " scatterError= " << scatterError << endl;}
-
-        if (debugBool){
-        debug_mc << "ds= " << ds << " distance[i]= " << " s_old= " << s_old <<endl; 
-        debug_mc << "xs= " << xs << " x_0= " << x_0 << " x_slope= " << x_slope << endl;
-        debug_mc << "ys= " << ys << " y_0= " << y_0 << " y_slope= " << y_slope << endl;
-        debug_mc << "x= " << x << " dx= " << dx << " ds= " << ds << endl;
-        debug_mc << "y= " << y << " dy= " << dy << " ds= " << ds << endl;
-        }
-
         
         // which pixel was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
         int imx=int((x+layerSize*0.5)/layerSize*float(pixelXN));
-       // if (debugBool){debug_off << (x+layerSize*0.5)/layerSize*float(pixelXN) << endl;}
         if (imx < 0 || imx >= pixelXN){ //[between (0,10]       
             continue;
         } 
         int imy=int((y+layerSize*0.5)/layerSize*float(pixelYN));
-        //if (debugBool){ debug_off << (y+layerSize*0.5)/layerSize*float(pixelYN) << endl;}
          if (imy < 0 || imy >= pixelYN){  //[between (0,5] 
             continue;
         }
@@ -154,7 +125,8 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
         line.x_mis.push_back(xl);
         line.y_mis.push_back(yl);
 
-        if (debugBool){debug_mc << "xl= " << xl << " yl= " << yl << " sdevX= " << sdevX[layer[i]-1][imy][imx] << " sdevY= " << sdevY[layer[i]-1][imy][imx] << endl;}
+        debug_mc << xl << " " << yl << " " << xs << " "  << ys << " " << dx << " " << dy << " " << x << " " << y << endl;  
+
        
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
@@ -162,28 +134,18 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
         // projection Y is always 0 for non-stero modules?? what is the motivation? 
         rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ rand_gaus *resolution; 
-        if (debugBool){debug_mc << "yhit = " << yhit << "rand_num= " << rand_gaus << " projectionY[i]= " << projectionY[i] << " projectionX[i]= " << projectionX[i] << " resolution= " << resolution << endl;}
         line.y_hits.push_back(yhit);
         line.hit_sigmas.push_back(resolution);
         line.hit_count++;
 
-        if (debugBool){ debug_off << xl << " " << xs << " " << projectionX[i] << " " << yl << " " << ys << " " << projectionY[i] << " " << rand_gaus << " " << resolution << " " << x << " " << sdevX[layer[i]-1][imy][imx] <<  endl;}
-
-       if (debugBool){
-               debug_calc << "xs= " << xs << "  ys= " << ys << "  x= " << x << "  y= " << y << endl;
-               debug_calc << "imx= " << imx << "  imy= " << imy << endl;
-               debug_calc << "ihit= " << ihit << "  xl= " << xl << "  yl= " << yl << "  xhit= " << distance[i]  << "  yhit= " << yhit << endl;
-               debug_calc << "sdevX[layer[i]-1][imy][imx]= " << sdevX[layer[i]-1][imy][imx] << " sdevY[layer[i]-1][imy][imx]= " << sdevY[layer[i]-1][imy][imx] << endl; 
-               debug_calc << "projectionX[i]= " << projectionX[i] << " projectionY[i]= " << projectionY[i] << endl; 
-               debug_calc << "nhits= " << line.hit_count << endl; 
-               debug_calc << endl; 
-            }      
+        if (debugBool){ 
+            debug_off << projectionX[i] << " " << projectionY[i] << " " << rand_gaus << " " << resolution << " " << sdevX[layer[i]-1][imy][imx] <<  endl;
+        } 
    
     }// end of looping over detector layers
-    if (debugBool){
-    debug_mc << "------------------------------------------------------------------------------" << endl; 
-    debug_mc << endl; 
-    }
+    
+     
+   
     return line; // Return data from simulated track
     
 } // end of genlin2

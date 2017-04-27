@@ -263,7 +263,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
                !WRITE(16,*) 'projectionX= ',spro(1,i),' projectionY= ',spro(2,i)
                !WRITE(16,*) ' '
                WRITE(16, 161) SQRT(1.0-stereo**2)
-            161 FORMAT(' ',1F16.7)
+            161 FORMAT(' ',1F16.9)
             END IF
         END IF
         s=s+diss
@@ -376,7 +376,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             sdevx(((i-1)*nmy+k)*nmx+ncx)=0.0      ! fix center modules at 0.
             IF (debug .EQ. 1) THEN
                 WRITE(19,191) sdevx(((i-1)*nmy+k)*nmx+ncx), i, k, ncx, ((i-1)*nmy+k)*nmx+ncx
-            191 FORMAT(' ', 1F16.7, 4I4)
+            191 FORMAT(' ', 1F16.9, 4I4)
             END IF
         END DO
         IF(.NOT.ex2) WRITE(lunt,*) 'Constraint  0.0'
@@ -478,7 +478,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
                     derlc(4), dergl(1), dergl(2), yhits(i), sigma(i), spro(1,lyr), xhits(i)
                !WRITE (12, *) dergl(2) 
             !201 FORMAT(' ', F12.8)
-            200 FORMAT(' ',4I8, 10F16.7)
+            200 FORMAT(' ',4I8, 10F16.9)
             END IF
             nthits=nthits+1  ! count hits
         END DO
@@ -573,6 +573,10 @@ SUBROUTINE genln2()
     INTEGER(mpi) :: gran
     INTEGER(mpi) :: uran
     REAL(mps) :: rannum
+    REAL(mps) :: rannum1
+    REAL(mps) :: rannum2
+    REAL(mps) :: rannum3
+    REAL(mps) :: rannum4
     REAL(mps) :: gausnum
     REAL(mps) :: ds
     REAL(mps) :: dx
@@ -601,33 +605,45 @@ SUBROUTINE genln2()
 
     !     track parameters
     
-    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
+    rannum1= ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
+    !rannum1 = AINT((rannum1*10000)/10000))
     IF (debug .EQ. 1) THEN
-        WRITE(18,*) "rannum= ",rannum,"uniform_ran_max=",uniform_ran_max,"two=",two
+        !WRITE(18,*) "rannum= ",rannum,"uniform_ran_max=",uniform_ran_max,"two=",two
     END IF
-    xnull=sizel*(rannum-0.5)   ! uniform vertex
+    xnull=sizel*(rannum1)   ! uniform vertex
+    !xnull = REAL(AINT(xnull*10000)/10000)
     IF (debug .EQ. 1) THEN
-        WRITE(18,*) "Rand= " ,rannum, "x0= ", xnull
+        !WRITE(18,*) "Rand= " ,rannum, "x0= ", xnull
     END IF
-    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
-    ynull=sizel*(rannum-0.5)   ! uniform vertex
+    rannum2 = ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
+    !rannum2 = AINT((rannum2*10000)/10000))
+    ynull=sizel*(rannum2)   ! uniform vertex
+    !ynull = REAL(AINT(ynull*10000)/10000)
     IF (debug .EQ. 1) THEN
-        WRITE(18,*) "Rand= " ,rannum, "y0= ", ynull
+        !WRITE(18,*) "Rand= " ,rannum, "y0= ", ynull
     END IF
-    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
-    xexit=sizel*(rannum-0.5)   ! uniform exit point
+    rannum3 = ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
+    !rannum3 = AINT((rannum3*10000)/10000))
+    xexit=sizel*(rannum3)   ! uniform exit point
+    !xexit = REAL(AINT(xexit*10000)/10000)
     IF (debug .EQ. 1) THEN
-        WRITE(18,*) "Rand= " ,rannum, "x1= ", xexit
+        !WRITE(18,*) "Rand= " ,rannum, "x1= ", xexit
     END IF
-    rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
-    yexit=sizel*(rannum-0.5)   ! uniform exit point
+    rannum4 = ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
+    !rannum4 = AINT((rannum4*10000)/10000))
+    yexit=sizel*(rannum4)   ! uniform exit point
+    !yexit = REAL(AINT(yexit*10000)/10000)
     IF (debug .EQ. 1) THEN
-        WRITE(18,*) "Rand= " ,rannum, "y1= ", yexit
+        !WRITE(18,*) "Rand= " ,rannum, "y1= ", yexit
     END IF
     xslop=(xexit-xnull)/sarc(nmlyr)
     yslop=(yexit-ynull)/sarc(nmlyr)
     IF (debug .EQ. 1) THEN
-        WRITE(18,*) "x_slope= " ,xslop, " y_slope= ", yslop, " distance[layerN-1]= ", sarc(nmlyr)
+        !WRITE(14,141) (rannum1), (rannum2), (rannum3), (rannum4)
+        WRITE(14,141) xnull, ynull , xexit, yexit , xslop, yslop, (rannum1), (rannum2), &
+                    (rannum3), (rannum4), sizel, sarc(nmlyr)
+        141 FORMAT(14F16.9)
+        !WRITE(18,*) "x_slope= " ,xslop, " y_slope= ", yslop, " distance[layerN-1]= ", sarc(nmlyr)
 
         WRITE(11,*) ' '
         WRITE(11,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
@@ -642,18 +658,14 @@ SUBROUTINE genln2()
     dy=yslop
     sold=0.0
 
-     IF (debug .EQ. 1) THEN
-         WRITE(18,*) "x= " , x , " dx= " , dx , " y= " , y , " dy= " , dy , " s_old= " , sold 
-        WRITE(18,*) ""
-     END IF
-    
+        
     IF (debug .EQ. 1) THEN
-                WRITE(14,*) ''
-                WRITE(14,*) '--------------------------------------------------------------------------'
-                WRITE(14,*) 'Track # (F)', nhits
-                WRITE(14,*) 'x_0= ',xnull, ' y_0= ',ynull , ' x_1= ',xexit, ' y_1= ',yexit , 'x_slope= ',xslop
-                WRITE(14,*) ' '
-                WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) '
+                !WRITE(14,*) ''
+                !WRITE(14,*) '--------------------------------------------------------------------------'
+                !WRITE(14,*) 'Track # (F)', nhits
+                !WRITE(14,*) 'x_0= ',xnull, ' y_0= ',ynull , ' x_1= ',xexit, ' y_1= ',yexit , 'x_slope= ',xslop
+                !WRITE(14,*) ' '
+                !WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) '
                             
     END IF
 
@@ -670,17 +682,17 @@ SUBROUTINE genln2()
         gausnum = Rone * gran() / gaussian_ran_stdev
         dx=dx+gausnum*the0
         IF (debug .EQ. 1) THEN
-            WRITE(18,*) "Rand= ",gausnum," dx= ",dx," scatterError= ",the0 
+            !WRITE(18,*) "Rand= ",gausnum," dx= ",dx," scatterError= ",the0 
         END IF
         gausnum = Rone * gran() / gaussian_ran_stdev
         dy=dy+gausnum*the0
         IF (debug .EQ. 1) THEN
-            WRITE(18,*) "Rand= " , gausnum , " dy= " , dy , " scatterError= " , the0 
-            WRITE(18,*)  "ds= " , ds , " distance[i]= " , " s_old= " , sold 
-            WRITE(18,*)  "xs= " , xs , " x_0= " ,xnull ," x_slope= " , xslop
-            WRITE(18,*)  "ys= " , ys , " y_0= " , ynull , " y_slope= " , yslop 
-            WRITE(18,*)  "x= " , x , " dx= " , dx ," ds= " ,ds 
-            WRITE(18,*)  "y= " , y ," dy= " , dy , " ds= " , ds
+            ! WRITE(18,*) "Rand= " , gausnum , " dy= " , dy , " scatterError= " , the0 
+            ! WRITE(18,*)  "ds= " , ds , " distance[i]= " , " s_old= " , sold 
+            ! WRITE(18,*)  "xs= " , xs , " x_0= " ,xnull ," x_slope= " , xslop
+            ! WRITE(18,*)  "ys= " , ys , " y_0= " , ynull , " y_slope= " , yslop 
+            ! WRITE(18,*)  "x= " , x , " dx= " , dx ," ds= " ,ds 
+            ! WRITE(18,*)  "y= " , y ," dy= " , dy , " ds= " , ds
         END IF
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
@@ -708,26 +720,29 @@ SUBROUTINE genln2()
         gausnum = Rone * gran() / gaussian_ran_stdev
         yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gausnum*ssig(i)
         IF (debug .EQ. 1) THEN
-             WRITE(17, 171) xl, xs, spro(1,i), yl, ys, spro(2,i), gausnum, ssig(i), x, sdevx(ioff)
-        171 FORMAT(' ', 10F16.7)
-            WRITE(18,*) "yhit = " , yhits(nhits) , "rand_num= " , gausnum , &
-         " projectionY[i]= " , spro(2,i) , " projectionX[i]= " , spro(1,i), " resolution= ", ssig(i)
+             WRITE(17, 171) spro(1,i), spro(2,i), gausnum, ssig(i), sdevx(ioff)
+        171 FORMAT(' ', 10F16.9)
+            !WRITE(18,*) "yhit = " , yhits(nhits) , "rand_num= " , gausnum , &
+        ! " projectionY[i]= " , spro(2,i) , " projectionX[i]= " , spro(1,i), " resolution= ", ssig(i)
         END IF
         sigma(nhits)=ssig(i)
-
+        WRITE(18,181) xl, yl, xs, ys, dx, dy, x, y
+    181 FORMAT(' ', 8F14.9)
         IF (debug .EQ. 1) THEN
-                WRITE(14,*) 'xs= ',xs,' ys= ',ys,' x= ',x ,' y= ',y
-                WRITE(14,*) 'imx= ',imx,'imy= ',imy,' ioff= ',ioff
-                WRITE(14,*) 'ihit= ',ihit, ' xl= ' ,xl, ' yl= ' ,yl, ' xhits= ',xhits(nhits), 'yhits= ' ,yhits(nhits)
-                WRITE(14,*) 'sdevx(ioff)= ',sdevx(ioff),' sdevy(ioff)= ',sdevy(ioff) 
-                WRITE(14,*) 'spro(1,i)= ',spro(1,i), ' spro(2,i)= ',spro(2,i)  
-                WRITE(14,*) ' '    
+             !   WRITE(14,141) xnull, ynull , xexit, yexit , xslop, yslop, xs, ys, x, y, xl, yl, (rannum1-0.5), (rannum2-0.5), &
+             !       (rannum3-0.5), (rannum4-0.5), sizel, sarc(nmlyr)
+            !141 FORMAT(18F16.6)
+                !WRITE(14,*) 'imx= ',imx,'imy= ',imy,' ioff= ',ioff
+                !WRITE(14,*) 'ihit= ',ihit, ' xl= ' ,xl, ' yl= ' ,yl, ' xhits= ',xhits(nhits), 'yhits= ' ,yhits(nhits)
+                !WRITE(14,*) 'sdevx(ioff)= ',sdevx(ioff),' sdevy(ioff)= ',sdevy(ioff) 
+                !WRITE(14,*) 'spro(1,i)= ',spro(1,i), ' spro(2,i)= ',spro(2,i)  
+                !WRITE(14,*) ' '    
         END IF
             
         IF(debug .EQ. 1) THEN
             WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits) 
-            WRITE(18,*) "--------------------------------------------------"
-            WRITE(18,*) "" 
+            !WRITE(18,*) "--------------------------------------------------"
+            !WRITE(18,*) "" 
         END IF
     END DO
     

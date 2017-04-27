@@ -97,7 +97,7 @@ int main(int argc, char* argv[]){
         catch (ios_base::failure& e)  {
            Logger::Instance()->write(Logger::ERROR, "Filestream exception caught: " + string(e.what()) + "\nPlease ensure valid filenames are specified!");
         }
-    }
+    } 
 
     //this is passed to Detector functions, with debug file names
     if (compareStr=="d"){
@@ -105,10 +105,10 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE");
     }
     else{
-    debugBool = false; // print out to debug files
+    debugBool = false; // print out to debug files 
     }
 
-    
+     
     
     Logger::Instance()->setUseColor(false); // will be reabled below
     // Millepede courtesy of John 
@@ -198,17 +198,17 @@ int main(int argc, char* argv[]){
     ofstream debug_mc(MC_debugFileName);
     ofstream debug_con(con_debugFileName);
 
-    std::cout << std::fixed << std::setprecision(7); 
-    debug << std::fixed << std::setprecision(7); 
-    debug_mp2 << std::fixed << std::setprecision(7); 
-    debug_tmp << std::fixed << std::setprecision(7); 
-    debug_calc << std::fixed << std::setprecision(7); 
-    debug_mis << std::fixed << std::setprecision(7); 
-    debug_geom << std::fixed << std::setprecision(7); 
-    debug_off << std::fixed << std::setprecision(7); 
-    debug_hits_only << std::fixed << std::setprecision(7); 
-    debug_mc << std::fixed << std::setprecision(7); 
-    debug_con << std::fixed << std::setprecision(7); 
+    std::cout << std::fixed << std::setprecision(9); 
+    debug << std::fixed << std::setprecision(9); 
+    debug_mp2 << std::fixed << std::setprecision(9); 
+    debug_tmp << std::fixed << std::setprecision(9); 
+    debug_calc << std::fixed << std::setprecision(9); 
+    debug_mis << std::fixed << std::setprecision(9); 
+    debug_geom << std::fixed << std::setprecision(9); 
+    debug_off << std::fixed << std::setprecision(9); 
+    debug_hits_only << std::fixed << std::setprecision(9); 
+    debug_mc << std::fixed << std::setprecision(9); 
+    debug_con << std::fixed << std::setprecision(9); 
    
     // GEOMETRY
     Detector::instance()->setGeometry(debug_geom, debugBool);
@@ -341,7 +341,7 @@ int main(int argc, char* argv[]){
                       
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
-            // For debugging
+             // For debugging
             if (debugBool){
                 //debug_proj << Detector::instance()->getProjectionX()[lyr] << " " << generated_line.x_hits[i] << endl; 
                 //debug_mp2 << endl; 
