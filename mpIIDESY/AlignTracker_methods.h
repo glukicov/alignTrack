@@ -41,7 +41,7 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=2000; /** Number of tracks (i.e. records) to be simulated passing through detector */
+	static const int trackCount=15000; /** Number of tracks (i.e. records) to be simulated passing through detector */
  
 	///initialising physics variables
 	static const int detectorN = 10; //number of detector layers [independent layers]
@@ -91,7 +91,7 @@ class Tracker {
 
 	void misalign(std::ofstream&, bool); // MC misalignment of detectors 
 		
-    void write_constraint_file(std::ofstream&); // Writes a constraint file for use with PEDE. 
+    void write_constraint_file(std::ofstream&, std::ofstream&, bool);  // Writes a constraint file for use with PEDE. 
 
 	void set_uniform_file(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
 

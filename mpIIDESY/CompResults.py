@@ -24,7 +24,7 @@ with open("../C_mpIIDESY/millepede.res") as f:
         C_results.append(number_str[1])
         C_errors.append(number_str[len(number_str)-1])
    
-with open("../F_mpIIDESY/millepede.res") as f:
+with open("millepede.res") as f:
     next(f)
     for line in f:  
         number_str = line.split()
