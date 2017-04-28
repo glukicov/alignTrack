@@ -1,30 +1,57 @@
 # alignTrack
 
-### Welcome to this collaborative repo for UCL g-2 team! ###
+### Welcome to this collaborative repo for UCL g-2 Tracker team! ###
 
-The file mp2tst.bin [default binary file] is produced by mptest2.f90 [lines 98, 354- 381]. 
+### DIR Structure ###
+mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
+C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
+C_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
+PEDEv04-03-04/ - clean pede (most recent) checkout from DESY
+python_toy_tracker/ - John's python code for toy tracker (with correct geometry)
 
-Here are the instructions to get the code on working on DAQ1: 
+### INSTALLATION ###
+Here are the instructions to get the code on working on gm2ucl at Fermilab: 
 
-0. `scl enable devtoolset-3 python27 bash`
 1.  `git clone https://github.com/glukicov/alignTrack.git`
 to get the latest code from our repository 
 2. `cd alignTrack/mpIIDESY`
 3. `make`
 to build the pede executable 
 4. test that it works by `pede -t`
-(should give a terminal output [last 2 lines]:
+(should give a terminal output [last 2 lines]):
  Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
  Peak dynamic memory allocation:    0.100512 GB
-5. To check the binary file do `python readMilleBinary.py "FILENAME" "N of line"`
-e.g. `python readMilleBinary.py test.bin -1` [reads our binary for all lines] 
-e.g. `python readMilleBinary.py mp2tst.bin 2` [reads default binary for 2 lines] 
+ 
+To run PEDE algorithm in general case:
+` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
 
-#### Random Number Generation ####
-Plaintext files of random numbers must be generated in order to run the C++ port of *Test 1*, and modified versions of the Fortran original. This allows random number seeding to be controlled, and for the outputs of the C++ and Fortran code to be compared. A Python script is supplied to generate these random numbers. One file of random numbers must be uniformly distributed between 0 and 1, and the other must consist of normally distributed random numbers, with a mean of 0 and a standard deviation of 1. The script is used as follows:
+#### Random (Integer) Number Generation ####
    * `python randomIntGenerator.py -u True -o uniform_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
    * `python randomIntGenerator.py -g True -o gaussian_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
-Please note that the output filenames shown are the default random number files for the modified Fortran version of *Test 1*. Random numbers are generated using Python's built-in *Marsenne Twister* generator. The seeds used for uniform and gaussian random numbers should be different. Generally, ~5,000,000 random numbers in each file seems to be more than enough for the default *Test 1*.  
+Please note that the output filenames shown are the default random number files for the modified Fortran version of *Test 1/2*, and C++ MC. Random numbers are generated using Python's built-in *Marsenne Twister* generator. Generally, ~5,000,000 random numbers in each file seems to be more than enough for the default *Test 1/2*, and C++ MC. 
+
+ 1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s 123456789 -n 5000000`
+ 
+ 2. * `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n 5000000`
+ 
+#### Running C++ version of mptest2.f90: ####
+1. Compile code with `make -f MakeMp2test.mk`
+2. Generate data by running `./Mptest2`. This generates:
+   * `C_Mp2tst.bin`, `C_Mp2con.txt`, `C_Mp2str.txt`
+3. Fit data by running `./pede C_Mp2str.txt`.
+
+### Producing PEDE Histograms ### 
+1. ` root -l `
+2. root [0]  ` .L readPedeHists.C+`
+3. root [1] ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
+4. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
+
+
+### To run PEDE algorithm for Fortran version of Mptest2 ###
+1. ` ./pede -t=track-model`
+where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
+
+e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
 
 
 #### Running C++ Port of Test 1 ####
@@ -68,36 +95,3 @@ Weak modes of alignment (overall detector shifts, shears *etc.*) may be examined
 4. Run script using `python eigenSpectrumAnalysis.py -i <eigenvector_file> -o <output_directory>`
 
 This script will plot the eigenspectrum for the matrix, showing the eigenvalue associated to each eigenvector. It will also plot values for each alignment parameter in each eigenvector, showing plane displacements and drift velocity deviations separately. All plots are output as `.pdf` files in the specified directory. Eigenvectors with low eigenvalues correspond to weak modes of alignment. Applying proper constraints should suppress these weak modes.
-
-#### Running C++ version of mptest2.f90: ####
-1. Compile code with `make -f MakeMp2test.mk`
-2. Generate data by running `./Mptest2`. This generates:
-   * `Mp2tst.bin`, `Mp2con.txt`, `Mp2str.txt`
-3. Fit data by running `./pede Mp2str.txt`.
-
-
-#### To run PEDE algorithm in general ####
-1.  ` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
-
-### Reading Pede Histograms ### 
-1. ` root -l `
-2. root [0]  ` .L readPedeHists.C+`
-3. root [1] ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
-4. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
-
-
-### To run PEDE algorithm for Fortran version of Mptest2 ###
-1. ` ./pede -t=track-model`
-where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
-
-e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
-
-### Generating Random Numbers ###
-1. ` python randomGenerator.py -g True`  [Gaussian (mean=0, std=1)]
-2. ` python randomGenerator.py -g True` [Uniform (0,1)]
-
-### Reading Pede Histograms ### 
-1. ` root -l `
-2. ` root [0] .L readPedeHists.C+`
-3. ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
-4. ` root [1] readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
