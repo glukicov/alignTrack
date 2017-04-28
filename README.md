@@ -3,11 +3,11 @@
 ### Welcome to this collaborative repo for UCL g-2 Tracker team! ###
 
 ### DIR Structure ###
-mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
-C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
-C_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
-PEDEv04-03-04/ - clean pede (most recent) checkout from DESY
-python_toy_tracker/ - John's python code for toy tracker (with correct geometry)
+1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
+2. C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
+3. C_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
+4. PEDEv04-03-04/ - clean pede (most recent) checkout from DESY
+5. python_toy_tracker/ - John's python code for toy tracker (with correct geometry)
 
 ### INSTALLATION ###
 Here are the instructions to get the code on working on gm2ucl at Fermilab: 
