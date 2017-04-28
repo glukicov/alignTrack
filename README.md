@@ -10,7 +10,7 @@
 5. python_toy_tracker/ - John's python code for toy tracker (with correct geometry)
 
 ### INSTALLATION ###
-Here are the instructions to get the code on working on gm2ucl at Fermilab: 
+Here are the instructions to get the code (requires c++0x compiler suport for Logger) on working on gm2ucl at Fermilab: 
 
 1.  `git clone https://github.com/glukicov/alignTrack.git`
 to get the latest code from our repository 
