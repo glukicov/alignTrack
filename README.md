@@ -32,12 +32,23 @@ Please note that the output filenames shown are the default random number files 
 
  1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s 123456789 -n 5000000`
  
- 2. * `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n 5000000`
+ 2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n 5000000`
+ 
+#### Running C++ MC AlignTracker: ####
+1. Compile code with `make -f AlignTracker.mk` [supports ROOT5, Logger from gm2trackedaq, and RandomNumberBuffer]
+[`make -f AlignTracker.mk clean` - also removes previusly generated data, steering and constrain files - can be useful]
+2. Generate data by running `./AlignTracker n` for normal or `./AlignTracker d` for debug/verbose output. Both generate:
+   * `Tracker_data.bin`, `Tracker_con.txt`, `Tracker_str.txt`
+   [data, constrains, and steering files]
+3. Fit data by running `./pede Tracker_str.txt`.
+
+ 
  
 #### Running C++ version of mptest2.f90: ####
 1. Compile code with `make -f MakeMp2test.mk`
-2. Generate data by running `./Mptest2`. This generates:
+2. Generate data by running `./Mptest2 n [or d]`. This generates:
    * `C_Mp2tst.bin`, `C_Mp2con.txt`, `C_Mp2str.txt`
+   [data, constrains, and steering files]
 3. Fit data by running `./pede C_Mp2str.txt`.
 
 ### Producing PEDE Histograms ### 
