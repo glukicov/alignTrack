@@ -9,8 +9,8 @@
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2012-03-16  Time: 11:08:55 
 
-!> \file
-!! MC for simple 10 layer silicon strip tracker.
+!> \file 
+!! MC for simple 10 layer silicon strip tracker. 
 !!
 !! \author Claus Kleinwort, DESY, 2009
 
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]){
         catch (ios_base::failure& e)  {
            Logger::Instance()->write(Logger::ERROR, "Filestream exception caught: " + string(e.what()) + "\nPlease ensure valid filenames are specified!");
         }
-    }
+    } 
 
     //this is passed to Detector functions, with debug file names
     if (compareStr=="d"){
@@ -105,10 +105,10 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE");
     }
     else{
-    debugBool = false; // print out to debug files
+    debugBool = false; // print out to debug files 
     }
 
-    
+     
     
     Logger::Instance()->setUseColor(false); // will be reabled below
     // Millepede courtesy of John 
@@ -166,7 +166,8 @@ int main(int argc, char* argv[]){
     string geom_debugFileName = "C_Mp2debug_geom.txt";  //
     string off_debugFileName = "C_Mp2debug_off.txt";  //
     string hitsOnly_debugFileName = "C_Mp2debug_hitsOnly.txt";
-    string MC_debugFileName = "C_Mp2debug_MC.txt";
+    string MC_debugFileName = "C_Mp2debug_MC.txt"; 
+    string con_debugFileName = "C_Mp2debug_con.txt"; 
     
     // TODO TTree -> seperate Macro for plotting [see Mark's suggested code: check correct motivationimplmenation for future] 
     //output ROOT file
@@ -181,7 +182,7 @@ int main(int argc, char* argv[]){
     
    // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-    cout << "Generating test data for Mp II.." << endl;
+    
    
     // fstreams for str and cons files 
     ofstream constraint_file(conFileName);
@@ -194,18 +195,20 @@ int main(int argc, char* argv[]){
     ofstream debug_geom(geom_debugFileName);
     ofstream debug_off(off_debugFileName);
     ofstream debug_hits_only(hitsOnly_debugFileName);
-    ofstream debug_mc(MC_debugFileName); 
+    ofstream debug_mc(MC_debugFileName);
+    ofstream debug_con(con_debugFileName);
 
-    std::cout << std::setprecision(7) << std::scientific;
-    debug << std::setprecision(7)<< std::scientific;
-    debug_mp2 << std::setprecision(7)<< std::scientific;
-    debug_tmp << std::setprecision(7)<< std::scientific;
-    debug_calc << std::setprecision(7);
-    debug_mis << std::setprecision(7)<< std::scientific;
-    debug_geom << std::setprecision(7)<< std::scientific;
-    debug_off << std::setprecision(8); 
-    debug_hits_only << std::setprecision(7)<< std::scientific;
-    debug_mc << std::setprecision(8)<< std::scientific; 
+    std::cout << std::fixed << std::setprecision(9); 
+    debug << std::fixed << std::setprecision(9); 
+    debug_mp2 << std::fixed << std::setprecision(9); 
+    debug_tmp << std::fixed << std::setprecision(9); 
+    debug_calc << std::fixed << std::setprecision(9); 
+    debug_mis << std::fixed << std::setprecision(9); 
+    debug_geom << std::fixed << std::setprecision(9); 
+    debug_off << std::fixed << std::setprecision(9); 
+    debug_hits_only << std::fixed << std::setprecision(9); 
+    debug_mc << std::fixed << std::setprecision(9); 
+    debug_con << std::fixed << std::setprecision(9); 
    
     // GEOMETRY
     Detector::instance()->setGeometry(debug_geom, debugBool);
@@ -216,7 +219,7 @@ int main(int argc, char* argv[]){
     Detector::instance()->misalign(debug_mis, debugBool); 
 
     // Write constraint file, for use with pede TODO fix this 
-    Detector::instance()->write_constraint_file(constraint_file);
+    Detector::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
 
     //Now writing steering and constraint files
     if(steering_file.is_open()){
@@ -264,6 +267,7 @@ int main(int argc, char* argv[]){
     
     float scatterError; // multiple scattering error
 
+    cout << "Generating test data for Mp II..." << endl;
     //Generating particles with energies: 10..100 Gev
        //for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
     for (int icount=0; icount<Detector::instance()->getTrackCount(); icount++){
@@ -277,11 +281,11 @@ int main(int argc, char* argv[]){
         LineData generated_line = Detector::instance()->genlin2(scatterError, debug_calc, debug_off, debug_mc, debugBool);
         if (debugBool){
             debug << endl; 
-            debug_mp2 << endl; 
+            //debug_mp2 << endl; 
             debug << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-            debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
+            //debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
             debug << "Track # (C)        " << icount+1 << endl;
-            debug_mp2 << "Track # (C)        " << icount+1 << endl;
+            //debug_mp2 << "Track # (C)        " << icount+1 << endl;
             
         }
         for (int i=0; i<generated_line.hit_count; i++){
@@ -294,15 +298,15 @@ int main(int argc, char* argv[]){
                 //debug_tmp << "lyr= " << lyr << "  im= " << im << " Module with hit: "  << generated_line.i_hits[i] << endl; 
                 //debug_tmp << endl; 
             }
-            
+             
             const int nalc = 4; 
             const int nagl = 2;  
             
             //Local derivatives
             float dlc1=Detector::instance()->getProjectionX()[lyr];
             float dlc2=Detector::instance()->getProjectionY()[lyr];
-            float dlc3=generated_line.x_hits[i]*Detector::instance()->getProjectionX()[lyr];
-            float dlc4=generated_line.x_hits[i]*Detector::instance()->getProjectionY()[lyr];  
+            float dlc3=float(generated_line.x_hits[i])*Detector::instance()->getProjectionX()[lyr];
+            float dlc4=float(generated_line.x_hits[i])*Detector::instance()->getProjectionY()[lyr];  
             float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
             //Global derivatives
             float dgl1 = Detector::instance()->getProjectionX()[lyr];
@@ -337,16 +341,19 @@ int main(int argc, char* argv[]){
                       
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
-            // For debugging
+             // For debugging
             if (debugBool){
-                debug_mp2 << endl; 
-                debug_mp2 << " LC #:              " << nalc << "          LC1 :     " << derlc[0] << "        LC2 :  " << derlc[1] << "       LC3 :    " << derlc[2] << "   LC4 :     " << derlc[3] << endl
-                          << " GL #:              " << nagl << "          GL1 :     " << dergl[0] << "       GL2 :  " << dergl[1] << endl
-                          << " LB1 :              " << label[0] << "         LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
+                //debug_proj << Detector::instance()->getProjectionX()[lyr] << " " << generated_line.x_hits[i] << endl; 
                 //debug_mp2 << endl; 
+                //debug_mp2 << " LC #:              " << nalc << "          LC1 :     " << derlc[0] << "        LC2 :  " << derlc[1] << "       LC3 :    " << derlc[2] << "   LC4 :     " << derlc[3] << endl
+                //          << " GL #:              " << nagl << "          GL1 :     " << dergl[0] << "       GL2 :  " << dergl[1] << endl
+                //          << " LB1 :              " << label[0] << "         LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
+                //debug_mp2 << endl; 
+                debug_mp2 <<nalc << " " <<nagl<< " "  <<label[0]<< " " <<label[1]<< " " << derlc[0]<< " " <<derlc[1]<< " " <<derlc[2]<< " " <<derlc[3]<< " " << dergl[0]<< " " <<dergl[1]<< " " <<rMeas_mp2 << " "<<sigma_mp2 << " " << Detector::instance()->getProjectionX()[lyr] << " " << generated_line.x_hits[i] << endl; 
+                //debug_mp2 << rMeas_mp2 << endl;
             }
 
-            if (debugBool) {
+            if (debugBool) { 
                 
                             debug<< "nhits: " << generated_line.hit_count << endl
                                  <<  "Hit #: " << i+1 << endl
@@ -393,6 +400,9 @@ int main(int argc, char* argv[]){
 
     cout << "Normal Randoms were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
     cout << "Gaussian Randoms were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
+    cout << "Min " << RandomBuffer::instance()->get_uniform_ran_max() <<endl;
+    cout << "Max " << RandomBuffer::instance()->get_uniform_ran_min() <<endl;
+    cout << "Std " << RandomBuffer::instance()->get_gaussian_ran_stdev() <<endl;
 
     // Close text files
     constraint_file.close();

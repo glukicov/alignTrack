@@ -86,7 +86,7 @@ class Detector {
 
 	void misalign(std::ofstream&, bool); // MC misalignment of detecors 
 		
-    void write_constraint_file(std::ofstream&); // Writes a constraint file to the provided file stream, for use with pede. 
+    void write_constraint_file(std::ofstream&, std::ofstream&, bool); // Writes a constraint file to the provided file stream, for use with pede. 
 
 	void set_uniform_file(std::string); // Set filename for uniform random numbers
 
