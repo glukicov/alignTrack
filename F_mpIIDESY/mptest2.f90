@@ -389,8 +389,8 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     !     record loop ------------------------------------------------------
 
-    !ncount=15000
-    ncount=2000
+    ncount=15000
+    !ncount=2000
     nthits=0
     nrecds=0
 
@@ -473,12 +473,15 @@ SUBROUTINE mptst2(imodel)         ! generate test files
                 !    derlc(3) , ' LC4 : ' , derlc(4)
                 !WRITE(12,*) ' GL #: ' , 2 , ' GL1 : ' , dergl(1) , ' GL2 : ' , dergl(2) 
                 !WRITE(12,*) ' LB1 : ' , label(1) , ' LB2 : ' , label(2)     ,     '     Y Hit: ' , yhits(i) ,   &   
-                !    '   Sigma : ' ,sigma(i) 
-                WRITE(12,200) nalc, 2, label(1)  ,  label(2) ,  derlc(1), derlc(2), derlc(3), & 
+                !   '   Sigma : ' ,sigma(i)
+                !WRITE(12, 200) yhits(i)
+            !200 FORMAT(' ', 1F16.9) 
+                WRITE(12,200) nalc, 2, label(1),  label(2) ,  derlc(1), derlc(2), derlc(3), & 
                     derlc(4), dergl(1), dergl(2), yhits(i), sigma(i), spro(1,lyr), xhits(i)
                !WRITE (12, *) dergl(2) 
             !201 FORMAT(' ', F12.8)
             200 FORMAT(' ',4I8, 10F16.9)
+
             END IF
             nthits=nthits+1  ! count hits
         END DO
@@ -641,8 +644,10 @@ SUBROUTINE genln2()
     IF (debug .EQ. 1) THEN
         !WRITE(14,141) (rannum1), (rannum2), (rannum3), (rannum4)
         WRITE(14,141) xnull, ynull , xexit, yexit , xslop, yslop, (rannum1), (rannum2), &
-                    (rannum3), (rannum4), sizel, sarc(nmlyr)
-        141 FORMAT(14F16.9)
+                   (rannum3), (rannum4), sizel, sarc(nmlyr)
+    141 FORMAT(14F16.9)
+        !WRITE(14, 141) rannum4
+    !141 FORMAT(' ', 1F16.9)
         !WRITE(18,*) "x_slope= " ,xslop, " y_slope= ", yslop, " distance[layerN-1]= ", sarc(nmlyr)
 
         WRITE(11,*) ' '
@@ -658,16 +663,6 @@ SUBROUTINE genln2()
     dy=yslop
     sold=0.0
 
-        
-    IF (debug .EQ. 1) THEN
-                !WRITE(14,*) ''
-                !WRITE(14,*) '--------------------------------------------------------------------------'
-                !WRITE(14,*) 'Track # (F)', nhits
-                !WRITE(14,*) 'x_0= ',xnull, ' y_0= ',ynull , ' x_1= ',xexit, ' y_1= ',yexit , 'x_slope= ',xslop
-                !WRITE(14,*) ' '
-                !WRITE(11,*) 'nhits' , ' i ' , ' ihit ' , ' x ' , ' y ' , ' xhits(nhits) '
-                            
-    END IF
 
     DO  i=1,nmlyr
         ds=sarc(i)-sold
@@ -681,31 +676,16 @@ SUBROUTINE genln2()
         !      multiple scattering
         gausnum = Rone * gran() / gaussian_ran_stdev
         dx=dx+gausnum*the0
-        IF (debug .EQ. 1) THEN
-            !WRITE(18,*) "Rand= ",gausnum," dx= ",dx," scatterError= ",the0 
-        END IF
         gausnum = Rone * gran() / gaussian_ran_stdev
         dy=dy+gausnum*the0
-        IF (debug .EQ. 1) THEN
-            ! WRITE(18,*) "Rand= " , gausnum , " dy= " , dy , " scatterError= " , the0 
-            ! WRITE(18,*)  "ds= " , ds , " distance[i]= " , " s_old= " , sold 
-            ! WRITE(18,*)  "xs= " , xs , " x_0= " ,xnull ," x_slope= " , xslop
-            ! WRITE(18,*)  "ys= " , ys , " y_0= " , ynull , " y_slope= " , yslop 
-            ! WRITE(18,*)  "x= " , x , " dx= " , dx ," ds= " ,ds 
-            ! WRITE(18,*)  "y= " , y ," dy= " , dy , " ds= " , ds
-        END IF
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
-        IF (debug .EQ. 1) THEN
-            !WRITE(17, *) (x+sizel*0.5)/sizel*REAL(nmx)
-        END IF
+        
         IF (imx < 0.OR.imx >= nmx) THEN
             CYCLE
         END IF
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
-        IF (debug .EQ. 1) THEN
-           ! WRITE(17, *) (y+sizel*0.5)/sizel*REAL(nmy)
-        END IF
+        
         IF (imy < 0.OR.imy >= nmy) THEN 
             CYCLE
         END IF

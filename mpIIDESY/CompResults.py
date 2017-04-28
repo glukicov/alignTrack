@@ -75,7 +75,7 @@ else:
 
 # Make a root file 
 f = TFile('TProfile.root','RECREATE')
-h_res  = TH1F("h_res", "C-F alignment results [cm]", 100, -0.000002, 0.000002)
+h_res  = TH1F("h_res", "C-F alignment results [cm]", 100, -0.0000002, 0.0000002)
  
 for item in CF_diff_results: 
     h_res.Fill(item)

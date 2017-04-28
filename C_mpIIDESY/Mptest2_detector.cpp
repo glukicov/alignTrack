@@ -53,21 +53,18 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
     line.hit_count = 0;
 
     float rand_num, rand_num1, rand_num2, rand_num3, rand_num4;
+    //float rand_num4 = 0;
     float rand_gaus;
 
     // Track parameters for rand-generated line MC 
-    rand_num1 = (( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
-    rand_num1 -= 0.5;
+    rand_num1 = (( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
     float x_0 = layerSize * (rand_num1); //uniform vertex
-    rand_num2 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
-    rand_num2 -= 0.5;
+    rand_num2 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
     float y_0 = layerSize * (rand_num2); //uniform vertex
-    rand_num3 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
-    rand_num3 -= 0.5;
+    rand_num3 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
     float x_1 = layerSize * (rand_num3); //uniform exit point: so fitting a line to these two points
-    rand_num4 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())); //- 0.5;
-    float extraRand = rand_num4;
-    float y_1 = layerSize * (extraRand - 0.5); //uniform exit point:
+    rand_num4 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())) - 0.5;
+    float y_1 = layerSize * (rand_num4); //uniform exit point:
     float x_slope=(x_1-x_0)/distance[layerN-1];
     float y_slope=(y_1-y_0)/distance[layerN-1];
     
@@ -80,6 +77,7 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
 
     if (debugBool){
         debug_calc << x_0<< "  " << y_0 << " " << x_1<< " " << y_1 <<" " << x_slope<< " "<< y_slope << "  " << (rand_num1) << " " << (rand_num2) << " " << (rand_num3) << " " << (rand_num4) << " " << layerSize << " " << distance[layerN-1] << endl;
+        //debug_calc << rand_num4;
     }
 
     
@@ -125,8 +123,10 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
         line.x_mis.push_back(xl);
         line.y_mis.push_back(yl);
 
+        if (debugBool){ 
         debug_mc << xl << " " << yl << " " << xs << " "  << ys << " " << dx << " " << dy << " " << x << " " << y << endl;  
-
+        
+        }
        
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
@@ -140,6 +140,7 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
 
         if (debugBool){ 
             debug_off << projectionX[i] << " " << projectionY[i] << " " << rand_gaus << " " << resolution << " " << sdevX[layer[i]-1][imy][imx] <<  endl;
+            
         } 
    
     }// end of looping over detector layers

@@ -166,8 +166,8 @@ int main(int argc, char* argv[]){
     string geom_debugFileName = "C_Mp2debug_geom.txt";  //
     string off_debugFileName = "C_Mp2debug_off.txt";  //
     string hitsOnly_debugFileName = "C_Mp2debug_hitsOnly.txt";
-    string MC_debugFileName = "C_Mp2debug_MC.txt";
-    string con_debugFileName = "C_Mp2debug_con.txt";
+    string MC_debugFileName = "C_Mp2debug_MC.txt"; 
+    string con_debugFileName = "C_Mp2debug_con.txt"; 
     
     // TODO TTree -> seperate Macro for plotting [see Mark's suggested code: check correct motivationimplmenation for future] 
     //output ROOT file
@@ -350,7 +350,7 @@ int main(int argc, char* argv[]){
                 //          << " LB1 :              " << label[0] << "         LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
                 //debug_mp2 << endl; 
                 debug_mp2 <<nalc << " " <<nagl<< " "  <<label[0]<< " " <<label[1]<< " " << derlc[0]<< " " <<derlc[1]<< " " <<derlc[2]<< " " <<derlc[3]<< " " << dergl[0]<< " " <<dergl[1]<< " " <<rMeas_mp2 << " "<<sigma_mp2 << " " << Detector::instance()->getProjectionX()[lyr] << " " << generated_line.x_hits[i] << endl; 
-                //debug_mp2 << dergl[0] << endl;
+                //debug_mp2 << rMeas_mp2 << endl;
             }
 
             if (debugBool) { 
