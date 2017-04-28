@@ -37,4 +37,4 @@ test:
 	@echo $(ROOTCFLAGS)
 
 clean :
-	-rm -f ${PROGNAME} ${OBJECTS}
+	-rm -f ${PROGNAME} ${OBJECTS} C_Mp2tst.bin C_Mp2str.txt C_Mp2con.txt
