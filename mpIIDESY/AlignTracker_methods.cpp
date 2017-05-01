@@ -1,24 +1,20 @@
 /*
-
 This source file contains definitions of various functions in the method class. 
-
 */  
 
 #include "AlignTracker_methods.h"
 
 using namespace std;
 
-// Set up empty pointer for instance of class.
+// Set up empty pointer for instance of the class.
 Tracker* Tracker::s_instance = NULL; 
 
 /** 
-    Empty constructor for detector class.
+Empty constructor for detector class.
  */
 Tracker::Tracker() {
   //XXX non-static variables definition here 
-
     resolution=0.002;  // 20um = 0.002 cm setting this in the constructor //TODO decide if this is a constant 
-
 }
 
 /** 
@@ -47,9 +43,9 @@ Tracker* Tracker::instance() {
 */
 LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, bool debugBool) {
   
-    // Set up new container for track data, with hit count set to zero`
+    // Set up new container for track data, with hit count set to zero
     LineData line;
-    line.hit_count = 0;
+    line.hit_count = 0; //count only counts through detector
 
     float rand_num1, rand_num2, rand_num3, rand_num4;
     float rand_gaus;
@@ -73,7 +69,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     float s_old = 0.0;  // previous position in "z"
    
     for(int i=0; i<layerN; i++){
-        //distance between cons. layers 
+        //distance between consecutive layers 
         float ds = distance[i] - s_old;
         s_old = distance[i];
 
@@ -118,7 +114,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
-        // projection Y is always 0 for non-stero modules?? what is the motivation? 
+        // projection Y is always 0 for non-stereo modules?? what is the motivation? 
         rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ rand_gaus *resolution; 
         line.y_hits.push_back(yhit);
@@ -130,7 +126,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     
 } // end of MC
 
-//Geometry of detecor arrangement 
+//Geometry of detector arrangement 
 void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
     float s=startingDistancePlane1;
     int i_counter = 0;
@@ -138,13 +134,11 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
 
     // Geometry of detecor arrangement 
     for (int layer_i=1; layer_i<=10; layer_i++){
-        
         layer.push_back(layer_i);  // layer [starting from 1st layer]
         distance.push_back(s);  //distance between planes  [14]
         resolutionLayer.push_back(resolution); //resolution
         projectionX.push_back(float(1.0));  // x
         projectionY.push_back(float(0.0));  // y
-        
         i_counter++; 
         //taking care of stereo planes [have no pixels] 1, 4, 7, 10
         if (((layer_i) % 3) == 1){
@@ -152,40 +146,30 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
             distance.push_back(s+offset);  //distance between planes  [14]
             resolutionLayer.push_back(resolution); //resolution
             projectionX.push_back(sqrt(1.0-stereoTheta*stereoTheta));  // x
-            projectionY.push_back(stereoTheta*sign);  // y
-           
+            projectionY.push_back(stereoTheta*sign);  // y  
             sign=-sign;
             i_counter++;    
         }
-
-        s=s+planeDistance;  // incrimenting distance between detecors
-
+        s=s+planeDistance;  // incrementing distance between detectors
     }  // end of looping over layers
-
-
 } // end of geom
 
-// MC misalignment of detecors 
+// MC misalignment of detectors 
 void Tracker::misalign(ofstream& debug_mis, bool debugBool){
-
     float rand_gaus;
     int counterMis = 0;
-    //Now misaligning detecors
+    //Now misaligning detectors
     float dispX = 0.01; // plane displacement in X .05 mm * N(0,1)
     float dispY = 0.01; // plane displacement in Y .05 mm * N(0,1)
-
     
     for (int i=0; i<=detectorN-1; i++){   
         for(int k=0; k<=pixelYN-1; k++){
             for(int l=0; l<=pixelXN-1; l++){
-                
                 rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
                 sdevX[i][k][l] = dispX * rand_gaus;
                 rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
                 sdevY[i][k][l] = dispY * rand_gaus;
                 counterMis++;
-
-            
             } // // end of number of pixel in x
         } // end of number of pixels in y 
     } // end of layers
@@ -198,18 +182,15 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     @param constraint_file Reference to ofstream to write constraint file to. 
  */
 void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool) {
-
     // constraints: fix center pixels in first/last layer
     // Check constraints file is open, then write. 
     if (constraint_file.is_open()) {
         
-
         //Evaluation of constraints
         int ncx = (pixelXN+1)/2; 
         int lunt = 9;
         float one = 1.0;
-         
-
+        
         for (int i = 1; i <= detectorN; i=i+(detectorN-1)){ 
             constraint_file << "Constraint 0.0" << endl;
             for (int k=0; k<=pixelYN-1; k++){
@@ -222,27 +203,22 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
                 int labelt=(i*pixelYN+k)*pixelXN+ncx+1000-1;
                 constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
                 sdevY[i-1][k][ncx-1]=0.0; 
-
             } // end of x loop
-        } // end of detecors loop 
-
-    } // constraing file open 
-} // end of wrting cons file 
+        } // end of detectors loop 
+    } // constrain file open 
+} // end of writing cons file 
 
 /**
    Set filename to read uniform random numbers from.
-
    @param uniform_filename String for filename of file of uniform random numbers.
  */
 void Tracker::set_uniform_file(string uniform_filename) {
     RandomBuffer::instance()->open_uniform_file(uniform_filename);
 }
 
-
 /**
-   Set filename to read gaussian random numbers from.
-
-   @param uniform_filename String for filename of file of gaussian random numbers.
+   Set filename to read Gaussian random numbers from.
+   @param uniform_filename String for filename of file of Gaussian random numbers.
  */
 void Tracker::set_gaussian_file(string gaussian_filename) {
     RandomBuffer::instance()->open_gaussian_file(gaussian_filename);

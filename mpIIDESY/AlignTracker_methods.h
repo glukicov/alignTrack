@@ -2,11 +2,11 @@
 #define ALIGNTRACKER_M
 
 /* This header file contains definitions of constant variables used in 
-* method class, as well as function declarations, and definitions of functions.
+* the method class, as well as function declarations, and definitions of functions.
 */  
 
 #include "random_buffer.h" // courtesy of John Smeaton (UCL)
-
+///XXX some includes may become redundant
 #include <vector>
 #include <string>
 #include <fstream>
@@ -64,7 +64,6 @@ class Tracker {
 
 	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
 	
-		
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
     std::vector<float> projectionY; //projection of measurement direction in (Y)

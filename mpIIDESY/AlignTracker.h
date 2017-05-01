@@ -7,6 +7,7 @@
 #include "AlignTracker_methods.h" // Methods and functions for the main programme (AlignTracker.cpp)
 #include "Logger.hh"  // Logger courtesy of Tom Stuttard (UCL) - from gm2trackdaq repository
 
+//XXX Some includes maybe redundant 
 #include <iostream>
 #include <fstream> 
 #include <string>
@@ -17,7 +18,7 @@
 #include <typeinfo>
 #include <stdlib.h>
 #include <cmath> 
-#include <TH1D.h> //1D Histo Root class
+#include <TH1D.h> 
 #include <TH2D.h> //2D Histo Root class
 #include <TH3D.h> //3D Histo Root class
 #include <TFile.h> // data records for ROOT 
