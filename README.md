@@ -42,7 +42,7 @@ Please note that the output filenames shown are the default random number files 
    [data, constrains, and steering files]
 3. Fit data by running `./pede Tracker_str.txt`.
 
- 
+AlignTracker.cpp (contains definition of purpose) - main programme calling on methods from AlignTracker_methods.cpp. 
  
 #### Running C++ version of mptest2.f90: ####
 1. Compile code with `make -f MakeMp2test.mk`
