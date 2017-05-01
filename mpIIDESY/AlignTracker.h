@@ -1,11 +1,11 @@
-#ifndef ALIGNTRACKER
-#define ALIGNTRACKER
+#ifndef ALIGNTRACKER_H
+#define ALIGNTRACKER_H
 
-//This header file declares main function, and imports necessary dependencies for AlignTracker.cpp [description of purpose is there]
-#include "Mille.h"  // courtesy of Gero Flucke (DESY) 
-#include "Mille.cc" // courtesy of Gero Flucke (DESY) 
-#include "AlignTracker_methods.h" // Methods and functions for the main programme (AlignTracker.cpp)
-#include "Logger.hh"  // Logger courtesy of Tom Stuttard (UCL) - from gm2trackdaq repository
+//This header file declares main function, and imports necessary dependencies.
+#include "Mille.h"
+#include "Mille.cc"
+#include "AlignTracker_methods.h"
+#include "Logger.hh"  // Logger courtesy of Tom 
 
 #include <iostream>
 #include <fstream> 
@@ -16,12 +16,12 @@
 #include <chrono>
 #include <typeinfo>
 #include <stdlib.h>
-#include <cmath> 
+#include <cmath> //math class`
 #include <TH1D.h> //1D Histo Root class
 #include <TH2D.h> //2D Histo Root class
 #include <TH3D.h> //3D Histo Root class
 #include <TFile.h> // data records for ROOT 
-#include <TRandom3.h> // Random generator class for ROOT
+#include <TRandom3.h> // rnd generator class for ROOT
 #include <TTree.h>
 
 int main(int argc, char* argv[]);  

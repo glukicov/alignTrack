@@ -1,6 +1,6 @@
 /*
 
-This source file contains definitions of various functions in the Tracker class. 
+This source file contains definitions of various functions in the Detector class. 
 
 */  
 

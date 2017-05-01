@@ -1,68 +1,19 @@
-// TODOs: 
-// Maps, Histogramm class, [singelton] Parametrs::Instance();   
-// extend to broken-lines, scattering etc.
 /*
-* 
-* Translation into C++11 of mptest2.f90 (see original description below) 
-* by Gleb Lukicov (g.lukicov@ucl.ac.uk) 24 Feb 2017 
------------------------------------------------------
-! Code converted using TO_F90 by Alan Miller
-! Date: 2012-03-16  Time: 11:08:55 
+*  TODOs: 
+*
+*
+*  Gleb Lukicov (g.lukicov@ucl.ac.uk) 17 April 2017 @ Fermilab 
+----------------------------------------------------------------
+*Methods and functions contained in AlignTracker_methods.cpp (Tracker class)
+This programme uses MC methods to produce a .bin file for the 
+PEDE routine, to align the tracking detector for the g-2 
+experiment.
 
-!> \file 
-!! MC for simple 10 layer silicon strip tracker. 
-!!
-!! \author Claus Kleinwort, DESY, 2009
+Private (for now) Git repository: https://github.com/glukicov/alignTrack [further instructions are there]
 
-!! No B-field, straight tracks. Selected with command line option '-t=track-model'
-!! The \a track-models differ in the implementation of multiple scattering (errors):
-!! - \c SL0: Ignore multiple scattering. Fit 4 track parameters.
-!! - \c SLE: Ignore correlations due to multiple scattering, use only diagonal of
-!!   m.s. covariance matrix. Fit 4 track parameters.
-!! - \c BP: Intoduce explicit scattering angles at each scatterer.
-!!   Fit 4+2*(\ref mptest2::layerN "layerN"-2) parameters.
-!!   Matrix of corresponding linear equation system is full and solution
-!!   is obtained by inversion (time ~ parameters^3).
-!! - \c BRLF: Use (fine) broken lines (see \ref ref_sec). Multiple scattering kinks
-!!   are described by triplets of offsets at scatterers as track parameters.
-!!   Fit 4+2*(\ref mptest2::layerN "layerN"-2) parameters. Matrix of corresponding
-!!   linear equation system has band structure and solution
-!!   is obtained by root-free Cholesky decomposition (time ~ parameters).
-!! - \c BRLC: Use (coarse) broken lines. Similar to \c BRLF, but with stereo layers
-!!   combined into single layer/scatterer. Fit 4+2*(\ref mptest2::detectorN "detectorN"-2) parameters.
-!!
-!! MC for simple silicon strip tracker:
-!! - 10 silicon detector layers
-!! - 50 pixels per layer (1*2cm)
-!! - 10 cm spacing, no B-field
-!! - layers 1,4,7,10 have additional +/-5deg stereo modules   
-!! - intrinsic resolution 20mu, 2% X0 per strip module
-!! - uniform track offsets/slopes
-!! - momentum: log10(p) 10..100 GeV uniform
-!!
-!! Global parameters:
-!! - Position offsets (2D) in measurement plane per module (alignment).
-
-// Generate test files.
-//
-// Create text and binary files.
-//
-//      unit  8: textfile Mp2str.txt   = steering file
-//      unit  9: textfile Mp2con.txt   = constraint file
-//      unit 51: binary file Mp2test.bin, written using CALL MILLE(.)
-//      existing file are removed
-//
-// \param [in] imodel track model
-//
-//           0: 'straight line', ignoring multiple scattering 
-//           1: 'straight line', using diagonal of m.s. error matrix
-//           2: 'break points'
-//           3: 'broken lines', fine
-//           4: 'broken lines', coarse (stereo layers combined)
-!!
+*
 **/
-
-#include "AlignTracker.h" 
+#include "AlignTracker.h"
 
 
 using namespace std; 
@@ -151,23 +102,23 @@ int main(int argc, char* argv[]){
     float twoR = 2.0;  //For normalisation of uniform random numbers [0,1] 
     
     //arguments for Mille constructor:
-    const char* outFileName = "C_Mp2tst.bin";
-    bool asBinary = true; 
-    bool writeZero = false;
+    const char* outFileName = "Tracker_data.bin";
+    bool asBinary = true; // set true for debugging XXX 
+    bool writeZero = false; // to write 0 LC/DLC labels - not accepted by pede 
     
-    string conFileName = "C_Mp2con.txt";
-    string strFileName = "C_Mp2str.txt";
-    string debugFileName = "C_Mp2debug.txt"; 
+    string conFileName = "Tracker_con.txt";
+    string strFileName = "Tracker_str.txt";
     //Debug files
-    string mp2_debugFileName = "C_Mp2debug_mp2.txt";  // for looking at parameters going to CALL MILLE
-    string temp_debugFileName = "C_Mp2debug_tmp.txt";  // 
-    string cacl_debugFileName = "C_Mp2debug_calc.txt";  //
-    string mis_debugFileName = "C_Mp2debug_mis.txt";  //
-    string geom_debugFileName = "C_Mp2debug_geom.txt";  //
-    string off_debugFileName = "C_Mp2debug_off.txt";  //
-    string hitsOnly_debugFileName = "C_Mp2debug_hitsOnly.txt";
-    string MC_debugFileName = "C_Mp2debug_MC.txt"; 
-    string con_debugFileName = "C_Mp2debug_con.txt"; 
+    string debugFileName = "Tracker_d.txt"; 
+    string mp2_debugFileName = "Tracker_d_mille.txt";  // for looking at parameters going to CALL MILLE
+    string temp_debugFileName = "Tracker_d_tmp.txt";  // 
+    string cacl_debugFileName = "Tracker_d_calc.txt";  //
+    string mis_debugFileName = "Tracker_d_mis.txt";  //
+    string geom_debugFileName = "Tracker_d_geom.txt";  //
+    string off_debugFileName = "Tracker_d_off.txt";  //
+    string hitsOnly_debugFileName = "Tracker_d_hitsOnly.txt";
+    string MC_debugFileName = "Tracker_d_MC.txt";
+    string con_debugFileName = "Tracker_d_con.txt"; 
     
     // TODO TTree -> seperate Macro for plotting [see Mark's suggested code: check correct motivationimplmenation for future] 
     //output ROOT file
@@ -176,7 +127,7 @@ int main(int argc, char* argv[]){
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // D=double bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06); // D=double bins, name, title, nBins, Min, Max
     TH2F* h_true_hits = new TH2F("h_true_hits", "True X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
-    TH2F* h_det_hits = new TH2F("h_det_hits", "Detector X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
+    TH2F* h_det_hits = new TH2F("h_det_hits", "Tracker X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
     TH2F* h_mis_hits = new TH2F("h_mis_hits", "Misaligned X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
 
     
@@ -228,8 +179,8 @@ int main(int argc, char* argv[]){
         
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl 
-        << "C_Mp2con.txt   ! constraints text file " << endl
-        << "C_Mp2tst.bin   ! binary data file" << endl
+        << "Tracker_con.txt   ! constraints text file " << endl
+        << "Tracker_data.bin   ! binary data file" << endl
         << "fortranfiles ! following bin files are fortran" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
@@ -385,24 +336,22 @@ int main(int argc, char* argv[]){
     cout << Tracker::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
-    cout << "Ready for PEDE alogrithm: ./pede C_Mp2str.txt" << endl; 
-    cout << "Sanity Plots: root -l Mptest2.root" << endl;
-
+    cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
+    cout << "Sanity Plots: root -l Tracker.root" << endl;
+    Logger::Instance()->setUseColor(false); // will be re-enabled below
+    // Millepede courtesy of John 
+    msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg2.str());
+    msg3 << Logger::yellow() << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg3.str());
+    msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msg4.str());
+    Logger::Instance()->setUseColor(true); // back to default colours 
     if (debugBool) {
-    Logger::Instance()->write(Logger::WARNING, "The following debug files produced:");
-    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_mp2.txt - computed inputs into pede"); 
-    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_calc.txt - line and hits calculation (verbose)");  
-    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_mis.txt - MISALIGNMENT");  
-    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_geom.txt - GEOMETRY ");  
-    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_off.txt - rejected/missed hits");  
-    Logger::Instance()->write(Logger::WARNING, "C_Mp2debug_tmp.txt - a debug file for quick checks and development");  
+    cout << "Normal random numbers were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
+    cout << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
+    Logger::Instance()->write(Logger::WARNING, "Text debug files were produced");
     }
-
-    cout << "Normal Randoms were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
-    cout << "Gaussian Randoms were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
-    cout << "Min " << RandomBuffer::instance()->get_uniform_ran_max() <<endl;
-    cout << "Max " << RandomBuffer::instance()->get_uniform_ran_min() <<endl;
-    cout << "Std " << RandomBuffer::instance()->get_gaussian_ran_stdev() <<endl;
 
     // Close text files
     constraint_file.close();
