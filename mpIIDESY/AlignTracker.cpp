@@ -13,20 +13,25 @@ Private (for now) Git repository: https://github.com/glukicov/alignTrack [furthe
 
 *
 **/
-#include "AlignTracker.h"
+
+#include "AlignTracker.h" 
 
 
 using namespace std; 
 
 
-/////************MAIN***************/////////////
+//***************MAIN****************//
 int main(int argc, char* argv[]){
 
+    //////----Variable Initialisation-------///////////
+    int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.] 
+    float twoR = 2.0;  //For normalisation of uniform random numbers [0,1] 
+
     float rand_num; //to store random (int number from buffer + max )/(2 * max) [0, 1]   
-    string compareStr;
-    bool debugBool = false; // './Mptest2 n' - for normal, of ./Mptest2 d' - for verbose debug output
+    string compareStr; //for debug vs normal output as specified by the user
+    bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
+    
     //Tell the logger to only show message at INFO level or above
-    // Logger courtesy of Tom 
     Logger::Instance()->setLogLevel(Logger::NOTE); 
 
     //Tell the logger to throw exceptions when ERROR messages are received
@@ -48,42 +53,31 @@ int main(int argc, char* argv[]){
         catch (ios_base::failure& e)  {
            Logger::Instance()->write(Logger::ERROR, "Filestream exception caught: " + string(e.what()) + "\nPlease ensure valid filenames are specified!");
         }
-    } 
+    }
 
-    //this is passed to Tracker functions, with debug file names
+    //this is also passed to Tracker functions, with debug file names
     if (compareStr=="d"){
     debugBool = true; // print out to debug files
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE");
     }
     else{
-    debugBool = false; // print out to debug files 
+    debugBool = false; // print out to debug files
     }
-
-     
     
-    Logger::Instance()->setUseColor(false); // will be reabled below
+    Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 
     std::stringstream msg0, msg01, msg02, msg1, msg2, msg3, msg4;
     Logger::Instance()->write(Logger::NOTE, "");
-    msg0 << Logger::blue() <<  "********************************************" << Logger::def();
+    msg0 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::blue() << "*                 MPTEST 2                 *" << Logger::def();
+    msg01 << Logger::yellow() << "   g-2  Tracker Alignment - Gleb Lukicov (UCL) - April 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
-    msg1 << Logger::blue() <<  "********************************************" << Logger::def();
+    msg1 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
-    Logger::Instance()->write(Logger::NOTE, "");
-    msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
-    Logger::Instance()->write(Logger::NOTE,msg2.str());
-    msg3 << Logger::yellow() << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << Logger::def();
-    Logger::Instance()->write(Logger::NOTE,msg3.str());
-    msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
-    Logger::Instance()->write(Logger::NOTE,msg4.str());
-    Logger::Instance()->write(Logger::NOTE, ""); 
-    
-    Logger::Instance()->setUseColor(true); // back to deafault colours 
+    Logger::Instance()->setUseColor(true); // back to default colours 
 
     try {
-        Tracker::instance()->set_uniform_file("uniform_ran.txt");
+        Tracker::instance()->set_uniform_file("uniform_ran.txt"); 
    
         Tracker::instance()->set_gaussian_file("gaussian_ran.txt");
         
@@ -91,15 +85,9 @@ int main(int argc, char* argv[]){
         
     catch (ios_base::failure& e) {
         cerr << "Filestream exception caught: " << e.what() << endl;
-        cerr << "Please ensure valid filenames are specified!" << endl;
+        cerr << "Please ensure valid filenames are specified!" << endl; 
         return 1;
         } 
-
-
-    //////----Variable Intialisation-------///////////
-    int imodel = 0;  //Model type (see above)
-
-    float twoR = 2.0;  //For normalisation of uniform random numbers [0,1] 
     
     //arguments for Mille constructor:
     const char* outFileName = "Tracker_data.bin";
@@ -120,9 +108,9 @@ int main(int argc, char* argv[]){
     string MC_debugFileName = "Tracker_d_MC.txt";
     string con_debugFileName = "Tracker_d_con.txt"; 
     
-    // TODO TTree -> seperate Macro for plotting [see Mark's suggested code: check correct motivationimplmenation for future] 
+    // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
-    TFile* file = new TFile("Mptest2.root", "recreate");  // recreate = owerwrite if already exisists
+    TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // D=double bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06); // D=double bins, name, title, nBins, Min, Max
@@ -133,9 +121,9 @@ int main(int argc, char* argv[]){
     
    // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-    
+    cout << "Generating test data for g-2 Tracker Alignment in PEDE." << endl;
    
-    // fstreams for str and cons files 
+    // file streams for constrain, steering, and debug files 
     ofstream constraint_file(conFileName);
     ofstream steering_file(strFileName);
     ofstream debug(debugFileName);
@@ -146,36 +134,38 @@ int main(int argc, char* argv[]){
     ofstream debug_geom(geom_debugFileName);
     ofstream debug_off(off_debugFileName);
     ofstream debug_hits_only(hitsOnly_debugFileName);
-    ofstream debug_mc(MC_debugFileName);
-    ofstream debug_con(con_debugFileName);
+    ofstream debug_mc(MC_debugFileName); 
+     ofstream debug_con(con_debugFileName);
 
-    std::cout << std::fixed << std::setprecision(9); 
-    debug << std::fixed << std::setprecision(9); 
-    debug_mp2 << std::fixed << std::setprecision(9); 
-    debug_tmp << std::fixed << std::setprecision(9); 
-    debug_calc << std::fixed << std::setprecision(9); 
-    debug_mis << std::fixed << std::setprecision(9); 
-    debug_geom << std::fixed << std::setprecision(9); 
-    debug_off << std::fixed << std::setprecision(9); 
-    debug_hits_only << std::fixed << std::setprecision(9); 
-    debug_mc << std::fixed << std::setprecision(9); 
-    debug_con << std::fixed << std::setprecision(9); 
+
+    cout << fixed << setprecision(9); 
+    debug << fixed << setprecision(9); 
+    debug_mp2 << fixed << setprecision(9); 
+    debug_tmp << fixed << setprecision(9); 
+    debug_calc << fixed << setprecision(9); 
+    debug_mis << fixed << setprecision(9); 
+    debug_geom << fixed << setprecision(9); 
+    debug_off << fixed << setprecision(9); 
+    debug_hits_only << fixed << setprecision(9); 
+    debug_mc << fixed << setprecision(9); 
+    debug_con << fixed << setprecision(9); 
    
     // GEOMETRY
     Tracker::instance()->setGeometry(debug_geom, debugBool);
-    
+    cout<< "Geometry is set!" << endl;
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
     Tracker::instance()->misalign(debug_mis, debugBool); 
-
+    cout<< "Misalignment is complete!" << endl;
+    
     // Write constraint file, for use with pede TODO fix this 
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
+    cout<< "Constraints are written!" << endl;
 
     //Now writing steering and constraint files
+    //TODO what steering parameters does tracker require? 
     if(steering_file.is_open()){
-
-        cout<< "Writing the steering file" << endl;
         
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl 
@@ -210,54 +200,39 @@ int main(int argc, char* argv[]){
         << "*matiter      3  ! recalculate matrix in iterations" << endl
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
-    } // end of str file    
+    } // end of str file 
+    cout<< "Steering file is finished." << endl;
 
     //Set up counters for hits and records (tracks)
-    int hitsN = 0;
-    int recordN=0;      
+    int hitsN = 0; // actually recorded (i.e. non-rejected hits)
+    int recordN=0; //records = tracks 
     
     float scatterError; // multiple scattering error
 
-    cout << "Generating test data for Mp II..." << endl;
     //Generating particles with energies: 10..100 Gev
-       //for (int icount=0; icount<Tracker::instance()->getTrackCount(); icount++){
     for (int icount=0; icount<Tracker::instance()->getTrackCount(); icount++){
         rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
         float p=pow(10.0, 1+rand_num);
         scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;  
         
-        if (debugBool){debug_tmp << "Rand= " << rand_num << " p= " << p << "width= " << Tracker::instance()->getWidth() << endl; }
-
+        
         //Generating tracks 
         LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
-        if (debugBool){
-            debug << endl; 
-            //debug_mp2 << endl; 
-            debug << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-            //debug_mp2 << "–––––––––––––––––––––––––––––––––––––––––––––––" <<  endl;
-            debug << "Track # (C)        " << icount+1 << endl;
-            //debug_mp2 << "Track # (C)        " << icount+1 << endl;
-            
-        }
+       
         for (int i=0; i<generated_line.hit_count; i++){
             //calculating the layer and pixel from the hit number 
             int lyr = (generated_line.i_hits[i]/Tracker::instance()->getPixelXYN());  // [1-14] //This the layer id
             int im = generated_line.i_hits[i]%Tracker::instance()->getPixelXYN();  // [0-49] //This the pixel id
             //  computes the remainder of the division of plane (e.g. MOD(693, 50) = 693 - 50*13 = 43) 
-
-            if (debugBool) {
-                //debug_tmp << "lyr= " << lyr << "  im= " << im << " Module with hit: "  << generated_line.i_hits[i] << endl; 
-                //debug_tmp << endl; 
-            }
-             
+          
             const int nalc = 4; 
             const int nagl = 2;  
             
             //Local derivatives
             float dlc1=Tracker::instance()->getProjectionX()[lyr];
             float dlc2=Tracker::instance()->getProjectionY()[lyr];
-            float dlc3=float(generated_line.x_hits[i])*Tracker::instance()->getProjectionX()[lyr];
-            float dlc4=float(generated_line.x_hits[i])*Tracker::instance()->getProjectionY()[lyr];  
+            float dlc3=generated_line.x_hits[i]*Tracker::instance()->getProjectionX()[lyr];
+            float dlc4=generated_line.x_hits[i]*Tracker::instance()->getProjectionY()[lyr];  
             float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
             //Global derivatives
             float dgl1 = Tracker::instance()->getProjectionX()[lyr];
@@ -290,35 +265,8 @@ int main(int argc, char* argv[]){
             h_mis_hits ->  Fill(generated_line.x_mis[i], generated_line.y_mis[i]);
             h_mis_hits->Draw("colz");
                       
+            //XXX passing by reference/pointer vs as variable 
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
-
-             // For debugging
-            if (debugBool){
-                //debug_proj << Tracker::instance()->getProjectionX()[lyr] << " " << generated_line.x_hits[i] << endl; 
-                //debug_mp2 << endl; 
-                //debug_mp2 << " LC #:              " << nalc << "          LC1 :     " << derlc[0] << "        LC2 :  " << derlc[1] << "       LC3 :    " << derlc[2] << "   LC4 :     " << derlc[3] << endl
-                //          << " GL #:              " << nagl << "          GL1 :     " << dergl[0] << "       GL2 :  " << dergl[1] << endl
-                //          << " LB1 :              " << label[0] << "         LB2:      " << label[1] << "            Y Hit: " << rMeas_mp2 << "     Sigma : " << sigma_mp2 << endl;
-                //debug_mp2 << endl; 
-                debug_mp2 <<nalc << " " <<nagl<< " "  <<label[0]<< " " <<label[1]<< " " << derlc[0]<< " " <<derlc[1]<< " " <<derlc[2]<< " " <<derlc[3]<< " " << dergl[0]<< " " <<dergl[1]<< " " <<rMeas_mp2 << " "<<sigma_mp2 << " " << Tracker::instance()->getProjectionX()[lyr] << " " << generated_line.x_hits[i] << endl; 
-                //debug_mp2 << rMeas_mp2 << endl;
-            }
-
-            if (debugBool) { 
-                
-                            debug<< "nhits: " << generated_line.hit_count << endl
-                                 <<  "Hit #: " << i+1 << endl
-                                 <<  "ihit: " << generated_line.i_hits[i] << endl
-                                 << "x= " << generated_line.x_true[i] << "y= " << generated_line.y_true[i] << endl
-                                // << "Local: " << derlc[0] << " " << derlc[1] << " " << derlc[2] << " " << derlc[3] << endl
-                                // << "Global: " << dergl[0] << " " << dergl[1] << endl
-                                // << "Label: " << label[0] << " " << label[1] << endl
-                                  << "xhits = " << generated_line.x_hits[i] << endl
-                                 << "yhits Hit= " << rMeas_mp2 << endl
-                                 << "Sigma= " << sigma_mp2 << endl << endl;            
-                              debug_hits_only << rMeas_mp2 << endl;
-                             }
-
 
         hitsN++; //count hits
         } // end of hits loop
@@ -331,7 +279,8 @@ int main(int argc, char* argv[]){
         recordN++; // count records;
        
     } // end of track count
-   
+    
+    
     cout << " " << endl;
     cout << Tracker::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
@@ -352,6 +301,7 @@ int main(int argc, char* argv[]){
     cout << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
     Logger::Instance()->write(Logger::WARNING, "Text debug files were produced");
     }
+
 
     // Close text files
     constraint_file.close();
