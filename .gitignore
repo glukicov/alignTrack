@@ -227,6 +227,8 @@ tools/.svn/
 /F_mpIIDESY/rotationMonteCarlo.py
 /F_mpIIDESY/vertpr.f90
 /mpIIDESY/#Mptest2.h#
+.DS_Store
+._.DS_Store
 
 
 ### files NOT to ignore 
