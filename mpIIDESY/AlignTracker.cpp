@@ -3,7 +3,7 @@
 * TTree,Ntuples, etc for ROOT plotting - separate macro? 
 *
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
-*   Created: 17 April 2017 
+*   Created: 17 April 2017  
 *   Modified: 1 March 2017 
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
