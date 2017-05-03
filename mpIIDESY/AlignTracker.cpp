@@ -1,6 +1,6 @@
 /*
 *  TODOs: 
-*    TTree,Ntuples, etc for ROOT plotting - separate macro? 
+*     TTree,Ntuples, etc for ROOT plotting - separate macro? 
 *
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
