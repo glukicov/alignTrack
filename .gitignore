@@ -229,6 +229,11 @@ tools/.svn/
 /mpIIDESY/#Mptest2.h#
 .DS_Store
 ._.DS_Store
+readPedeHists_C.d
+readPedeHists_C.so
+readPedeHists_C_ACLiC_dict_rdict.pcm
+../python_toy_tracker/toytraceback.pyc
+/python_toy_tracker/toytraceback.pyc
 
 
 ### files NOT to ignore 

@@ -24,6 +24,13 @@
 #include <TFile.h> // data records for ROOT 
 #include <TRandom3.h> // Random generator class for ROOT
 #include <TTree.h>
+#include <TROOT.h>
+#include <TClass.h>
+#include <TGraph.h>
+#include <TCanvas.h>
+#include <TBranch.h>
+#include <TStyle.h>
+#include <TColor.h>
 
 int main(int argc, char* argv[]);  
 

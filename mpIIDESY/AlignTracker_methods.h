@@ -41,20 +41,25 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=15000; /** Number of tracks (i.e. records) to be simulated passing through detector */
+	static const int trackCount=100; /** Number of tracks (i.e. records) to be simulated passing through detector */
+
+	static const int beamPositionLength = 10; 
+
+	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
+
+	float dispX;
+	//--------------------//
  
 	///initialising physics variables
-	static const int detectorN = 10; //number of detector layers [independent layers]
-	static const int layerN = 14; //number of measurement layers  [total number of layers]
-	static const int pixelXN = 10 ; //number of measurement elements in x direction
-	static const int pixelYN = 5; //number of measurement elements in y direction  
-	static const int pixelXYN = pixelXN*pixelYN;
+	static const int detectorN = 6; //number of detector layers [independent layers]
+	static const int layerN = 8; //number of measurement layers  [total number of layers] This will be layers 
+	static const int pixelXN = 16 ; //number of measurement elements in x direction this will be straws 16
 
 	static const float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
-	static const int pixelTotalN = detectorN*pixelYN*pixelXN; //total number of measurement elements 
+	static const int pixelTotalN = detectorN*pixelXN; //total number of measurement elements 
 	//  define detector geometry
-	static const float startingDistancePlane1=10.0; // distance of first layer relative to the "beam" // [cm]
+	static const float startingDistancePlane1=50.0; // distance of first layer relative to the "beam" // [cm]
 	static const float planeDistance=10.0; // distance between planes //[cm] 
 	static const float width =0.02; //thickness/width of a plane (X0) // [cm]
 	static const float offset=0.5;  // offset of stereo pixels [cm] 
@@ -62,8 +67,7 @@ class Tracker {
 	//static const float stereoTheta=0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX
 	static const float layerSize=20.0; //length of layers // [cm] 
 
-	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
-	
+
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
     std::vector<float> projectionY; //projection of measurement direction in (Y)
@@ -71,8 +75,8 @@ class Tracker {
     std::vector<float> distance;  // distance between planes [this is set in geometry]
     std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
     
-    float sdevX[detectorN][pixelYN][pixelXN];// shift in x due to the imposed misalignment (alignment parameter)
-    float sdevY[detectorN][pixelYN][pixelXN] ; //shift in y due to the imposed misalignment (alignment GLOBAL parameter)
+    float sdevX[detectorN][pixelXN];// shift in x due to the imposed misalignment (alignment parameter)
+    float sdevY[detectorN][pixelXN] ; //shift in y due to the imposed misalignment (alignment GLOBAL parameter)
 	
 	// Class constructor and destructor
 	Tracker();
@@ -109,9 +113,10 @@ class Tracker {
 		return projectionX;
 	}
 
-	std::vector<float> getProjectionY() {
-		return projectionY;
+	int getPixelXN(){
+		return pixelXN;
 	}
+
 
 	int getTrackCount() {
 		return trackCount;
@@ -129,12 +134,13 @@ class Tracker {
 		return layerN;
 	}
 
-	int getPixelXYN() {
-		return pixelXYN;
-	}
 
 	int getPixelTotalN() {
 		return pixelTotalN;
+	}
+
+    float getDispX(){
+		return dispX;
 	}
 
 };

@@ -1,6 +1,10 @@
 /*
-*  TODOs: 
-*     TTree,Ntuples, etc for ROOT plotting - separate macro? 
+*  TODO: 
+    -TTree,Ntuples, etc for ROOT plotting - separate macro: use more advances ROOT methods properly 
+    -Graphically plot what's going on pyROOT/Python
+    -Use git tag for new version: small increments 0.x, large changes x.0, additional features
+        (e.g MF) use a, b, c i.e. v1.3a. Keep version history wiki on git (read-up on that...)
+    -End of programme print out more used const and non-const par. 
 *
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
@@ -10,6 +14,39 @@ This programme uses MC methods to produce a .bin data file for the
 PEDE routine, to align the tracking detector for the g-2 
 experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
+
+============================= Test Model v0.1 =======================================
+*Simple 2D case (1D alignment along x) of simplified tracker station of 2 small trackers.
+* No B-field, straight tracks, 100% efficiency. 
+*(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted] 
+
+Terminology: for now straw=central wire...
+
+2 trackers with 16 straws in length (instead of 32), 4 layers per tracker: 64 straws per tracker.
+    total of 128 straws in 8 "independent" layers. 
+Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
+Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
+    tracks are lines between z=0 and z=25, with x1 and x2 = 10 * rand[0,1] (=0-10)
+Resolution (i.e. tracker systematic) is  20 um = 0.002
+Misalignment manually by 0.01 for each layers in +/- x-direction
+
+Hit rejection:  1) outside of layer
+                2) more than 0.25 cm away from straw centre (i.e straw radius) 
+
+Labels TODO   layer 1-8: A, B, C, D, E, F, G, H with straws 0-16 (e.g. C15) -> convert to hex -> back to string  = win win! 
+Constrains TODO Fixing first (A) and last (H) layers? 
+Steering options TODO  ??? do some reading
+                                    Tracker Geometry:
+First layer fist straw (A1) is at z=50, x=0; spacing between straws in layer is ... XXX 
+Spacing between layers in same view is ... XXX
+Spacing between U and V views (last and first layers in views) is ... XXX 
+Spacing between modules (last and first layers in modules) ... XXX
+Layers in a view are (e.g. U0, U1) have an extra relative x displacement of ... XXX 
+
+For more information see: 
+http://gm2-docdb.fnal.gov:8080/cgi-bin/RetrieveFile?docid=4375&filename=Orientation.pdf&version=1 
+
+=======================================================================================
 
 #TODO Model type is implemented via imodel = 0, 1 .....  
 
@@ -32,8 +69,8 @@ int main(int argc, char* argv[]){
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.] 
     string compareStr; //for debug vs. normal output as specified by the user
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
-    float rand_num; //to store random (int number from buffer + max )/(2.0 * max) [0, 1]   
-    float twoR = 2.0;  //For normalisation of uniform random numbers [0,1]
+    //float rand_num; //to store random (int number from buffer + max )/(2.0 * max) [0, 1]   
+    //float twoR = 2.0;  //For normalisation of uniform random numbers [0,1]
     //Set up counters for hits and records (tracks)
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks 
@@ -100,9 +137,16 @@ int main(int argc, char* argv[]){
     string MC_debugFileName = "Tracker_d_MC.txt";  // Final results from MC
     string con_debugFileName = "Tracker_d_con.txt"; //Constraints
 
-    
+    // Set some ROOT plotting defaults
+    // gROOT->Reset();  //gROOT is a pointer; clean the environment.
+    // gStyle->SetCanvasBorderMode(1); // turn off canvas borders
+    //gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
+    // gStyle->SetStatFontSize(0.07);
+    // gStyle->SetTitleFontSize(0.02);
+        
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
+     #if 0
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // F=float bins, name, title, nBins, Min, Max
@@ -110,6 +154,7 @@ int main(int argc, char* argv[]){
     TH2F* h_true_hits = new TH2F("h_true_hits", "True X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
     TH2F* h_det_hits = new TH2F("h_det_hits", "Tracker X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
     TH2F* h_mis_hits = new TH2F("h_mis_hits", "Misaligned X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
+    #endif
 
  
     // Creating .bin, steering, and constrain files
@@ -193,37 +238,36 @@ int main(int argc, char* argv[]){
 
     //Generating particles with energies: 10-100 [GeV]
     for (int icount=0; icount<Tracker::instance()->getTrackCount(); icount++){  //Track count is set in methods XXX is it the best place for it? 
-        rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
-        float p=pow(10.0, 1+rand_num);
-        scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;  
+        //rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
+        //float p=pow(10.0, 1+rand_num);
+        //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
+        scatterError = 0; // set no scatterError for now 
         
         //Generating tracks 
         LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
        
         for (int i=0; i<generated_line.hit_count; i++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
-            int lyr = (generated_line.i_hits[i]/Tracker::instance()->getPixelXYN());  // [1-14] //This the layer id
-            int im = generated_line.i_hits[i]%Tracker::instance()->getPixelXYN();  // [0-49] //This the pixel id
-            //  computes the remainder of the division of plane (e.g. MOD(693, 50) = 693 - 50*13 = 43) 
+            
+            //TODO get labels, "im" and layers here.... 
+            int lyr = 1; //XXX
+            int im =1; //XXX this must be taken from A...H 
 
             //Number of local and global parameters 
-            const int nalc = 4; 
-            const int nagl = 2;  
+            // TODO do the maths...
+            const int nalc = 2; 
+            const int nagl = 1;  
             
             //Local derivatives
             float dlc1=Tracker::instance()->getProjectionX()[lyr];
-            float dlc2=Tracker::instance()->getProjectionY()[lyr];
-            float dlc3=generated_line.x_hits[i]*Tracker::instance()->getProjectionX()[lyr];
-            float dlc4=generated_line.x_hits[i]*Tracker::instance()->getProjectionY()[lyr];  
-            float derlc[nalc] = {dlc1, dlc2, dlc3, dlc4};
+            float dlc2=generated_line.x_hits[i]*Tracker::instance()->getProjectionX()[lyr];
+            float derlc[nalc] = {dlc1, dlc2};
             //Global derivatives
             float dgl1 = Tracker::instance()->getProjectionX()[lyr];
-            float dgl2 = Tracker::instance()->getProjectionY()[lyr];
-            float dergl[nagl] = {dgl1, dgl2};  
+            float dergl[nagl] = {dgl1};  
             //Labels 
-            int l1 = im+Tracker::instance()->getPixelXYN()*Tracker::instance()->getLayer()[lyr];  
-            int l2 = im+Tracker::instance()->getPixelXYN()*Tracker::instance()->getLayer()[lyr]+1000; 
-            int label[nalc] = {l1, l2}; 
+            int l1 = im+Tracker::instance()->getPixelXN()*Tracker::instance()->getLayer()[lyr]; 
+            int label[nalc] = {l1}; 
             
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)
@@ -232,8 +276,8 @@ int main(int argc, char* argv[]){
             float rMeas_mp2 =  generated_line.y_hits[i]; 
             float sigma_mp2 = generated_line.hit_sigmas[i]; 
 
+            #if 0
             //Sanity Plots 
-            h_sigma -> Fill(sigma_mp2);
             h_hits_MP2 -> Fill (rMeas_mp2); 
             h_true_hits ->  Fill(generated_line.x_true[i], generated_line.y_true[i]);
             //h_true_hits->SetContour(ncol);
@@ -243,7 +287,9 @@ int main(int argc, char* argv[]){
             h_det_hits->Draw("colz");
             h_mis_hits ->  Fill(generated_line.x_mis[i], generated_line.y_mis[i]);
             h_mis_hits->Draw("colz");
-                      
+                 
+            #endif
+
             //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
@@ -265,6 +311,8 @@ int main(int argc, char* argv[]){
     cout << " " << endl;
     cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
     cout << "Sanity Plots: root Tracker.root" << endl;
+    cout << "Manual Misalignment was " << Tracker::instance()->getDispX() << " cm" << endl; 
+    cout << "Resolution was " << Tracker::instance()->getResolution() << " cm" << endl;  
     Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 
     std::stringstream msg2, msg3, msg4;
@@ -294,8 +342,10 @@ int main(int argc, char* argv[]){
     debug_con.close();
     
     //ROOT stuff
+     #if 0
     file->Write();
     file->Close(); //good habit!
+    #endif
    
     return 0; 
 } //end of main 

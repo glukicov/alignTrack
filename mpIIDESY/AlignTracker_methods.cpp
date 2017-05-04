@@ -15,6 +15,7 @@ Empty constructor for detector class.
 Tracker::Tracker() {
   //XXX non-static variables definition here 
     resolution=0.002;  // 20um = 0.002 cm setting this in the constructor //TODO decide if this is a constant 
+    dispX = 0.01;
 }
 
 /** 
@@ -47,25 +48,18 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     LineData line;
     line.hit_count = 0; //count only counts through detector
 
-    float rand_num1, rand_num2, rand_num3, rand_num4;
+    float rand_num;
     float rand_gaus;
 
    // Track parameters for rand-generated line MC 
-    rand_num1 = (( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
-    float x_0 = layerSize * (rand_num1); //uniform vertex
-    rand_num2 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
-    float y_0 = layerSize * (rand_num2); //uniform vertex
-    rand_num3 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
-    float x_1 = layerSize * (rand_num3); //uniform exit point: so fitting a line to these two points
-    rand_num4 = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max())) - 0.5;
-    float y_1 = layerSize * (rand_num4); //uniform exit point:
+    rand_num = (( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
+    float x_0 = layerSize * (rand_num); //uniform vertex
+    rand_num = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()))- 0.5;
+    float x_1 = layerSize * (rand_num); //uniform exit point: so fitting a line to these two points
     float x_slope=(x_1-x_0)/distance[layerN-1];
-    float y_slope=(y_1-y_0)/distance[layerN-1];
-
+    
     float x = x_0;
     float dx = x_slope;
-    float y = y_0;
-    float dy = y_slope;
     float s_old = 0.0;  // previous position in "z"
    
     for(int i=0; i<layerN; i++){
@@ -75,49 +69,39 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
 
         //positions on the detector plane  
         float xs=x_0 + distance[i] * x_slope;
-        float ys=y_0 + distance[i] * y_slope;
         line.x_det.push_back(xs);
-        line.y_det.push_back(ys);
         
         //true track position [for MS]
         x=x+dx*ds;
-        y=y+dy*ds;
         line.x_true.push_back(x);
-        line.y_true.push_back(y);
 
         //multiple scattering
         rand_gaus= RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         dx = dx+ rand_gaus * scatterError;
-        rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-        dy = dy+ rand_gaus * scatterError;
                 
-        // which pixel was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
+        // which straw was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
+         //Rejection of hits
+        //TODO rewrite this ugly part 
         int imx=int((x+layerSize*0.5)/layerSize*float(pixelXN));
-       
+
         if (imx < 0 || imx >= pixelXN){ //[between (0,10]       
             continue;
         } 
-        int imy=int((y+layerSize*0.5)/layerSize*float(pixelYN));
-    
-         if (imy < 0 || imy >= pixelYN){  //[between (0,5] 
-            continue;
-        }
-       
-        int ihit= ((i)*pixelYN+imy)*pixelXN+imx; // i from 0 to 13 (incl.)
+        
+        //This will be straw number 
+        int ihit= (i)*pixelXN+imx; // i from 0 to 15 (incl.)
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
 
-        float xl=x-sdevX[layer[i]-1][imy][imx]; //misalign. 
-        float yl=y-sdevY[layer[i]-1][imy][imx];
+        float xl=x-sdevX[layer[i]-1][imx]; //misalign. 
         line.x_mis.push_back(xl);
-        line.y_mis.push_back(yl);
        
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
         line.x_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
         // projection Y is always 0 for non-stereo modules?? what is the motivation? 
         rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-        float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ rand_gaus *resolution; 
-        line.y_hits.push_back(yhit);
+        float hit = (xl-xs)*projectionX[i] + rand_gaus *resolution; 
+        line.y_hits.push_back(hit);
         line.hit_sigmas.push_back(resolution);
         line.hit_count++;
    
@@ -138,15 +122,13 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
         distance.push_back(s);  //distance between planes  [14]
         resolutionLayer.push_back(resolution); //resolution
         projectionX.push_back(float(1.0));  // x
-        projectionY.push_back(float(0.0));  // y
         i_counter++; 
         //taking care of stereo planes [have no pixels] 1, 4, 7, 10
         if (((layer_i) % 3) == 1){
             layer.push_back(layer_i);  // layer
             distance.push_back(s+offset);  //distance between planes  [14]
             resolutionLayer.push_back(resolution); //resolution
-            projectionX.push_back(sqrt(1.0-stereoTheta*stereoTheta));  // x
-            projectionY.push_back(stereoTheta*sign);  // y  
+            projectionX.push_back(sqrt(1.0-stereoTheta*stereoTheta));  // x 
             sign=-sign;
             i_counter++;    
         }
@@ -159,19 +141,12 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     float rand_gaus;
     int counterMis = 0;
     //Now misaligning detectors
-    float dispX = 0.01; // plane displacement in X .05 mm * N(0,1)
-    float dispY = 0.01; // plane displacement in Y .05 mm * N(0,1)
-    
     for (int i=0; i<=detectorN-1; i++){   
-        for(int k=0; k<=pixelYN-1; k++){
             for(int l=0; l<=pixelXN-1; l++){
                 rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-                sdevX[i][k][l] = dispX * rand_gaus;
-                rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-                sdevY[i][k][l] = dispY * rand_gaus;
+                sdevX[i][l] = dispX * rand_gaus;
                 counterMis++;
             } // // end of number of pixel in x
-        } // end of number of pixels in y 
     } // end of layers
 }//end of misalign
 
@@ -185,7 +160,7 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
     // constraints: fix center pixels in first/last layer
     // Check constraints file is open, then write. 
     if (constraint_file.is_open()) {
-        
+       
         //Evaluation of constraints
         int ncx = (pixelXN+1)/2; 
         int lunt = 9;
@@ -193,17 +168,10 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
         
         for (int i = 1; i <= detectorN; i=i+(detectorN-1)){ 
             constraint_file << "Constraint 0.0" << endl;
-            for (int k=0; k<=pixelYN-1; k++){
-                int labelt=(i*pixelYN+k)*pixelXN+ncx-1;
+                int labelt=(i)*pixelXN+ncx-1;
                 constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
-                sdevX[i-1][k][ncx-1]=0.0;     // fix center pixels at 0.
-            } // end of y loop
+                sdevX[i-1][ncx-1]=0.0;     // fix center pixels at 0.
             constraint_file << "Constraint 0.0" << endl;
-            for(int k=0; k<=pixelYN-1; k++){
-                int labelt=(i*pixelYN+k)*pixelXN+ncx+1000-1;
-                constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
-                sdevY[i-1][k][ncx-1]=0.0; 
-            } // end of x loop
         } // end of detectors loop 
     } // constrain file open 
 } // end of writing cons file 
