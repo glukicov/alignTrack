@@ -15,7 +15,7 @@ Empty constructor for detector class.
 Tracker::Tracker() {
   //XXX non-static variables definition here 
     resolution=0.002;  // 20um = 0.002 cm setting this in the constructor //TODO decide if this is a constant 
-    dispX = 0.01;  // mnaul displacemnt by 0.01 cm [0.1]
+    dispX = 0.01;  // mnaul displacemnt by 0.01 cm 
 }
 
 /** 
@@ -38,6 +38,19 @@ Tracker* Tracker::instance() {
 }
 
 /**
+  Distance of closest approach between a line (track) and a point (straw/wire).
+  
+   @return dca
+*/
+float Tracker::DCA(float x_straw, float y_straw, float slope, float intercept, float x_point, float y_point){
+
+    float dca = 0;
+
+    return dca; 
+}
+
+
+/**
    Simulate the passage of a randomly generated linear track through the detector, calculating properties of hits by the track on detector planes.
   
    @return LineData struct containing data about detector hits.
@@ -48,23 +61,22 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     LineData line;
     line.hit_count = 0; //count only counts through detector
 
-    float rand_num;
+    float rand_num; 
     float rand_gaus;
 
    // Track parameters for rand-generated line MC [start and end positions outside of detectors]
+    // [0,0.5]
     rand_num = (( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
     float x_0 = beamPositionLength * (rand_num); //uniform vertex
     rand_num = ((RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
     float x_1 = beamPositionLength * (rand_num); //uniform exit point: so fitting a line to these two points
     //float x_slope=(x_1-x_0)/distance[layerN];
-    float x_slope=(x_1-x_0)/(beamStop-beamStart); //beams starts at z=0, beamsStop=25; 
-    //XXX Wouldn't the correct detention be: float x_slope=(beamStop-beamStart)/(x_1-x_0); m=dz/dx? 
+    //float x_slope=(x_1-x_0)/(beamStop-beamStart); //beams starts at z=0, beamsStop=25; 
+    //XXX Wouldn't the correct detention be: 
+    float x_slope=(beamStop-beamStart)/(x_1-x_0); //m=dz/dx?
 
-    line.x_gen.push_back(x_0);
-    line.z_gen.push_back(beamStart);
-    line.x_gen.push_back(x_1);
-    line.z_gen.push_back(beamStop);
-    
+    float x_intercept = beamStart - x_slope*x_1; 
+
     float x = x_0;
     float dx = x_slope;
     float previousPosition = 0.0;  // previous position in "z"
@@ -72,7 +84,18 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
    //The main loop is for modules [which are misaligned]
     //TODO within modules we will have loops over views, layers, straws 
     for(int i=0; i<moduleN; i++){
-        //distance between consecutive layers 
+        
+        //Only want to fill for track not all hits
+        if (i==0){
+        line.x0_gen.push_back(x_0);
+        line.z0_gen.push_back(float(beamStart));
+        line.x1_gen.push_back(x_1);
+        line.z1_gen.push_back(float(beamStop));
+        line.x_m.push_back(x_slope);
+        line.x_c.push_back(x_intercept);
+        }
+        
+        //distance between consecutive modules 
         float dPostion = distance[i] - previousPosition;
         previousPosition = distance[i];
 
@@ -88,15 +111,31 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         rand_gaus= RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         dx = dx+ rand_gaus * scatterError;
                 
+        vector<float> straw_positions; //vector to store straw positions 
+        //loops over views, layers, straws 
+        for (int i_view=0; i_view<viewN; i_view++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){
+                for (int i_straw=0; i_straw<strawN; i_straw++){
+                
+                } //end of Straws loop
+            }//end of Layers lopp
+        }// end of View loop
+
+
+
         // which straw was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
          //Rejection of hits
         //TODO rewrite this ugly part 
         // For now, NO hit rejection 
-        int imx=1;
-        if (imx < 0 || imx >= strawXN){ //[between (0,10]       
+        int imx=1; //XXX HACK
+        if (imx < 0 || imx >= strawN){ //[between (0,10]       
             continue;
         } 
         
+        //TODO DCA function goes here
+        // float hit_distance = dca()
+
+
         //Module number
         int ihit= i; // which module are we on
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
@@ -161,7 +200,7 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
                 int labelt=i;
                 constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
                 //sdevX[i]=0.0;     // fix center modules at 0. XXX
-            constraint_file << "Constraint 0.0" << endl;
+           // constraint_file << "Constraint 0.0" << endl;
         } // end of detectors loop 
     } // constrain file open 
 } // end of writing cons file 

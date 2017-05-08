@@ -13,7 +13,8 @@
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
-#include <cmath> 
+#include <cmath>
+
 
 /**
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
@@ -27,8 +28,12 @@ struct LineData {
 	std::vector<float> x_mis; /** X-positions of misalignment in hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
-	std::vector<char> x_gen; // generated points of the track
-	std::vector<char> z_gen; // generated points of the track
+	std::vector<float> x0_gen; // generated points of the track
+	std::vector<float> z0_gen; // generated points of the track
+	std::vector<float> x1_gen; // generated points of the track
+	std::vector<float> z1_gen; // generated points of the track
+	std::vector<float> x_m; 
+	std::vector<float> x_c;
 };
 
 /**
@@ -40,11 +45,11 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=100; /** Number of tracks (i.e. records) to be simulated passing through detector */
+	static const int trackCount=1000; /** Number of tracks (i.e. records) to be simulated passing through detector */
 	//[all distances are in cm]
-	static const int beamPositionLength = 10;  // max x position of beam origin [0, 10]
-	static const int beamStart = 0; // z 
-	static const int beamStop = 25;  // z 
+	static const int beamPositionLength = 10.0;  // max x position of beam origin [0, 10]
+	static const float beamStart = 0.0; // z 
+	static const float beamStop = 25.0;  // z 
 
 	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
 
@@ -53,12 +58,12 @@ class Tracker {
  
 	///initialising physics variables
 	static const int moduleN = 2; //number of movable detectors/module [independent modules]
-	static const int layerN = 4*moduleN; //number of measurement layers  [total number of layers; 4 per module]
-	static const int strawXN = 16 ; //number of measurement elements in x direction  [number of straws per layer]
+	static const int viewN = 2; //There are two views per module (U and V)
+	static const int layerN = 2; //there are 2 layers per view
+	static const int strawN = 16; //number of measurement elements in x direction  [number of straws per layer]
 
 	static const float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
-	static const int strawTotalN = layerN*strawXN; //total number of measurement elements [8*16=128]
 	//  define detector geometry [all distances are in cm]
 	static const float startingDistanceModule0=5.0; // distance of first layer relative to the "beam" // [cm]
 	static const float strawSpacing= 0.6;  // x distance between straws in a layer
@@ -89,6 +94,9 @@ class Tracker {
 
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
+	
+	float DCA(float, float, float, float, float, float);
+
 	LineData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement 
@@ -114,8 +122,8 @@ class Tracker {
 		return projectionX;
 	}
 
-	int getStrawXN(){
-		return strawXN;
+	int getStrawN(){
+		return strawN;
 	}
 
 
@@ -135,13 +143,20 @@ class Tracker {
 		return layerN;
 	}
 
-
-	int getStrawTotalN() {
-		return strawTotalN;
+	int getModuleN() {
+		return moduleN;
 	}
 
     float getDispX(){
 		return dispX;
+	}
+	
+	float getBeamStart(){
+		return beamStart;
+	}
+	
+	float getBeamStop(){
+		return beamStop;
 	}
 
 };

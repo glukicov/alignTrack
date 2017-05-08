@@ -25,7 +25,7 @@ Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 Terminology: for now straw=central wire, detector=module (==the alignment object)
 
 2 trackers with 16 straws in length (instead of 32), 4 layers per tracker: 64 straws per tracker.
-    total of 128 straws in 8 "independent" layers. 
+    total of 128 straws in 8 layers. 
 Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
 Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
     tracks are lines between z=0 and z=25, with x1 and x2 = 10 * rand[0,1] (=0-10)
@@ -104,11 +104,15 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "   g-2  Tracker Alignment - Gleb Lukicov (UCL) - May 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "   g-2  Tracker Alignment (v0.1) - Gleb Lukicov (UCL) - May 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
+
+    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " traker modules, having " << Tracker::instance()->getStrawN() << " straws per layer (out of 4) layers." << endl;
+    cout << "No B-field, Straight Tracks, 100\% efficiency" << endl; 
+
 
     // See https://github.com/glukicov/alignTrack for instructions to generate random numbers
     try {
@@ -138,22 +142,27 @@ int main(int argc, char* argv[]){
     string off_debugFileName = "Tracker_d_off.txt";  // Offsets/Missed hits
     string MC_debugFileName = "Tracker_d_MC.txt";  // Final results from MC
     string con_debugFileName = "Tracker_d_con.txt"; //Constraints
-
-    // Set some ROOT plotting defaults
-    // gROOT->Reset();  //gROOT is a pointer; clean the environment.
-    // gStyle->SetCanvasBorderMode(1); // turn off canvas borders
-    gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
-    // gStyle->SetStatFontSize(0.07);
-    // gStyle->SetTitleFontSize(0.02);
+   
         
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
     
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
+    //TTree *T = (TTree*)file->Get("T");
+    //TCanvas *c1 = new TCanvas("c1");
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06); 
-    TH2F* h_gen = new TH2F("h_gen", "Generated track points", 100, -2, 12, 100, -2, 27);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06);
+    TH2F* h_gen = new TH2F("h_gen", "Generated track points", 15, -3, 12, 30, -3, 27);
+    TH1F* h_slope = new TH1F("h_slope", "Slope ",  100,  -100, 500);
+    TH1F* h_c = new TH1F("h_c", "Intercept ",  100,  -300, 300);
+    gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
+     // Set some ROOT plotting defaults
+    // gROOT->Reset();  //gROOT is a pointer; clean the environment.
+    // gStyle->SetCanvasBorderMode(1); // turn off canvas borders
+    // gStyle->SetStatFontSize(0.07);
+    // gStyle->SetTitleFontSize(0.02);
+
  
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -234,6 +243,8 @@ int main(int argc, char* argv[]){
     } // end of str file 
     cout<< "Steering file was generated!" << endl;
 
+    //int i_plot=0; // XXX HACK
+
     //Generating particles with energies: 10-100 [GeV]
     for (int icount=0; icount<Tracker::instance()->getTrackCount(); icount++){  //Track count is set in methods XXX is it the best place for it? 
         //rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
@@ -242,11 +253,8 @@ int main(int argc, char* argv[]){
         scatterError = 0; // set no scatterError for now 
         
         //Generating tracks 
-        LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
+        LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);     
 
-        //Fill for tracks:
-        //h_gen->Fill(generated_line.x_gen[icount],generated_line.z_gen[icount]);
-       
         for (int i=0; i<generated_line.hit_count; i++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
@@ -265,9 +273,9 @@ int main(int argc, char* argv[]){
             float dgl1 = Tracker::instance()->getProjectionX()[lyr];
             float dergl[nagl] = {dgl1};  
             //Labels 
-            int l1 = Tracker::instance()->getLayer()[lyr]; 
+            int l1 = Tracker::instance()->getLayer()[lyr]+1; //Millepede doesn't like 0 as a label apparently ... XXX 
             int label[nalc] = {l1}; 
-            
+             
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
@@ -277,8 +285,19 @@ int main(int argc, char* argv[]){
 
             
             //Fill for hits
-             //h_hits_MP2 -> Fill (rMeas_mp2); 
-             //h_sigma -> Fill(sigma_mp2);
+             h_hits_MP2 -> Fill (rMeas_mp2); 
+             h_sigma -> Fill(sigma_mp2);
+
+             //Fill for tracks:
+            if (i==0){
+            h_gen->Fill(generated_line.x0_gen[i],Tracker::instance()->getBeamStart());
+            h_gen->Fill(generated_line.x1_gen[i],Tracker::instance()->getBeamStop());
+            h_slope->Fill(generated_line.x_m[i]);
+            h_c->Fill(generated_line.x_c[i]);
+            }
+            //T->SetMarkerStyle(3);
+            //TGraph *g = new TGraph(n,x,y);
+            //g->Draw("p");
 
             //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
@@ -294,6 +313,7 @@ int main(int argc, char* argv[]){
        
     } // end of track count
     
+
     
     cout << " " << endl;
     cout << Tracker::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
@@ -332,7 +352,8 @@ int main(int argc, char* argv[]){
     debug_con.close();
     
     //ROOT stuff
-    
+    h_gen->SetMarkerStyle(30);
+    h_gen->SetMarkerColor(kBlue);
     file->Write();
     file->Close(); //good habit!
     
