@@ -8,7 +8,7 @@
 *
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
-*   Modified: 1 March 2017 
+*   Modified: 3 May 2017 
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
 PEDE routine, to align the tracking detector for the g-2 
@@ -20,7 +20,9 @@ Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 * No B-field, straight tracks, 100% efficiency. 
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted] 
 
-Terminology: for now straw=central wire...
+(!) Module, Straw, View, etc. labelling starts from 0 
+
+Terminology: for now straw=central wire, detector=module (==the alignment object)
 
 2 trackers with 16 straws in length (instead of 32), 4 layers per tracker: 64 straws per tracker.
     total of 128 straws in 8 "independent" layers. 
@@ -28,20 +30,20 @@ Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
 Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
     tracks are lines between z=0 and z=25, with x1 and x2 = 10 * rand[0,1] (=0-10)
 Resolution (i.e. tracker systematic) is  20 um = 0.002
-Misalignment manually by 0.01 for each layers in +/- x-direction
+Misalignment manually by 0.01 for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
 
 Hit rejection:  1) outside of layer
                 2) more than 0.25 cm away from straw centre (i.e straw radius) 
 
-Labels TODO   layer 1-8: A, B, C, D, E, F, G, H with straws 0-16 (e.g. C15) -> convert to hex -> back to string  = win win! 
-Constrains TODO Fixing first (A) and last (H) layers? 
+Labels Module 0, Module 1. 
+Constrains TODO ??? 
 Steering options TODO  ??? do some reading
                                     Tracker Geometry:
-First layer fist straw (A1) is at z=50, x=0; spacing between straws in layer is ... XXX 
-Spacing between layers in same view is ... XXX
-Spacing between U and V views (last and first layers in views) is ... XXX 
-Spacing between modules (last and first layers in modules) ... XXX
-Layers in a view are (e.g. U0, U1) have an extra relative x displacement of ... XXX 
+First layer fist straw (A1) is at z=50, x=0; spacing (in x) between straws in layer is ... XXX [strawSpacing]
+Spacing between layers in same view is ... XXX [layerSpacing]
+Spacing between U and V views (last and first layers in views) is ... XXX [viewSpaing]
+Spacing between modules (last and first layers in modules) ... XXX [moduleSpacing]
+Layers in a view are (e.g. U0 vs. U1) have an extra relative x displacement of ... XXX  [layerDisplacement]
 
 For more information see: 
 http://gm2-docdb.fnal.gov:8080/cgi-bin/RetrieveFile?docid=4375&filename=Orientation.pdf&version=1 
@@ -102,7 +104,7 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "   g-2  Tracker Alignment - Gleb Lukicov (UCL) - April 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "   g-2  Tracker Alignment - Gleb Lukicov (UCL) - May 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
@@ -140,22 +142,18 @@ int main(int argc, char* argv[]){
     // Set some ROOT plotting defaults
     // gROOT->Reset();  //gROOT is a pointer; clean the environment.
     // gStyle->SetCanvasBorderMode(1); // turn off canvas borders
-    //gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
+    gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
     // gStyle->SetStatFontSize(0.07);
     // gStyle->SetTitleFontSize(0.02);
         
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
-     #if 0
+    
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06); 
-    TH2F* h_true_hits = new TH2F("h_true_hits", "True X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
-    TH2F* h_det_hits = new TH2F("h_det_hits", "Tracker X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
-    TH2F* h_mis_hits = new TH2F("h_mis_hits", "Misaligned X vs Y hits [cm]", 100,  -10, 10, 100, -10, 10);
-    #endif
-
+    TH2F* h_gen = new TH2F("h_gen", "Generated track points", 100, -2, 12, 100, -2, 27);
  
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -204,7 +202,7 @@ int main(int argc, char* argv[]){
         << "Cfiles ! following bin files are Cfiles" << endl 
         << "Tracker_con.txt   ! constraints text file " << endl
         << "Tracker_data.bin   ! binary data file" << endl
-        << "fortranfiles ! following bin files are fortran" << endl
+         << "fortranfiles ! following bin files are fortran" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
         //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
         << "*hugecut 50.0     !cut factor in iteration 0" << endl
@@ -245,19 +243,20 @@ int main(int argc, char* argv[]){
         
         //Generating tracks 
         LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
+
+        //Fill for tracks:
+        //h_gen->Fill(generated_line.x_gen[icount],generated_line.z_gen[icount]);
        
         for (int i=0; i<generated_line.hit_count; i++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
-            //TODO get labels, "im" and layers here.... 
-            int lyr = 1; //XXX
-            int im =1; //XXX this must be taken from A...H 
-
-            //Number of local and global parameters 
+             //Number of local and global parameters 
             // TODO do the maths...
-            const int nalc = 2; 
+            const int nalc = 2;  
             const int nagl = 1;  
             
+            int lyr = generated_line.i_hits[i];
+
             //Local derivatives
             float dlc1=Tracker::instance()->getProjectionX()[lyr];
             float dlc2=generated_line.x_hits[i]*Tracker::instance()->getProjectionX()[lyr];
@@ -266,29 +265,20 @@ int main(int argc, char* argv[]){
             float dgl1 = Tracker::instance()->getProjectionX()[lyr];
             float dergl[nagl] = {dgl1};  
             //Labels 
-            int l1 = im+Tracker::instance()->getPixelXN()*Tracker::instance()->getLayer()[lyr]; 
+            int l1 = Tracker::instance()->getLayer()[lyr]; 
             int label[nalc] = {l1}; 
             
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
            
-            float rMeas_mp2 =  generated_line.y_hits[i]; 
+            float rMeas_mp2 =  generated_line.x_hits[i]; 
             float sigma_mp2 = generated_line.hit_sigmas[i]; 
 
-            #if 0
-            //Sanity Plots 
-            h_hits_MP2 -> Fill (rMeas_mp2); 
-            h_true_hits ->  Fill(generated_line.x_true[i], generated_line.y_true[i]);
-            //h_true_hits->SetContour(ncol);
-            //gStyle->SetPalette(100,colors);
-            h_true_hits->Draw("colz");
-            h_det_hits ->  Fill(generated_line.x_det[i], generated_line.y_det[i]);
-            h_det_hits->Draw("colz");
-            h_mis_hits ->  Fill(generated_line.x_mis[i], generated_line.y_mis[i]);
-            h_mis_hits->Draw("colz");
-                 
-            #endif
+            
+            //Fill for hits
+             //h_hits_MP2 -> Fill (rMeas_mp2); 
+             //h_sigma -> Fill(sigma_mp2);
 
             //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
@@ -342,10 +332,10 @@ int main(int argc, char* argv[]){
     debug_con.close();
     
     //ROOT stuff
-     #if 0
+    
     file->Write();
     file->Close(); //good habit!
-    #endif
+    
    
     return 0; 
 } //end of main 

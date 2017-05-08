@@ -20,16 +20,15 @@
 */
 struct LineData {
 	int hit_count; /** Number of hits in detector */
+	std::vector<float> z_hits; /** Z-positions of generated hits in detector */ //distances 
 	std::vector<float> x_hits; /** X-positions of generated hits in detector */
-	std::vector<float> y_hits; /** Y-positions of generated hits in detector */
 	std::vector<float> x_true; /** X-positions of true hits in detector */
-	std::vector<float> y_true; /** Y-positions of true hits in detector */
 	std::vector<float> x_det; /** X-positions of recorded hits in detector */
-	std::vector<float> y_det; /** Y-positions of recorded hits in detector */
 	std::vector<float> x_mis; /** X-positions of misalignment in hits in detector */
-	std::vector<float> y_mis; /** Y-positions of misalignment in hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
+	std::vector<char> x_gen; // generated points of the track
+	std::vector<char> z_gen; // generated points of the track
 };
 
 /**
@@ -42,8 +41,10 @@ class Tracker {
 	static Tracker* s_instance; // Pointer to instance of class
 
 	static const int trackCount=100; /** Number of tracks (i.e. records) to be simulated passing through detector */
-
-	static const int beamPositionLength = 10; 
+	//[all distances are in cm]
+	static const int beamPositionLength = 10;  // max x position of beam origin [0, 10]
+	static const int beamStart = 0; // z 
+	static const int beamStop = 25;  // z 
 
 	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
 
@@ -51,33 +52,33 @@ class Tracker {
 	//--------------------//
  
 	///initialising physics variables
-	static const int detectorN = 6; //number of detector layers [independent layers]
-	static const int layerN = 8; //number of measurement layers  [total number of layers] This will be layers 
-	static const int pixelXN = 16 ; //number of measurement elements in x direction this will be straws 16
+	static const int moduleN = 2; //number of movable detectors/module [independent modules]
+	static const int layerN = 4*moduleN; //number of measurement layers  [total number of layers; 4 per module]
+	static const int strawXN = 16 ; //number of measurement elements in x direction  [number of straws per layer]
 
 	static const float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
-	static const int pixelTotalN = detectorN*pixelXN; //total number of measurement elements 
-	//  define detector geometry
-	static const float startingDistancePlane1=50.0; // distance of first layer relative to the "beam" // [cm]
-	static const float planeDistance=10.0; // distance between planes //[cm] 
-	static const float width =0.02; //thickness/width of a plane (X0) // [cm]
-	static const float offset=0.5;  // offset of stereo pixels [cm] 
-	static const float stereoTheta=0.08727;  // stereo angle  // [rad] (5 deg = 0.087.. rad)
-	//static const float stereoTheta=0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX
-	static const float layerSize=20.0; //length of layers // [cm] 
+	static const int strawTotalN = layerN*strawXN; //total number of measurement elements [8*16=128]
+	//  define detector geometry [all distances are in cm]
+	static const float startingDistanceModule0=5.0; // distance of first layer relative to the "beam" // [cm]
+	static const float strawSpacing= 0.6;  // x distance between straws in a layer
+	static const float layerSpacing = 0.5; // z distance between layers in a view
+	static const float viewSpaing = 2.0; // z distance between views in a modules
+	static const float moduleSpacing= 11; // z distance between modules
+	static const float layerDisplacement = 0.3; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted] 
 
-
+	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
+	static const float strawRadius =0.25; //thickness/width of a plane (X0) // [cm]
+	//static const float stereoTheta=0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
+	
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
-    std::vector<float> projectionY; //projection of measurement direction in (Y)
-
+    
     std::vector<float> distance;  // distance between planes [this is set in geometry]
     std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
     
-    float sdevX[detectorN][pixelXN];// shift in x due to the imposed misalignment (alignment parameter)
-    float sdevY[detectorN][pixelXN] ; //shift in y due to the imposed misalignment (alignment GLOBAL parameter)
-	
+    float sdevX[moduleN];// shift in x due to the imposed misalignment (alignment parameter)
+    	
 	// Class constructor and destructor
 	Tracker();
 	~Tracker();
@@ -113,8 +114,8 @@ class Tracker {
 		return projectionX;
 	}
 
-	int getPixelXN(){
-		return pixelXN;
+	int getStrawXN(){
+		return strawXN;
 	}
 
 
@@ -122,8 +123,8 @@ class Tracker {
 		return trackCount;
 	}
 
-	float getWidth() {
-		return width;
+	float getStrawRadius() {
+		return strawRadius;
 	}
 
 	float getResolution() {
@@ -135,8 +136,8 @@ class Tracker {
 	}
 
 
-	int getPixelTotalN() {
-		return pixelTotalN;
+	int getStrawTotalN() {
+		return strawTotalN;
 	}
 
     float getDispX(){
