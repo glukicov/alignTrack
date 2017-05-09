@@ -21,7 +21,7 @@ ifeq ($(findstring 4.1., $(GCCVERS)), 4.1.)
   GCC=llvm-gcc
   GCCVERS=$(shell $(GCC) -dumpversion)  
 endif
-$(info Using gcc version $(GCCVERS))
+$(info Using gcc version $(GCCVERS)) 
 #
 # #################################################################
 #
