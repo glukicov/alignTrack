@@ -12,6 +12,7 @@ ROOTLIBS     := $(shell root-config --nonew --libs)
 CPP = g++
 CPPFLAGS = -std=c++0x
 CPPFLAGS += $(ROOTCFLAGS)
+CPPFLAGS += -Wstatic-float-init
 
 LDD = g++
 LDFLAGS = 

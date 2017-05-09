@@ -14,8 +14,8 @@ Empty constructor for detector class.
  */
 Tracker::Tracker() {
   //XXX non-static variables definition here 
-    resolution=0.002;  // 20um = 0.002 cm setting this in the constructor //TODO decide if this is a constant 
-    dispX = 0.01;  // mnaul displacemnt by 0.01 cm 
+    resolution=0.01;  // 100um = 0.01 cm setting this in the constructor //TODO decide if this is a constant 
+    dispX = 0.15;  // manual displacement by 0.15 cm 
 }
 
 /** 
@@ -174,10 +174,14 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
 // MC misalignment of detectors 
 void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     float rand_gaus;
+    float sign = 1.0; //for +x or -x direction of misalignment
    //Now misaligning detectors
     for (int i=0; i<moduleN; i++){   
                 rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-                sdevX[i] = dispX * rand_gaus;
+                if (rand_gaus < 0){sign = -1.0;} //change direction of mis. 
+                // Before misalignment was smeared XXX
+                //sdevX[i] = dispX * rand_gaus;
+                sdevX[i] = dispX * sign;
     } // end of modules
 }//end of misalign
 
@@ -188,7 +192,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     @param constraint_file Reference to ofstream to write constraint file to. 
  */
 void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool) {
-    // constraints: fix center straws in first/last layer
+    // constraints: fix centre straws in first/last layer
     // Check constraints file is open, then write. 
     if (constraint_file.is_open()) {
        
@@ -197,9 +201,9 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
         
         for (int i = 0; i < moduleN; i++){ 
             constraint_file << "Constraint 0.0" << endl;
-                int labelt=i;
+                int labelt=i+1; // Millepede doesn't like 0 as a label...
                 constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
-                //sdevX[i]=0.0;     // fix center modules at 0. XXX
+                //sdevX[i]=0.0;     // fix centre modules at 0. XXX
            // constraint_file << "Constraint 0.0" << endl;
         } // end of detectors loop 
     } // constrain file open 

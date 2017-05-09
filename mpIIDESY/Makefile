@@ -13,11 +13,12 @@
 #
 # ### Define gcc to be used ###
 #
-GCC=gcc
+GCC=/usr/local/bin/gcc-7    #Compiler on Mac
+#GCC=gcc 
 GCCVERS=$(shell $(GCC) -dumpversion)
 # On SL5 replace default (gcc41) by gcc44
 ifeq ($(findstring 4.1., $(GCCVERS)), 4.1.)
-  GCC=gcc44
+  GCC=llvm-gcc
   GCCVERS=$(shell $(GCC) -dumpversion)  
 endif
 $(info Using gcc version $(GCCVERS))

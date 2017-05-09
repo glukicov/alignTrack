@@ -20,7 +20,7 @@ Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 * No B-field, straight tracks, 100% efficiency. 
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted] 
 
-(!) Module, Straw, View, etc. labelling starts from 0 
+(!) Module, Straw, View, etc. labelling starts from 0 [+1 is put by hand as MP2 doesn't seem to accept 0 as a label]
 
 Terminology: for now straw=central wire, detector=module (==the alignment object)
 
@@ -29,8 +29,8 @@ Terminology: for now straw=central wire, detector=module (==the alignment object
 Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
 Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
     tracks are lines between z=0 and z=25, with x1 and x2 = 10 * rand[0,1] (=0-10)
-Resolution (i.e. tracker systematic) is  20 um = 0.002
-Misalignment manually by 0.01 for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
+Resolution (i.e. tracker systematic) is   100um = 0.01 cm 
+Misalignment manually by 0.15 for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
 
 Hit rejection:  1) outside of layer
                 2) more than 0.25 cm away from straw centre (i.e straw radius) 
@@ -180,14 +180,14 @@ int main(int argc, char* argv[]){
     ofstream debug_con(con_debugFileName);
 
     // Setting fixed precision for floating point values
-    cout << fixed << setprecision(9); 
-    debug_mp2 << fixed << setprecision(9); 
-    debug_calc << fixed << setprecision(9); 
-    debug_mis << fixed << setprecision(9); 
-    debug_geom << fixed << setprecision(9); 
-    debug_off << fixed << setprecision(9); 
-    debug_mc << fixed << setprecision(9); 
-    debug_con << fixed << setprecision(9);
+    cout << fixed << setprecision(7); 
+    debug_mp2 << fixed << setprecision(7); 
+    debug_calc << fixed << setprecision(7); 
+    debug_mis << fixed << setprecision(7); 
+    debug_geom << fixed << setprecision(7); 
+    debug_off << fixed << setprecision(7); 
+    debug_mc << fixed << setprecision(7); 
+    debug_con << fixed << setprecision(7);
 
     // SETTING GEOMETRY
     Tracker::instance()->setGeometry(debug_geom, debugBool);
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]){
     cout << " " << endl;
     cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
     cout << "Sanity Plots: root Tracker.root" << endl;
-    cout << "Manual Misalignment was " << Tracker::instance()->getDispX() << " cm" << endl; 
+    cout << "Manual Misalignment was " << Tracker::instance()->getDispX() << " cm: " << Tracker::instance()->getSdevX(0) << "for Module 0 and" << Tracker::instance()->getSdevX(1) << " for Module 2." << endl; 
     cout << "Resolution was " << Tracker::instance()->getResolution() << " cm" << endl;  
     Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 

@@ -32,8 +32,8 @@ struct LineData {
 	std::vector<float> z0_gen; // generated points of the track
 	std::vector<float> x1_gen; // generated points of the track
 	std::vector<float> z1_gen; // generated points of the track
-	std::vector<float> x_m; 
-	std::vector<float> x_c;
+	std::vector<float> x_m; // generated slopes
+	std::vector<float> x_c; //generated intercepts 
 };
 
 /**
@@ -47,33 +47,32 @@ class Tracker {
 
 	static const int trackCount=1000; /** Number of tracks (i.e. records) to be simulated passing through detector */
 	//[all distances are in cm]
-	static const int beamPositionLength = 10.0;  // max x position of beam origin [0, 10]
-	static const float beamStart = 0.0; // z 
-	static const float beamStop = 25.0;  // z 
+	static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
+	static constexpr float beamStart = 0.0; // z 
+	static constexpr float beamStop = 25.0;  // z 
 
 	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
 
-	float dispX;
+	float dispX; // [value is assigned in the constructor]
 	//--------------------//
- 
+ 	
+ 	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
+	
 	///initialising physics variables
+	
+	//  define detector geometry [all distances are in cm]
 	static const int moduleN = 2; //number of movable detectors/module [independent modules]
 	static const int viewN = 2; //There are two views per module (U and V)
-	static const int layerN = 2; //there are 2 layers per view
+	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
 	static const int strawN = 16; //number of measurement elements in x direction  [number of straws per layer]
-
-	static const float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
-
-	//  define detector geometry [all distances are in cm]
-	static const float startingDistanceModule0=5.0; // distance of first layer relative to the "beam" // [cm]
-	static const float strawSpacing= 0.6;  // x distance between straws in a layer
-	static const float layerSpacing = 0.5; // z distance between layers in a view
-	static const float viewSpaing = 2.0; // z distance between views in a modules
-	static const float moduleSpacing= 11; // z distance between modules
-	static const float layerDisplacement = 0.3; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted] 
-
+	static constexpr float startingDistanceModule0=5.0; // distance of the very first layer relative to the "beam" // [cm]
+	static constexpr float strawSpacing= 0.6;  // x distance between straws in a layer
+	static constexpr float layerSpacing = 0.5; // z distance between layers in a view
+	static constexpr float viewSpaing = 2.0; // z distance between views in a modules
+	static constexpr float moduleSpacing= 11; // z distance between modules
+	static constexpr float layerDisplacement = 0.3; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted] 
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
-	static const float strawRadius =0.25; //thickness/width of a plane (X0) // [cm]
+	static constexpr float strawRadius =0.25; //thickness/width of a plane (X0) // [cm]
 	//static const float stereoTheta=0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
 	
 	std::vector<int> layer; // record of layers that were hit
@@ -121,6 +120,11 @@ class Tracker {
 	std::vector<float> getProjectionX() {
 		return projectionX;
 	}
+
+	float getSdevX(int i) {
+		return sdevX[i];
+	}
+
 
 	int getStrawN(){
 		return strawN;
