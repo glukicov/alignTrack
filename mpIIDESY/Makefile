@@ -13,8 +13,17 @@
 #
 # ### Define gcc to be used ###
 #
-GCC=/usr/local/bin/gcc-7    #Compiler on Mac
-#GCC=gcc 
+
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Linux)
+GCC=gcc 
+endif
+ifeq ($(UNAME), Darwin)
+GCC=/usr/local/bin/gcc-7  #OPENMP gcc Compiler on Gleb's Mac
+endif
+
+#
 GCCVERS=$(shell $(GCC) -dumpversion)
 # On SL5 replace default (gcc41) by gcc44
 ifeq ($(findstring 4.1., $(GCCVERS)), 4.1.)
