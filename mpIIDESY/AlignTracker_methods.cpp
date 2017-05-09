@@ -113,13 +113,13 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
                 
         vector<float> straw_positions; //vector to store straw positions 
         //loops over views, layers, straws 
-        for (int i_view=0; i_view<viewN; i_view++){
+       // for (int i_view=0; i_view<viewN; i_view++){
             for (int i_layer=0; i_layer<layerN; i_layer++){
                 for (int i_straw=0; i_straw<strawN; i_straw++){
                 
                 } //end of Straws loop
             }//end of Layers lopp
-        }// end of View loop
+       // }// end of View loop
 
 
 
@@ -140,7 +140,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         int ihit= i; // which module are we on
         line.i_hits.push_back(ihit); // vector of planes that were actually hit
 
-        float xl=x-sdevX[layer[i]]; //misalign. 
+        float xl=x-sdevX[i]; //misalignment: same for all layers in a moduels 
         line.x_mis.push_back(xl);
        
         // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
@@ -153,22 +153,83 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         line.hit_sigmas.push_back(resolution);
         line.hit_count++;
    
-    }// end of looping over detector layers
+    }// end of looping over modules 
     return line; // Return data from simulated track
     
 } // end of MC
 
 //Geometry of detector arrangement 
 void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
-    float seperation=startingDistanceModule0;
-    // Geometry of detecor arrangement 
-    for (int layer_i=0; layer_i<moduleN; layer_i++){
-        layer.push_back(layer_i);  // layer [starting from 1st layer]
-        distance.push_back(seperation);  //distance between planes  [14]
-        resolutionLayer.push_back(resolution); //resolution
-        projectionX.push_back(float(1.0));  // x
-        seperation+=moduleSpacing;  // incrementing distance between detectors
-    }  // end of looping over layers
+    float dZ=startingZDistanceModule0; // to add distance in z
+    
+    //Z position of layers
+     //first layer has a specified starting point
+    //starting from the second layer there is a pattern 
+    // XXX conditions will be modified when multiple views are added 
+    for (int layer_n=0; layer_n<layerTotalN; layer_n++){
+        distance.push_back(dZ);
+        // for layers in the same view (previous position + 0.515)
+        if (layer_n%2 == 0){
+            dZ = distance[layer_n]+layerSpacing; 
+        }
+
+        // for layers in the next module (previous position of first straw + 0.515)
+        if (layer_n%2 != 0){
+           dZ = distance[layer_n-1]+moduleSpacing; 
+        }
+    layer.push_back(layer_n);  // layer label array [starting from 0th layer] 
+    }// total # layers 
+
+    if (debugBool){
+        cout << "Distance Z: ";
+        for (int i = 0; i<distance.size(); i++){
+            cout << distance[i] << " ";
+        }
+        cout << endl;
+    }
+
+    // Geometry of detector arrangement in X 
+    float dX1 = startingXDistanceModule0; // starting on the x-axis (z, 0)
+    float dX2 = layerDisplacement; 
+
+    for (int straw_i=0; straw_i<layerN; straw_i++){
+            //TODO 0,1 labels will be more efficiently used in a for loop.... 
+            mod_0_lyr_0.push_back(dX1);
+            mod_0_lyr_1.push_back(dX2);
+            mod_1_lyr_0.push_back(dX1);
+            mod_1_lyr_1.push_back(dX2);
+            resolutionLayer.push_back(resolution); //resolution
+            projectionX.push_back(float(1.0));  // x
+            //Constant displacement of straws thereafter 
+            dX1=strawSpacing;
+            dX2=strawSpacing;
+    }  // end of looping over straws  
+  
+    if (debugBool){
+        cout << "Mod0 Lyr0 X: ";
+        for (int i = 0; i<mod_0_lyr_0.size(); i++){
+            cout <<  mod_0_lyr_0[i] << " ";
+        }
+        cout << endl;
+        cout << "Mod0 Lyr1 X: ";
+        
+        for (int i = 0; i<mod_0_lyr_1.size(); i++){
+            cout <<  mod_0_lyr_1[i] << " ";
+        }
+         cout << endl;
+        cout << "Mod1 Lyr0 X: ";
+        for (int i = 0; i<mod_1_lyr_0.size(); i++){
+            cout <<  mod_1_lyr_0[i] << " ";
+        }
+         cout << endl;
+        cout << "Mod1 Lyr1 X: ";
+        
+        for (int i = 0; i<mod_1_lyr_1.size(); i++){
+            cout <<  mod_1_lyr_0[i] << " ";
+        }
+        cout << endl;
+    }
+
 } // end of geom
 
 // MC misalignment of detectors 
@@ -181,7 +242,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
                 if (rand_gaus < 0){sign = -1.0;} //change direction of mis. 
                 // Before misalignment was smeared XXX
                 //sdevX[i] = dispX * rand_gaus;
-                sdevX[i] = dispX * sign;
+                sdevX.push_back(dispX * sign);
     } // end of modules
 }//end of misalign
 

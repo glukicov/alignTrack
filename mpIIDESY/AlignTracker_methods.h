@@ -45,9 +45,10 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=1000; /** Number of tracks (i.e. records) to be simulated passing through detector */
+	static const int trackCount=100; /** Number of tracks (i.e. records) to be simulated passing through detector */
 	//[all distances are in cm]
-	static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
+	//static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
+	static const int beamPositionLength = 2.0;
 	static constexpr float beamStart = 0.0; // z 
 	static constexpr float beamStop = 25.0;  // z 
 
@@ -62,15 +63,17 @@ class Tracker {
 	
 	//  define detector geometry [all distances are in cm]
 	static const int moduleN = 2; //number of movable detectors/module [independent modules]
-	static const int viewN = 2; //There are two views per module (U and V)
+	//static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
-	static const int strawN = 16; //number of measurement elements in x direction  [number of straws per layer]
-	static constexpr float startingDistanceModule0=5.0; // distance of the very first layer relative to the "beam" // [cm]
-	static constexpr float strawSpacing= 0.6;  // x distance between straws in a layer
-	static constexpr float layerSpacing = 0.5; // z distance between layers in a view
-	static constexpr float viewSpaing = 2.0; // z distance between views in a modules
-	static constexpr float moduleSpacing= 11; // z distance between modules
-	static constexpr float layerDisplacement = 0.3; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted] 
+	static const int layerTotalN = layerN*moduleN; // total number of layers 
+	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
+	static constexpr float startingZDistanceModule0=5.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
+	static constexpr float startingXDistanceModule0=0.0; // distance of the very first layer [the first straw] in x // [cm]
+	static constexpr float strawSpacing= 0.606;  // x distance between straws in a layer
+	static constexpr float layerSpacing = 0.515; // z distance between layers in a view
+	static constexpr float viewSpaing = 2.020; // z distance between views in a modules
+	static constexpr float moduleSpacing= 18.735; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
+	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted] 
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius =0.25; //thickness/width of a plane (X0) // [cm]
 	//static const float stereoTheta=0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
@@ -78,10 +81,17 @@ class Tracker {
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
     
-    std::vector<float> distance;  // distance between planes [this is set in geometry]
+    std::vector<float> distance;  // Z distance between planes [this is set in geometry]
     std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
     
-    float sdevX[moduleN];// shift in x due to the imposed misalignment (alignment parameter)
+    std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
+
+    // BIG TODO: implement this in a different place allowing to dynamically name and reserve size of vectors/vector # based on geom. constants
+    // then used in all for loops with i, n = 0, 1, 2 .....
+    std::vector<float> mod_0_lyr_0;
+    std::vector<float> mod_0_lyr_1;
+    std::vector<float> mod_1_lyr_0;
+    std::vector<float> mod_1_lyr_1;
     	
 	// Class constructor and destructor
 	Tracker();

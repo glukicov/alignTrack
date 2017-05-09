@@ -13,6 +13,7 @@ CPP = g++
 CPPFLAGS = -std=c++0x
 CPPFLAGS += $(ROOTCFLAGS)
 CPPFLAGS += -Wstatic-float-init
+CPPFLAGS += -fstack-protector-all
 
 LDD = g++
 LDFLAGS = 
