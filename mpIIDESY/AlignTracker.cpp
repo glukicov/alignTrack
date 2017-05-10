@@ -151,8 +151,8 @@ int main(int argc, char* argv[]){
     //TTree *T = (TTree*)file->Get("T");
     //TCanvas *c1 = new TCanvas("c1");
      // Book histograms
-    TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.004); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.05, 0.06);
+    TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.02); // F=float bins, name, title, nBins, Min, Max
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.1, 0.1);
     TH2F* h_gen = new TH2F("h_gen", "Generated track points", 15, -3, 12, 30, -3, 27);
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  100,  -100, 500);
     TH1F* h_c = new TH1F("h_c", "Intercept ",  100,  -300, 300);
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]){
     cout << " " << endl;
     cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
     cout << "Sanity Plots: root Tracker.root" << endl;
-    cout << "Manual Misalignment was " << Tracker::instance()->getDispX() << " cm: " << Tracker::instance()->getSdevX(0) << "for Module 0 and" << Tracker::instance()->getSdevX(1) << " for Module 2." << endl; 
+    cout << "Manual Misalignment was " << Tracker::instance()->getDispX() << " cm: " << Tracker::instance()->getSdevX(0) << " for Module 0 and " << Tracker::instance()->getSdevX(1) << " for Module 1." << endl; 
     cout << "Resolution was " << Tracker::instance()->getResolution() << " cm" << endl;  
     Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 

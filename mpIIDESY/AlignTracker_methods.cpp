@@ -181,7 +181,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
     }// total # layers 
 
     if (debugBool){
-        cout << "Distance Z: ";
+        cout << "Plane Dis. Z: ";
         for (int i = 0; i<distance.size(); i++){
             cout << distance[i] << " ";
         }
@@ -192,7 +192,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
     float dX1 = startingXDistanceModule0; // starting on the x-axis (z, 0)
     float dX2 = layerDisplacement; 
 
-    for (int straw_i=0; straw_i<layerN; straw_i++){
+    for (int straw_i=0; straw_i<strawN; straw_i++){
             //TODO 0,1 labels will be more efficiently used in a for loop.... 
             mod_0_lyr_0.push_back(dX1);
             mod_0_lyr_1.push_back(dX2);
@@ -201,8 +201,8 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
             resolutionLayer.push_back(resolution); //resolution
             projectionX.push_back(float(1.0));  // x
             //Constant displacement of straws thereafter 
-            dX1=strawSpacing;
-            dX2=strawSpacing;
+            dX1=strawSpacing+dX1;
+            dX2=strawSpacing+dX2;
     }  // end of looping over straws  
   
     if (debugBool){
@@ -225,7 +225,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
         cout << "Mod1 Lyr1 X: ";
         
         for (int i = 0; i<mod_1_lyr_1.size(); i++){
-            cout <<  mod_1_lyr_0[i] << " ";
+            cout <<  mod_1_lyr_1[i] << " ";
         }
         cout << endl;
     }
@@ -238,11 +238,11 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     float sign = 1.0; //for +x or -x direction of misalignment
    //Now misaligning detectors
     for (int i=0; i<moduleN; i++){   
-                rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-                if (rand_gaus < 0){sign = -1.0;} //change direction of mis. 
+                rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev()); 
                 // Before misalignment was smeared XXX
                 //sdevX[i] = dispX * rand_gaus;
                 sdevX.push_back(dispX * sign);
+                sign = -sign;
     } // end of modules
 }//end of misalign
 
