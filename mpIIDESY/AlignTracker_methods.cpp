@@ -38,13 +38,35 @@ Tracker* Tracker::instance() {
 }
 
 /**
-  Distance of closest approach between a line (track) and a point (straw/wire).
-  
+  Distance (parallel) of closest approach between a line (track) and a point (straw/wire).
+  //BIG TODO: Implement this properly 
+
+  Equation of a line: z=mx+c
+  The (x,z) coordinate of a straw are known. 
+
+    1) Find x_hit [=(z-c)/m] for the line at given z
+    2) Find straw closest to x_hit
+    3) Find x_straw-x_hit 
    @return dca
 */
-float Tracker::DCA(float x_straw, float y_straw, float slope, float intercept, float x_point, float y_point){
+float Tracker::DCA(std::vector<float> layer_x, float z_straw, float slope, float intercept){  // XXX HACK 
 
+    //Find the x coordinate on that line at given z
+    float x_hit = (z_straw - intercept) / (slope);
+
+    //Find the closest x straw coordinate given x on the line [the vector of straw x is naturally in an ascending order]
+    float lastDx=LONG_MAX; //ensure failure of the first comparison
+    float thisDx=0; 
     float dca = 0;
+    for (int i=0; i<layer_x.size(); i++){
+        thisDx=layer_x[i]-x_hit;
+        if (abs(lastDx)>abs(thisDx)){
+            lastDx=thisDx;
+        }
+        if (abs(thisDx)>abs(lastDx)){
+            dca=lastDx; 
+        }
+    }
 
     return dca; 
 }
@@ -83,7 +105,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
    
    //The main loop is for modules [which are misaligned]
     //TODO within modules we will have loops over views, layers, straws 
-    for(int i=0; i<moduleN; i++){
+    for(int i=0; i<layerTotalN; i++){
         
         //Only want to fill for track not all hits
         if (i==0){
@@ -104,14 +126,13 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         line.x_det.push_back(xs);
         
         //true track position [for MS]
-        x=x+dx*dPostion;
+        x=x+dx*dPostion;  
         line.x_true.push_back(x);
 
         //multiple scattering
         rand_gaus= RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         dx = dx+ rand_gaus * scatterError;
                 
-        vector<float> straw_positions; //vector to store straw positions 
         //loops over views, layers, straws 
        // for (int i_view=0; i_view<viewN; i_view++){
             for (int i_layer=0; i_layer<layerN; i_layer++){
@@ -121,7 +142,19 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
             }//end of Layers lopp
        // }// end of View loop
 
-
+        // BIG TODO: implement this in a different place allowing to dynamically name and reserve size of vectors/vector # based on geom. constants
+        // then used in all for loops with i, n = 0, 1, 2 .....
+        for (int i=0; i<mod_0_lyr_0.size(); i++){
+            //TODO DCA function goes here
+        float hit_distance_1 = DCA(mod_0_lyr_0, distance[i], dx, x_intercept);
+        float hit_distance_2 = DCA(mod_0_lyr_1, distance[i], dx, x_intercept);
+        float hit_distance_3 = DCA(mod_1_lyr_0, distance[i], dx, x_intercept);
+        float hit_distance_4 = DCA(mod_1_lyr_1, distance[i], dx, x_intercept);
+        line.dca1.push_back(hit_distance_1);
+        line.dca2.push_back(hit_distance_2);
+        line.dca3.push_back(hit_distance_3);
+        line.dca4.push_back(hit_distance_4);
+        }
 
         // which straw was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
          //Rejection of hits
@@ -132,13 +165,9 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
             continue;
         } 
         
-        //TODO DCA function goes here
-        // float hit_distance = dca()
-
-
+        
         //Module number
-        int ihit= i; // which module are we on
-        line.i_hits.push_back(ihit); // vector of planes that were actually hit
+        line.i_hits.push_back(i); // vector of planes that were actually hit
 
         float xl=x-sdevX[i]; //misalignment: same for all layers in a moduels 
         line.x_mis.push_back(xl);
@@ -242,7 +271,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
                 // Before misalignment was smeared XXX
                 //sdevX[i] = dispX * rand_gaus;
                 sdevX.push_back(dispX * sign);
-                sign = -sign;
+                sign = -sign;  //next module will be displaced in the opposite direction
     } // end of modules
 }//end of misalign
 

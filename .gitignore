@@ -234,7 +234,8 @@ readPedeHists_C.so
 readPedeHists_C_ACLiC_dict_rdict.pcm
 ../python_toy_tracker/toytraceback.pyc
 /python_toy_tracker/toytraceback.pyc
-
+*.d
+.depend
 
 ### files NOT to ignore 
 

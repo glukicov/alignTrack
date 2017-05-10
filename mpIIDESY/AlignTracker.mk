@@ -31,11 +31,19 @@ all : $(PROGNAME)
 $(PROGNAME) : $(OBJECTS) $(PROGNAME).o
 	$(CPP) -o $@ $(OBJECTS) $(PROGNAME).o $(LDFLAGS) $(LIBS)
 
-%.o : %.cpp
-	$(CPP) $(CPPFLAGS) -o $@ -c $<
+%.o : %.cpp %.h AlignTracker_methods.h
+	$(CPP) $(CPPFLAGS) -c $<
 
 test:
 	@echo $(ROOTCFLAGS)
+
+depend: .depend
+
+.depend: $(SRCS)
+	rm -f ./.depend
+	$(CPP) $(SOURCES) -MM $^ -MF ./.depend;
+
+include .depend
 
 clean :
 	-rm -f ${PROGNAME} ${OBJECTS} Tracker_con.txt Tracker_str.txt Tracker_data.bin

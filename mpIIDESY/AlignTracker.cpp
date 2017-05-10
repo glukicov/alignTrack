@@ -127,7 +127,7 @@ int main(int argc, char* argv[]){
         } 
     
     //arguments for Mille constructor:
-    const char* outFileName = "Tracker_data.bin";
+    const char* outFileName = "Tracker_data.bin"; 
     bool asBinary = true; // set false for debugging
     bool writeZero = false; // to write 0 LC/DLC labels - not accepted by pede 
     
@@ -154,8 +154,13 @@ int main(int argc, char* argv[]){
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.02); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.1, 0.1);
     TH2F* h_gen = new TH2F("h_gen", "Generated track points", 15, -3, 12, 30, -3, 27);
-    TH1F* h_slope = new TH1F("h_slope", "Slope ",  100,  -100, 500);
-    TH1F* h_c = new TH1F("h_c", "Intercept ",  100,  -300, 300);
+    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
+    TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
+    TH1F* h_dca1 = new TH1F("h_dca1", "DCA1",  500,  -1, 1);
+    TH1F* h_dca2 = new TH1F("h_dca2", "DCA1",  500,  -1, 1);
+    TH1F* h_dca3 = new TH1F("h_dca3", "DCA1",  500,  -1, 1);
+    TH1F* h_dca4 = new TH1F("h_dca4", "DCA1",  500,  -1, 1); 
+
     gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
      // Set some ROOT plotting defaults
     // gROOT->Reset();  //gROOT is a pointer; clean the environment.
@@ -294,6 +299,10 @@ int main(int argc, char* argv[]){
             h_gen->Fill(generated_line.x1_gen[i],Tracker::instance()->getBeamStop());
             h_slope->Fill(generated_line.x_m[i]);
             h_c->Fill(generated_line.x_c[i]);
+            h_dca1->Fill(generated_line.dca1[i]);
+            h_dca2->Fill(generated_line.dca2[i]);
+            h_dca3->Fill(generated_line.dca3[i]);
+            h_dca4->Fill(generated_line.dca4[i]);
             }
             //T->SetMarkerStyle(3);
             //TGraph *g = new TGraph(n,x,y);
