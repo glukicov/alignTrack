@@ -57,13 +57,12 @@ class Tracker {
 	static constexpr float beamStop = 25.0;  // z 
 
 	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
-
 	float dispX; // [value is assigned in the constructor]
-	//--------------------//
  	
  	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 	
-	///initialising physics variables
+	//initialising physics variables
+ 	//XXX
 	
 	//  define detector geometry [all distances are in cm]
 	static const int moduleN = 2; //number of movable detectors/module [independent modules]
@@ -71,16 +70,17 @@ class Tracker {
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
 	static const int layerTotalN = layerN*moduleN; // total number of layers 
 	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
-	static constexpr float startingZDistanceModule0=5.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
-	static constexpr float startingXDistanceModule0=0.0; // distance of the very first layer [the first straw] in x // [cm]
-	static constexpr float strawSpacing= 0.606;  // x distance between straws in a layer
+	static constexpr float startingZDistanceStraw0 = 5.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
+	static constexpr float startingXDistanceStraw0 = 0.0; // distance of the very first layer [the first straw] in x // [cm]
+	static constexpr float strawSpacing = 0.606;  // x distance between straws in a layer
 	static constexpr float layerSpacing = 0.515; // z distance between layers in a view
 	static constexpr float viewSpaing = 2.020; // z distance between views in a modules
-	static constexpr float moduleSpacing= 18.735; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
+	static constexpr float moduleSpacing = 13.735; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
 	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted] 
+	
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
-	static constexpr float strawRadius =0.25; //thickness/width of a plane (X0) // [cm]
-	//static const float stereoTheta=0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
+	static constexpr float strawRadius = 0.25; //thickness/width of a plane (X0) // [cm]
+	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
 	
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
@@ -92,6 +92,11 @@ class Tracker {
 
     // BIG TODO: implement this in a different place allowing to dynamically name and reserve size of vectors/vector # based on geom. constants
     // then used in all for loops with i, n = 0, 1, 2 .....
+
+    // or std::vector<float<float<float>>> [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
+    std::vector< std::vector< std::vector< float > > > mod_lyr_straw;  
+
+    //TODO delete 
     std::vector<float> mod_0_lyr_0;
     std::vector<float> mod_0_lyr_1;
     std::vector<float> mod_1_lyr_0;

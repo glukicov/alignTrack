@@ -185,14 +185,14 @@ int main(int argc, char* argv[]){
     ofstream debug_con(con_debugFileName);
 
     // Setting fixed precision for floating point values
-    cout << fixed << setprecision(7); 
-    debug_mp2 << fixed << setprecision(7); 
-    debug_calc << fixed << setprecision(7); 
-    debug_mis << fixed << setprecision(7); 
-    debug_geom << fixed << setprecision(7); 
-    debug_off << fixed << setprecision(7); 
-    debug_mc << fixed << setprecision(7); 
-    debug_con << fixed << setprecision(7);
+    cout << fixed << setprecision(6); 
+    debug_mp2 << fixed << setprecision(6); 
+    debug_calc << fixed << setprecision(6); 
+    debug_mis << fixed << setprecision(6); 
+    debug_geom << fixed << setprecision(6); 
+    debug_off << fixed << setprecision(6); 
+    debug_mc << fixed << setprecision(6); 
+    debug_con << fixed << setprecision(6);
 
     // SETTING GEOMETRY
     Tracker::instance()->setGeometry(debug_geom, debugBool);
@@ -248,7 +248,6 @@ int main(int argc, char* argv[]){
     } // end of str file 
     cout<< "Steering file was generated!" << endl;
 
-    //int i_plot=0; // XXX HACK
 
     //Generating particles with energies: 10-100 [GeV]
     for (int icount=0; icount<Tracker::instance()->getTrackCount(); icount++){  //Track count is set in methods XXX is it the best place for it? 
@@ -263,22 +262,23 @@ int main(int argc, char* argv[]){
         for (int i=0; i<generated_line.hit_count; i++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
-             //Number of local and global parameters 
-            // TODO do the maths...
+            //Number of local and global parameters 
             const int nalc = 2;  
             const int nagl = 1;  
-            
-            int lyr = generated_line.i_hits[i];
+
+            int label_mp2 = generated_line.i_hits[i]; //label to associate hits within different layers with a correct module
 
             //Local derivatives
-            float dlc1=Tracker::instance()->getProjectionX()[lyr];
-            float dlc2=generated_line.x_hits[i]*Tracker::instance()->getProjectionX()[lyr];
+            // TODO do the maths...
+            float dlc1=Tracker::instance()->getProjectionX()[label_mp2];
+            float dlc2=generated_line.x_hits[i]*Tracker::instance()->getProjectionX()[label_mp2];
             float derlc[nalc] = {dlc1, dlc2};
             //Global derivatives
-            float dgl1 = Tracker::instance()->getProjectionX()[lyr];
+            float dgl1 = Tracker::instance()->getProjectionX()[label_mp2];
             float dergl[nagl] = {dgl1};  
             //Labels 
-            int l1 = Tracker::instance()->getLayer()[lyr]+1; //Millepede doesn't like 0 as a label apparently ... XXX 
+            /// TODO check that properly
+            int l1 = label_mp2+1; //Millepede doesn't like 0 as a label apparently ... XXX 
             int label[nalc] = {l1}; 
              
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
@@ -289,20 +289,21 @@ int main(int argc, char* argv[]){
             float sigma_mp2 = generated_line.hit_sigmas[i]; 
 
             
+            
             //Fill for hits
              h_hits_MP2 -> Fill (rMeas_mp2); 
              h_sigma -> Fill(sigma_mp2);
 
-             //Fill for tracks:
+             //Fill for tracks (once only):
             if (i==0){
-            h_gen->Fill(generated_line.x0_gen[i],Tracker::instance()->getBeamStart());
-            h_gen->Fill(generated_line.x1_gen[i],Tracker::instance()->getBeamStop());
-            h_slope->Fill(generated_line.x_m[i]);
-            h_c->Fill(generated_line.x_c[i]);
-            h_dca1->Fill(generated_line.dca1[i]);
-            h_dca2->Fill(generated_line.dca2[i]);
-            h_dca3->Fill(generated_line.dca3[i]);
-            h_dca4->Fill(generated_line.dca4[i]);
+            // h_gen->Fill(generated_line.x0_gen[i],Tracker::instance()->getBeamStart());
+            // h_gen->Fill(generated_line.x1_gen[i],Tracker::instance()->getBeamStop());
+            // h_slope->Fill(generated_line.x_m[i]);
+            // h_c->Fill(generated_line.x_c[i]);
+            // h_dca1->Fill(generated_line.dca1[i]);
+            // h_dca2->Fill(generated_line.dca2[i]);
+            // h_dca3->Fill(generated_line.dca3[i]);
+            // h_dca4->Fill(generated_line.dca4[i]);
             }
             //T->SetMarkerStyle(3);
             //TGraph *g = new TGraph(n,x,y);
@@ -310,6 +311,9 @@ int main(int argc, char* argv[]){
 
             //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
+            
+            
+
 
         hitsN++; //count hits
         } // end of hits loop

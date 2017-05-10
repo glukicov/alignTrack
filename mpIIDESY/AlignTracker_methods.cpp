@@ -95,17 +95,18 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     //float x_slope=(x_1-x_0)/distance[layerN];
     //float x_slope=(x_1-x_0)/(beamStop-beamStart); //beams starts at z=0, beamsStop=25; 
     //XXX Wouldn't the correct detention be: 
-    float x_slope=(beamStop-beamStart)/(x_1-x_0); //m=dz/dx?
+    float x_slope=(beamStop-beamStart)/(x_1-x_0); //m=dz/dx? Slope for a line with coordinates (x_0, beamStart), (x_1, beamStop)
 
-    float x_intercept = beamStart - x_slope*x_1; 
+    float x_intercept = beamStart - x_slope*x_0; // for line z=mx+c -> c= z - mx
 
-    float x = x_0;
+    float x_track = x_0;
     float dx = x_slope;
     float previousPosition = 0.0;  // previous position in "z"
    
-   //The main loop is for modules [which are misaligned]
-    //TODO within modules we will have loops over views, layers, straws 
-    for(int i=0; i<layerTotalN; i++){
+    //The main loop is for modules: 
+    // Then looping over layers [we know there will be at most 1 hit per layer]
+    // within layers we will have loops over straws in that layer [to find out which straw was hit and dca]
+    for(int i=0; i<moduleN; i++){
         
         //Only want to fill for track not all hits
         if (i==0){
@@ -117,67 +118,73 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         line.x_c.push_back(x_intercept);
         }
         
+    #if 0  //This was left over from MP2 Toy model: we are implimenting dca instead...
+
         //distance between consecutive modules 
-        float dPostion = distance[i] - previousPosition;
+        float dPostion = distance[i] - previousPosition; // in Z
         previousPosition = distance[i];
-
         //positions on the detector plane  
-        float xs=x_0 + distance[i] * x_slope;
-        line.x_det.push_back(xs);
-        
+        float x_det=x_0 + distance[i] * x_slope;
+        line.x_det.push_back(x_det);
         //true track position [for MS]
-        x=x+dx*dPostion;  
-        line.x_true.push_back(x);
-
+        x_track=x_track+dx*dPostion;  
+        line.x_true.push_back(x_track);
         //multiple scattering
         rand_gaus= RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         dx = dx+ rand_gaus * scatterError;
-                
+    #endif
+
+        float x_det=0; 
         //loops over views, layers, straws 
        // for (int i_view=0; i_view<viewN; i_view++){
-            for (int i_layer=0; i_layer<layerN; i_layer++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
                 for (int i_straw=0; i_straw<strawN; i_straw++){
-                
+
+                    x_track = 1;  // true track position [from line] 
+                    
+                    float x_det =2; // position on the detector [from dca]
+
                 } //end of Straws loop
-            }//end of Layers lopp
+            }//end of Layers loop
        // }// end of View loop
 
         // BIG TODO: implement this in a different place allowing to dynamically name and reserve size of vectors/vector # based on geom. constants
         // then used in all for loops with i, n = 0, 1, 2 .....
         for (int i=0; i<mod_0_lyr_0.size(); i++){
             //TODO DCA function goes here
-        float hit_distance_1 = DCA(mod_0_lyr_0, distance[i], dx, x_intercept);
-        float hit_distance_2 = DCA(mod_0_lyr_1, distance[i], dx, x_intercept);
-        float hit_distance_3 = DCA(mod_1_lyr_0, distance[i], dx, x_intercept);
-        float hit_distance_4 = DCA(mod_1_lyr_1, distance[i], dx, x_intercept);
-        line.dca1.push_back(hit_distance_1);
-        line.dca2.push_back(hit_distance_2);
-        line.dca3.push_back(hit_distance_3);
-        line.dca4.push_back(hit_distance_4);
+        // float hit_distance_1 = DCA(mod_0_lyr_0, distance[i], dx, x_intercept);
+        // float hit_distance_2 = DCA(mod_0_lyr_1, distance[i], dx, x_intercept);
+        // float hit_distance_3 = DCA(mod_1_lyr_0, distance[i], dx, x_intercept);
+        // float hit_distance_4 = DCA(mod_1_lyr_1, distance[i], dx, x_intercept);
+        // line.dca1.push_back(hit_distance_1);
+        // line.dca2.push_back(hit_distance_2);
+        // line.dca3.push_back(hit_distance_3);
+        // line.dca4.push_back(hit_distance_4);
         }
 
-        // which straw was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
+        
          //Rejection of hits
+        // which straw was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
         //TODO rewrite this ugly part 
         // For now, NO hit rejection 
         int imx=1; //XXX HACK
         if (imx < 0 || imx >= strawN){ //[between (0,10]       
-            continue;
+            //continue;
         } 
         
         
-        //Module number
-        line.i_hits.push_back(i); // vector of planes that were actually hit
+        //Module number [for labelling]
+        line.i_hits.push_back(i); // vector of planes that were actually hit [after passing rejection test]
 
-        float xl=x-sdevX[i]; //misalignment: same for all layers in a moduels 
-        line.x_mis.push_back(xl);
-       
-        // we seem to now redefine the coordinates so that x is now the distance and y is a measure of the residual
+        float x_mis=x_track-sdevX[i]; //x position due to misalignment: same for all layers in a modules [true position - misalignment]
+        line.x_mis.push_back(x_mis);
+        
+        //Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
         line.z_hits.push_back(distance[i]);
         // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
         // projection Y is always 0 for non-stereo modules?? what is the motivation? 
         rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-        float hit = (xl-xs)*projectionX[i] + rand_gaus *resolution; 
+        float hit = (x_mis-x_det)*projectionX[i] + rand_gaus *resolution; //difference between hit due to misalignment [] and detected position * smeared resolution 
         line.x_hits.push_back(hit);
         line.hit_sigmas.push_back(resolution);
         line.hit_count++;
@@ -189,12 +196,13 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
 
 //Geometry of detector arrangement 
 void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
-    float dZ=startingZDistanceModule0; // to add distance in z
+    float dZ=startingZDistanceStraw0; // to add distance in z
     
     //Z position of layers
      //first layer has a specified starting point
     //starting from the second layer there is a pattern 
     // XXX conditions will be modified when multiple views are added 
+    //We have layerTotalN elements in z to be matched with potion in z
     for (int layer_n=0; layer_n<layerTotalN; layer_n++){
         distance.push_back(dZ);
         // for layers in the same view (previous position + 0.515)
@@ -202,61 +210,51 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
             dZ = distance[layer_n]+layerSpacing; 
         }
 
-        // for layers in the next module (previous position of first straw + 0.515)
+        // for layers in the next module (previous position of first straw + 18.735)
+        // This will be modified with addition of views XXX
         if (layer_n%2 != 0){
            dZ = distance[layer_n-1]+moduleSpacing; 
         }
-    layer.push_back(layer_n);  // layer label array [starting from 0th layer] 
+    layer.push_back(layer_n);  // layer label array [starting from 0th layer]
+    resolutionLayer.push_back(resolution); //resolution in each layer
+    projectionX.push_back(float(1.0));  // x projection of hits in each layer
     }// total # layers 
 
-    if (debugBool){
-        cout << "Plane Dis. Z: ";
-        for (int i = 0; i<distance.size(); i++){
-            cout << distance[i] << " ";
-        }
-        cout << endl;
-    }
 
     // Geometry of detector arrangement in X 
-    float dX1 = startingXDistanceModule0; // starting on the x-axis (z, 0)
-    float dX2 = layerDisplacement; 
+    float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0)
 
-    for (int straw_i=0; straw_i<strawN; straw_i++){
-            //TODO 0,1 labels will be more efficiently used in a for loop.... 
-            mod_0_lyr_0.push_back(dX1);
-            mod_0_lyr_1.push_back(dX2);
-            mod_1_lyr_0.push_back(dX1);
-            mod_1_lyr_1.push_back(dX2);
-            resolutionLayer.push_back(resolution); //resolution
-            projectionX.push_back(float(1.0));  // x
-            //Constant displacement of straws thereafter 
-            dX1=strawSpacing+dX1;
-            dX2=strawSpacing+dX2;
-    }  // end of looping over straws  
+    // XXX conditions will be modified when multiple views are added 
+    for (int i_module=0; i_module<moduleN; i_module++){
+        mod_lyr_straw.push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
+         //for (int i_view=0; i_view<viewN; i_view++){
+                for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
+                    mod_lyr_straw[i_module].push_back(vector<float> ()); //initialize the first index with a 2D vector
+                    for (int i_straw=0; i_straw<strawN; i_straw++){
+                        mod_lyr_straw[i_module][i_layer].push_back(dX); 
+                        dX=strawSpacing+dX; //while we are in the same layer: increment straw spacing in x
+                    } //end of Straws loop
+                    dX=layerDisplacement; //set displacement in x for the next layer in the view
+                }//end of Layers loop
+                dX=startingXDistanceStraw0;
+           // }// end of View loop
+        }//Modules  
   
     if (debugBool){
-        cout << "Mod0 Lyr0 X: ";
-        for (int i = 0; i<mod_0_lyr_0.size(); i++){
-            cout <<  mod_0_lyr_0[i] << " ";
-        }
-        cout << endl;
-        cout << "Mod0 Lyr1 X: ";
-        
-        for (int i = 0; i<mod_0_lyr_1.size(); i++){
-            cout <<  mod_0_lyr_1[i] << " ";
-        }
-         cout << endl;
-        cout << "Mod1 Lyr0 X: ";
-        for (int i = 0; i<mod_1_lyr_0.size(); i++){
-            cout <<  mod_1_lyr_0[i] << " ";
-        }
-         cout << endl;
-        cout << "Mod1 Lyr1 X: ";
-        
-        for (int i = 0; i<mod_1_lyr_1.size(); i++){
-            cout <<  mod_1_lyr_1[i] << " ";
-        }
-        cout << endl;
+        int Zcounter=0;
+        for (int i_module=0; i_module<moduleN; i_module++){
+          //for (int i_view=0; i_view<viewN; i_view++){
+                for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
+                    cout << "Mod " << i_module  << " Layer " << i_layer << " X : ";
+                    for (int i_straw=0; i_straw<strawN; i_straw++){
+                    cout << mod_lyr_straw[i_module][i_layer][i_straw]<<" ";
+                    } //end of Straws loop
+                    cout << " | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
+                    Zcounter++;
+                } // end of Layers
+                
+           // }// end of View loop
+        }//Modules 
     }
 
 } // end of geom
@@ -268,7 +266,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
    //Now misaligning detectors
     for (int i=0; i<moduleN; i++){   
                 rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev()); 
-                // Before misalignment was smeared XXX
+                // Before misalignment was also smeared XXX
                 //sdevX[i] = dispX * rand_gaus;
                 sdevX.push_back(dispX * sign);
                 sign = -sign;  //next module will be displaced in the opposite direction
