@@ -200,7 +200,7 @@ void readC(double *bufferDouble, float *bufferFloat, int *bufferInt,
 	 *nFileIn: number of the file the record is read from,
 	 starting from 1 (not 0)
 	 */
-	int doublePrec = 1;  // HACK used to be 0
+	int doublePrec = 0;
 
 	if (!errorFlag)
 		return;

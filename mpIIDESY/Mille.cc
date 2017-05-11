@@ -124,7 +124,7 @@ void Mille::mille(int NLC, const float *derLc,
  * \param[in]    floatings  floats
  * \param[in]    integers   ints
  */
-void Mille::special(int nSpecial, const double *floatings, const int *integers)
+void Mille::special(int nSpecial, const float *floatings, const int *integers)
 {
   if (nSpecial == 0) return;
   if (myBufferPos == -1) this->newSet(); // start, e.g. new track

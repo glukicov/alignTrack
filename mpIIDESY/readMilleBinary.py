@@ -55,9 +55,7 @@ intfmt = 'i'  # SL5, gcc-4
 #intfmt = 'l' # SL4, gcc-3
 #
 ## Binary file name
-#fname = "milleBinaryISN.dat"
-#fname ="mp2tst.bin"
-fname = "test.bin"
+fname = "milleBinaryISN.dat"
 #
 ## number of records (tracks) to show
 mrec = 10

@@ -575,7 +575,7 @@ SUBROUTINE genln2()
     IMPLICIT NONE
     INTEGER(mpi) :: gran
     INTEGER(mpi) :: uran
-    !REAL(mps) :: rannum
+    REAL(mps) :: rannum
     REAL(mps) :: rannum1
     REAL(mps) :: rannum2
     REAL(mps) :: rannum3
