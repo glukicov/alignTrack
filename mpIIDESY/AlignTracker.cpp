@@ -250,7 +250,7 @@ int main(int argc, char* argv[]){
 
 
     //Generating particles with energies: 10-100 [GeV]
-    for (int icount=0; icount<Tracker::instance()->getTrackCount(); icount++){  //Track count is set in methods XXX is it the best place for it? 
+    for (int trackCount=0; trackCount<Tracker::instance()->getTrackCount(); trackCount++){  //Track count is set in methods XXX is it the best place for it? 
         //rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
         //float p=pow(10.0, 1+rand_num);
         //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
@@ -259,34 +259,34 @@ int main(int argc, char* argv[]){
         //Generating tracks 
         LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);     
 
-        for (int i=0; i<generated_line.hit_count; i++){  //counting only hits going though detector
+        for (int hitCount=0; hitCount<generated_line.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
             //Number of local and global parameters 
             const int nalc = 2;  
             const int nagl = 1;  
 
-            int label_mp2 = generated_line.i_hits[i]; //label to associate hits within different layers with a correct module
+            int label_mp2 = generated_line.i_hits[hitCount]; //label to associate hits within different layers with a correct module
 
             //Local derivatives
             // TODO do the maths...
-            float dlc1=Tracker::instance()->getProjectionX()[label_mp2];
-            float dlc2=generated_line.x_hits[i]*Tracker::instance()->getProjectionX()[label_mp2];
+            float dlc1=Tracker::instance()->getProjectionX(label_mp2);
+            float dlc2=generated_line.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
             float derlc[nalc] = {dlc1, dlc2};
             //Global derivatives
-            float dgl1 = Tracker::instance()->getProjectionX()[label_mp2];
+            float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
             float dergl[nagl] = {dgl1};  
             //Labels 
             /// TODO check that properly
             int l1 = label_mp2+1; //Millepede doesn't like 0 as a label apparently ... XXX 
-            int label[nalc] = {l1}; 
+            int label[nagl] = {l1}; 
              
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
            
-            float rMeas_mp2 =  generated_line.x_hits[i]; 
-            float sigma_mp2 = generated_line.hit_sigmas[i]; 
+            float rMeas_mp2 =  generated_line.x_hits[hitCount]; 
+            float sigma_mp2 = generated_line.hit_sigmas[hitCount]; 
 
             
             
@@ -295,7 +295,7 @@ int main(int argc, char* argv[]){
              h_sigma -> Fill(sigma_mp2);
 
              //Fill for tracks (once only):
-            if (i==0){
+            if (hitCount==0){
             // h_gen->Fill(generated_line.x0_gen[i],Tracker::instance()->getBeamStart());
             // h_gen->Fill(generated_line.x1_gen[i],Tracker::instance()->getBeamStop());
             // h_slope->Fill(generated_line.x_m[i]);
@@ -312,7 +312,7 @@ int main(int argc, char* argv[]){
             //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
             
-            
+            debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
 
 
         hitsN++; //count hits

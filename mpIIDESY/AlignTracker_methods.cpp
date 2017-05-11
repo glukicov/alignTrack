@@ -58,12 +58,15 @@ float Tracker::DCA(float x0,float y0,float x1,float y1,float x2,float y2){
 */
 float Tracker::hit_layer(std::vector<float> layer_x, float z_straw, float x1,float z1,float x2, float z2, float c, float m, bool debugBool){ 
 
+    bool StrongDebugBool=false; //quick hack
+
     //Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
     //TODO is this a good method? Probably not... 
 
     float x_line = (z_straw-c)/m;
     float lower, upper, hit_distance;
-     
+    
+    //TODO ensure this also true for >= and <= for hits going through the actual wire!!  
     vector<float>::iterator it;
     it = lower_bound(layer_x.begin(), layer_x.end(), x_line);
     if (it == layer_x.begin()) upper = *it; // no smaller value  than val in vector
@@ -80,8 +83,7 @@ float Tracker::hit_layer(std::vector<float> layer_x, float z_straw, float x1,flo
     if (hit_distance_up<hit_distance_low){hit_distance = hit_distance_up;}
     if (hit_distance_up==hit_distance_low){hit_distance = hit_distance_low; cout << "Ambiguity which straw registered hit";}  //XXX
 
-    
-    if (debugBool){
+    if (debugBool && StrongDebugBool){
         cout << "Track (line) point in-line with the layer at ( " << x_line << " , "  << z_straw << " ); belongs to the line with  generated points: ( " << x1 <<" , " << beamStart << ");" <<endl;
         cout << "( " << x2 << " , " << beamStop << " ); slope= " << m << "; intercept= " << c << endl;
         cout << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs "<< hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl;
@@ -119,28 +121,29 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
 
     float x_intercept = beamStart - x_slope*x_0; // for line z=mx+c -> c= z - mx
 
-    float x_track = x_0;
+    float x_track = x_0; //true track position x=(z_straw-c)/m;
     float dx = x_slope;
     float previousPosition = 0.0;  // previous position in "z"
 
-     Tracker::hit_layer(mod_lyr_straw[0][1], distance[0], x_0, beamStart, x_1, beamStop, x_intercept, x_slope, debugBool);
+     //Tracker::hit_layer(mod_lyr_straw[1][1], distance[3], x_0, beamStart, x_1, beamStop, x_intercept, x_slope, debugBool);
    
     //The main loop is for modules: 
     // Then looping over layers [we know there will be at most 1 hit per layer]
     // within layers we will have loops over straws in that layer [to find out which straw was hit and dca]
-    for(int i=0; i<moduleN; i++){
+    int z_counter=0; // distance in z is incremented from 0 to TotalLayerN 
+    for(int i_module=0; i_module<moduleN; i_module++){
         
         //Only want to fill for track not all hits
-        if (i==0){
-        line.x0_gen.push_back(x_0);
-        line.z0_gen.push_back(float(beamStart));
-        line.x1_gen.push_back(x_1);
-        line.z1_gen.push_back(float(beamStop));
-        line.x_m.push_back(x_slope);
-        line.x_c.push_back(x_intercept);
-        }
+        // if (i==0){
+        // line.x0_gen.push_back(x_0);
+        // line.z0_gen.push_back(float(beamStart));
+        // line.x1_gen.push_back(x_1);
+        // line.z1_gen.push_back(float(beamStop));
+        // line.x_m.push_back(x_slope);
+        // line.x_c.push_back(x_intercept);
+        // }
         
-    #if 0  //This was left over from MP2 Toy model: we are implimenting dca instead...
+    #if 0  //This was left over from MP2 Toy model: we are implimenting dca instead...some usefeul methods still might be there...
 
         //distance between consecutive modules 
         float dPostion = distance[i] - previousPosition; // in Z
@@ -148,7 +151,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         //positions on the detector plane  
         float x_det=x_0 + distance[i] * x_slope;
         line.x_det.push_back(x_det);
-        //true track position [for MS]
+        //true track position
         x_track=x_track+dx*dPostion;  
         line.x_true.push_back(x_track);
         //multiple scattering
@@ -156,23 +159,49 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         dx = dx+ rand_gaus * scatterError;
     #endif
 
-        float x_det=0; 
+        float x_det; // this will the dca
+       
         //loops over views, layers, straws 
        // for (int i_view=0; i_view<viewN; i_view++){
-            for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
-                for (int i_straw=0; i_straw<strawN; i_straw++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){ //per layer
+                //for (int i_straw=0; i_straw<strawN; i_straw++){
 
-                    x_track = 1;  // true track position [from line] 
+                    x_track = (distance[z_counter]-x_intercept)/(x_slope);  // true track position [from line] 
                     
-                    float x_det =2; // position on the detector [from dca]
+                    x_det =Tracker::hit_layer(mod_lyr_straw[i_module][i_layer], distance[z_counter], x_0, beamStart, x_1, beamStop, x_intercept, x_slope, debugBool); // position on the detector [from dca]
 
-                } //end of Straws loop
+                    //Rejection of hits due to geometry (i.e. missed hits) TODO for later
+                    // which straw was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
+                    // For now, NO hit rejection 
+                    // int imx=1; //XXX HACK
+                    // if (imx < 0 || imx >= strawN){ //[between (0,10]       
+                    //     //continue;
+                    // } 
+                    
+                    //Module number [for labelling]
+                    line.i_hits.push_back(i_module); // vector of planes that were actually hit [after passing rejection test]
+
+                    float x_mis=x_track-sdevX[i_module]; //x position due to misalignment: same for all layers in a modules [true position - misalignment]
+                    line.x_mis.push_back(x_mis);
+                    
+                    //Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
+                    line.z_hits.push_back(distance[z_counter]);
+                    // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
+                    // projection Y is always 0 for non-stereo modules?? what is the motivation? 
+                    rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
+                    float hit = (x_mis-x_det)*projectionX[i_module] + rand_gaus *resolution; //difference between hit due to misalignment [] and detected position * smeared resolution 
+                    line.x_hits.push_back(hit);
+                    line.hit_sigmas.push_back(resolution);
+                    line.hit_count++;
+
+               // } //end of Straws loop
+            z_counter++;
             }//end of Layers loop
        // }// end of View loop
 
         // BIG TODO: implement this in a different place allowing to dynamically name and reserve size of vectors/vector # based on geom. constants
         // then used in all for loops with i, n = 0, 1, 2 .....
-        for (int i=0; i<mod_0_lyr_0.size(); i++){
+       // for (int i=0; i<mod_0_lyr_0.size(); i++){
             //TODO DCA function goes here
         // float hit_distance_1 = DCA(mod_0_lyr_0, distance[i], dx, x_intercept);
         // float hit_distance_2 = DCA(mod_0_lyr_1, distance[i], dx, x_intercept);
@@ -182,34 +211,8 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
         // line.dca2.push_back(hit_distance_2);
         // line.dca3.push_back(hit_distance_3);
         // line.dca4.push_back(hit_distance_4);
-        }
+        //}
 
-        
-         //Rejection of hits
-        // which straw was hit [0,5 Y; 0,10 X] MC rejection if beyond plane geometry
-        //TODO rewrite this ugly part 
-        // For now, NO hit rejection 
-        int imx=1; //XXX HACK
-        if (imx < 0 || imx >= strawN){ //[between (0,10]       
-            //continue;
-        } 
-        
-        
-        //Module number [for labelling]
-        line.i_hits.push_back(i); // vector of planes that were actually hit [after passing rejection test]
-
-        float x_mis=x_track-sdevX[i]; //x position due to misalignment: same for all layers in a modules [true position - misalignment]
-        line.x_mis.push_back(x_mis);
-        
-        //Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
-        line.z_hits.push_back(distance[i]);
-        // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
-        // projection Y is always 0 for non-stereo modules?? what is the motivation? 
-        rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-        float hit = (x_mis-x_det)*projectionX[i] + rand_gaus *resolution; //difference between hit due to misalignment [] and detected position * smeared resolution 
-        line.x_hits.push_back(hit);
-        line.hit_sigmas.push_back(resolution);
-        line.hit_count++;
    
     }// end of looping over modules 
     return line; // Return data from simulated track

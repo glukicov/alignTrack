@@ -315,7 +315,7 @@ int main(int argc, char* argv[]){
             //Labels 
             int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr];  
             int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000; 
-            int label[nalc] = {l1, l2}; 
+            int label[nagl] = {l1, l2}; 
             
             //multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)

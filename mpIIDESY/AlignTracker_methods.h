@@ -49,7 +49,7 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=1; /** Number of tracks (i.e. records) to be simulated passing through detector */
+	static const int trackCount=15; /** Number of tracks (i.e. records) to be simulated passing through detector */
 	//[all distances are in cm]
 	//static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
 	static const int beamPositionLength = 2.0;
@@ -135,12 +135,12 @@ class Tracker {
 	//
 
 
-	std::vector<int> getLayer() {
-		return layer;
+	int getLayer(int i) {
+		return layer[i];
 	}
 	
-	std::vector<float> getProjectionX() {
-		return projectionX;
+	float getProjectionX(int i) {
+		return projectionX[i];
 	}
 
 	float getSdevX(int i) {
