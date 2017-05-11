@@ -37,38 +37,58 @@ Tracker* Tracker::instance() {
     return s_instance;
 }
 
+
 /**
-  Distance (parallel) of closest approach between a line (track) and a point (straw/wire).
-  //BIG TODO: Implement this properly 
-
-  Equation of a line: z=mx+c
-  The (x,z) coordinate of a straw are known. 
-
-    1) Find x_hit [=(z-c)/m] for the line at given z
-    2) Find straw closest to x_hit
-    3) Find x_straw-x_hit 
+   Simple function to calculate the Distance of Closest Approach
+   between a point (x0, y0) and a line (defined by two points: (x1, y1), (x2, y2) ).
+  
    @return dca
 */
-float Tracker::DCA(std::vector<float> layer_x, float z_straw, float slope, float intercept){  // XXX HACK 
+float Tracker::DCA(float x0,float y0,float x1,float y1,float x2,float y2){
 
-    //Find the x coordinate on that line at given z
-    float x_hit = (z_straw - intercept) / (slope);
+    float dca = abs((y2-y1)*x0-(x2-x1)*y0+x2*y1-y2*x1)/sqrt((y2-y1)*(y2-y1)+(x2-x1)*(x2-x1));
 
-    //Find the closest x straw coordinate given x on the line [the vector of straw x is naturally in an ascending order]
-    float lastDx=LONG_MAX; //ensure failure of the first comparison
-    float thisDx=0; 
-    float dca = 0;
-    for (int i=0; i<layer_x.size(); i++){
-        thisDx=layer_x[i]-x_hit;
-        if (abs(lastDx)>abs(thisDx)){
-            lastDx=thisDx;
-        }
-        if (abs(thisDx)>abs(lastDx)){
-            dca=lastDx; 
-        }
+    return dca;
+}
+
+
+/** Uses DCA function to find the shortest dca between straws (i.e. which straw was hit in that layer)
+  
+   @return hit_distance - dca of the straw that was hit
+*/
+float Tracker::hit_layer(std::vector<float> layer_x, float z_straw, float x1,float z1,float x2, float z2, float c, float m, bool debugBool){ 
+
+    //Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
+    //TODO is this a good method? Probably not... 
+
+    float x_line = (z_straw-c)/m;
+    float lower, upper, hit_distance;
+     
+    vector<float>::iterator it;
+    it = lower_bound(layer_x.begin(), layer_x.end(), x_line);
+    if (it == layer_x.begin()) upper = *it; // no smaller value  than val in vector
+    else if (it == layer_x.end()) lower = *(it-1); // no bigger value than val in vector
+    else {
+        lower = *(it-1);
+        upper = *it;
+    }
+   
+    float hit_distance_low = Tracker::DCA(lower, z_straw, x1, z1, x2, z2);
+    float hit_distance_up = Tracker::DCA(upper, z_straw, x1, z1, x2, z2); 
+
+    if (hit_distance_up>hit_distance_low){hit_distance = hit_distance_low;}
+    if (hit_distance_up<hit_distance_low){hit_distance = hit_distance_up;}
+    if (hit_distance_up==hit_distance_low){hit_distance = hit_distance_low; cout << "Ambiguity which straw registered hit";}  //XXX
+
+    
+    if (debugBool){
+        cout << "Track (line) point in-line with the layer at ( " << x_line << " , "  << z_straw << " ); belongs to the line with  generated points: ( " << x1 <<" , " << beamStart << ");" <<endl;
+        cout << "( " << x2 << " , " << beamStop << " ); slope= " << m << "; intercept= " << c << endl;
+        cout << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs "<< hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl;
+        cout << "Selected DCA as the correct hit distance is " << hit_distance << endl;
     }
 
-    return dca; 
+    return hit_distance; 
 }
 
 
@@ -102,6 +122,8 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     float x_track = x_0;
     float dx = x_slope;
     float previousPosition = 0.0;  // previous position in "z"
+
+     Tracker::hit_layer(mod_lyr_straw[0][1], distance[0], x_0, beamStart, x_1, beamStop, x_intercept, x_slope, debugBool);
    
     //The main loop is for modules: 
     // Then looping over layers [we know there will be at most 1 hit per layer]
@@ -256,6 +278,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
            // }// end of View loop
         }//Modules 
     }
+
 
 } // end of geom
 

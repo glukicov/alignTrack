@@ -49,7 +49,7 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=10000; /** Number of tracks (i.e. records) to be simulated passing through detector */
+	static const int trackCount=1; /** Number of tracks (i.e. records) to be simulated passing through detector */
 	//[all distances are in cm]
 	//static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
 	static const int beamPositionLength = 2.0;
@@ -113,7 +113,9 @@ class Tracker {
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
 	
-	float DCA(std::vector<float>, float, float, float);
+	float DCA(float ,float ,float ,float ,float ,float);
+
+	float hit_layer(std::vector<float>, float, float, float, float, float, float, float, bool);
 
 	LineData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
@@ -131,6 +133,7 @@ class Tracker {
 	//
 	// Getter methods
 	//
+
 
 	std::vector<int> getLayer() {
 		return layer;

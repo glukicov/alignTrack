@@ -13,14 +13,24 @@
 #
 # ### Define gcc to be used ###
 #
-GCC=gcc
+
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Linux)
+GCC=gcc 
+endif
+ifeq ($(UNAME), Darwin)
+GCC=/usr/local/bin/gcc-7  #OPENMP gcc Compiler on Gleb's Mac
+endif
+
+#
 GCCVERS=$(shell $(GCC) -dumpversion)
 # On SL5 replace default (gcc41) by gcc44
 ifeq ($(findstring 4.1., $(GCCVERS)), 4.1.)
-  GCC=gcc44
+  GCC=llvm-gcc
   GCCVERS=$(shell $(GCC) -dumpversion)  
 endif
-$(info Using gcc version $(GCCVERS))
+$(info Using gcc version $(GCCVERS)) 
 #
 # #################################################################
 #
@@ -57,7 +67,7 @@ PREFIX = .
 # #################################################################
 #
 FCOMP = $(OMPP) $(GCC)
-F_FLAGS = -Wall -fautomatic -fno-backslash -O3 -cpp
+F_FLAGS = -Wall -fautomatic -fno-backslash -O3 -cpp -fno-range-check
 #
 CCOMP = $(OMPP) $(GCC) 
 C_FLAGS = -Wall -O3 -Df2cFortran
@@ -116,10 +126,10 @@ pede : 	${USER_OBJ_PEDE} Makefile
 		-o $@ ${USER_OBJ_PEDE} $(C_LIBS) 
 #
 clean:
-	rm -f *.o *~ */*.o */*~ *.mod */*.mod
+	rm -f *.o *~ */*.o */*~ *.mod */*.mod mp2tst.bin mp2con.txt mp2str.txt
 #
 clobber: clean 
-	rm -f $(EXECUTABLES)
+	rm -f $(EXECUTABLES) 
 
 install: $(EXECUTABLES) #clean
 	mkdir -p $(PREFIX)/bin
