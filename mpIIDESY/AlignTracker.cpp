@@ -151,11 +151,12 @@ int main(int argc, char* argv[]){
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.02); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.1, 0.1);
     TH2F* h_gen = new TH2F("h_gen", "Generated track points", 15, -3, 12, 30, -3, 27);
-    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
-    TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
+    //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
+    //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
     TH1F* h_det = new TH1F("h_det", "DCA (det hits)",  500,  -0.1, 0.4);
     TH1F* h_true = new TH1F("h_true", "True hits",  500,  -0.2, 0.8);
-    TH1F* h_mis = new TH1F("h_mis", "Misal. hits",  500,  -0.2, 0.8);
+   // TH1F* h_mis = new TH1F("h_mis", "Misal. hits",  500,  -0.2, 0.8);
+    TH1F* h_x_fitted = new TH1F("h_x_fitted", "Ideal X position of the line to be fitted",  500,  -0.2, 0.8);
     
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -249,9 +250,9 @@ int main(int argc, char* argv[]){
 
         //Fill for tracks
         h_gen->Fill(generated_line.x0_gen[trackCount],generated_line.z0_gen[trackCount]);
-        h_gen->Fill(generated_line.x1_gen[trackCount],generated_line.z1_gen[trackCount]);
-        h_slope->Fill(generated_line.x_m[trackCount]);
-        h_c->Fill(generated_line.x_c[trackCount]);
+        //h_gen->Fill(generated_line.x1_gen[trackCount],generated_line.z1_gen[trackCount]);
+        // h_slope->Fill(generated_line.x_m[trackCount]);
+        // h_c->Fill(generated_line.x_c[trackCount]);
             
         for (int hitCount=0; hitCount<generated_line.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
@@ -291,8 +292,9 @@ int main(int argc, char* argv[]){
              h_hits_MP2 -> Fill (rMeas_mp2); 
              h_sigma -> Fill(sigma_mp2);
              h_det->Fill(generated_line.x_det[hitCount]);
-             h_mis->Fill(generated_line.x_mis[hitCount]);
+            // h_mis->Fill(generated_line.x_mis[hitCount]);
              h_true->Fill(generated_line.x_true[hitCount]);
+             h_x_fitted->Fill(Tracker::instance()->getX_fitted(hitCount));
 
                        
             debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
@@ -352,11 +354,11 @@ int main(int argc, char* argv[]){
     h_gen->Draw();
     h_sigma ->Draw();
     h_hits_MP2 ->Draw();
-    h_slope ->Draw(); 
-    h_c ->Draw();
-    h_det ->Draw();
+   // h_slope ->Draw(); 
+    //h_c ->Draw();
+    //h_det ->Draw();
     h_true ->Draw();
-    h_mis ->Draw();
+   // h_mis ->Draw();
     
     file->Write();
     file->Close(); //good habit!

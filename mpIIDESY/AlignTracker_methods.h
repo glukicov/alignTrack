@@ -25,7 +25,7 @@ struct LineData {
 	std::vector<float> x_hits; /** X-positions of generated hits in detector */
 	std::vector<float> x_true; /** X-positions of true hits in detector */
 	std::vector<float> x_det; /** X-positions of recorded hits in detector */
-	std::vector<float> x_mis; /** X-positions of misalignment in hits in detector */
+	//std::vector<float> x_mis; /** X-positions of misalignment in hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
 	std::vector<float> x0_gen; // generated points of the track
@@ -34,6 +34,13 @@ struct LineData {
 	std::vector<float> z1_gen; // generated points of the track
 	std::vector<float> x_m; // generated slopes
 	std::vector<float> x_c; //generated intercepts 
+};
+
+
+struct DCAData{
+	int strawID; 
+	float dca;
+	float LRSign; // L=-ive, R=+ive 
 };
 
 /**
@@ -90,6 +97,9 @@ class Tracker {
     // Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
     std::vector< std::vector< std::vector< float > > > mod_lyr_strawIdealPosition; 
     std::vector< std::vector< std::vector< float > > > mod_lyr_strawMisPosition;  
+    
+    //vector to store x coordinates of the track as seen from the ideal detector 
+    std::vector<float> x_fitted;  
  
     	
 	// Class constructor and destructor
@@ -103,9 +113,17 @@ class Tracker {
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
 	
-	float DCA(float ,float ,float ,float ,float ,float);
+	
 
+	float DCA(float ,float ,float ,float ,float ,float);
+	//TODO rewrite like DCA_simple struc. 
 	float DCAHit(std::vector<float>, float, float, float, float, float, float, float, bool);
+
+	float DCA_simple(float, float);
+
+	DCAData DCAHit_simple(std::vector<float>, float, float, bool);
+
+	float GetIdealLineX(int, float, float, std::vector<float>);
 
 	LineData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
@@ -135,6 +153,10 @@ class Tracker {
 
 	float getSdevX(int i) {
 		return sdevX[i];
+	}
+
+	float getX_fitted(int i){
+		return x_fitted[i];
 	}
 
 
