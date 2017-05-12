@@ -17,7 +17,7 @@ Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 
 ============================= Test Model v0.1 =======================================
 *Simple 2D case (1D alignment along x) of simplified tracker station of 2 small trackers.
-* No B-field, straight tracks, 100% efficiency. 
+* No B-field, straight tracks, no MS, 100% efficiency. 
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted] 
 
 (!) Module, Straw, View, etc. labelling starts from 0 [+1 is put by hand as MP2 doesn't seem to accept 0 as a label]
@@ -146,29 +146,17 @@ int main(int argc, char* argv[]){
         
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
-    
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
-    //TTree *T = (TTree*)file->Get("T");
-    //TCanvas *c1 = new TCanvas("c1");
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.02); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.1, 0.1);
     TH2F* h_gen = new TH2F("h_gen", "Generated track points", 15, -3, 12, 30, -3, 27);
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
-    TH1F* h_dca1 = new TH1F("h_dca1", "DCA1",  500,  -1, 1);
-    TH1F* h_dca2 = new TH1F("h_dca2", "DCA1",  500,  -1, 1);
-    TH1F* h_dca3 = new TH1F("h_dca3", "DCA1",  500,  -1, 1);
-    TH1F* h_dca4 = new TH1F("h_dca4", "DCA1",  500,  -1, 1); 
-
-    gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
-     // Set some ROOT plotting defaults
-    // gROOT->Reset();  //gROOT is a pointer; clean the environment.
-    // gStyle->SetCanvasBorderMode(1); // turn off canvas borders
-    // gStyle->SetStatFontSize(0.07);
-    // gStyle->SetTitleFontSize(0.02);
-
- 
+    TH1F* h_det = new TH1F("h_det", "DCA (det hits)",  500,  -0.1, 0.4);
+    TH1F* h_true = new TH1F("h_true", "True hits",  500,  -0.2, 0.8);
+    TH1F* h_mis = new TH1F("h_mis", "Misal. hits",  500,  -0.2, 0.8);
+    
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
     cout << "Generating test data for g-2 Tracker Alignment in PEDE." << endl;
@@ -257,8 +245,14 @@ int main(int argc, char* argv[]){
         scatterError = 0; // set no scatterError for now 
         
         //Generating tracks 
-        LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);     
+        LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
 
+        //Fill for tracks
+        h_gen->Fill(generated_line.x0_gen[trackCount],generated_line.z0_gen[trackCount]);
+        h_gen->Fill(generated_line.x1_gen[trackCount],generated_line.z1_gen[trackCount]);
+        h_slope->Fill(generated_line.x_m[trackCount]);
+        h_c->Fill(generated_line.x_c[trackCount]);
+            
         for (int hitCount=0; hitCount<generated_line.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
@@ -288,34 +282,23 @@ int main(int argc, char* argv[]){
             float rMeas_mp2 =  generated_line.x_hits[hitCount]; 
             float sigma_mp2 = generated_line.hit_sigmas[hitCount]; 
 
-            
-            
-            //Fill for hits
-             h_hits_MP2 -> Fill (rMeas_mp2); 
-             h_sigma -> Fill(sigma_mp2);
-
-             //Fill for tracks (once only):
-            if (hitCount==0){
-            // h_gen->Fill(generated_line.x0_gen[i],Tracker::instance()->getBeamStart());
-            // h_gen->Fill(generated_line.x1_gen[i],Tracker::instance()->getBeamStop());
-            // h_slope->Fill(generated_line.x_m[i]);
-            // h_c->Fill(generated_line.x_c[i]);
-            // h_dca1->Fill(generated_line.dca1[i]);
-            // h_dca2->Fill(generated_line.dca2[i]);
-            // h_dca3->Fill(generated_line.dca3[i]);
-            // h_dca4->Fill(generated_line.dca4[i]);
-            }
-            //T->SetMarkerStyle(3);
-            //TGraph *g = new TGraph(n,x,y);
-            //g->Draw("p");
-
             //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
             
+            //Sanity Plots
+
+            //Fill for hits
+             h_hits_MP2 -> Fill (rMeas_mp2); 
+             h_sigma -> Fill(sigma_mp2);
+             h_det->Fill(generated_line.x_det[hitCount]);
+             h_mis->Fill(generated_line.x_mis[hitCount]);
+             h_true->Fill(generated_line.x_true[hitCount]);
+
+                       
             debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
 
 
-        hitsN++; //count hits
+            hitsN++; //count hits
         } // end of hits loop
          
         // XXX additional measurements from MS IF (imodel == 2) THEN
@@ -326,7 +309,6 @@ int main(int argc, char* argv[]){
        
     } // end of track count
     
-
     
     cout << " " << endl;
     cout << Tracker::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
@@ -352,7 +334,6 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::WARNING, "Text debug files were produced: ls Tracker_d_*.txt");
     }
 
-
     // Close text files
     constraint_file.close();
     steering_file.close();
@@ -365,8 +346,18 @@ int main(int argc, char* argv[]){
     debug_con.close();
     
     //ROOT stuff
+    gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
     h_gen->SetMarkerStyle(30);
     h_gen->SetMarkerColor(kBlue);
+    h_gen->Draw();
+    h_sigma ->Draw();
+    h_hits_MP2 ->Draw();
+    h_slope ->Draw(); 
+    h_c ->Draw();
+    h_det ->Draw();
+    h_true ->Draw();
+    h_mis ->Draw();
+    
     file->Write();
     file->Close(); //good habit!
     
