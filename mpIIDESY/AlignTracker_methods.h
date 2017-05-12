@@ -86,17 +86,11 @@ class Tracker {
     
     std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
 
-    // BIG TODO: implement this in a different place allowing to dynamically name and reserve size of vectors/vector # based on geom. constants
-    // then used in all for loops with i, n = 0, 1, 2 .....
 
-    // or std::vector<float<float<float>>> [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
-    std::vector< std::vector< std::vector< float > > > mod_lyr_straw;  
-
-    //TODO delete 
-    std::vector<float> mod_0_lyr_0;
-    std::vector<float> mod_0_lyr_1;
-    std::vector<float> mod_1_lyr_0;
-    std::vector<float> mod_1_lyr_1;
+    // Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
+    std::vector< std::vector< std::vector< float > > > mod_lyr_strawIdealPosition; 
+    std::vector< std::vector< std::vector< float > > > mod_lyr_strawMisPosition;  
+ 
     	
 	// Class constructor and destructor
 	Tracker();

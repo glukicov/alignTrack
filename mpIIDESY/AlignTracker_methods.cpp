@@ -168,7 +168,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
 
                 x_track = (distance[z_counter]-x_intercept)/x_slope;   // true track position [from line] WRONGG.... XXX need dca here
                 
-                x_det = Tracker::DCAHit(mod_lyr_straw[i_module][i_layer], distance[z_counter], x_0, beamStart, x_1, beamStop, x_intercept, x_slope, debugBool); // position on the detector [from dca]
+                x_det = Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_layer], distance[z_counter], x_0, beamStart, x_1, beamStop, x_intercept, x_slope, debugBool); // position on the detector [from dca]
 
                 //Rejection of hits due to geometry (i.e. missed hits) TODO for later
                 //No signal in a straw = no signal in the layer
@@ -187,7 +187,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
                 // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
                 // projection Y is always 0 for non-stereo modules?? what is the motivation? 
                 rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-                float residual_to_a_line = (x_mis-x_det)*projectionX[i_module] + rand_gaus *resolution; //difference between hit due to misalignment [] and detected position * smeared resolution 
+                float hit = (x_mis-x_det)*projectionX[i_module] + rand_gaus *resolution; //RESIDUAL between hit due to misalignment [] and detected position * smeared resolution 
                 line.x_hits.push_back(hit);
                 line.hit_sigmas.push_back(resolution);
                 line.hit_count++;
@@ -208,7 +208,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     
 } // end of MC
 
-//Geometry of detector arrangement 
+//Geometry of detector arrangement (Ideal Geometry)
 void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
     float dZ=startingZDistanceStraw0; // to add distance in z
     
@@ -240,12 +240,12 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
 
     // XXX conditions will be modified when multiple views are added 
     for (int i_module=0; i_module<moduleN; i_module++){
-        mod_lyr_straw.push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
+        mod_lyr_strawIdealPosition.push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
          //for (int i_view=0; i_view<viewN; i_view++){
                 for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
-                    mod_lyr_straw[i_module].push_back(vector<float> ()); //initialize the first index with a 2D vector
+                    mod_lyr_strawIdealPosition[i_module].push_back(vector<float> ()); //initialize the first index with a 2D vector
                     for (int i_straw=0; i_straw<strawN; i_straw++){
-                        mod_lyr_straw[i_module][i_layer].push_back(dX); 
+                        mod_lyr_strawIdealPosition[i_module][i_layer].push_back(dX); 
                         dX=strawSpacing+dX; //while we are in the same layer: increment straw spacing in x
                     } //end of Straws loop
                     dX=layerDisplacement; //set displacement in x for the next layer in the view
@@ -259,9 +259,9 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
         for (int i_module=0; i_module<moduleN; i_module++){
           //for (int i_view=0; i_view<viewN; i_view++){
                 for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
-                    cout << "Mod " << i_module  << " Layer " << i_layer << " X : ";
+                    cout << "IDEAL Mod " << i_module  << " Layer " << i_layer << " X : ";
                     for (int i_straw=0; i_straw<strawN; i_straw++){
-                    cout << mod_lyr_straw[i_module][i_layer][i_straw]<<" ";
+                    cout << mod_lyr_strawIdealPosition[i_module][i_layer][i_straw]<<" ";
                     } //end of Straws loop
                     cout << " | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
                     Zcounter++;
@@ -277,16 +277,50 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
 // MC misalignment of detectors 
 //TODO 
 void Tracker::misalign(ofstream& debug_mis, bool debugBool){
-    float rand_gaus;
+    //float rand_gaus;
     float sign = 1.0; //for +x or -x direction of misalignment
-   //Now misaligning detectors
-    for (int i=0; i<moduleN; i++){   
-                rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev()); 
-                // Before misalignment was also smeared XXX
-                //sdevX[i] = dispX * rand_gaus;
-                sdevX.push_back(dispX * sign);
+    //Now misaligning detectors in x
+
+    float dX = startingXDistanceStraw0+(dispX * sign); // starting on the x-axis (z, 0+dispX)
+
+    for (int i_module=0; i_module<moduleN; i_module++){
+        //rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev()); 
+        // Before misalignment was also smeared XXX
+        //sdevX[i] = dispX * rand_gaus;
+        sdevX.push_back(dispX * sign);  // vector of misalignment 
+        mod_lyr_strawMisPosition.push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
+         //for (int i_view=0; i_view<viewN; i_view++){
+                for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
+                    mod_lyr_strawMisPosition[i_module].push_back(vector<float> ()); //initialize the first index with a 2D vector
+                    for (int i_straw=0; i_straw<strawN; i_straw++){
+                        mod_lyr_strawMisPosition[i_module][i_layer].push_back(dX); 
+                        dX=strawSpacing+dX; //while we are in the same layer: increment straw spacing in x
+                    } //end of Straws loop
+                    dX=layerDisplacement+(dispX * sign); //set displacement in x for the next layer in the view
+                }//end of Layers loop
                 sign = -sign;  //next module will be displaced in the opposite direction
-    } // end of modules
+                dX=startingXDistanceStraw0+(dispX * sign);
+           // }// end of View loop
+        
+        }//Modules 
+
+    if (debugBool){
+        int Zcounter=0;
+        for (int i_module=0; i_module<moduleN; i_module++){
+          //for (int i_view=0; i_view<viewN; i_view++){
+                for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
+                    cout << "MIS Mod " << i_module  << " Layer " << i_layer << " X : ";
+                    for (int i_straw=0; i_straw<strawN; i_straw++){
+                    cout << mod_lyr_strawMisPosition[i_module][i_layer][i_straw]<<" ";
+                    } //end of Straws loop
+                    cout << " | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
+                    Zcounter++;
+                } // end of Layers
+                
+           // }// end of View loop
+        }//Modules 
+    }
+
 }//end of misalign
 
 
