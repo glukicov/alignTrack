@@ -53,7 +53,8 @@ float Tracker::DCA(float x0,float y0,float x1,float y1,float x2,float y2){
 
 float Tracker::DCA_simple(float x_0,float x_straw){
 
-    float dca = abs(x_0-x_straw);
+    //accounting for negative coordinates 
+    float dca = sqrt((x_0-x_straw)*(x_0-x_straw));
 
     return dca;
 }
@@ -114,20 +115,25 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float z_straw, float 
     //dca_data.dca.clear();
     //dca_data.LRSign.clear();
 
-    bool StrongDebugBool=true; //quick hack XXX for even more debug output
+    bool StrongDebugBool=false; //quick hack XXX for even more debug output
 
     //Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
    //TODO ensure this also true for >= and <= for hits going through the actual wire!! 
    // if hit bigger that all straws all smaller  
 
     float x_line = x_0;
+
+    if (x_0>beamPositionLength || x_0 < 0){
+        cout << "Error: generated point out of bounds";
+        exit(0);
+    }
     
     float lower, upper, hit_distance;
     int vector_lastID = strawN-1; // the ID of the last straw in the vector
     float comparator; // to find the ID
     float LR; //L or R hit
 
-    if (debugBool && StrongDebugBool){
+    if (debugBool && StrongDebugBool && 1==0){
         //cout << "Track (line) point in-line with the layer at ( " << x_line << " , "  << z_straw << " ); belongs to the line with  generated points: ( " << x_0 <<" , " << beamStart << ");" <<endl;
         //cout << "( " << x_0 << " , " << beamStop << " );" << endl;
         cout << "Hit at " << x_0 << endl;
@@ -144,7 +150,7 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float z_straw, float 
         hit_distance = Tracker::DCA_simple(upper, x_0);
         comparator = upper;
         LR=-1.0;
-        if (debugBool && StrongDebugBool){cout << "The first straw is closest at " << lower <<  "; with DCA "<< hit_distance << endl;}
+        if (debugBool && StrongDebugBool){cout << "Hit at " << x_0 << " The first straw is closest at " << upper <<  "; with DCA "<< hit_distance << endl;}
     }   
     // no bigger value than val in vector
     else if (it == layer_x.end()){
@@ -154,7 +160,7 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float z_straw, float 
         hit_distance = Tracker::DCA_simple(lower, x_0); // hit distance is the dca from the L of the straw 0
         comparator = lower;
         LR=1.0;
-        if (debugBool && StrongDebugBool){cout << "The last straw is closest at " << upper <<  "; with DCA "<< hit_distance << endl;}
+        if (debugBool && StrongDebugBool){cout << "Hit at " << x_0 << " The last straw is closest at " << lower <<  "; with DCA "<< hit_distance << endl;}
     }
     else {
         lower = *(it-1);
@@ -202,7 +208,7 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float z_straw, float 
     }
 
     dca_data.dca = hit_distance;
-    dca_data.dca = LR;
+    dca_data.LRSign = LR;
 
     if (debugBool && StrongDebugBool && 1==0){
        
@@ -303,8 +309,9 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
                 
                 DCAData x_det= Tracker::DCAHit_simple(mod_lyr_strawMisPosition[i_module][i_layer], distance[z_counter], x_0, debugBool); // position on the detector [from dca]
 
+                cout << x_det.dca << endl;
                 float x_det_dca =  x_det.dca;  //dca of the hit straw
-                //cout << x_det_dca << endl;
+                cout << x_det_dca << endl;
  
                 int x_det_ID =  x_det.strawID; // if of the hit straw [to identify the correct straw in the Fit function]
 
