@@ -52,7 +52,7 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=1200; /** Number of tracks (i.e. records) to be simulated passing through detector */
+	static const int trackCount=1000; /** Number of tracks (i.e. records) to be simulated passing through detector */
 	//[all distances are in cm]
 	//static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
 	static const int beamPositionLength = 2.0;

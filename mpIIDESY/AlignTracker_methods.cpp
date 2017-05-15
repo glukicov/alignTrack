@@ -123,53 +123,90 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float z_straw, float 
     float x_line = x_0;
     
     float lower, upper, hit_distance;
+    int vector_lastID = strawN-1; // the ID of the last straw in the vector
+    float comparator; // to find the ID
+    float LR; //L or R hit
+
+    if (debugBool && StrongDebugBool){
+        //cout << "Track (line) point in-line with the layer at ( " << x_line << " , "  << z_straw << " ); belongs to the line with  generated points: ( " << x_0 <<" , " << beamStart << ");" <<endl;
+        //cout << "( " << x_0 << " , " << beamStop << " );" << endl;
+        cout << "Hit at " << x_0 << endl;
+    }
+
     //Iterator to find two straws between the hit:
     vector<float>::iterator it;
     it = lower_bound(layer_x.begin(), layer_x.end(), x_line);
-    if (it == layer_x.begin()) upper = *it; // no smaller value  than val in vector
-    else if (it == layer_x.end()) lower = *(it-1); // no bigger value than val in vector
+    // no smaller value  than val in vector
+    if (it == layer_x.begin()){
+        upper = *it; 
+        //if (debugBool && StrongDebugBool){ cout << " upper = " << upper << endl;}
+         // hit distance is the dca from the L of the straw 0
+        hit_distance = Tracker::DCA_simple(upper, x_0);
+        comparator = upper;
+        LR=-1.0;
+        if (debugBool && StrongDebugBool){cout << "The first straw is closest at " << lower <<  "; with DCA "<< hit_distance << endl;}
+    }   
+    // no bigger value than val in vector
+    else if (it == layer_x.end()){
+        lower = *(it-1); 
+        //if (debugBool && StrongDebugBool){ cout << "lower = " << lower << endl;}
+        // hit distance is the dca from the R of the last straw
+        hit_distance = Tracker::DCA_simple(lower, x_0); // hit distance is the dca from the L of the straw 0
+        comparator = lower;
+        LR=1.0;
+        if (debugBool && StrongDebugBool){cout << "The last straw is closest at " << upper <<  "; with DCA "<< hit_distance << endl;}
+    }
     else {
         lower = *(it-1);
         upper = *it;
-    }
+        //if (debugBool && StrongDebugBool){ cout << "lower = " << lower << " upper = " << upper << endl;}
+
+            float hit_distance_low = Tracker::DCA_simple(lower, x_0);
+            float hit_distance_up = Tracker::DCA_simple(upper, x_0); 
+
+            if (hit_distance_up>hit_distance_low){
+                hit_distance = hit_distance_low;
+                comparator = lower;
+                LR=+1.0;
+            }
+            if (hit_distance_up<hit_distance_low){
+                hit_distance = hit_distance_up;
+                comparator = upper;
+                LR=-1.0;
+            }
+            //XXX resolve this [won't be an issue once physical geometry and hit rejection is added]
+            if (hit_distance_up==hit_distance_low){
+                hit_distance = hit_distance_low; cout << "Ambiguity which straw registered hit" << endl;
+                exit(0);
+            } 
+            if (debugBool && StrongDebugBool && 1==0){
+                cout << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs "<< hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl; 
+            }
+    } // end of iterator to find straws between hits
    
-    float hit_distance_low = Tracker::DCA_simple(lower, x_0);
-    float hit_distance_up = Tracker::DCA_simple(upper, x_0); 
-
-    float comparator;
-    float LR; //L or R hit
-    if (hit_distance_up>hit_distance_low){
-        hit_distance = hit_distance_low;
-        comparator = lower;
-        LR=+1.0;
-    }
-    if (hit_distance_up<hit_distance_low){
-        hit_distance = hit_distance_up;
-        comparator = upper;
-        LR=-1.0;
-    }
-    if (hit_distance_up==hit_distance_low){hit_distance = hit_distance_low; cout << "Ambiguity which straw registered hit";}  //XXX
-
-    //Iterator to find straw ID:
+    //Iterator to find straw ID [implemented separately, as now we look up once only]:
     int index;
     it = find(layer_x.begin(), layer_x.end(), comparator);
     if (it == layer_x.end()){   
-        cout << "Error: straw x not found in vector!";
+        cout << "Error: straw x not found in vector!" << endl;
+        exit(0);
       //TODO error happens here: wrong side of the straw + crazy ID number. 
         // XXX Good test for the algorithm - investigate here :) 
     } else {
         index = std::distance(layer_x.begin(), it);
+        if (index > vector_lastID || index < 0){
+            cout << "Error: ID is out of range" << endl;
+            exit(0);
+        }
         dca_data.strawID = index;
     }
 
     dca_data.dca = hit_distance;
     dca_data.dca = LR;
 
-    if (debugBool && StrongDebugBool){
-        cout << "Track (line) point in-line with the layer at ( " << x_line << " , "  << z_straw << " ); belongs to the line with  generated points: ( " << x_0 <<" , " << beamStart << ");" <<endl;
-        cout << "( " << x_0 << " , " << beamStop << endl;
-        cout << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs "<< hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl;
-        cout << "Selected DCA as the correct hit distance is " << hit_distance << ".Straw ID: " << dca_data.strawID;
+    if (debugBool && StrongDebugBool && 1==0){
+       
+        cout << "Selected DCA as the correct hit distance is " << hit_distance << ". Straw ID: " << dca_data.strawID;
         if (LR  > 0){
             cout << ". The straw was hit from the right" << endl;
         }
@@ -177,7 +214,6 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float z_straw, float 
             cout << ". The straw was hit from the left" << endl;
         }
     }//debug
-    
         return dca_data; // as dca and id of the closest straw
 }
 
@@ -268,6 +304,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
                 DCAData x_det= Tracker::DCAHit_simple(mod_lyr_strawMisPosition[i_module][i_layer], distance[z_counter], x_0, debugBool); // position on the detector [from dca]
 
                 float x_det_dca =  x_det.dca;  //dca of the hit straw
+                //cout << x_det_dca << endl;
  
                 int x_det_ID =  x_det.strawID; // if of the hit straw [to identify the correct straw in the Fit function]
 

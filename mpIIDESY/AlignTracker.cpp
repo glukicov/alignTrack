@@ -71,6 +71,7 @@ int main(int argc, char* argv[]){
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.] 
     string compareStr; //for debug vs. normal output as specified by the user
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
+    bool debugBoolStrong = true; //XXX hack
     //float rand_num; //to store random (int number from buffer + max )/(2.0 * max) [0, 1]   
     //float twoR = 2.0;  //For normalisation of uniform random numbers [0,1]
     //Set up counters for hits and records (tracks)
@@ -245,6 +246,10 @@ int main(int argc, char* argv[]){
         //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
         scatterError = 0; // set no scatterError for now 
         
+        if (debugBool){
+            cout << "Track: " << trackCount << endl;
+        }
+
         //Generating tracks 
         LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
 
@@ -351,13 +356,14 @@ int main(int argc, char* argv[]){
     gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
     h_gen->SetMarkerStyle(30);
     h_gen->SetMarkerColor(kBlue);
-    h_gen->Draw();
-    h_sigma ->Draw();
-    h_hits_MP2 ->Draw();
+    //h_gen->SetOptStat(111111);
+    //h_gen->Draw();
+    //h_sigma ->Draw();
+    //h_hits_MP2 ->Draw();
    // h_slope ->Draw(); 
     //h_c ->Draw();
     //h_det ->Draw();
-    h_true ->Draw();
+    //h_true ->Draw();
    // h_mis ->Draw();
     
     file->Write();
