@@ -37,9 +37,9 @@ Please note that the output filenames shown are the default random number files 
 #### Running C++ MC AlignTracker: ####
 1. Compile code with `make -f AlignTracker.mk` [supports ROOT5, Logger from gm2trackedaq, and RandomNumberBuffer]
 [`make -f AlignTracker.mk clean` - also removes previusly generated data, steering and constrain files - can be useful]
-2. Generate data by running `./AlignTracker n` for normal or `./AlignTracker d` for debug/verbose output, or `./AlignTracker p` for plotting with reduced statistics (to see individual tracks) Both generate:
-   * `Tracker_data.bin`, `Tracker_con.txt`, `Tracker_str.txt`
-   [data, constrains, and steering files]
+2. Generate data by running `./AlignTracker n` for normal or `./AlignTracker d` for debug/verbose output, or `./AlignTracker p` for plotting with reduced statistics (to see individual tracks) All options generate:
+   * `Tracker_data.bin`, `Tracker_con.txt`, `Tracker_str.txt` [data, constrains, and steering files]
+    * `Tracker.root` [sanity plots]
 3. Fit data by running `./pede Tracker_str.txt`.
 
 AlignTracker.cpp (contains definition of purpose) - main programme calling on methods from AlignTracker_methods.cpp. 
