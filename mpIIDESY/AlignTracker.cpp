@@ -85,19 +85,26 @@ int main(int argc, char* argv[]){
     Logger::Instance()->enableCriticalErrorThrow();
 
     // Check if correct number of arguments specified, exiting if not
-    if (argc > 2) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug or align)");} 
-        else if (argc < 2) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. debug or align)");} 
+    if (argc > 2) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");} 
+        else if (argc < 2) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");} 
         else { // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
             try {compareStr = argv[1];} 
         catch (ios_base::failure& e) {
-            Logger::Instance()->write(Logger::ERROR, "Filestream exception caught: " + string(e.what()) + "\nPlease ensure valid filenames are specified!");
+            Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
         }
     } // end of 2nd else [correct # arguments]
 
     //this is also passed to Tracker functions, with debug file names
-    if (compareStr=="d"){debugBool = true; // print out to debug files
+    if (compareStr=="d"){debugBool = true; // print out to debug files [and verbose cout output]
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE"); }
-    else{ debugBool = false; // print out to debug files
+    else if (compareStr=="p"){Tracker::instance()->setTrackNumber(10); 
+    Logger::Instance()->write(Logger::WARNING,  "PLOTTING MODE"); //setting small statistics for visual plotting of tracks
+    } 
+    else if (compareStr=="n" || compareStr=="a"){
+    debugBool = false; // print out to debug files
+    }
+    else{
+        Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");
     }
     
     Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
@@ -150,14 +157,15 @@ int main(int argc, char* argv[]){
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.02); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -0.1, 0.1);
-    TH2F* h_gen = new TH2F("h_gen", "Generated track points", 15, -3, 12, 30, -3, 27);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -1, 3);
     //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
-    TH1F* h_det = new TH1F("h_det", "DCA (det hits)",  500,  -0.1, 0.4);
+    TH1F* h_det = new TH1F("h_det", "DCA (det hits)",  500,  -0.1, 1.4);
     TH1F* h_true = new TH1F("h_true", "True hits",  500,  -0.2, 0.8);
    // TH1F* h_mis = new TH1F("h_mis", "Misal. hits",  500,  -0.2, 0.8);
-    TH1F* h_x_fitted = new TH1F("h_x_fitted", "Ideal X position of the line to be fitted",  500,  -0.2, 0.8);
+    TH1F* h_x_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position",  500,  -0.5, 3.5);
+    TH2F* h_gen = new TH2F("h_gen", "Generate starting track points", 1000,  0.5, 2.5, 1000, -3, 28);
+
     
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -240,7 +248,7 @@ int main(int argc, char* argv[]){
 
 
     //Generating particles with energies: 10-100 [GeV]
-    for (int trackCount=0; trackCount<Tracker::instance()->getTrackCount(); trackCount++){  //Track count is set in methods XXX is it the best place for it? 
+    for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  //Track number is set in methods XXX is it the best place for it? 
         //rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
         //float p=pow(10.0, 1+rand_num);
         //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
@@ -253,11 +261,6 @@ int main(int argc, char* argv[]){
         //Generating tracks 
         LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
 
-        //Fill for tracks
-        h_gen->Fill(generated_line.x0_gen[trackCount],generated_line.z0_gen[trackCount]);
-        //h_gen->Fill(generated_line.x1_gen[trackCount],generated_line.z1_gen[trackCount]);
-        // h_slope->Fill(generated_line.x_m[trackCount]);
-        // h_c->Fill(generated_line.x_c[trackCount]);
             
         for (int hitCount=0; hitCount<generated_line.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
@@ -294,12 +297,29 @@ int main(int argc, char* argv[]){
             //Sanity Plots
 
             //Fill for hits
-             h_hits_MP2 -> Fill (rMeas_mp2); 
-             h_sigma -> Fill(sigma_mp2);
-             h_det->Fill(generated_line.x_det[hitCount]);
+            h_hits_MP2 -> Fill (rMeas_mp2); 
+            h_sigma -> Fill(sigma_mp2);
+            h_det->Fill(generated_line.x_det[hitCount]);
+            //if (generated_line.x_det[hitCount] > Tracker::instance()->getStrawSpacing()/2){
+            //    cout << "dca = " << generated_line.x_det[hitCount] << endl;
+            //}
             // h_mis->Fill(generated_line.x_mis[hitCount]);
-             h_true->Fill(generated_line.x_true[hitCount]);
-             h_x_fitted->Fill(Tracker::instance()->getX_fitted(hitCount));
+            h_true->Fill(generated_line.x_true[hitCount]);
+            h_x_ideal->Fill(generated_line.x_true[hitCount]);
+
+            //Fill for tracks
+             if (hitCount ==0){
+              //cout << "Filling for tracks" << endl;
+                // h_slope->Fill(generated_line.x_m[hitCount]);
+                // h_c->Fill(generated_line.x_c[hitCount]);
+                h_gen->Fill(generated_line.x0_gen[hitCount], generated_line.z0_gen[hitCount]);
+                h_gen->Fill(generated_line.x1_gen[hitCount], generated_line.z1_gen[hitCount]);
+                //TLine::TLine (       );
+                //line->TLine::DrawLine(generated_line.x0_gen[hitCount],generated_line.z0_gen[hitCount],generated_line.x1_gen[hitCount],generated_line.z1_gen[hitCount]);
+                //line->SetLineColor(kRed);
+                //line->Draw();
+                
+            }
 
                        
             debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
@@ -315,10 +335,19 @@ int main(int argc, char* argv[]){
         recordN++; // count records (i.e. tracks);
        
     } // end of track count
+
+    TCanvas *c1 = new TCanvas("c1");
+    TH1F* h = new TH1F("h","test",100,-4,4);
+    h->FillRandom("gaus",10000);
+    h->Draw();
+    TLine line(-4, 150, 3, 400);
+    line.Draw();
+    //line->SetLineColor(kRed);
+    //line->Draw();
     
     
     cout << " " << endl;
-    cout << Tracker::instance()->getTrackCount() << " tracks generated with " << hitsN << " hits." << endl;
+    cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
@@ -356,6 +385,8 @@ int main(int argc, char* argv[]){
     gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
     h_gen->SetMarkerStyle(30);
     h_gen->SetMarkerColor(kBlue);
+    //h_gen->SetLineColor(kRed);
+    //h_gen->Draw("L");
     //h_gen->SetOptStat(111111);
     //h_gen->Draw();
     //h_sigma ->Draw();

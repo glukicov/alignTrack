@@ -25,15 +25,17 @@ struct LineData {
 	std::vector<float> x_hits; /** X-positions of generated hits in detector */
 	std::vector<float> x_true; /** X-positions of true hits in detector */
 	std::vector<float> x_det; /** X-positions of recorded hits in detector */
+	std::vector<float> x_ideal; // ideal straw potion + dca (from mis.)
 	//std::vector<float> x_mis; /** X-positions of misalignment in hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
-	std::vector<float> x0_gen; // generated points of the track
-	std::vector<float> z0_gen; // generated points of the track
-	std::vector<float> x1_gen; // generated points of the track
-	std::vector<float> z1_gen; // generated points of the track
 	std::vector<float> x_m; // generated slopes
-	std::vector<float> x_c; //generated intercepts 
+	std::vector<float> x_c; //generated intercepts
+
+	std::vector<float> x0_gen; 
+	std::vector<float> x1_gen; 
+	std::vector<float> z0_gen; 
+	std::vector<float> z1_gen; 
 };
 
 
@@ -52,10 +54,10 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
-	static const int trackCount=1000; /** Number of tracks (i.e. records) to be simulated passing through detector */
 	//[all distances are in cm]
 	//static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
-	static const int beamPositionLength = 2.0;
+	static constexpr float beamPositionLength = 1.3; // max x coordinate = beamPositionLength + beamOffset
+	static constexpr float beamOffset=0.6; // offset from 0 in x
 	static constexpr float beamStart = 0.0; // z 
 	static constexpr float beamStop = 25.0;  // z 
 
@@ -90,8 +92,8 @@ class Tracker {
     
     std::vector<float> distance;  // Z distance between planes [this is set in geometry]
     std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
-    
     std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
+    int trackNumber; /** Number of tracks (i.e. records) to be simulated passing through detector */
 
 
     // Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
@@ -99,7 +101,7 @@ class Tracker {
     std::vector< std::vector< std::vector< float > > > mod_lyr_strawMisPosition;  
     
     //vector to store x coordinates of the track as seen from the ideal detector 
-    std::vector<float> x_fitted;  
+     std::vector<float> x_idealPoints;  
  
     	
 	// Class constructor and destructor
@@ -123,7 +125,9 @@ class Tracker {
 
 	DCAData DCAHit_simple(std::vector<float>, float, float, bool);
 
-	float GetIdealLineX(int, float, float, std::vector<float>);
+	float GetIdealPoint(int, float, float, std::vector<float>);
+
+	vector<float> GetResiduals(std::vector<float>);
 
 	LineData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
@@ -136,6 +140,16 @@ class Tracker {
 	void set_uniform_file(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
 
 	void set_gaussian_file(std::string); // Set filename for Gaussian random numbers
+
+
+
+	//
+	// Setter methods
+	//
+
+	void setTrackNumber(int tracks){
+		trackNumber=tracks; 
+	}
 
 
 	//
@@ -155,9 +169,9 @@ class Tracker {
 		return sdevX[i];
 	}
 
-	float getX_fitted(int i){
-		return x_fitted[i];
-	}
+	// float getX_idealPoints(int i){
+	// 	return x_idealPoints[i];
+	// }
 
 
 	int getStrawN(){
@@ -165,12 +179,16 @@ class Tracker {
 	}
 
 
-	int getTrackCount() {
-		return trackCount;
+	int getTrackNumber() {
+		return trackNumber;
 	}
 
 	float getStrawRadius() {
 		return strawRadius;
+	}
+
+	float getStrawSpacing(){
+		return strawSpacing;
 	}
 
 	float getResolution() {
