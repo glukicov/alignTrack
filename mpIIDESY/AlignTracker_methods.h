@@ -36,6 +36,7 @@ struct LineData {
 	std::vector<float> x1_gen; 
 	std::vector<float> z0_gen; 
 	std::vector<float> z1_gen; 
+
 };
 
 

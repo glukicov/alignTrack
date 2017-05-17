@@ -71,6 +71,7 @@ int main(int argc, char* argv[]){
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.] 
     string compareStr; //for debug vs. normal output as specified by the user
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
+    bool plotBool = false; // './AlignTracker p' - for plotting small stats
     bool debugBoolStrong = true; //XXX hack
     //float rand_num; //to store random (int number from buffer + max )/(2.0 * max) [0, 1]   
     //float twoR = 2.0;  //For normalisation of uniform random numbers [0,1]
@@ -78,11 +79,16 @@ int main(int argc, char* argv[]){
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks 
     float scatterError; // multiple scattering error [calculated here and passed back to Tracker class]
+    //Vectors to store x and z for TGraph
+    // vector<float> x_gen;
+    // vector<float> z_gen;
     
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
     //Tell the logger to throw exceptions when ERROR messages are received
     Logger::Instance()->enableCriticalErrorThrow();
+
+    //TApplication theApp("App",&argc, argv); //for Canvas in ROOT
 
     // Check if correct number of arguments specified, exiting if not
     if (argc > 2) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");} 
@@ -95,9 +101,14 @@ int main(int argc, char* argv[]){
     } // end of 2nd else [correct # arguments]
 
     //this is also passed to Tracker functions, with debug file names
-    if (compareStr=="d"){debugBool = true; // print out to debug files [and verbose cout output]
+    if (compareStr=="d"){
+    debugBool = true; // print out to debug files [and verbose cout output]
+    Tracker::instance()->setTrackNumber(50);
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE"); }
-    else if (compareStr=="p"){Tracker::instance()->setTrackNumber(10); 
+    else if (compareStr=="p"){
+    plotBool = true; 
+    debugBool = true; // print out to debug files [and verbose cout output]
+    Tracker::instance()->setTrackNumber(20); 
     Logger::Instance()->write(Logger::WARNING,  "PLOTTING MODE"); //setting small statistics for visual plotting of tracks
     } 
     else if (compareStr=="n" || compareStr=="a"){
@@ -150,7 +161,8 @@ int main(int argc, char* argv[]){
     string off_debugFileName = "Tracker_d_off.txt";  // Offsets/Missed hits
     string MC_debugFileName = "Tracker_d_MC.txt";  // Final results from MC
     string con_debugFileName = "Tracker_d_con.txt"; //Constraints
-   
+    string gen_plotFileName = "Tracker_p_gen.txt"; //
+  
         
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
@@ -161,11 +173,11 @@ int main(int argc, char* argv[]){
     //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
     TH1F* h_det = new TH1F("h_det", "DCA (det hits)",  500,  -0.1, 1.4);
-    TH1F* h_true = new TH1F("h_true", "True hits",  500,  -0.2, 0.8);
+    TH1F* h_true = new TH1F("h_true", "True hits",  500,  -0.2, 2.5);
    // TH1F* h_mis = new TH1F("h_mis", "Misal. hits",  500,  -0.2, 0.8);
     TH1F* h_x_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position",  500,  -0.5, 3.5);
-    TH2F* h_gen = new TH2F("h_gen", "Generate starting track points", 1000,  0.5, 2.5, 1000, -3, 28);
-
+    //TH2F* h_gen = new TH2F("h_gen", "Generate starting track points", 1000,  0.5, 2.5, 1000, -3, 28);
+    //TH2F* h_gen = new TH2F("h_gen", "Generate starting track points", 1000,  0.5, 2.5, 1000, -3, 28);
     
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -181,7 +193,8 @@ int main(int argc, char* argv[]){
     ofstream debug_off(off_debugFileName);
     ofstream debug_mc(MC_debugFileName); 
     ofstream debug_con(con_debugFileName);
-
+    ofstream plot_gen(gen_plotFileName);
+    
     // Setting fixed precision for floating point values
     cout << fixed << setprecision(6); 
     debug_mp2 << fixed << setprecision(6); 
@@ -191,6 +204,8 @@ int main(int argc, char* argv[]){
     debug_off << fixed << setprecision(6); 
     debug_mc << fixed << setprecision(6); 
     debug_con << fixed << setprecision(6);
+    plot_gen << fixed << setprecision(6);
+  
 
     // SETTING GEOMETRY
     Tracker::instance()->setGeometry(debug_geom, debugBool);
@@ -307,13 +322,19 @@ int main(int argc, char* argv[]){
             h_true->Fill(generated_line.x_true[hitCount]);
             h_x_ideal->Fill(generated_line.x_true[hitCount]);
 
+
+
             //Fill for tracks
              if (hitCount ==0){
               //cout << "Filling for tracks" << endl;
                 // h_slope->Fill(generated_line.x_m[hitCount]);
                 // h_c->Fill(generated_line.x_c[hitCount]);
-                h_gen->Fill(generated_line.x0_gen[hitCount], generated_line.z0_gen[hitCount]);
-                h_gen->Fill(generated_line.x1_gen[hitCount], generated_line.z1_gen[hitCount]);
+                // x_gen.push_back(generated_line.x0_gen[hitCount]);
+                // x_gen.push_back(generated_line.x1_gen[hitCount]);
+                // z_gen.push_back(generated_line.z0_gen[hitCount]);
+                // z_gen.push_back(generated_line.z1_gen[hitCount]);
+                plot_gen << generated_line.x0_gen[hitCount] << " " << generated_line.z0_gen[hitCount] << " " << generated_line.x1_gen[hitCount] << " " << generated_line.z1_gen[hitCount] << endl;
+                //h_gen->Fit("pol1", "Q", "C", 1, 2);
                 //TLine::TLine (       );
                 //line->TLine::DrawLine(generated_line.x0_gen[hitCount],generated_line.z0_gen[hitCount],generated_line.x1_gen[hitCount],generated_line.z1_gen[hitCount]);
                 //line->SetLineColor(kRed);
@@ -336,15 +357,22 @@ int main(int argc, char* argv[]){
        
     } // end of track count
 
-    TCanvas *c1 = new TCanvas("c1");
-    TH1F* h = new TH1F("h","test",100,-4,4);
-    h->FillRandom("gaus",10000);
-    h->Draw();
-    TLine line(-4, 150, 3, 400);
-    line.Draw();
-    //line->SetLineColor(kRed);
-    //line->Draw();
-    
+    // if (plotBool){
+    //     TCanvas *c1 = new TCanvas("c1","Generated Tracks",200,10,700,500);
+    //     for (int i=1; i<3; i++){
+    //     Double_t x[100], y[100];
+    //     Int_t n = Tracker::instance()->getTrackNumber();
+    //     for (Int_t i=0;i<n;i++) {
+    //         x[i] = i*0.1;
+    //         y[i] = 10*sin(x[i]+0.2);
+    //     }
+    //     TGraph *gr = new TGraph(n,x,y);
+    //     gr->Draw("AL");
+    //     gr->SetTitle("Generated Tracks");
+    //     //return c1;
+    //     //c1->Draw();
+    //     }
+    // }   
     
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
@@ -383,8 +411,9 @@ int main(int argc, char* argv[]){
     
     //ROOT stuff
     gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
-    h_gen->SetMarkerStyle(30);
-    h_gen->SetMarkerColor(kBlue);
+    //h_gen->SetMarkerStyle(30);
+    //h_gen->SetMarkerColor(kBlue);
+    //h_gen->SetTitle("Generated Tracks");
     //h_gen->SetLineColor(kRed);
     //h_gen->Draw("L");
     //h_gen->SetOptStat(111111);
@@ -400,6 +429,6 @@ int main(int argc, char* argv[]){
     file->Write();
     file->Close(); //good habit!
     
-   
+    //if(plotBool){theApp.Run();} //ctrl+c to exit
     return 0; 
 } //end of main 

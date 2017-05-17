@@ -32,6 +32,7 @@
 #include <TStyle.h>
 #include <TColor.h>
 #include <TLine.h>
+#include <TApplication.h> //for Displaying Canvas
 
 int main(int argc, char* argv[]);  
 

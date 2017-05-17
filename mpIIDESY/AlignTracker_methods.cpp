@@ -16,7 +16,7 @@ Tracker::Tracker() {
   //XXX non-static variables definition here 
     resolution=0.01;  // 100um = 0.01 cm setting this in the constructor //TODO decide if this is a constant 
     dispX = 0.15;  // manual displacement by 0.15 cm
-    trackNumber=1000;
+    trackNumber=800000;
 }
 
 /** 
@@ -377,7 +377,8 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
                 line.x_det.push_back(x_det_dca);
                 //line.x_mis.push_back(x_mis);
                 line.x_true.push_back(x_track);
-                line.x_ideal.push_back(x_ideal); 
+                line.x_ideal.push_back(x_ideal);
+                
 
                 //Sanity Plots: Tracks
                 if (line.hit_count == 0){
@@ -468,8 +469,10 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
                     cout << "IDEAL Mod " << i_module  << " Layer " << i_layer << " X : ";
                     for (int i_straw=0; i_straw<strawN; i_straw++){
                     cout << mod_lyr_strawIdealPosition[i_module][i_layer][i_straw]<<" ";
-                    } //end of Straws loop
+                    debug_geom << mod_lyr_strawIdealPosition[i_module][i_layer][i_straw] << " ";
+                    } // straws 
                     cout << " | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
+                    debug_geom << distance[Zcounter] << endl;
                     Zcounter++;
                 } // end of Layers
                 
@@ -518,8 +521,11 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
                     cout << "MIS Mod " << i_module  << " Layer " << i_layer << " X : ";
                     for (int i_straw=0; i_straw<strawN; i_straw++){
                     cout << mod_lyr_strawMisPosition[i_module][i_layer][i_straw]<<" ";
+                    debug_mis << mod_lyr_strawMisPosition[i_module][i_layer][i_straw] << " ";
+                    
                     } //end of Straws loop
                     cout << " | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
+                    debug_mis << distance[Zcounter] << endl;
                     Zcounter++;
                 } // end of Layers
                 
