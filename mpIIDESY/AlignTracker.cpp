@@ -162,6 +162,7 @@ int main(int argc, char* argv[]){
     string MC_debugFileName = "Tracker_d_MC.txt";  // Final results from MC
     string con_debugFileName = "Tracker_d_con.txt"; //Constraints
     string gen_plotFileName = "Tracker_p_gen.txt"; //
+    string fit_plotFileName = "Tracker_p_fit.txt"; //
   
         
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
@@ -194,6 +195,7 @@ int main(int argc, char* argv[]){
     ofstream debug_mc(MC_debugFileName); 
     ofstream debug_con(con_debugFileName);
     ofstream plot_gen(gen_plotFileName);
+    ofstream plot_fit(fit_plotFileName);
     
     // Setting fixed precision for floating point values
     cout << fixed << setprecision(6); 
@@ -205,6 +207,7 @@ int main(int argc, char* argv[]){
     debug_mc << fixed << setprecision(6); 
     debug_con << fixed << setprecision(6);
     plot_gen << fixed << setprecision(6);
+    plot_fit << fixed << setprecision(6);
   
 
     // SETTING GEOMETRY
@@ -274,7 +277,7 @@ int main(int argc, char* argv[]){
         }
 
         //Generating tracks 
-        LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, debugBool);
+        LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, plot_fit, debugBool);
 
             
         for (int hitCount=0; hitCount<generated_line.hit_count; hitCount++){  //counting only hits going though detector

@@ -38,6 +38,8 @@ Mxs2=[]
 Mxs3=[] 
 Mzs=[]
 
+x_fit=[]
+
 w, h = 4, 4;
 Mis = [[0 for x in range(w)] for y in range(h)] 
 Ideal = [[0 for x in range(w)] for y in range(h)] 
@@ -67,6 +69,12 @@ with open("Tracker_p_gen.txt") as f:
         x1.append(float(number_str[2]))
         z1.append(float(number_str[3]))
 
+with open("Tracker_p_fit.txt") as f:
+    for line in f:  #Line is a string
+        #split the string on whitespace, return a list of numbers (as strings)
+        number_str = line.split()    
+        x_fit.append(float(number_str[0]))
+        
  #Read file and store in lists
 i=0
 with open("Tracker_d_mis.txt") as f:
@@ -86,12 +94,12 @@ with open("Tracker_d_mis.txt") as f:
 # print Mis[3]
 # print Mzs
 
-fig=plt.figure()
-ax=fig.add_subplot(111)
+plt.figure(1)
+plt.subplot(221)
 for i in range(0, len(x0)): 
-	data = [[x0[i],z0[i]], [x1[i],z1[i]]]
+	dataM = [[x0[i],z0[i]], [x1[i],z1[i]]]
 	plt.plot(
-	    *zip(*itertools.chain.from_iterable(itertools.combinations(data, 2))),
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))),
 	    color = 'brown', marker = '*')
 
 for i in range(0, 4):
@@ -99,6 +107,23 @@ for i in range(0, 4):
 	plt.plot(Mis[1][i], Mzs[1], color="green", marker = "o")
 	plt.plot(Mis[2][i], Mzs[2], color="green", marker = "o")
 	plt.plot(Mis[3][i], Mzs[3], color="green", marker = "o")
+
+
+axes = plt.gca()
+axes.set_xlim([-1,3])
+axes.set_ylim([-3,28])
+plt.ylabel("z [cm]")
+plt.xlabel("x [cm]")
+plt.title("Mis. (Real) Geom")
+
+
+plt.subplot(222)
+for i in range(0, len(x_fit)): 
+	dataM = [[x_fit[i],z0[i]], [x_fit[i],z1[i]]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))),
+	    color = 'purple', marker = 'x')
+
 
 for i in range(0, 4):
 	plt.plot(Ideal[0][i], Izs[0], color="yellow", marker = "o")
@@ -111,6 +136,6 @@ axes.set_xlim([-1,3])
 axes.set_ylim([-3,28])
 plt.ylabel("z [cm]")
 plt.xlabel("x [cm]")
-plt.title("Generated Tracks: Misaligned (Real) Geometry [green], Ideal Geometry [yellow]")
+plt.title("Ideal Geom.")
 
 plt.show()

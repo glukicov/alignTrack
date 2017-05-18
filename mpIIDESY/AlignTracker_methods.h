@@ -128,9 +128,11 @@ class Tracker {
 
 	float GetIdealPoint(int, float, float, std::vector<float>);
 
-	vector<float> GetResiduals(std::vector<float>);
+	vector<float> GetResiduals(std::vector<float>, std::vector<float>);
 
-	LineData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
+	vector<float> GetResiduals_simple(std::vector<float>, std::ofstream&);
+
+	LineData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement 
 

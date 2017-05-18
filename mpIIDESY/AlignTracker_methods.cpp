@@ -247,11 +247,13 @@ float Tracker::GetIdealPoint(int x_det_ID, float x_det_dca, float LRSign, vector
 }
 
 // Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
-vector<float> Tracker::GetResiduals(vector<float> IdealPoints){
+// @ Inputs: ideal points (x,z)
+// Algorithm based on SLR: https://en.wikipedia.org/wiki/Simple_linear_regression#Fitting_the_regression_line
+vector<float> Tracker::GetResiduals(vector<float> IdealPoints, vector<float> distanceZ){
 
     //XXX Hack: for now this is just the smearing
     //TODO implement best fit line
-    vector<float> residuals; 
+    vector<float> residuals; //to store residuals after fit
     for (int i_size=0; i_size<IdealPoints.size(); i_size++){
         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
         float residual_i=IdealPoints[i_size]; 
@@ -262,6 +264,32 @@ vector<float> Tracker::GetResiduals(vector<float> IdealPoints){
     }
     return residuals;
 }
+
+// Function to return residuals to the fitted line to a parallel tracks: SIMPLE: sum(x)/N(x)
+// @ Inputs: ideal points (x,z)
+// Algorithm based on SLR: https://en.wikipedia.org/wiki/Simple_linear_regression#Fitting_the_regression_line
+vector<float> Tracker::GetResiduals_simple(vector<float> IdealPoints, ofstream& plot_fit){
+
+    vector<float> residuals; //to store residuals after fit
+    float SumX=0;
+    for (int i_size=0; i_size<IdealPoints.size(); i_size++){
+        //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
+        SumX+=IdealPoints[i_size];
+        
+    }
+    cout << "SumX = " << SumX << endl;
+    float x_fit=SumX/IdealPoints.size(); 
+    plot_fit << x_fit << endl;
+    for (int i_size=0; i_size<IdealPoints.size(); i_size++){
+        //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
+        float residual_i = abs(x_line-IdealPoints[i_size]);
+        //float residual_i = (x_fit-IdealPoints[i_size]); XXX
+        residuals.push_back(residual_i);
+        cout << "residual_i= " << residual_i << " IdealPoint= " << IdealPoints[i_size] << " x_fit= " << x_fit <<endl;
+    }
+
+    return residuals;
+}
     
 
 
@@ -270,7 +298,7 @@ vector<float> Tracker::GetResiduals(vector<float> IdealPoints){
   
    @return LineData struct containing data about detector hits.
 */
-LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, bool debugBool) {
+LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, bool debugBool) {
   
     // Set up new container for track data, with hit count set to zero
     LineData line;
@@ -402,7 +430,7 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
 
     //This happens once per MC function call [as we now accumulated x coordinates of "ideal" point for all hits
     // and need to do a simultaneous fit once - to return #hits of residuals]
-    vector<float> residualsVector = Tracker::GetResiduals(x_idealPoints);
+    vector<float> residualsVector = Tracker::GetResiduals_simple(x_idealPoints, plot_fit);
     
     ///Here we will push back into "x_hits" for loop for 0-> hit_count to unpack in main in the hit loop
     for (int i_HitCounter=0; i_HitCounter<line.hit_count; i_HitCounter++){
