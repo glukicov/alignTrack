@@ -78,10 +78,7 @@ int main(int argc, char* argv[]){
     //Set up counters for hits and records (tracks)
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks 
-    float scatterError; // multiple scattering error [calculated here and passed back to Tracker class]
-    //Vectors to store x and z for TGraph
-    // vector<float> x_gen;
-    // vector<float> z_gen;
+    float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -103,12 +100,12 @@ int main(int argc, char* argv[]){
     //this is also passed to Tracker functions, with debug file names
     if (compareStr=="d"){
     debugBool = true; // print out to debug files [and verbose cout output]
-    Tracker::instance()->setTrackNumber(50);
+    Tracker::instance()->setTrackNumber(1000);
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE"); }
     else if (compareStr=="p"){
     plotBool = true; 
     debugBool = true; // print out to debug files [and verbose cout output]
-    Tracker::instance()->setTrackNumber(20); 
+    Tracker::instance()->setTrackNumber(1); 
     Logger::Instance()->write(Logger::WARNING,  "PLOTTING MODE"); //setting small statistics for visual plotting of tracks
     } 
     else if (compareStr=="n" || compareStr=="a"){
@@ -129,8 +126,9 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
 
-    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " traker modules, having " << Tracker::instance()->getStrawN() << " straws per layer (out of 4) layers." << endl;
-    cout << "No B-field, Straight Tracks, 100\% efficiency" << endl; 
+    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer ";
+    cout << "("<< Tracker::instance()->getLayerN() << " layers per module)." << endl;
+    cout << "No B-field, Straight (parallel) Tracks, 100\% efficiency" << endl; 
 
 
     // See https://github.com/glukicov/alignTrack for instructions to generate random numbers
@@ -206,8 +204,8 @@ int main(int argc, char* argv[]){
     debug_off << fixed << setprecision(6); 
     debug_mc << fixed << setprecision(6); 
     debug_con << fixed << setprecision(6);
-    plot_gen << fixed << setprecision(6);
-    plot_fit << fixed << setprecision(6);
+    plot_gen << fixed << setprecision(9);
+    plot_fit << fixed << setprecision(9);
   
 
     // SETTING GEOMETRY
@@ -290,7 +288,7 @@ int main(int argc, char* argv[]){
             int label_mp2 = generated_line.i_hits[hitCount]; //label to associate hits within different layers with a correct module
 
             //Local derivatives
-            // TODO do the maths...
+            // TODO check the maths...
             float dlc1=Tracker::instance()->getProjectionX(label_mp2);
             float dlc2=generated_line.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
             float derlc[nalc] = {dlc1, dlc2};
@@ -299,7 +297,7 @@ int main(int argc, char* argv[]){
             float dergl[nagl] = {dgl1};  
             //Labels 
             /// TODO check that properly
-            int l1 = label_mp2+1; //Millepede doesn't like 0 as a label apparently ... XXX 
+            int l1 = label_mp2+1; //Millepede doesn't like 0 as a label XXX 
             int label[nagl] = {l1}; 
              
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
@@ -317,13 +315,13 @@ int main(int argc, char* argv[]){
             //Fill for hits
             h_hits_MP2 -> Fill (rMeas_mp2); 
             h_sigma -> Fill(sigma_mp2);
-            h_det->Fill(generated_line.x_det[hitCount]);
+            h_det->Fill(generated_line.x_mis_dca[hitCount]);
             //if (generated_line.x_det[hitCount] > Tracker::instance()->getStrawSpacing()/2){
             //    cout << "dca = " << generated_line.x_det[hitCount] << endl;
             //}
             // h_mis->Fill(generated_line.x_mis[hitCount]);
-            h_true->Fill(generated_line.x_true[hitCount]);
-            h_x_ideal->Fill(generated_line.x_true[hitCount]);
+            h_true->Fill(generated_line.x_track[hitCount]);
+            h_x_ideal->Fill(generated_line.x_ideal[hitCount]);
 
 
 
@@ -332,23 +330,9 @@ int main(int argc, char* argv[]){
               //cout << "Filling for tracks" << endl;
                 // h_slope->Fill(generated_line.x_m[hitCount]);
                 // h_c->Fill(generated_line.x_c[hitCount]);
-                // x_gen.push_back(generated_line.x0_gen[hitCount]);
-                // x_gen.push_back(generated_line.x1_gen[hitCount]);
-                // z_gen.push_back(generated_line.z0_gen[hitCount]);
-                // z_gen.push_back(generated_line.z1_gen[hitCount]);
                 plot_gen << generated_line.x0_gen[hitCount] << " " << generated_line.z0_gen[hitCount] << " " << generated_line.x1_gen[hitCount] << " " << generated_line.z1_gen[hitCount] << endl;
-                //h_gen->Fit("pol1", "Q", "C", 1, 2);
-                //TLine::TLine (       );
-                //line->TLine::DrawLine(generated_line.x0_gen[hitCount],generated_line.z0_gen[hitCount],generated_line.x1_gen[hitCount],generated_line.z1_gen[hitCount]);
-                //line->SetLineColor(kRed);
-                //line->Draw();
-                
             }
-
-                       
             debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
-
-
             hitsN++; //count hits
         } // end of hits loop
          
@@ -359,23 +343,6 @@ int main(int argc, char* argv[]){
         recordN++; // count records (i.e. tracks);
        
     } // end of track count
-
-    // if (plotBool){
-    //     TCanvas *c1 = new TCanvas("c1","Generated Tracks",200,10,700,500);
-    //     for (int i=1; i<3; i++){
-    //     Double_t x[100], y[100];
-    //     Int_t n = Tracker::instance()->getTrackNumber();
-    //     for (Int_t i=0;i<n;i++) {
-    //         x[i] = i*0.1;
-    //         y[i] = 10*sin(x[i]+0.2);
-    //     }
-    //     TGraph *gr = new TGraph(n,x,y);
-    //     gr->Draw("AL");
-    //     gr->SetTitle("Generated Tracks");
-    //     //return c1;
-    //     //c1->Draw();
-    //     }
-    // }   
     
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
@@ -413,21 +380,7 @@ int main(int argc, char* argv[]){
     debug_con.close();
     
     //ROOT stuff
-    gStyle->SetOptStat(1111111); // TODO make this work with TFile? or just separate ROOT macro?
-    //h_gen->SetMarkerStyle(30);
-    //h_gen->SetMarkerColor(kBlue);
-    //h_gen->SetTitle("Generated Tracks");
-    //h_gen->SetLineColor(kRed);
-    //h_gen->Draw("L");
-    //h_gen->SetOptStat(111111);
-    //h_gen->Draw();
-    //h_sigma ->Draw();
-    //h_hits_MP2 ->Draw();
-   // h_slope ->Draw(); 
-    //h_c ->Draw();
-    //h_det ->Draw();
-    //h_true ->Draw();
-   // h_mis ->Draw();
+    h_det->SetXTitle( "DCA [cm]");
     
     file->Write();
     file->Close(); //good habit!

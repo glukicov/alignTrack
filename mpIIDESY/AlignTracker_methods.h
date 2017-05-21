@@ -23,10 +23,9 @@ struct LineData {
 	int hit_count; /** Number of hits in detector */
 	std::vector<float> z_hits; /** Z-positions of generated hits in detector */ //distances 
 	std::vector<float> x_hits; /** X-positions of generated hits in detector */
-	std::vector<float> x_true; /** X-positions of true hits in detector */
-	std::vector<float> x_det; /** X-positions of recorded hits in detector */
+	std::vector<float> x_track; /** X-positions of true hits in detector */
+	std::vector<float> x_mis_dca; /** X-positions of recorded hits in detector */
 	std::vector<float> x_ideal; // ideal straw potion + dca (from mis.)
-	//std::vector<float> x_mis; /** X-positions of misalignment in hits in detector */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
 	std::vector<float> x_m; // generated slopes
@@ -36,7 +35,6 @@ struct LineData {
 	std::vector<float> x1_gen; 
 	std::vector<float> z0_gen; 
 	std::vector<float> z1_gen; 
-
 };
 
 
@@ -56,7 +54,6 @@ class Tracker {
 	static Tracker* s_instance; // Pointer to instance of class
 
 	//[all distances are in cm]
-	//static const int beamPositionLength = 10.0;  // max x position (spread) of beam origin [0, 10]
 	static constexpr float beamPositionLength = 1.3; // max x coordinate = beamPositionLength + beamOffset
 	static constexpr float beamOffset=0.6; // offset from 0 in x
 	static constexpr float beamStart = 0.0; // z 
@@ -119,6 +116,7 @@ class Tracker {
 	
 
 	float DCA(float ,float ,float ,float ,float ,float);
+	
 	//TODO rewrite like DCA_simple struc. 
 	float DCAHit(std::vector<float>, float, float, float, float, float, float, float, bool);
 
