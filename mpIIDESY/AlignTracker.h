@@ -10,6 +10,8 @@
 //XXX Some includes maybe redundant 
 #include <iostream>
 #include <fstream> 
+#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
+#include <chrono>
 #include <string>
 #include <vector>
 #include <random>

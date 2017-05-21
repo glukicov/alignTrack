@@ -59,17 +59,44 @@ Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
 *
 *
 **/
-
 #include "AlignTracker.h" 
 
 using namespace std; 
+// for compiler version determination:
+string ver_string(int a, int b, int c) {
+  std::ostringstream ss;
+  ss << a << '.' << b << '.' << c;
+  return ss.str();
+}
 
 //***************MAIN****************//
 int main(int argc, char* argv[]){
+    clock_t t_cpu; // CPU ticks for programme execution
+    t_cpu = clock(); 
+    auto t_start = std::chrono::high_resolution_clock::now(); // Wall clock ticks
+
+    //Determining compiler used:
+    std::string true_cxx =
+    #ifdef __clang__
+        "clang++";
+    #else
+        "g++";
+     #endif
+
+    std::string true_cxx_ver =
+    #ifdef __clang__
+        ver_string(__clang_major__, __clang_minor__, __clang_patchlevel__);
+    #else
+        ver_string(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+    #endif
+
+    cout << endl;
+    cout<<"The C++ compiler used: " << true_cxx << " " << true_cxx_ver<<endl;
 
     //////----Variable Initialisation-------///////////
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.] 
     string compareStr; //for debug vs. normal output as specified by the user
+    int tracksInput; // number of tracks to generate as specified by the user 
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
     bool plotBool = false; // './AlignTracker p' - for plotting small stats
     bool debugBoolStrong = true; //XXX hack
@@ -88,10 +115,13 @@ int main(int argc, char* argv[]){
     //TApplication theApp("App",&argc, argv); //for Canvas in ROOT
 
     // Check if correct number of arguments specified, exiting if not
-    if (argc > 2) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");} 
-        else if (argc < 2) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");} 
+    if (argc > 3) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");} 
+        else if (argc < 3) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");} 
         else { // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
-            try {compareStr = argv[1];} 
+            try {
+                compareStr = argv[1];
+                tracksInput = stoi(argv[2]);
+            } 
         catch (ios_base::failure& e) {
             Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
         }
@@ -100,16 +130,18 @@ int main(int argc, char* argv[]){
     //this is also passed to Tracker functions, with debug file names
     if (compareStr=="d"){
     debugBool = true; // print out to debug files [and verbose cout output]
-    Tracker::instance()->setTrackNumber(1000);
+    Tracker::instance()->setTrackNumber(tracksInput);
     Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE"); }
     else if (compareStr=="p"){
     plotBool = true; 
     debugBool = true; // print out to debug files [and verbose cout output]
-    Tracker::instance()->setTrackNumber(1); 
+    Tracker::instance()->setTrackNumber(tracksInput); 
     Logger::Instance()->write(Logger::WARNING,  "PLOTTING MODE"); //setting small statistics for visual plotting of tracks
     } 
     else if (compareStr=="n" || compareStr=="a"){
     debugBool = false; // print out to debug files
+    plotBool = false;  
+    Tracker::instance()->setTrackNumber(tracksInput); 
     }
     else{
         Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");
@@ -118,11 +150,11 @@ int main(int argc, char* argv[]){
     Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
     std::stringstream msg0, msg01, msg02, msg1;
     Logger::Instance()->write(Logger::NOTE, "");
-    msg0 << Logger::blue() <<  "*************************************************************" << Logger::def();
+    msg0 << Logger::blue() <<  "******************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
     msg01 << Logger::yellow() << "   g-2  Tracker Alignment (v0.1) - Gleb Lukicov (UCL) - May 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
-    msg1 << Logger::blue() <<  "*************************************************************" << Logger::def();
+    msg1 << Logger::blue() <<  "******************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
 
@@ -167,16 +199,15 @@ int main(int argc, char* argv[]){
     //output ROOT file
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
      // Book histograms
-    TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0, 0.02); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits [cm]",  400, -1, 3);
+    TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0.100, 0.015); // F=float bins, name, title, nBins, Min, Max
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  400, 0.1, 0.2);
     //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
-    TH1F* h_det = new TH1F("h_det", "DCA (det hits)",  500,  -0.1, 1.4);
-    TH1F* h_true = new TH1F("h_true", "True hits",  500,  -0.2, 2.5);
-   // TH1F* h_mis = new TH1F("h_mis", "Misal. hits",  500,  -0.2, 0.8);
-    TH1F* h_x_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position",  500,  -0.5, 3.5);
-    //TH2F* h_gen = new TH2F("h_gen", "Generate starting track points", 1000,  0.5, 2.5, 1000, -3, 28);
-    //TH2F* h_gen = new TH2F("h_gen", "Generate starting track points", 1000,  0.5, 2.5, 1000, -3, 28);
+    TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, 0.4);
+    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  0, 2.2);
+    TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  0, 2.2);
+    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  0, 2.2);
+  
     
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -262,7 +293,7 @@ int main(int argc, char* argv[]){
     } // end of str file 
     cout<< "Steering file was generated!" << endl;
 
-
+    cout<< "Generating data..." << endl;
     //Generating particles with energies: 10-100 [GeV]
     for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  //Track number is set in methods XXX is it the best place for it? 
         //rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
@@ -275,22 +306,22 @@ int main(int argc, char* argv[]){
         }
 
         //Generating tracks 
-        LineData generated_line = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, plot_fit, debugBool);
+        MCData generated_MC = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, plot_fit, debugBool);
 
             
-        for (int hitCount=0; hitCount<generated_line.hit_count; hitCount++){  //counting only hits going though detector
+        for (int hitCount=0; hitCount<generated_MC.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
             //Number of local and global parameters 
             const int nalc = 2;  
             const int nagl = 1;  
 
-            int label_mp2 = generated_line.i_hits[hitCount]; //label to associate hits within different layers with a correct module
+            int label_mp2 = generated_MC.i_hits[hitCount]; //label to associate hits within different layers with a correct module
 
             //Local derivatives
             // TODO check the maths...
             float dlc1=Tracker::instance()->getProjectionX(label_mp2);
-            float dlc2=generated_line.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
+            float dlc2=generated_MC.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
             float derlc[nalc] = {dlc1, dlc2};
             //Global derivatives
             float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
@@ -304,8 +335,8 @@ int main(int argc, char* argv[]){
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
            
-            float rMeas_mp2 =  generated_line.x_hits[hitCount]; 
-            float sigma_mp2 = generated_line.hit_sigmas[hitCount]; 
+            float rMeas_mp2 =  generated_MC.x_hits[hitCount]; 
+            float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; 
 
             //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
@@ -315,22 +346,22 @@ int main(int argc, char* argv[]){
             //Fill for hits
             h_hits_MP2 -> Fill (rMeas_mp2); 
             h_sigma -> Fill(sigma_mp2);
-            h_det->Fill(generated_line.x_mis_dca[hitCount]);
-            //if (generated_line.x_det[hitCount] > Tracker::instance()->getStrawSpacing()/2){
-            //    cout << "dca = " << generated_line.x_det[hitCount] << endl;
+            h_det->Fill(generated_MC.x_mis_dca[hitCount]);
+            //if (generated_MC.x_det[hitCount] > Tracker::instance()->getStrawSpacing()/2){
+            //    cout << "dca = " << generated_MC.x_det[hitCount] << endl;
             //}
-            // h_mis->Fill(generated_line.x_mis[hitCount]);
-            h_true->Fill(generated_line.x_track[hitCount]);
-            h_x_ideal->Fill(generated_line.x_ideal[hitCount]);
-
+            // h_mis->Fill(generated_MC.x_mis[hitCount]);
+            h_true->Fill(generated_MC.x_track[hitCount]);
+            h_ideal->Fill(generated_MC.x_ideal[hitCount]);
+            h_fit->Fill(generated_MC.x_fitted[hitCount]);
 
 
             //Fill for tracks
              if (hitCount ==0){
               //cout << "Filling for tracks" << endl;
-                // h_slope->Fill(generated_line.x_m[hitCount]);
-                // h_c->Fill(generated_line.x_c[hitCount]);
-                plot_gen << generated_line.x0_gen[hitCount] << " " << generated_line.z0_gen[hitCount] << " " << generated_line.x1_gen[hitCount] << " " << generated_line.z1_gen[hitCount] << endl;
+                // h_slope->Fill(generated_MC.x_m[hitCount]);
+                // h_c->Fill(generated_MC.x_c[hitCount]);
+                plot_gen << generated_MC.x0_gen[hitCount] << " " << generated_MC.z0_gen[hitCount] << " " << generated_MC.x1_gen[hitCount] << " " << generated_MC.z1_gen[hitCount] << endl;
             }
             debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
             hitsN++; //count hits
@@ -380,11 +411,21 @@ int main(int argc, char* argv[]){
     debug_con.close();
     
     //ROOT stuff
+    h_sigma->SetXTitle( "[cm]");
+    h_sigma->SetXTitle( "[cm]");
     h_det->SetXTitle( "DCA [cm]");
-    
+    h_true->SetXTitle( "[cm]");
+    h_ideal->SetXTitle( "[cm]");
+    h_fit->SetXTitle( "[cm]");
     file->Write();
     file->Close(); //good habit!
     
+    t_cpu = clock() - t_cpu;
+    auto t_end = std::chrono::high_resolution_clock::now();
+    cout << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu)/CLOCKS_PER_SEC << " s)." << " Wall clock time passed: " << std::chrono::duration<double>(t_end-t_start).count() << " s." << endl;
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. Job finished on: " << dt << endl;
     //if(plotBool){theApp.Run();} //ctrl+c to exit
     return 0; 
 } //end of main 

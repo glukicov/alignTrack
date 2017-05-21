@@ -16,7 +16,6 @@ Tracker::Tracker() {
   //XXX non-static variables definition here 
     resolution=0.01;  // 100um = 0.01 cm setting this in the constructor //TODO decide if this is a constant 
     dispX = 0.15;  // manual displacement by 0.15 cm
-    trackNumber=15000;
 }
 
 /** 
@@ -256,28 +255,29 @@ vector<float> Tracker::GetResiduals(vector<float> IdealPoints, vector<float> dis
 // Function to return residuals to the fitted line to a parallel tracks: SIMPLE: sum(x)/N(x)
 // @ Inputs: ideal points (x,z)
 // Algorithm based on SLR: https://en.wikipedia.org/wiki/Simple_linear_regression#Fitting_the_regression_line
-vector<float> Tracker::GetResiduals_simple(vector<float> IdealPoints, ofstream& plot_fit){
+ResidualData Tracker::GetResiduals_simple(vector<float> IdealPoints, ofstream& plot_fit){
 
-    vector<float> residuals; //to store residuals after fit
+    ResidualData resData;
     float SumX=0;
     for (int i_size=0; i_size<IdealPoints.size(); i_size++){
         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
         SumX+=IdealPoints[i_size];
         
     }
-    cout << "SumX = " << SumX << endl;
+    //cout << "SumX = " << SumX << endl;
     float x_fit=SumX/IdealPoints.size(); 
     plot_fit << x_fit << endl;
-    cout << "x_ftt =" << x_fit; 
+    resData.x_fitted.push_back(x_fit);
+    //cout << "x_ftt =" << x_fit; 
     for (int i_size=0; i_size<IdealPoints.size(); i_size++){
         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
         float residual_i = abs(x_fit-IdealPoints[i_size]);
         //float residual_i = (x_fit-IdealPoints[i_size]); XXX
-        residuals.push_back(residual_i);
-        cout << "residual_i= " << residual_i << " IdealPoint= " << IdealPoints[i_size] << " x_fit= " << x_fit <<endl;
+        resData.residuals.push_back(residual_i);
+        //cout << "residual_i= " << residual_i << " IdealPoint= " << IdealPoints[i_size] << " x_fit= " << x_fit <<endl;
     }
 
-    return residuals;
+    return resData;
 }
     
 
@@ -287,12 +287,13 @@ vector<float> Tracker::GetResiduals_simple(vector<float> IdealPoints, ofstream& 
   
    @return LineData struct containing data about detector hits.
 */
-LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, bool debugBool) {
+MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, bool debugBool) {
   
     // Set up new container for track data, with hit count set to zero
-    LineData line;
-    line.hit_count = 0; //count only counts through detector
-    x_idealPoints.clear();  // clear for each track
+    MCData MC;
+    MC.hit_count = 0; //count only counts through detector
+    //vector to store x coordinates of the track as seen from the ideal detector 
+    vector<float> x_idealPoints;  
 
     float rand_num; 
     float rand_gaus;
@@ -308,8 +309,8 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
     //float x_slope=(beamStop-beamStart)/(x_1-x_0); //m=dz/dx? Slope for a line with coordinates (x_0, beamStart), (x_1, beamStop)
     //float x_intercept = beamStart - x_slope*x_0; // for line z=mx+c -> c= z - mx
 
-    float xTrack = x0; //true track position x=(z_straw-c)/m; XXX always x_0 for parallel track 
-    cout << "xTrack = " << xTrack << endl;
+    //float xTrack = x0; //true track position x=(z_straw-c)/m; XXX always x_0 for parallel track 
+    //cout << "xTrack = " << xTrack << endl;
     //float dx = x_slope;
     float previousPosition = 0.0;  // previous position in "z"
     
@@ -341,20 +342,20 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
             //for (int i_straw=0; i_straw<strawN; i_straw++){
 
                 //xTrack = (distance[z_counter]-x_intercept)/x_slope;   // true track position [from line] WRONGG.... XXX need dca here
-               
-                //the dca between x_0 and the x_straw [misaligned]
+                float xTrack = x0; // always the same for parallel line 
+                //the dca between xTrack and the xStraw [misaligned]
                 DCAData x_MisDetector= Tracker::DCAHit_simple(mod_lyr_strawMisPosition[i_module][i_layer], distance[z_counter], xTrack, debugBool); // position on the detector [from dca]           
                 float x_mis_dca =  x_MisDetector.dca;  //dca of the hit straw
                 int x_mis_ID =  x_MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
                 float x_mis_LRSign = x_MisDetector.LRSign;
 
-                cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;
+                if(debugBool){cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;}
 
                 //Fining the hit as seen from the ideal detector
                 float xIdeal = Tracker::GetIdealPoint(x_mis_ID, x_mis_dca, x_mis_LRSign, mod_lyr_strawIdealPosition[i_module][i_layer]);
                 x_idealPoints.push_back(xIdeal); // vector to store x coordinates of the track as seen from the ideal detector
                 
-                cout << "Ideal x= " << xIdeal << endl;  
+               if(debugBool){cout << "Ideal x= " << xIdeal << endl;}
 
                 //Rejection of hits due to geometry (i.e. missed hits) TODO for later   
                 //No signal in a straw = no signal in the layer
@@ -363,40 +364,40 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
                 // } 
                 
                 //Module number [for labelling]
-                line.i_hits.push_back(i_module); // vector of planes that were actually hit [after passing rejection test]
+                MC.i_hits.push_back(i_module); // vector of modules that were actually hit [after passing rejection test]
 
                 //float x_mis=xTrack-sdevX[i_module]; //x position due to misalignment: same for all layers in a modules [true position - misalignment]
                 
                 
                 //Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
-                line.z_hits.push_back(distance[z_counter]);
+                MC.z_hits.push_back(distance[z_counter]);
                 // the residual looks to be deltaX + deltaY rather than the magnitude of the distance... worth noting?
                 // projection Y is always 0 for non-stereo modules?? what is the motivation? 
                 //rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
                 //float hit = (x_mis-x_det)*projectionX[i_module] + rand_gaus *resolution; //RESIDUAL between hit due to misalignment [] and detected position * smeared resolution 
                // float dca_misStraw = x_det_dca*projectionX[i_module] + rand_gaus *resolution; //RESIDUAL between hit due to misalignment [] and detected position * smeared resolution 
                // line.x_hits.push_back(dca_misStraw);
-                line.hit_sigmas.push_back(resolution);
+                MC.hit_sigmas.push_back(resolution);
                 
                 //Sanity Plots 
                 //Hits
-                line.x_mis_dca.push_back(x_mis_dca);
-                line.x_track.push_back(xTrack);
-                line.x_ideal.push_back(xIdeal);
+                MC.x_mis_dca.push_back(x_mis_dca);
+                MC.x_track.push_back(xTrack);
+                MC.x_ideal.push_back(xIdeal);
                 
 
                 //Sanity Plots: Tracks
-                if (line.hit_count == 0){
+                if (MC.hit_count == 0){
                     //cout << "Track plot push back" << endl;
-                    //line.x_m.push_back(x_slope);
-                    //line.x_c.push_back(x_intercept);
-                    line.x0_gen.push_back(xTrack);
-                    line.x1_gen.push_back(xTrack);
-                    line.z0_gen.push_back(float(beamStart)); //XXX 
-                    line.z1_gen.push_back(float(beamStop));  //XXX 
+                    //MC.x_m.push_back(x_slope);
+                    //MC.x_c.push_back(x_intercept);
+                    MC.x0_gen.push_back(xTrack);
+                    MC.x1_gen.push_back(xTrack);
+                    MC.z0_gen.push_back(float(beamStart)); //XXX 
+                    MC.z1_gen.push_back(float(beamStop));  //XXX 
                 } 
 
-                line.hit_count++;
+                MC.hit_count++;
 
            // } //end of Straws loop
         z_counter++;
@@ -407,16 +408,19 @@ LineData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_o
 
     //This happens once per MC function call [as we now accumulated x coordinates of "ideal" point for all hits
     // and need to do a simultaneous fit once - to return #hits of residuals]
-    vector<float> residualsVector = Tracker::GetResiduals_simple(x_idealPoints, plot_fit);
-    
+    ResidualData res_Data = Tracker::GetResiduals_simple(x_idealPoints, plot_fit);
+    vector<float> residuals = res_Data.residuals;
+    vector<float> x_fitted=res_Data.x_fitted; 
+
     ///Here we will push back into "x_hits" for loop for 0-> hit_count to unpack in main in the hit loop
-    for (int i_HitCounter=0; i_HitCounter<line.hit_count; i_HitCounter++){
-        line.x_hits.push_back(residualsVector[i_HitCounter]);
+    for (int i_HitCounter=0; i_HitCounter<MC.hit_count; i_HitCounter++){
+        MC.x_hits.push_back(residuals[i_HitCounter]);
+        MC.x_fitted.push_back(x_fitted[i_HitCounter]); //Sanity Plot 
         //cout << "i_HitCounter" << i_HitCounter << endl;
         //cout << residualsVector[i_HitCounter] << endl;
     }
 
-    return line; // Return data from simulated track
+    return MC; // Return data from simulated track
     
 } // end of MC
 
@@ -577,4 +581,47 @@ void Tracker::set_uniform_file(string uniform_filename) {
  */
 void Tracker::set_gaussian_file(string gaussian_filename) {
     RandomBuffer::instance()->open_gaussian_file(gaussian_filename);
+}
+
+/**
+ * Returns the peak (maximum so far) resident set size [RSS] (physical
+ * memory use) measured in bytes, or zero if the value cannot be
+ * determined on this OS. By Dr. David R. Nadeau:
+ * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
+ */
+size_t Tracker::getPeakRSS( ){
+#if defined(_WIN32)
+    /* Windows -------------------------------------------------- */
+    PROCESS_MEMORY_COUNTERS info;
+    GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
+    return (size_t)info.PeakWorkingSetSize;
+
+#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+    /* AIX and Solaris ------------------------------------------ */
+    struct psinfo psinfo;
+    int fd = -1;
+    if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
+        return (size_t)0L;      /* Can't open? */
+    if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
+    {
+        close( fd );
+        return (size_t)0L;      /* Can't read? */
+    }
+    close( fd );
+    return (size_t)(psinfo.pr_rssize * 1024L);
+
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+    /* BSD, Linux, and OSX -------------------------------------- */
+    struct rusage rusage;
+    getrusage( RUSAGE_SELF, &rusage );
+#if defined(__APPLE__) && defined(__MACH__)
+    return (size_t)rusage.ru_maxrss;
+#else
+    return (size_t)(rusage.ru_maxrss * 1024L);
+#endif
+
+#else
+    /* Unknown OS ----------------------------------------------- */
+    return (size_t)0L;          /* Unsupported. */
+#endif
 }

@@ -19,15 +19,18 @@
 /**
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
 */
-struct LineData {
+struct MCData {
 	int hit_count; /** Number of hits in detector */
 	std::vector<float> z_hits; /** Z-positions of generated hits in detector */ //distances 
-	std::vector<float> x_hits; /** X-positions of generated hits in detector */
-	std::vector<float> x_track; /** X-positions of true hits in detector */
-	std::vector<float> x_mis_dca; /** X-positions of recorded hits in detector */
-	std::vector<float> x_ideal; // ideal straw potion + dca (from mis.)
+	std::vector<float> x_hits; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
-	std::vector<int> i_hits; /** Number for plane struck in detector hits, with the plane numbers starting at 1, and increasing by one for each adjacent plane */
+	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
+
+	std::vector<float> x_track; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
+	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
+	std::vector<float> x_ideal; // ideal straw hit position + dca (from mis.)
+	std::vector<float> x_fitted; // reconstructed x position of the line 
+
 	std::vector<float> x_m; // generated slopes
 	std::vector<float> x_c; //generated intercepts
 
@@ -44,6 +47,11 @@ struct DCAData{
 	float LRSign; // L=-ive, R=+ive 
 };
 
+struct ResidualData{
+	std::vector<float> residuals; // residual between  
+	std::vector<float> x_fitted;  
+};
+
 /**
    Singleton class to represent a detector made up of an array of planar drift chambers, simulating the passage of linear tracks through the detector.
  */
@@ -53,14 +61,16 @@ class Tracker {
 
 	static Tracker* s_instance; // Pointer to instance of class
 
+	int trackNumber; // Number of tracks (i.e. records) to be simulated passing through detector - passed as command line argument
+	float resolution; //decide if this is a constant  [value is assigned in the constructor]
+	float dispX; // [value is assigned in the constructor]
+	
+
 	//[all distances are in cm]
 	static constexpr float beamPositionLength = 1.3; // max x coordinate = beamPositionLength + beamOffset
 	static constexpr float beamOffset=0.6; // offset from 0 in x
 	static constexpr float beamStart = 0.0; // z 
 	static constexpr float beamStop = 25.0;  // z 
-
-	float resolution; //TODO decide if this is a constant  [value is assigned in the constructor]
-	float dispX; // [value is assigned in the constructor]
  	
  	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 	
@@ -91,16 +101,12 @@ class Tracker {
     std::vector<float> distance;  // Z distance between planes [this is set in geometry]
     std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
     std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
-    int trackNumber; /** Number of tracks (i.e. records) to be simulated passing through detector */
+    
 
 
     // Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
     std::vector< std::vector< std::vector< float > > > mod_lyr_strawIdealPosition; 
-    std::vector< std::vector< std::vector< float > > > mod_lyr_strawMisPosition;  
-    
-    //vector to store x coordinates of the track as seen from the ideal detector 
-     std::vector<float> x_idealPoints;  
- 
+    std::vector< std::vector< std::vector< float > > > mod_lyr_strawMisPosition;   
     	
 	// Class constructor and destructor
 	Tracker();
@@ -128,9 +134,9 @@ class Tracker {
 
 	vector<float> GetResiduals(std::vector<float>, std::vector<float>);
 
-	vector<float> GetResiduals_simple(std::vector<float>, std::ofstream&);
+	ResidualData GetResiduals_simple(std::vector<float>, std::ofstream&);
 
-	LineData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
+	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement 
 
@@ -142,7 +148,9 @@ class Tracker {
 
 	void set_gaussian_file(std::string); // Set filename for Gaussian random numbers
 
+	size_t getPeakRSS( );
 
+	size_t getCurrentRSS( );
 
 	//
 	// Setter methods
