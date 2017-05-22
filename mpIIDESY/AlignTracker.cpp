@@ -39,11 +39,11 @@ Labels Module 0, Module 1.
 Constrains TODO ??? 
 Steering options TODO  ??? do some reading
                                     Tracker Geometry:
-First layer fist straw (A1) is at z=50, x=0; spacing (in x) between straws in layer is ... XXX [strawSpacing]
-Spacing between layers in same view is ... XXX [layerSpacing]
-Spacing between U and V views (last and first layers in views) is ... XXX [viewSpaing]
-Spacing between modules (last and first layers in modules) ... XXX [moduleSpacing]
-Layers in a view are (e.g. U0 vs. U1) have an extra relative x displacement of ... XXX  [layerDisplacement]
+First layer fist straw (A1) is at z=50, x=0; spacing (in x) between straws in layer is 0.606 [strawSpacing]
+Spacing between layers in same view is 0.515 [layerSpacing]
+Spacing between U and V views (last and first layers in views) is 2.020 [viewSpaing]
+Spacing between modules (last and first layers in modules) 13.735 [moduleSpacing]
+Layers in a view are (e.g. U0 vs. U1) have an extra relative x displacement of 0.303  [layerDisplacement]
 
 For more information see: 
 http://gm2-docdb.fnal.gov:8080/cgi-bin/RetrieveFile?docid=4375&filename=Orientation.pdf&version=1 
@@ -89,9 +89,6 @@ int main(int argc, char* argv[]){
     #else
         ver_string(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
     #endif
-
-    cout << endl;
-    cout<<"The C++ compiler used: " << true_cxx << " " << true_cxx_ver<<endl;
 
     //////----Variable Initialisation-------///////////
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.] 
@@ -347,18 +344,12 @@ int main(int argc, char* argv[]){
             h_hits_MP2 -> Fill (rMeas_mp2); 
             h_sigma -> Fill(sigma_mp2);
             h_det->Fill(generated_MC.x_mis_dca[hitCount]);
-            //if (generated_MC.x_det[hitCount] > Tracker::instance()->getStrawSpacing()/2){
-            //    cout << "dca = " << generated_MC.x_det[hitCount] << endl;
-            //}
-            // h_mis->Fill(generated_MC.x_mis[hitCount]);
             h_true->Fill(generated_MC.x_track[hitCount]);
             h_ideal->Fill(generated_MC.x_ideal[hitCount]);
             h_fit->Fill(generated_MC.x_fitted[hitCount]);
 
-
             //Fill for tracks
              if (hitCount ==0){
-              //cout << "Filling for tracks" << endl;
                 // h_slope->Fill(generated_MC.x_m[hitCount]);
                 // h_c->Fill(generated_MC.x_c[hitCount]);
                 plot_gen << generated_MC.x0_gen[hitCount] << " " << generated_MC.z0_gen[hitCount] << " " << generated_MC.x1_gen[hitCount] << " " << generated_MC.z1_gen[hitCount] << endl;
@@ -425,7 +416,7 @@ int main(int argc, char* argv[]){
     cout << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu)/CLOCKS_PER_SEC << " s)." << " Wall clock time passed: " << std::chrono::duration<double>(t_end-t_start).count() << " s." << endl;
     time_t now = time(0);
     char* dt = ctime(&now);
-    cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. Job finished on: " << dt << endl;
-    //if(plotBool){theApp.Run();} //ctrl+c to exit
+    cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. The C++ compiler used: " << true_cxx << " " << true_cxx_ver<<" Job finished on: " << dt << endl;
+    //if(plotBool){theApp.Run();} //ctrl+c to exit //for Canvas in ROOT
     return 0; 
 } //end of main 

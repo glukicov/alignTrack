@@ -13,6 +13,7 @@ CPP = g++
 //CPP=/usr/local/bin/g++-7
 CPPFLAGS = -std=c++0x
 CPPFLAGS += $(ROOTCFLAGS)
+//CPPFLAGS +=-static-libtsan
 CPPFLAGS += -Wstatic-float-init
 CPPFLAGS += -fstack-protector-all
 

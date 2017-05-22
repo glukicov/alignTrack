@@ -49,7 +49,7 @@ struct DCAData{
 
 struct ResidualData{
 	std::vector<float> residuals; // residual between  
-	std::vector<float> x_fitted;  
+	std::vector<float> x_fitted;   // the x-coordinate of the fitted line in a layer [z-coordinate corresponds to distance vector]
 };
 
 /**
@@ -65,8 +65,7 @@ class Tracker {
 	float resolution; //decide if this is a constant  [value is assigned in the constructor]
 	float dispX; // [value is assigned in the constructor]
 	
-
-	//[all distances are in cm]
+	//Beam parameters [all distances are in cm]
 	static constexpr float beamPositionLength = 1.3; // max x coordinate = beamPositionLength + beamOffset
 	static constexpr float beamOffset=0.6; // offset from 0 in x
 	static constexpr float beamStart = 0.0; // z 
@@ -75,9 +74,9 @@ class Tracker {
  	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 	
 	//initialising physics variables
- 	//XXX
+ 	//XXX for later 
 	
-	//  define detector geometry [all distances are in cm]
+	// define detector geometry [all distances are in cm]
 	static const int moduleN = 2; //number of movable detectors/module [independent modules]
 	//static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
@@ -101,8 +100,6 @@ class Tracker {
     std::vector<float> distance;  // Z distance between planes [this is set in geometry]
     std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
     std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
-    
-
 
     // Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
     std::vector< std::vector< std::vector< float > > > mod_lyr_strawIdealPosition; 
@@ -118,7 +115,6 @@ class Tracker {
 
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
-	
 	
 
 	float DCA(float ,float ,float ,float ,float ,float);
@@ -148,14 +144,13 @@ class Tracker {
 
 	void set_gaussian_file(std::string); // Set filename for Gaussian random numbers
 
-	size_t getPeakRSS( );
+	size_t getPeakRSS( ); // Peak Dynamic Memory used 
 
 	size_t getCurrentRSS( );
 
 	//
 	// Setter methods
 	//
-
 	void setTrackNumber(int tracks){
 		trackNumber=tracks; 
 	}
@@ -164,7 +159,6 @@ class Tracker {
 	//
 	// Getter methods
 	//
-
 
 	int getLayer(int i) {
 		return layer[i];
@@ -178,15 +172,10 @@ class Tracker {
 		return sdevX[i];
 	}
 
-	// float getX_idealPoints(int i){
-	// 	return x_idealPoints[i];
-	// }
-
 
 	int getStrawN(){
 		return strawN;
 	}
-
 
 	int getTrackNumber() {
 		return trackNumber;
