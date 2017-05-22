@@ -30,6 +30,8 @@ struct MCData {
 	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
 	std::vector<float> x_ideal; // ideal straw hit position + dca (from mis.)
 	std::vector<float> x_fitted; // reconstructed x position of the line 
+	std::vector<float> strawID;
+	std::vector<float> LR;
 
 	std::vector<float> x_m; // generated slopes
 	std::vector<float> x_c; //generated intercepts

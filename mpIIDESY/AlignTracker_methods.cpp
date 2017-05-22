@@ -342,6 +342,8 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
                 float x_mis_dca =  x_MisDetector.dca;  //dca of the hit straw
                 int x_mis_ID =  x_MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
                 float x_mis_LRSign = x_MisDetector.LRSign;
+                MC.strawID.push_back(x_mis_ID);
+                MC.LR.push_back(x_mis_LRSign);
 
                 if(debugBool){cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;}
 

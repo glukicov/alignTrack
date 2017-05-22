@@ -147,11 +147,11 @@ int main(int argc, char* argv[]){
     Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
     std::stringstream msg0, msg01, msg02, msg1;
     Logger::Instance()->write(Logger::NOTE, "");
-    msg0 << Logger::blue() <<  "******************************************************************" << Logger::def();
+    msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "   g-2  Tracker Alignment (v0.1) - Gleb Lukicov (UCL) - May 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.1) - Gleb Lukicov (UCL) - May 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
-    msg1 << Logger::blue() <<  "******************************************************************" << Logger::def();
+    msg1 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
 
@@ -204,11 +204,35 @@ int main(int argc, char* argv[]){
     TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  0, 2.2);
     TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  0, 2.2);
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  0, 2.2);
-  
+
+    //std::unique_ptr<RootManager> rm_;  // gm2util/common/RootManager.hh" TODO  
+    // std::string name;
+    // std::stringstream sh; std::stringstream st;
+    // for (int i_layer=0; i_layer < Tracker::instance()->getLayerN(); i_layer++){
+    //     sh.str(""); sh << "h_det_layer_" << i_layer;
+    //     auto hx = new TH1F(sh.str().c_str(),st.str().c_str(), 500,  -0.05, 0.4);
+    //     hx->GetXaxis()->SetTitle("DCA [cm]");
+    //     //rm_->Add(currentDirName.str(), hx);
+    // }
+
+    TH1F* h_det_layer_0 = new TH1F("h_det_layer_0", "DCA_layer_0",  500,  -0.05, 0.4);
+    TH1F* h_det_layer_1 = new TH1F("h_det_layer_1", "DCA_layer_1",  500,  -0.05, 0.4);
+    TH1F* h_det_layer_2 = new TH1F("h_det_layer_2", "DCA_layer_2",  500,  -0.05, 0.4);
+    TH1F* h_det_layer_3 = new TH1F("h_det_layer_3", "DCA_layer_3",  500,  -0.05, 0.4);
+
+    TH1I* h_strawID_layer_0 = new TH1I("h_strawID_layer_0", "h_strawID_layer_0", 5, -1, 4);
+    TH1I* h_strawID_layer_1 = new TH1I("h_strawID_layer_1", "h_strawID_layer_1", 5, -1, 4);
+    TH1I* h_strawID_layer_2 = new TH1I("h_strawID_layer_2", "h_strawID_layer_2", 5, -1, 4);
+    TH1I* h_strawID_layer_3 = new TH1I("h_strawID_layer_3", "h_strawID_layer_3", 5, -1, 4);
+
+    TH1F* h_LR_layer_0 = new TH1F("h_LR_layer_0", "h_LR_layer_0", 4, -2, 2);
+    TH1F* h_LR_layer_1 = new TH1F("h_LR_layer_1", "h_LR_layer_1", 4, -2, 2);
+    TH1F* h_LR_layer_2 = new TH1F("h_LR_layer_2", "h_LR_layer_2", 4, -2, 2);
+    TH1F* h_LR_layer_3 = new TH1F("h_LR_layer_3", "h_LR_layer_3", 4, -2, 2);
     
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-    cout << "Generating test data for g-2 Tracker Alignment in PEDE." << endl;
+    cout << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
    
     // file streams for constrain, steering, and debug files 
     ofstream constraint_file(conFileName);
@@ -348,8 +372,14 @@ int main(int argc, char* argv[]){
             h_ideal->Fill(generated_MC.x_ideal[hitCount]);
             h_fit->Fill(generated_MC.x_fitted[hitCount]);
 
+            if (hitCount ==0){h_det_layer_0->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_0->Fill(generated_MC.strawID[hitCount]); h_LR_layer_0->Fill(generated_MC.LR[hitCount]);} 
+            if (hitCount ==1){h_det_layer_1->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_1->Fill(generated_MC.strawID[hitCount]); h_LR_layer_1->Fill(generated_MC.LR[hitCount]);} 
+            if (hitCount ==2){h_det_layer_2->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_2->Fill(generated_MC.strawID[hitCount]); h_LR_layer_2->Fill(generated_MC.LR[hitCount]);} 
+            if (hitCount ==3){h_det_layer_3->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_3->Fill(generated_MC.strawID[hitCount]); h_LR_layer_3->Fill(generated_MC.LR[hitCount]);} 
+
             //Fill for tracks
-             if (hitCount ==0){
+            if (hitCount ==0){
+                
                 // h_slope->Fill(generated_MC.x_m[hitCount]);
                 // h_c->Fill(generated_MC.x_c[hitCount]);
                 plot_gen << generated_MC.x0_gen[hitCount] << " " << generated_MC.z0_gen[hitCount] << " " << generated_MC.x1_gen[hitCount] << " " << generated_MC.z1_gen[hitCount] << endl;
@@ -357,7 +387,15 @@ int main(int argc, char* argv[]){
             debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
             hitsN++; //count hits
         } // end of hits loop
-         
+        
+     
+        //TODO impliment via ROOT Manager!  
+        // for (int i_layer=0; i_layer < Tracker::instance()->getLayerN(); i_layer++){
+        //     sh.str(""); sh << "h_det_layer_" << i_layer;
+        //     auto h = rm_->Get<TH1F*>(currentDirName.str(),sh.str());
+        //     h->Fill(generated_MC.x_mis_dca[i_layer]);
+        // }
+
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
 
