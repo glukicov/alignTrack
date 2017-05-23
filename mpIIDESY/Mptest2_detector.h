@@ -50,16 +50,16 @@ class Detector {
 	static const int pixelYN = 5; //number of pixels in y direction   //total 50 pixels pixelXN * pixelYN = 50
 	static const int pixelXYN = pixelXN*pixelYN;
 
-	static const float twoR=2.0; //For normalisation of uniform random numbers [0,1] 
+	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] 
 
 	static const int pixelTotalN = detectorN*pixelYN*pixelXN; //total number of pixels extra modules at 1, 4 ,7 10 have no pixels]
 	//  define detector geometry
-	static const float startingDistancePlane1=10.0; // arclength of first plane
-	static const float planeDistance=10.0; // distance between planes //cm / Pede works in cm
-	static const float width =0.02; //thickness/width of plane (X0)
-	static const float offset=0.5;  // offset of stereo pixels
-	static const float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
-	static const float layerSize=20.0; //size of layers  //cm 
+	static constexpr float startingDistancePlane1=10.0; // arclength of first plane
+	static constexpr float planeDistance=10.0; // distance between planes //cm / Pede works in cm
+	static constexpr float width =0.02; //thickness/width of plane (X0)
+	static constexpr float offset=0.5;  // offset of stereo pixels
+	static constexpr float stereoTheta=0.08727;  // stereo angle  // radians (5 deg = 0.087.. rad)  
+	static constexpr float layerSize=20.0; //size of layers  //cm 
 	float resolution;  // <resolution  // 20um = 0.002 cm setting this in the constructor
 		
 	std::vector<int> layer; 
