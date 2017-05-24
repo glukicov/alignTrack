@@ -61,6 +61,7 @@ Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
 **/
 #include "AlignTracker.h" 
 
+
 using namespace std; 
 // for compiler version determination:
 string ver_string(int a, int b, int c) {
@@ -197,41 +198,59 @@ int main(int argc, char* argv[]){
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
     //output ROOT file
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
-     // Book histograms
+    //create a subdirectories 
+    TDirectory* cd_All_Hits = file->mkdir("All_Hits");
+    TDirectory* cd_Layers = file->mkdir("Layers");
+    TDirectory* cd_Modules = file->mkdir("Modules");
+    TDirectory* cd_Views = file->mkdir("Views");
+    TDirectory* cd_Tracks = file->mkdir("Tracks");
+     // Book histograms [once only]
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0.100, 0.015); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  400, 0.0, 0.2);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  400, 0.0, 0.005);
     //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, 0.4);
     TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -1, 3);
     TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  -1, 3);
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -1, 3);
+    h_sigma->SetXTitle( "[cm]");
+    h_hits_MP2->SetXTitle( "[cm]");
+    h_det->SetXTitle( "DCA [cm]");
+    h_true->SetXTitle( "[cm]");
+    h_ideal->SetXTitle( "[cm]");
+    h_fit->SetXTitle( "[cm]");
+    h_sigma->SetDirectory(cd_All_Hits);
+    h_hits_MP2->SetDirectory(cd_All_Hits);
+    h_det->SetDirectory(cd_All_Hits);
+    h_true->SetDirectory(cd_All_Hits);
+    h_ideal->SetDirectory(cd_All_Hits);
+    h_fit->SetDirectory(cd_All_Hits);
 
-    //std::unique_ptr<RootManager> rm_;  // gm2util/common/RootManager.hh" TODO  
-    // std::string name;
-    // std::stringstream sh; std::stringstream st;
-    // for (int i_layer=0; i_layer < Tracker::instance()->getLayerN(); i_layer++){
-    //     sh.str(""); sh << "h_det_layer_" << i_layer;
-    //     auto hx = new TH1F(sh.str().c_str(),st.str().c_str(), 500,  -0.05, 0.4);
-    //     hx->GetXaxis()->SetTitle("DCA [cm]");
-    //     //rm_->Add(currentDirName.str(), hx);
-    // }
-
-    TH1F* h_det_layer_0 = new TH1F("h_det_layer_0", "DCA_layer_0",  500,  -0.05, 0.4);
-    TH1F* h_det_layer_1 = new TH1F("h_det_layer_1", "DCA_layer_1",  500,  -0.05, 0.4);
-    TH1F* h_det_layer_2 = new TH1F("h_det_layer_2", "DCA_layer_2",  500,  -0.05, 0.4);
-    TH1F* h_det_layer_3 = new TH1F("h_det_layer_3", "DCA_layer_3",  500,  -0.05, 0.4);
-
-    TH1I* h_strawID_layer_0 = new TH1I("h_strawID_layer_0", "h_strawID_layer_0", 5, -1, 4);
-    TH1I* h_strawID_layer_1 = new TH1I("h_strawID_layer_1", "h_strawID_layer_1", 5, -1, 4);
-    TH1I* h_strawID_layer_2 = new TH1I("h_strawID_layer_2", "h_strawID_layer_2", 5, -1, 4);
-    TH1I* h_strawID_layer_3 = new TH1I("h_strawID_layer_3", "h_strawID_layer_3", 5, -1, 4);
-
-    TH1F* h_LR_layer_0 = new TH1F("h_LR_layer_0", "h_LR_layer_0", 4, -2, 2);
-    TH1F* h_LR_layer_1 = new TH1F("h_LR_layer_1", "h_LR_layer_1", 4, -2, 2);
-    TH1F* h_LR_layer_2 = new TH1F("h_LR_layer_2", "h_LR_layer_2", 4, -2, 2);
-    TH1F* h_LR_layer_3 = new TH1F("h_LR_layer_3", "h_LR_layer_3", 4, -2, 2);
+    //TODO create a directory in root file 
     
+    std::stringstream h_name;
+    std::stringstream h_title;
+    //Booking histograms for TOTAL # layers
+    for (int i = 0 ; i < Tracker::instance()->getLayerTotalN(); i++) {
+        h_name.str(""); h_name << "h_det_layer_" << i;
+        h_title.str(""); h_title << "DCA in layer " << i;
+        auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 500,  -0.05, 0.4);
+        h1->GetXaxis()->SetTitle("[cm]");
+        
+       
+
+        h_name.str(""); h_name << "h_strawID_layer_" << i;
+        h_title.str(""); h_title << "strawID in layer " << i;
+        auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), 5, -1, 4);
+        h2->GetXaxis()->SetTitle("Straw ID [0-31]");
+
+        h_name.str(""); h_name << "h_LR_layer_" << i;
+        h_title.str(""); h_title << "Left-Right hit distribution in layer" << i;
+        auto h3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
+        h3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 ");
+
+    }
+
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
     cout << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
@@ -366,22 +385,35 @@ int main(int argc, char* argv[]){
             
             //Sanity Plots
 
-            //Fill for hits
+            //Fill for all hits
+            //cd_All_Hits->cd();    // ROOT dir
             h_hits_MP2 -> Fill (rMeas_mp2); 
             h_sigma -> Fill(sigma_mp2);
             h_det->Fill(generated_MC.x_mis_dca[hitCount]);
             h_true->Fill(generated_MC.x_track[hitCount]);
             h_ideal->Fill(generated_MC.x_ideal[hitCount]);
             h_fit->Fill(generated_MC.x_fitted[hitCount]);
+           
+            //Fill for hits in layers
+            //cd_Layers->cd();    // ROOT dir
+            //file->cd();
+            h_name.str("");
+            h_name << "h_det_layer_" << hitCount;
+            TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
+            h1->Fill(generated_MC.x_mis_dca[hitCount]);
+            h_name.str("");
+            h_name << "h_strawID_layer_" << hitCount;
+            TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
+            h2 ->Fill(generated_MC.strawID[hitCount]);
+            h_name.str("");
+            h_name << "h_LR_layer_" << hitCount;
+            TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
+            h3 ->Fill(generated_MC.LR[hitCount]);
 
-            if (hitCount ==0){h_det_layer_0->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_0->Fill(generated_MC.strawID[hitCount]); h_LR_layer_0->Fill(generated_MC.LR[hitCount]);} 
-            if (hitCount ==1){h_det_layer_1->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_1->Fill(generated_MC.strawID[hitCount]); h_LR_layer_1->Fill(generated_MC.LR[hitCount]);} 
-            if (hitCount ==2){h_det_layer_2->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_2->Fill(generated_MC.strawID[hitCount]); h_LR_layer_2->Fill(generated_MC.LR[hitCount]);} 
-            if (hitCount ==3){h_det_layer_3->Fill(generated_MC.x_mis_dca[hitCount]); h_strawID_layer_3->Fill(generated_MC.strawID[hitCount]); h_LR_layer_3->Fill(generated_MC.LR[hitCount]);} 
 
-            //Fill for tracks
+            //Fill for tracks [once only]
             if (hitCount ==0){
-                
+                // cd_Tracks->cd();    // ROOT dir TODO
                 // h_slope->Fill(generated_MC.x_m[hitCount]);
                 // h_c->Fill(generated_MC.x_c[hitCount]);
                 plot_gen << generated_MC.x0_gen[hitCount] << " " << generated_MC.z0_gen[hitCount] << " " << generated_MC.x1_gen[hitCount] << " " << generated_MC.z1_gen[hitCount] << endl;
@@ -404,7 +436,7 @@ int main(int argc, char* argv[]){
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records (i.e. tracks);
     
-        
+       
     } // end of track count
     
     cout << " " << endl;
@@ -444,13 +476,9 @@ int main(int argc, char* argv[]){
     debug_mc.close();
     debug_con.close();
     
+    
     //ROOT stuff
-    h_sigma->SetXTitle( "[cm]");
-    h_sigma->SetXTitle( "[cm]");
-    h_det->SetXTitle( "DCA [cm]");
-    h_true->SetXTitle( "[cm]");
-    h_ideal->SetXTitle( "[cm]");
-    h_fit->SetXTitle( "[cm]");
+
     file->Write();
     file->Close(); //good habit!
     

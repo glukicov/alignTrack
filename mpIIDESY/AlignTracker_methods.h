@@ -223,6 +223,10 @@ class Tracker {
 		return layerN;
 	}
 
+	int getLayerTotalN() {
+		return layerTotalN;
+	}
+
 	int getModuleN() {
 		return moduleN;
 	}

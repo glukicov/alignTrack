@@ -1,7 +1,7 @@
 #make file for AlignTracker.cpp 
 
 PROGNAME = AlignTracker
-SOURCES =  Logger.cpp AlignTracker_methods.cpp random_buffer.cpp 
+SOURCES =  Logger.cpp AlignTracker_methods.cpp random_buffer.cpp
 OBJECTS = $(patsubst %.cpp, %.o, $(SOURCES))
 
 ROOTCFLAGS   := $(shell root-config --cflags)
