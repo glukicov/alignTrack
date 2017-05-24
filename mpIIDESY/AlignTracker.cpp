@@ -155,9 +155,11 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
 
-    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer ";
-    cout << "("<< Tracker::instance()->getLayerN() << " layers per module)." << endl;
-    cout << "No B-field, Straight (parallel) Tracks, 100\% efficiency" << endl; 
+    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer " << endl;
+    cout << "["<< Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
+    cout << "No B-field, Straight (parallel) Tracks, 100\% efficiency" << endl;
+    cout << "Hit rejection: DCA > StrawRadius [" << Tracker::instance()->getStrawRadius() << " cm]" << endl;
+    cout << "Parallel Tracks: single hit per layer allowed [no multiple hit counter]" << endl;
 
 
     // See https://github.com/glukicov/alignTrack for instructions to generate random numbers
@@ -407,10 +409,12 @@ int main(int argc, char* argv[]){
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
+    cout << "There was " << Tracker::instance()->getRejectedHitsDCA() << " hits that missed a straw in TOTAL." << endl;
+    cout << "Additionally, " << Tracker::instance()->getMultipleHitsLayer() << " multiple hits in layers in TOTAL." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
     cout << "Sanity Plots: root Tracker.root" << endl;
-    cout << "Manual Misalignment was " << Tracker::instance()->getDispX() << " cm: " << Tracker::instance()->getSdevX(0) << " for Module 0 and " << Tracker::instance()->getSdevX(1) << " for Module 1." << endl; 
+    cout << "Manual Misalignment was " << Tracker::instance()->getSdevX(0) << " cm for Module 0, and " << Tracker::instance()->getSdevX(1) << " cm for Module 1." << endl; 
     cout << "Resolution was " << Tracker::instance()->getResolution() << " cm" << endl;  
     Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 

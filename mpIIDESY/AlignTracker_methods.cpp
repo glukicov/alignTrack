@@ -15,7 +15,10 @@ Empty constructor for detector class.
 Tracker::Tracker() {
   // non-static variables definition here 
     resolution=0.01;  // 100um = 0.01 cm setting this in the constructor //TODO decide if this is a constant 
-    dispX = 0.15;  // manual displacement by 0.15 cm
+    dispX = 0.02;  // manual displacement by 0.15 cm
+
+    rejectedHitsDCA = 0;
+    multipleHitsLayer = 0;
 }
 
 /** 
@@ -166,6 +169,11 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float zStraw, float x
 
             float hit_distance_low = Tracker::DCA_simple(lower, xTrack);
             float hit_distance_up = Tracker::DCA_simple(upper, xTrack); 
+
+            if (hit_distance_low < strawRadius && hit_distance_up < strawRadius){
+                if (debugBool){cout << "multiple Straw in layer were hit!" << endl;}
+                multipleHitsLayer++;
+            }
 
             if (hit_distance_up>hit_distance_low){
                 hitDistance = hit_distance_low;
@@ -353,11 +361,13 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
                 
                 if(debugBool){cout << "Ideal x= " << xIdeal << endl;}
 
-                //Rejection of hits due to geometry (i.e. missed hits) TODO for later   
+                //Rejection of hits due to geometry (i.e. missed hits)  
                 //No signal in a straw = no signal in the layer
-                 // if (x_det > strawRadius){ //[between (0,0.25]       
-                //     //continue;
-                // } 
+                if (x_mis_dca > strawRadius){ //[between (0,0.25]       
+                    continue;
+                    rejectedHitsDCA++;
+                    if (debugBool){cout << "Hit Rejected: outside of straw!" << endl;}
+                } 
                 
                 //Module number [for labelling] - after (if) passing the rejection...
                 MC.i_hits.push_back(i_module); // vector of modules that were actually hit [after passing rejection test]
@@ -463,7 +473,8 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
                 dX=startingXDistanceStraw0;
            // }// end of View loop
         }//Modules  
-  
+   
+   // Print out:
     if (debugBool){
         int Zcounter=0;
         for (int i_module=0; i_module<moduleN; i_module++){
@@ -489,16 +500,17 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
 // MC misalignment of detectors 
 void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     //float rand_gaus;
-    float sign = 1.0; //for +x or -x direction of misalignment
+    //float sign = 1.0; //for +x or -x direction of misalignment
+    float factor = 1.0; // to enlarge the effect of misalignment
     //Now misaligning detectors in x
 
-    float dX = startingXDistanceStraw0+(dispX * sign); // starting on the x-axis (z, 0+dispX)
+    float dX = startingXDistanceStraw0+(dispX * factor); // starting on the x-axis (z, 0+dispX)
 
     for (int i_module=0; i_module<moduleN; i_module++){
         //rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev()); 
         // Before misalignment was also smeared XXX
         //sdevX[i] = dispX * rand_gaus;
-        sdevX.push_back(dispX * sign);  // vector of misalignment 
+        sdevX.push_back(dispX * factor);  // vector of misalignment 
         mod_lyr_strawMisPosition.push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
          //for (int i_view=0; i_view<viewN; i_view++){
                 for (int i_layer=0; i_layer<layerN; i_layer++){ //per module
@@ -507,14 +519,16 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
                         mod_lyr_strawMisPosition[i_module][i_layer].push_back(dX); 
                         dX=strawSpacing+dX; //while we are in the same layer: increment straw spacing in x
                     } //end of Straws loop
-                    dX=layerDisplacement+(dispX * sign); //set displacement in x for the next layer in the view
+                    dX=layerDisplacement+(dispX * factor); //set displacement in x for the next layer in the view
                 }//end of Layers loop
-                sign = -sign;  //next module will be displaced in the opposite direction
-                dX=startingXDistanceStraw0+(dispX * sign);
+                //sign = -sign;  //next module will be displaced in the opposite direction
+                factor = 1.25;  //next module will be displaced 1.25 more in the same direction 
+                dX=startingXDistanceStraw0+(dispX * factor);
            // }// end of View loop
         
         }//Modules 
 
+    // Print out:
     if (debugBool){
         int Zcounter=0;
         for (int i_module=0; i_module<moduleN; i_module++){

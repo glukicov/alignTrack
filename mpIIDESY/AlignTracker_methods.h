@@ -68,8 +68,8 @@ class Tracker {
 	float dispX; // [value is assigned in the constructor]
 	
 	//Beam parameters [all distances are in cm]
-	static constexpr float beamPositionLength = 1.3; // max x coordinate = beamPositionLength + beamOffset
-	static constexpr float beamOffset=0.6; // offset from 0 in x
+	static constexpr float beamPositionLength = 3.0; // max x coordinate = beamPositionLength + beamOffset
+	static constexpr float beamOffset=-0.5; // offset from 0 in x
 	static constexpr float beamStart = 0.0; // z 
 	static constexpr float beamStop = 25.0;  // z 
  	
@@ -80,7 +80,7 @@ class Tracker {
 	
 	// define detector geometry [all distances are in cm]
 	static const int moduleN = 2; //number of movable detectors/module [independent modules]
-	//static const int viewN = 2; //There are two views per module (U and V) XXX
+	static const int viewN = 0; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
 	static const int layerTotalN = layerN*moduleN; // total number of layers 
 	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
@@ -95,6 +95,10 @@ class Tracker {
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.25; //thickness/width of a plane (X0) // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
+
+	//Rejection counters // TODO implement as vectors for layers
+	int rejectedHitsDCA;
+	int multipleHitsLayer;
 	
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
@@ -179,12 +183,24 @@ class Tracker {
 		return strawN;
 	}
 
+	int getViewN(){
+		return viewN;
+	}
+
 	int getTrackNumber() {
 		return trackNumber;
 	}
 
 	float getStrawRadius() {
 		return strawRadius;
+	}
+
+	int getRejectedHitsDCA() {
+		return rejectedHitsDCA;
+	}
+
+	int getMultipleHitsLayer() {
+		return multipleHitsLayer;
 	}
 
 	float getStrawSpacing(){
