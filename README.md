@@ -26,6 +26,7 @@ To run PEDE algorithm in general case:
 ` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
 
 #### Random (Integer) Number Generation ####
+Script to generate a plaintext file of random floating-point numbers, either  uniformly distributed between 0 and 1, or normally distributed with a mean of 0, and a standard deviation of 1. Uses Marsenne Twister algorithm included in Python's random package. User can specify seed, number of random numbers to generate, precision, and output file.
    * `python randomIntGenerator.py -u True -o uniform_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
    * `python randomIntGenerator.py -g True -o gaussian_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
 Please note that the output filenames shown are the default random number files for the modified Fortran version of *Test 1/2*, and C++ MC. Random numbers are generated using Python's built-in *Marsenne Twister* generator. Generally, ~5,000,000 random numbers in each file seems to be more than enough for the default *Test 1/2*, and C++ MC. 
