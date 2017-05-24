@@ -17,8 +17,6 @@ Tracker::Tracker() {
     resolution=0.01;  // 100um = 0.01 cm setting this in the constructor //TODO decide if this is a constant 
     dispX = 0.02;  // manual displacement by 0.15 cm
 
-    rejectedHitsDCA = 0;
-    multipleHitsLayer = 0;
 }
 
 /** 
@@ -171,8 +169,8 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float zStraw, float x
             float hit_distance_up = Tracker::DCA_simple(upper, xTrack); 
 
             if (hit_distance_low < strawRadius && hit_distance_up < strawRadius){
-                if (debugBool){cout << "multiple Straw in layer were hit!" << endl;}
-                multipleHitsLayer++;
+                if (debugBool){cout << "Multiple straws in layer were hit!" << endl;}
+                incMultipleHitsLayer();
             }
 
             if (hit_distance_up>hit_distance_low){
@@ -353,19 +351,19 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
                 MC.strawID.push_back(x_mis_ID);
                 MC.LR.push_back(x_mis_LRSign);
 
-                if(debugBool){cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;}
+                //if(debugBool){cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;}
 
                 //Finding the hit as seen from the ideal detector
                 float xIdeal = Tracker::GetIdealPoint(x_mis_ID, x_mis_dca, x_mis_LRSign, mod_lyr_strawIdealPosition[i_module][i_layer]);
                 x_idealPoints.push_back(xIdeal); // vector to store x coordinates of the track as seen from the ideal detector
                 
-                if(debugBool){cout << "Ideal x= " << xIdeal << endl;}
+                //if(debugBool){cout << "Ideal x= " << xIdeal << endl;}
 
                 //Rejection of hits due to geometry (i.e. missed hits)  
                 //No signal in a straw = no signal in the layer
                 if (x_mis_dca > strawRadius){ //[between (0,0.25]       
+                    incRejectedHitsDCA();
                     continue;
-                    rejectedHitsDCA++;
                     if (debugBool){cout << "Hit Rejected: outside of straw!" << endl;}
                 } 
                 
@@ -423,7 +421,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
         MC.x_hits.push_back(residuals[i_HitCounter]); 
         MC.x_fitted.push_back(x_fitted[i_HitCounter]); //Sanity Plot 
     }
-
+    
     return MC; // Return data from simulated track
     
 } // end of MC

@@ -40,6 +40,7 @@ struct MCData {
 	std::vector<float> x1_gen; 
 	std::vector<float> z0_gen; 
 	std::vector<float> z1_gen; 
+	
 };
 
 
@@ -74,6 +75,10 @@ class Tracker {
 	static constexpr float beamStop = 25.0;  // z 
  	
  	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
+
+ 	//Rejection counters // TODO implement as vectors for layers
+    int rejectedHitsDCA=0;
+    int multipleHitsLayer=0; // passed over from DCAData
 	
 	//initialising physics variables
  	//XXX for later 
@@ -95,10 +100,6 @@ class Tracker {
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.25; //thickness/width of a plane (X0) // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
-
-	//Rejection counters // TODO implement as vectors for layers
-	int rejectedHitsDCA;
-	int multipleHitsLayer;
 	
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
@@ -161,7 +162,14 @@ class Tracker {
 		trackNumber=tracks; 
 	}
 
+	void incRejectedHitsDCA(){
+		rejectedHitsDCA=rejectedHitsDCA+1;
+	}
 
+	void incMultipleHitsLayer(){
+		multipleHitsLayer=multipleHitsLayer+1;
+	}
+    
 	//
 	// Getter methods
 	//
@@ -176,6 +184,14 @@ class Tracker {
 
 	float getSdevX(int i) {
 		return sdevX[i];
+	}
+
+	int getRejectedHitsDCA(){
+		return rejectedHitsDCA;
+	}
+
+	int getMultipleHitsLayer(){
+		return multipleHitsLayer;
 	}
 
 
@@ -193,14 +209,6 @@ class Tracker {
 
 	float getStrawRadius() {
 		return strawRadius;
-	}
-
-	int getRejectedHitsDCA() {
-		return rejectedHitsDCA;
-	}
-
-	int getMultipleHitsLayer() {
-		return multipleHitsLayer;
 	}
 
 	float getStrawSpacing(){

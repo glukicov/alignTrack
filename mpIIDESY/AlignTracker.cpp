@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
     //float twoR = 2.0;  //For normalisation of uniform random numbers [0,1]
     //Set up counters for hits and records (tracks)
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
-    int recordN=0; //records = tracks 
+    int recordN=0; //records = tracks
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     
     //Tell the logger to only show message at INFO level or above
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]){
     cout << "["<< Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
     cout << "No B-field, Straight (parallel) Tracks, 100\% efficiency" << endl;
     cout << "Hit rejection: DCA > StrawRadius [" << Tracker::instance()->getStrawRadius() << " cm]" << endl;
-    cout << "Parallel Tracks: single hit per layer allowed [no multiple hit counter]" << endl;
+    cout << "Parallel Tracks: single hit per layer allowed [shortest DCA is chosen as the hit]" << endl;
 
 
     // See https://github.com/glukicov/alignTrack for instructions to generate random numbers
@@ -199,13 +199,13 @@ int main(int argc, char* argv[]){
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
      // Book histograms
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0.100, 0.015); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  400, 0.1, 0.2);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  400, 0.0, 0.2);
     //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, 0.4);
-    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  0, 2.2);
-    TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  0, 2.2);
-    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  0, 2.2);
+    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -1, 3);
+    TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  -1, 3);
+    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -1, 3);
 
     //std::unique_ptr<RootManager> rm_;  // gm2util/common/RootManager.hh" TODO  
     // std::string name;
@@ -403,7 +403,8 @@ int main(int argc, char* argv[]){
 
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records (i.e. tracks);
-       
+    
+        
     } // end of track count
     
     cout << " " << endl;
