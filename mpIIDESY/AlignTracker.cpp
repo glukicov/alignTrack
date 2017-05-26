@@ -156,11 +156,12 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
 
-    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer " << endl;
+    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer." << endl;
     cout << "["<< Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
-    cout << "No B-field, Straight (parallel) Tracks, 100\% efficiency" << endl;
-    cout << "Hit rejection: DCA > StrawRadius [" << Tracker::instance()->getStrawRadius() << " cm]" << endl;
-    cout << "Parallel Tracks: single hit per layer allowed [shortest DCA is chosen as the hit]" << endl;
+    cout << "No B-field, Straight (parallel) Tracks, 100% efficiency." << endl;
+    cout << "Hit rejection: DCA > StrawRadius [" << Tracker::instance()->getStrawRadius() << " cm]." << endl;
+    cout << "Parallel Tracks: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
+    cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [not used yet/no hit smearing]." << endl;  
 
 
     // See https://github.com/glukicov/alignTrack for instructions to generate random numbers
@@ -290,10 +291,12 @@ int main(int argc, char* argv[]){
     // MISALIGNMENT
     Tracker::instance()->misalign(debug_mis, debugBool); 
     cout<< "Misalignment is complete!" << endl;
+    cout << "Manual Misalignment was " << Tracker::instance()->getSdevX(0) << " cm for Module 0, and " << Tracker::instance()->getSdevX(1) << " cm for Module 1." << endl; 
+    
     
     // Write a constraint file, for use with pede
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
-    cout<< "Constraints are written!" << endl;
+    cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
 
     //Now writing the steering file
     //TODO what steering parameters does tracker require? 
@@ -333,9 +336,9 @@ int main(int argc, char* argv[]){
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
     } // end of str file 
-    cout<< "Steering file was generated!" << endl;
+    cout<< "Steering file was generated! [see Tracker_con.txt]" << endl;
 
-    cout<< "Generating data..." << endl;
+    cout<< "Calculating residuals..." << endl;
     //Generating particles with energies: 10-100 [GeV]
     for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  //Track number is set in methods XXX is it the best place for it? 
         //rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
@@ -442,13 +445,14 @@ int main(int argc, char* argv[]){
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
-    cout << "There was " << Tracker::instance()->getRejectedHitsDCA() << " hits that missed a straw in TOTAL." << endl;
-    cout << "Additionally, " << Tracker::instance()->getMultipleHitsLayer() << " multiple hits in layers in TOTAL." << endl;
+    float rejectsFrac=Tracker::instance()->getRejectedHitsDCA();
+    rejectsFrac = rejectsFrac/(Tracker::instance()->getLayerTotalN()*recordN);
+    cout << fixed << setprecision(1);
+    cout << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << ". [" << rejectsFrac*100 << "%]" << endl;
+    cout << "Multiple hits (for all layers): " << Tracker::instance()->getMultipleHitsLayer() << "." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
     cout << "Sanity Plots: root Tracker.root" << endl;
-    cout << "Manual Misalignment was " << Tracker::instance()->getSdevX(0) << " cm for Module 0, and " << Tracker::instance()->getSdevX(1) << " cm for Module 1." << endl; 
-    cout << "Resolution was " << Tracker::instance()->getResolution() << " cm" << endl;  
     Logger::Instance()->setUseColor(false); // will be re-enabled below
     // Millepede courtesy of John 
     std::stringstream msg2, msg3, msg4;
@@ -482,6 +486,7 @@ int main(int argc, char* argv[]){
     file->Write();
     file->Close(); //good habit!
     
+    cout << fixed << setprecision(4);
     t_cpu = clock() - t_cpu;
     auto t_end = std::chrono::high_resolution_clock::now();
     cout << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu)/CLOCKS_PER_SEC << " s)." << " Wall clock time passed: " << std::chrono::duration<double>(t_end-t_start).count() << " s." << endl;

@@ -16,6 +16,7 @@ CPPFLAGS += $(ROOTCFLAGS)
 //CPPFLAGS +=-static-libtsan
 CPPFLAGS += -Wstatic-float-init
 CPPFLAGS += -fstack-protector-all
+CPPFLAGS += -pedantic-errors
 
 LDD = g++
 LDFLAGS = 
