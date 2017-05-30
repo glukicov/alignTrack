@@ -119,9 +119,9 @@ plt.title("Mis. (Real) Geom")
 
 plt.subplot(222)
 for i in range(0, len(x_fit)): 
-	dataM = [[x_fit[i],z0[i]], [x_fit[i],z1[i]]]
+	dataI = [[x_fit[i], z0[i]], [x_fit[i], z1[i]]]
 	plt.plot(
-	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))),
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataI, 2))),
 	    color = 'purple', marker = 'x')
 
 
