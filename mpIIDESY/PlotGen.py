@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # TODOs:
-# 1. Implement where python takes in # straw, layer, modules, views, and reads and stores sensibly TODO 
+# 1. Circles as straws  + hit colouring 
 
 ####################################################################
 # Sanity plots for AlginTracker
@@ -16,124 +16,150 @@ import numpy as np
 import matplotlib.pyplot as plt #for plotting 
 import itertools
 import csv
+import pprint
 
-#as quadruplets x0,y0,x1,y1 for Generated tracks 
-x0=[] 
-z0=[] 
-x1=[] 
-z1=[] 
 
-#as quintuplets Ixs0, Ixs1, Ixs2, Ixs3, Izs for straw Ideal geometry 
-Ixs0=[]
-Ixs1=[]
-Ixs2=[]
-Ixs3=[] 
+#Ideal geometry Z 
 Izs=[]
 
-
-#as quintuplets Mxs0, Mxs1, Mxs2, Mxs3, Mzs for straw Misaligned geometry 
-Mxs0=[]
-Mxs1=[]
-Mxs2=[]
-Mxs3=[] 
+# Misaligned geometry Z
 Mzs=[]
 
-x_fit=[]
-
-w, h = 4, 4;
-Mis = [[0 for x in range(w)] for y in range(h)] 
-Ideal = [[0 for x in range(w)] for y in range(h)] 
-
-#TODO need a better reading method: read by columns
-#Read file and store in lists 
-i=0
-with open("Tracker_d_geom.txt") as f:
+# Getting constants from MC
+with open("Tracker_p_constants.txt") as f:
 	for line in f:  #Line is a string
 		number_str = line.split()
-		Ideal[i][0]=(float(number_str[0]))
-		Ideal[i][1]=(float(number_str[1]))
-	  	Ideal[i][2]=(float(number_str[2]))
-	  	Ideal[i][3]=(float(number_str[3]))
-	  	Izs.append(float(number_str[4]))
-	  	i=i+1
+		moduleN=int(number_str[0])
+		viewN=int(number_str[1])
+		layerN=int(number_str[2])
+		strawN=int(number_str[3])
+		trackN=int(number_str[4])
+		beamX0=float(number_str[5])
+		beamZ0=float(number_str[6])
+		beamX1=float(number_str[7])
+		beamZ1=float(number_str[8])
+
+toalLayerN=layerN*moduleN*viewN
+
+print "Parameters from Simulation:"
+print "moduleN= ",moduleN
+print "viewN= ",viewN
+print "layerN= ",layerN
+print "strawN= ",strawN
+print "toalLayerN= ",toalLayerN
+print "trackN= ",trackN
+print "beamX0= ",beamX0
+print "beamZ0= ",beamZ0
+print "beamX1= ",beamX1
+print "beamZ1= ",beamZ1
+
+# X 4D arrays for Mis and Ideal Geom. 
+Mis = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
+Ideal = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
+# Generated tracks and fitted tracks [x0, x1, z0, z1]
+gen=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
+fit=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
 
 
+#Read files and store in lists
+layerI=[] #temp storage
+with open("Tracker_d_geom.txt") as f:
+	for line in f:  #Line is a string
+		layerI.append(line.split())
 
-#Read file and store in lists 
+for i_layer in range(0, toalLayerN):
+	Izs.append(float(layerI[i_layer][strawN])) #Z is the last element in the temp array 
+
+layerM=[] #temp storage
+with open("Tracker_d_mis.txt") as f:
+	for line in f:  #Line is a string
+		layerM.append(line.split())
+
+for i_layer in range(0, toalLayerN):
+	Mzs.append(float(layerM[i_layer][strawN]))
+
+#Now for straws in X: 
+i_totalLayers=0
+for i_module in range(0, moduleN):
+	for i_view in range(0, viewN):
+		for i_layer in range(0, layerN):
+			for i_straw in range(0, strawN):
+				dXI= float(layerI[i_totalLayers][i_straw])
+				dXM= float(layerM[i_totalLayers][i_straw])
+				Ideal[i_module][i_view][i_layer][i_straw]=dXI
+				Mis[i_module][i_view][i_layer][i_straw]=dXM
+			i_totalLayers+=1 #once we added all straws in that layer -> go to the next absolute layer
+
+
+#Read file and store in lists for tracks Generated and Fitted:
+i_track = 0
 with open("Tracker_p_gen.txt") as f:
     for line in f:  #Line is a string
-        #split the string on whitespace, return a list of numbers (as strings)
         number_str = line.split()    
-        x0.append(float(number_str[0]))
-        z0.append(float(number_str[1]))
-        x1.append(float(number_str[2]))
-        z1.append(float(number_str[3]))
+        for i in range(0,4):
+        	gen[i_track][i] = float(number_str[i])
+        i_track+=1
 
+i_track = 0
 with open("Tracker_p_fit.txt") as f:
     for line in f:  #Line is a string
-        #split the string on whitespace, return a list of numbers (as strings)
         number_str = line.split()    
-        x_fit.append(float(number_str[0]))
-        
- #Read file and store in lists
-i=0
-with open("Tracker_d_mis.txt") as f:
-    for line in f:  #Line is a string
-        #split the string on whitespace, return a list of numbers (as strings)
-        number_str = line.split()    
-        Mis[i][0]=(float(number_str[0]))
-        Mis[i][1]=(float(number_str[1]))
-        Mis[i][2]=(float(number_str[2]))
-        Mis[i][3]=(float(number_str[3]))
-        Mzs.append(float(number_str[4]))
-        i=i+1
+        for i in range(0,4):
+        	fit[i_track][i] = float(number_str[i])
+        i_track+=1
 
-# print Mis[0]
-# print Mis[1]
-# print Mis[2]
-# print Mis[3]
-# print Mzs
-
+##################PLOTING##############################
+#Misaligned Geometry and Generated tracks 
 plt.figure(1)
 plt.subplot(221)
-for i in range(0, len(x0)): 
-	dataM = [[x0[i],z0[i]], [x1[i],z1[i]]]
+for i_track in range(0, trackN):
+	dataM = [[gen[i_track][0],gen[i_track][2]], [gen[i_track][1],gen[i_track][3]]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))),
-	    color = 'brown', marker = '*')
+	    color = 'red', marker = 'x')
 
-for i in range(0, 4):
-	plt.plot(Mis[0][i], Mzs[0], color="green", marker = "o")
-	plt.plot(Mis[1][i], Mzs[1], color="green", marker = "o")
-	plt.plot(Mis[2][i], Mzs[2], color="green", marker = "o")
-	plt.plot(Mis[3][i], Mzs[3], color="green", marker = "o")
+i_totalLayers=0
+for i_module in range(0, moduleN):
+	for i_view in range(0, viewN):
+		for i_layer in range(0, layerN):
+			for i_straw in range(0, strawN):
+				plt.plot(Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers], color="green", marker = "o")
+			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
+
+circle = plt.Circle((1, 1), 0.5, color='b', fill=False)
 
 
 axes = plt.gca()
-axes.set_xlim([-1,3])
-axes.set_ylim([-3,28])
+
+axes.add_artist(circle)
+
+axes.set_xlim([beamX0-1,beamX1+1])
+axes.set_ylim([beamZ0-1,beamZ1+1])
 plt.ylabel("z [cm]")
 plt.xlabel("x [cm]")
 plt.title("Mis. (Real) Geom")
 
-
+#Ideal Geometry and Fitted tracks 
 plt.subplot(222)
-for i in range(0, len(x_fit)): 
-	dataI = [[x_fit[i], z0[i]], [x_fit[i], z1[i]]]
+for i_track in range(0, trackN):
+	dataI = [[fit[i_track][0],fit[i_track][2]], [fit[i_track][1],fit[i_track][3]]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataI, 2))),
 	    color = 'purple', marker = 'x')
 
+i_totalLayers=0
+for i_module in range(0, moduleN):
+	for i_view in range(0, viewN):
+		for i_layer in range(0, layerN):
+			for i_straw in range(0, strawN):
+				plt.plot(Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers], color="yellow", marker = "o")
+			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
-for i in range(0, 4):
-	plt.plot(Ideal[0][i], Izs[0], color="yellow", marker = "o")
-	plt.plot(Ideal[1][i], Izs[1], color="yellow", marker = "o")
-	plt.plot(Ideal[2][i], Izs[2], color="yellow", marker = "o")
-	plt.plot(Ideal[3][i], Izs[3], color="yellow", marker = "o")
+	
 
 axes = plt.gca()
-axes.set_xlim([-1,3])
-axes.set_ylim([-3,28])
+axes.set_xlim([beamX0-1,beamX1+1])
+axes.set_ylim([beamZ0-1,beamZ1+1])
 plt.ylabel("z [cm]")
 plt.xlabel("x [cm]")
 plt.title("Ideal Geom.")

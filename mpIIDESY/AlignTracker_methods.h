@@ -35,11 +35,6 @@ struct MCData {
 
 	std::vector<float> x_m; // generated slopes
 	std::vector<float> x_c; //generated intercepts
-
-	std::vector<float> x0_gen; 
-	std::vector<float> x1_gen; 
-	std::vector<float> z0_gen; 
-	std::vector<float> z1_gen; 
 	
 };
 
@@ -68,13 +63,7 @@ class Tracker {
 	float resolution; //decide if this is a constant  [value is assigned in the constructor]
 	float dispX; // [value is assigned in the constructor]
 	
-	//Beam parameters [all distances are in cm]
-	static constexpr float beamPositionLength = 3.0; // max x coordinate = beamPositionLength + beamOffset
-	static constexpr float beamOffset=-0.5; // offset from 0 in x
-	static constexpr float beamStart = 0.0; // z 
-	static constexpr float beamStop = 25.0;  // z 
- 	
- 	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
+	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
  	//Rejection counters // TODO implement as vectors for layers
     int rejectedHitsDCA=0;
@@ -85,17 +74,23 @@ class Tracker {
 	
 	// define detector geometry [all distances are in cm]
 	static const int moduleN = 2; //number of movable detectors/module [independent modules]
-	static const int viewN = 0; //There are two views per module (U and V) XXX
+	static const int strawN = 32; //number of measurement elements in x direction  [number of straws per layer]
+	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
-	static const int layerTotalN = layerN*moduleN; // total number of layers 
-	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
+	static const int layerTotalN = layerN*viewN*moduleN; // total number of layers 
 	static constexpr float startingZDistanceStraw0 = 5.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
 	static constexpr float startingXDistanceStraw0 = 0.0; // distance of the very first layer [the first straw] in x // [cm]
 	static constexpr float strawSpacing = 0.606;  // x distance between straws in a layer
 	static constexpr float layerSpacing = 0.515; // z distance between layers in a view
-	static constexpr float viewSpaing = 2.020; // z distance between views in a modules
+	static constexpr float viewSpacing = 2.020; // z distance between views in a modules
 	static constexpr float moduleSpacing = 13.735; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
-	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted] 
+	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
+
+	//Beam parameters [all distances are in cm]
+	static constexpr float beamPositionLength = strawN*strawSpacing; // max x coordinate = beamPositionLength + beamOffset
+	static constexpr float beamOffset=startingXDistanceStraw0+0.3; // offset from 0 in x
+	static constexpr float beamStart = startingZDistanceStraw0-5; // z 
+	static constexpr float beamStop = moduleSpacing*moduleN+viewSpacing*viewN+layerSpacing*layerN+15;  // z  
 	
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.25; //thickness/width of a plane (X0) // [cm]
@@ -109,8 +104,11 @@ class Tracker {
     std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
 
     // Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
-    std::vector< std::vector< std::vector< float > > > mod_lyr_strawIdealPosition; 
-    std::vector< std::vector< std::vector< float > > > mod_lyr_strawMisPosition;   
+    std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPosition; 
+    std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPosition;   
+
+    // Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
+    std::vector< std::vector< string > > UVmapping; 
     	
 	// Class constructor and destructor
 	Tracker();
@@ -139,7 +137,7 @@ class Tracker {
 
 	ResidualData GetResiduals_simple(std::vector<float>, std::ofstream&);
 
-	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
+	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement 
 
@@ -241,6 +239,14 @@ class Tracker {
 	
 	float getBeamStop(){
 		return beamStop;
+	}
+
+	float getBeamOffset(){
+		return beamOffset;
+	}
+
+	float getBeamPositionLength(){
+		return beamPositionLength;
 	}
 
 };

@@ -158,6 +158,7 @@ int main(int argc, char* argv[]){
 
     cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer." << endl;
     cout << "["<< Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
+    cout << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl; 
     cout << "No B-field, Straight (parallel) Tracks, 100% efficiency." << endl;
     cout << "Hit rejection: DCA > StrawRadius [" << Tracker::instance()->getStrawRadius() << " cm]." << endl;
     cout << "Parallel Tracks: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
@@ -194,6 +195,7 @@ int main(int argc, char* argv[]){
     string con_debugFileName = "Tracker_d_con.txt"; //Constraints
     string gen_plotFileName = "Tracker_p_gen.txt"; //
     string fit_plotFileName = "Tracker_p_fit.txt"; //
+    string contsants_plotFileName = "Tracker_p_constants.txt"; // passing constants (e.g. strawN to python script)
   
         
     // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
@@ -268,6 +270,7 @@ int main(int argc, char* argv[]){
     ofstream debug_con(con_debugFileName);
     ofstream plot_gen(gen_plotFileName);
     ofstream plot_fit(fit_plotFileName);
+    ofstream contsants_plot(contsants_plotFileName);
     
     // Setting fixed precision for floating point values
     cout << fixed << setprecision(6); 
@@ -278,9 +281,16 @@ int main(int argc, char* argv[]){
     debug_off << fixed << setprecision(6); 
     debug_mc << fixed << setprecision(6); 
     debug_con << fixed << setprecision(6);
-    plot_gen << fixed << setprecision(9);
-    plot_fit << fixed << setprecision(9);
-  
+    plot_gen << fixed << setprecision(6);
+    plot_fit << fixed << setprecision(6);
+    contsants_plot << fixed << setprecision(6);
+    
+    //Passing constants to plotting script
+    if (plotBool){
+        contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " " 
+                      << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << Tracker::instance()->getTrackNumber() << " " 
+                      << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()  << "  " << Tracker::instance()->getBeamStop() <<  endl;
+    }
 
     // SETTING GEOMETRY
     Tracker::instance()->setGeometry(debug_geom, debugBool);
@@ -351,7 +361,7 @@ int main(int argc, char* argv[]){
         }
 
         //Generating tracks 
-        MCData generated_MC = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, plot_fit, debugBool);
+        MCData generated_MC = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, debugBool);
 
             
         for (int hitCount=0; hitCount<generated_MC.hit_count; hitCount++){  //counting only hits going though detector
@@ -419,14 +429,12 @@ int main(int argc, char* argv[]){
                 // cd_Tracks->cd();    // ROOT dir TODO
                 // h_slope->Fill(generated_MC.x_m[hitCount]);
                 // h_c->Fill(generated_MC.x_c[hitCount]);
-                plot_gen << generated_MC.x0_gen[hitCount] << " " << generated_MC.z0_gen[hitCount] << " " << generated_MC.x1_gen[hitCount] << " " << generated_MC.z1_gen[hitCount] << endl;
             }
             debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
             hitsN++; //count hits
         } // end of hits loop
         
-     
-        //TODO impliment via ROOT Manager!  
+      
         // for (int i_layer=0; i_layer < Tracker::instance()->getLayerN(); i_layer++){
         //     sh.str(""); sh << "h_det_layer_" << i_layer;
         //     auto h = rm_->Get<TH1F*>(currentDirName.str(),sh.str());
