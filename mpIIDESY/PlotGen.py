@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-# TODOs:
-# 1. Circles as straws  + hit colouring 
-
 ####################################################################
 # Sanity plots for AlginTracker
 #
@@ -59,6 +56,7 @@ Ideal = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for
 # Generated tracks and fitted tracks [x0, x1, z0, z1]
 gen=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
 fit=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
+hitList=[[0 for number in xrange(toalLayerN)] for i_track in xrange(trackN)]
 
 
 #Read files and store in lists
@@ -98,7 +96,11 @@ with open("Tracker_p_gen.txt") as f:
         number_str = line.split()    
         for i in range(0,4):
         	gen[i_track][i] = float(number_str[i])
+        for hit in range(0, toalLayerN):
+        	hitList[i_track][hit] = number_str[4+hit] #hit list starts at 4th position
         i_track+=1
+
+print hitList
 
 i_track = 0
 with open("Tracker_p_fit.txt") as f:
@@ -111,57 +113,64 @@ with open("Tracker_p_fit.txt") as f:
 ##################PLOTING##############################
 #Misaligned Geometry and Generated tracks 
 plt.figure(1)
-plt.subplot(221)
+plt.subplot(121)
 for i_track in range(0, trackN):
 	dataM = [[gen[i_track][0],gen[i_track][2]], [gen[i_track][1],gen[i_track][3]]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))),
 	    color = 'red', marker = 'x')
+axes = plt.gca()
 
 i_totalLayers=0
 for i_module in range(0, moduleN):
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
-				plt.plot(Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers], color="green", marker = "o")
+				if (hitList[0][i_totalLayers] == str(i_straw)):
+					circleM = plt.Circle((Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers]), 0.25, color='green', fill=True)
+					plt.plot(Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers], color="black", marker = ",")
+					axes.add_artist(circleM)
+				else: 
+					circleM = plt.Circle((Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers]), 0.25, color='black', fill=False)
+					plt.plot(Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers], color="black", marker = ",")
+					axes.add_artist(circleM)
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
-
-circle = plt.Circle((1, 1), 0.5, color='b', fill=False)
-
-
-axes = plt.gca()
-
-axes.add_artist(circle)
 
 axes.set_xlim([beamX0-1,beamX1+1])
 axes.set_ylim([beamZ0-1,beamZ1+1])
 plt.ylabel("z [cm]")
 plt.xlabel("x [cm]")
-plt.title("Mis. (Real) Geom")
+plt.title("Misaligned Geometry with generated tracks")
 
 #Ideal Geometry and Fitted tracks 
-plt.subplot(222)
+plt.subplot(122)
 for i_track in range(0, trackN):
 	dataI = [[fit[i_track][0],fit[i_track][2]], [fit[i_track][1],fit[i_track][3]]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataI, 2))),
 	    color = 'purple', marker = 'x')
+axes2 = plt.gca()
 
 i_totalLayers=0
 for i_module in range(0, moduleN):
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
-				plt.plot(Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers], color="yellow", marker = "o")
+				if (hitList[0][i_totalLayers] == str(i_straw)):
+					circleI = plt.Circle((Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers]), 0.25, color='yellow', fill=True)
+					plt.plot(Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers], color="black", marker = ",")
+					axes2.add_artist(circleI)
+				else: 
+					circleI = plt.Circle((Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers]), 0.25, color='black', fill=False)
+					plt.plot(Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers], color="black", marker = ",")
+					axes2.add_artist(circleI)
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
 	
-
-axes = plt.gca()
-axes.set_xlim([beamX0-1,beamX1+1])
-axes.set_ylim([beamZ0-1,beamZ1+1])
+axes.set_xlim([beamX0-3,beamX1+3])
+axes.set_ylim([beamZ0-3,beamZ1+3])
 plt.ylabel("z [cm]")
 plt.xlabel("x [cm]")
-plt.title("Ideal Geom.")
+plt.title("Ideal Geometry with fitted tracks")
 
 plt.show()

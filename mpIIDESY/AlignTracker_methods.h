@@ -25,6 +25,9 @@ struct MCData {
 	std::vector<float> x_hits; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
+	std::vector<int> hit_list;  // same of layers (absolute)
+	std::vector<int> hit_bool;  // same of layers (absolute) +1 = hit 0=no hit
+ 	std::vector<string> absolute_straw_hit; // MVLS - 5 digit string (e.g. 111-3 = M1V1L1S3; 11113=M1V1L1S13)
 
 	std::vector<float> x_track; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
 	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
@@ -35,7 +38,7 @@ struct MCData {
 
 	std::vector<float> x_m; // generated slopes
 	std::vector<float> x_c; //generated intercepts
-	
+
 };
 
 
@@ -90,11 +93,13 @@ class Tracker {
 	static constexpr float beamPositionLength = strawN*strawSpacing; // max x coordinate = beamPositionLength + beamOffset
 	static constexpr float beamOffset=startingXDistanceStraw0+0.3; // offset from 0 in x
 	static constexpr float beamStart = startingZDistanceStraw0-5; // z 
-	static constexpr float beamStop = moduleSpacing*moduleN+viewSpacing*viewN+layerSpacing*layerN+15;  // z  
+	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*layerN)*moduleN;  // z  
 	
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.25; //thickness/width of a plane (X0) // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
+
+	int hitLayerCounter; 
 	
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
