@@ -121,7 +121,7 @@ output_file.close()
 if (gaussian):
     print count, "Gaussian random integer numbers generated."
 if (uniform):
-    print count, "Gaussian random integer numbers generated."
+    print count, "Uniform random integer numbers generated."
 
 # Sanity plot
 #plt.hist(generated_randoms, 100)

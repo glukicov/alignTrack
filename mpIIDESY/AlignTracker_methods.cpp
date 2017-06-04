@@ -354,7 +354,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
 
             //Rejection of hits due to geometry (i.e. missed hits)  
             //No signal in a straw = no signal in the layer
-            if (x_mis_dca > strawRadius){ //[between (0,0.25]
+            if (x_mis_dca > 1.25*strawRadius){ //[between (0,0.25]
                 MC.hit_bool.push_back(0);       
                 incRejectedHitsDCA();
                 if (debugBool){cout << "Hit Rejected: outside of straw layer!" << endl;}
@@ -390,7 +390,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
             
             //Module number [for labelling] - after (if) passing the rejection...
             ostringstream oss;
-            oss << i_module << i_view << i_layer << x_mis_ID; //Millepede doesn't like 0 as a label XXX 
+            oss << i_module  << i_view << i_layer << x_mis_ID; //Millepede doesn't like 0 as a label XXX 
             istringstream iss(oss.str());
             int label_int;
             iss >> label_int;

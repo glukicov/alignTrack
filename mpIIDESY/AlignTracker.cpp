@@ -386,6 +386,7 @@ int main(int argc, char* argv[]){
             /// TODO check that properly
             int l1 = label_mp2+1; //Millepede doesn't like 0 as a label XXX 
             int label[nagl] = {l1}; 
+            if (debugBool){cout << "l1 = " << l1 << endl;}
              
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)

@@ -216,7 +216,7 @@ int main(int argc, char* argv[]){
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
-    Detector::instance()->misalign(debug_mis, debugBool); 
+    Detector::instance()->misalign(debug_mis, debugBool);  
 
     // Write constraint file, for use with pede TODO fix this 
     Detector::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
@@ -316,6 +316,10 @@ int main(int argc, char* argv[]){
             int l1 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr];  
             int l2 = im+Detector::instance()->getPixelXYN()*Detector::instance()->getLayer()[lyr]+1000; 
             int label[nalc] = {l1, l2}; 
+
+            if (debugBool){
+                cout << "l1= " << l1 << " l2= " << l2 << endl;
+            }
             
             //multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)
