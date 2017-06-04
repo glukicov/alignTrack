@@ -10,9 +10,13 @@ ROOTGLIBS    := $(shell root-config --glibs)
 ROOTLIBS     := $(shell root-config --nonew --libs)
 
 CPP = g++
-#CPPFLAGS = -std=c++11
+//CPP=/usr/local/bin/g++-7
 CPPFLAGS = -std=c++0x
 CPPFLAGS += $(ROOTCFLAGS)
+//CPPFLAGS +=-static-libtsan
+CPPFLAGS += -Wstatic-float-init
+CPPFLAGS += -fstack-protector-all
+CPPFLAGS += -pedantic-errors
 
 LDD = g++
 LDFLAGS = 
@@ -30,11 +34,18 @@ all : $(PROGNAME)
 $(PROGNAME) : $(OBJECTS) $(PROGNAME).o
 	$(CPP) -o $@ $(OBJECTS) $(PROGNAME).o $(LDFLAGS) $(LIBS)
 
-%.o : %.cpp
-	$(CPP) $(CPPFLAGS) -o $@ -c $<
+%.o : %.cpp %.h AlignTracker_methods.h
+	$(CPP) $(CPPFLAGS) -c $<
 
 test:
 	@echo $(ROOTCFLAGS)
 
+depend: .depend
+
+.depend: $(SRCS)
+	rm -f ./.depend
+	$(CPP) $(SOURCES) -MM $^ -MF ./.depend;
+
+include .depend
 clean :
 	-rm -f ${PROGNAME} ${OBJECTS} C_Mp2tst.bin C_Mp2str.txt C_Mp2con.txt

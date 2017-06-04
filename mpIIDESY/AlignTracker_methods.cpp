@@ -277,6 +277,8 @@ ResidualData Tracker::GetResiduals_simple(vector<float> IdealPoints, ofstream& p
     for (int i_size=0; i_size<IdealPoints.size(); i_size++){
         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
         float residual_i = abs(x_fit-IdealPoints[i_size]);
+        //float rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
+        //float residual_i = abs(x_fit-IdealPoints[i_size])+rand_gaus*res;
         resData.residuals.push_back(residual_i);
         resData.x_fitted.push_back(x_fit);
     }
@@ -358,7 +360,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
                 if (debugBool){cout << "Hit Rejected: outside of straw layer!" << endl;}
                 stringstream absolute_hit;
                 absolute_hit <<"#"; 
-                cout << "absolute_hit: " << absolute_hit.str().c_str() << endl;
+                //cout << "absolute_hit: " << absolute_hit.str().c_str() << endl;
                 MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());    
                 continue;
             } 
@@ -375,7 +377,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
             stringstream absolute_hit;
             //Making 5 chars consistent strings:
             absolute_hit << x_mis_ID;
-            cout << "absolute_hit: " << absolute_hit.str().c_str() << endl;
+            //cout << "absolute_hit: " << absolute_hit.str().c_str() << endl;
             MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());         
 
             //if(debugBool){cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;}
@@ -387,7 +389,13 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
             //if(debugBool){cout << "Ideal x= " << xIdeal << endl;}
             
             //Module number [for labelling] - after (if) passing the rejection...
-            MC.i_hits.push_back(i_module); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
+            ostringstream oss;
+            oss << i_module << i_view << i_layer << x_mis_ID; //Millepede doesn't like 0 as a label XXX 
+            istringstream iss(oss.str());
+            int label_int;
+            iss >> label_int;
+            //if(debugBool){cout << "label int = " << label_int << endl;}
+            MC.i_hits.push_back(label_int); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
       
             //Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
             MC.z_hits.push_back(distance[z_counter]);
@@ -551,7 +559,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
             }//end of Layers loop
         }// end of View loop 
     //sign = -sign;  //next module will be displaced in the opposite direction
-    factor = 4;  //next module will be displaced 2 times more in the same direction 
+    factor = 2;  //next module will be displaced 2 times more in the same direction 
     dX=startingXDistanceStraw0+(dispX * factor);
     }//Modules  
 

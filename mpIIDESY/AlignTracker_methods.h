@@ -76,8 +76,8 @@ class Tracker {
  	//XXX for later 
 	
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 2; //number of movable detectors/module [independent modules]
-	static const int strawN = 32; //number of measurement elements in x direction  [number of straws per layer]
+	static const int moduleN = 4; //number of movable detectors/module [independent modules]
+	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
 	static const int layerTotalN = layerN*viewN*moduleN; // total number of layers 
@@ -91,7 +91,7 @@ class Tracker {
 
 	//Beam parameters [all distances are in cm]
 	static constexpr float beamPositionLength = strawN*strawSpacing; // max x coordinate = beamPositionLength + beamOffset
-	static constexpr float beamOffset=startingXDistanceStraw0+0.3; // offset from 0 in x
+	static constexpr float beamOffset=startingXDistanceStraw0-0.3; // offset from 0 in x
 	static constexpr float beamStart = startingZDistanceStraw0-5; // z 
 	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*layerN)*moduleN;  // z  
 	

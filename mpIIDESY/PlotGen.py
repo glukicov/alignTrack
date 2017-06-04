@@ -36,6 +36,7 @@ with open("Tracker_p_constants.txt") as f:
 		beamX1=float(number_str[7])
 		beamZ1=float(number_str[8])
 
+
 toalLayerN=layerN*moduleN*viewN
 
 print "Parameters from Simulation:"

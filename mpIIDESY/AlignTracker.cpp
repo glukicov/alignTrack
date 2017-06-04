@@ -208,14 +208,14 @@ int main(int argc, char* argv[]){
     TDirectory* cd_Views = file->mkdir("Views");
     TDirectory* cd_Tracks = file->mkdir("Tracks");
      // Book histograms [once only]
-    TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  100,  0.100, 0.015); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  400, 0.0, 0.005);
+    TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  500,  Tracker::instance()->getResolution()-0.01, Tracker::instance()->getResolution()+0.01); // F=float bins, name, title, nBins, Min, Max
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, 0.0, 0.1);
     //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
-    TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, 0.4);
-    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -1, 3);
-    TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  -1, 3);
-    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -1, 3);
+    TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
+    TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
+    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
     h_sigma->SetXTitle( "[cm]");
     h_hits_MP2->SetXTitle( "[cm]");
     h_det->SetXTitle( "DCA [cm]");
@@ -241,10 +241,9 @@ int main(int argc, char* argv[]){
         h1->GetXaxis()->SetTitle("[cm]");
         
        
-
         h_name.str(""); h_name << "h_strawID_layer_" << i;
         h_title.str(""); h_title << "strawID in layer " << i;
-        auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), 5, -1, 4);
+        auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), 5, -1, Tracker::instance()->getStrawN());
         h2->GetXaxis()->SetTitle("Straw ID [0-31]");
 
         h_name.str(""); h_name << "h_LR_layer_" << i;
@@ -301,9 +300,11 @@ int main(int argc, char* argv[]){
     // MISALIGNMENT
     Tracker::instance()->misalign(debug_mis, debugBool); 
     cout<< "Misalignment is complete!" << endl;
-    cout << "Manual Misalignment was " << Tracker::instance()->getSdevX(0) << " cm for Module 0, and " << Tracker::instance()->getSdevX(1) << " cm for Module 1." << endl; 
-    
-    
+    cout << "Manual Misalignment was ";
+    for (int i_moduel=0; i_moduel<Tracker::instance()->getModuleN(); i_moduel++){
+    cout << "Module " << i_moduel <<" : " << Tracker::instance()->getSdevX(i_moduel) << " cm. ";
+    }
+    cout << endl;
     // Write a constraint file, for use with pede
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
     cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
