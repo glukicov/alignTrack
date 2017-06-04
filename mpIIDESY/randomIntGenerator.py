@@ -118,6 +118,11 @@ for i in xrange(count):
 # Close output file
 output_file.close()
 
+if (gaussian):
+    print count, "Gaussian random integer numbers generated."
+if (uniform):
+    print count, "Gaussian random integer numbers generated."
+
 # Sanity plot
 #plt.hist(generated_randoms, 100)
 #plt.title("Generated Randoms Sanity Histogram\n" + str(len(generated_randoms)) + " Numbers Generated, With Seed " + str(seednum))
