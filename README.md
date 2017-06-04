@@ -31,6 +31,12 @@ Script to generate a plaintext file of random floating-point numbers, either  un
    * `python randomIntGenerator.py -g True -o gaussian_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
 Please note that the output filenames shown are the default random number files for the modified Fortran version of *Test 1/2*, and C++ MC. Random numbers are generated using Python's built-in *Marsenne Twister* generator. Generally, ~5,000,000 random numbers in each file seems to be more than enough for the default *Test 1/2*, and C++ MC. 
 
+To generate random numbers (e.g):
+
+* `./getRandoms.sh 5000000`
+
+This bash script calls:
+
  1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s 123456789 -n 5000000`
  
  2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n 5000000`
