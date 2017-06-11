@@ -77,7 +77,7 @@ int main(int argc, char* argv[]){
     auto t_start = std::chrono::high_resolution_clock::now(); // Wall clock ticks
 
     //Determining compiler used:
-    std::string true_cxx =
+    std::string true_cxx = 
     #ifdef __clang__
         "clang++";
     #else
@@ -310,12 +310,12 @@ int main(int argc, char* argv[]){
     cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
 
     //Now writing the steering file
-    //TODO what steering parameters does tracker require? 
+    //TODO what steering parameters does the tracker require? 
     if(steering_file.is_open()){
         
         steering_file <<  "*            Default test steering file" << endl
         << "Cfiles ! following bin files are Cfiles" << endl 
-        << "Tracker_con.txt   ! constraints text file " << endl
+        << "*Tracker_con.txt   ! constraints text file " << endl
         << "Tracker_data.bin   ! binary data file" << endl
          << "fortranfiles ! following bin files are fortran" << endl
         //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
@@ -337,13 +337,15 @@ int main(int argc, char* argv[]){
         << "*regularisation 1.0 0.01 ! regularisation factor, pre-sigma"<< endl
         << " " << endl
         << "*bandwidth 0         ! width of precond. band matrix"<< endl
+        << "method HIP 3 0.001 ! diagonalization      "<< endl   // XXX
         << "method diagonalization 3 0.001 ! diagonalization      "<< endl
-        << "method fullMINRES       3 0.01 ! minimal residual     "<< endl
-        << "method sparseMINRES     3 0.01 ! minimal residual     "<< endl
+        << "*method fullMINRES       3 0.01 ! minimal residual     "<< endl
+        << "*method sparseMINRES     3 0.01 ! minimal residual     "<< endl
         << "*mrestol      1.0D-8          ! epsilon for MINRES"<< endl
         << "method inversion       3 0.001 ! Gauss matrix inversion"<< endl
         << "* last method is applied"<< endl
         << "*matiter      3  ! recalculate matrix in iterations" << endl
+        << "printrecord 1 -1" << endl     // XXX produces mpdebug.txt
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
     } // end of str file 
@@ -384,7 +386,7 @@ int main(int argc, char* argv[]){
             float dergl[nagl] = {dgl1};  
             //Labels 
             /// TODO check that properly
-            int l1 = label_mp2+1; //Millepede doesn't like 0 as a label XXX 
+            int l1 = label_mp2; //Millepede doesn't like 0 as a label XXX 
             int label[nagl] = {l1}; 
             if (debugBool){cout << "l1 = " << l1 << endl;}
              
