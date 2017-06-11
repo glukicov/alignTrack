@@ -46,15 +46,8 @@ Tracker* Tracker::instance() {
   
    @return dca
 */
-float Tracker::DCA(float xPoint,float yPoint,float x1,float y1,float x2,float y2){
-
-    float dca = abs((y2-y1)*xPoint-(x2-x1)*yPoint+x2*y1-y2*x1)/sqrt((y2-y1)*(y2-y1)+(x2-x1)*(x2-x1));
-
-    return dca;
-}
-
 //DCA in 1D for parallel tracks
-float Tracker::DCA_simple(float xTrack,float xStraw){
+float Tracker::DCA(float xTrack,float xStraw){
 
     //accounting for negative coordinates 
     float dca = sqrt((xTrack-xStraw)*(xTrack-xStraw));
@@ -63,56 +56,7 @@ float Tracker::DCA_simple(float xTrack,float xStraw){
 }
 
 
-
-/** Uses DCA function to find the shortest dca between straws (i.e. which straw was hit in that layer)
-
-    @Inputs (see DCA method) + vector of straws' x coordinates in a layer, and a return type: "dca_hit"  or "x_line"
-  
-    @return hit_distance - dca of the straw that was hit, or x coordinate of the line on the same z as a straw
-*/
-float Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float x1,float z1,float x2, float z2, float c, float m, bool debugBool){ 
-
-    // Logic out-of-date XXXX
-
-   //  bool StrongDebugBool=false; //quick hack XXX for even more debug output
-
-   //  //Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
-   // //TODO ensure this also true for >= and <= for hits going through the actual wire!! 
-   // // if hit bigger that all straws all smaller  
-
-   //  float x_line = (z_straw-c)/m;
-    
-   //  float lower, upper, hit_distance;
-
-   //  vector<float>::iterator it;
-   //  it = lower_bound(layer_x.begin(), layer_x.end(), x_line);
-   //  if (it == layer_x.begin()) upper = *it; // no smaller value  than val in vector
-   //  else if (it == layer_x.end()) lower = *(it-1); // no bigger value than val in vector
-   //  else {
-   //      lower = *(it-1);
-   //      upper = *it;
-   //  }
-   
-   //  float hit_distance_low = Tracker::DCA(lower, z_straw, x1, z1, x2, z2);
-   //  float hit_distance_up = Tracker::DCA(upper, z_straw, x1, z1, x2, z2); 
-
-   //  if (hit_distance_up>hit_distance_low){hit_distance = hit_distance_low;}
-   //  if (hit_distance_up<hit_distance_low){hit_distance = hit_distance_up;}
-   //  if (hit_distance_up==hit_distance_low){hit_distance = hit_distance_low; cout << "Ambiguity which straw registered hit";}  //XXX
-
-   //  if (debugBool && StrongDebugBool){
-   //      cout << "Track (line) point in-line with the layer at ( " << x_line << " , "  << z_straw << " ); belongs to the line with  generated points: ( " << x1 <<" , " << beamStart << ");" <<endl;
-   //      cout << "( " << x2 << " , " << beamStop << " ); slope= " << m << "; intercept= " << c << endl;
-   //      cout << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs "<< hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl;
-   //      cout << "Selected DCA as the correct hit distance is " << hit_distance << endl;
-   //  }
-    
-   //      return hit_distance; // as dca of the closest straw
-    return 0;
-}
-
-
-DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float zStraw, float xTrack, bool debugBool){ 
+DCAData Tracker::DCAHit(std::vector<float> layer_x, float zStraw, float xTrack, bool debugBool){ 
 
     DCAData dca_data;
 
@@ -140,7 +84,7 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float zStraw, float x
         upper = *it; 
         //if (debugBool && StrongDebugBool){ cout << " upper = " << upper << endl;}
          // hit distance is the dca from the L of the straw 0
-        hitDistance = Tracker::DCA_simple(upper, xTrack);
+        hitDistance = Tracker::DCA(upper, xTrack);
         comparator = upper;
         LR=-1.0;
         if (debugBool && StrongDebugBool && (hitDistance > strawSpacing/2)){
@@ -153,7 +97,7 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float zStraw, float x
         lower = *(it-1); 
         //if (debugBool && StrongDebugBool){ cout << "lower = " << lower << endl;}
         // hit distance is the dca from the R of the last straw
-        hitDistance = Tracker::DCA_simple(lower, xTrack); // hit distance is the dca from the L of the straw 0
+        hitDistance = Tracker::DCA(lower, xTrack); // hit distance is the dca from the L of the straw 0
         comparator = lower;
         LR=1.0;
         if (debugBool && StrongDebugBool && (hitDistance > strawSpacing/2)){
@@ -166,8 +110,8 @@ DCAData Tracker::DCAHit_simple(std::vector<float> layer_x, float zStraw, float x
         upper = *it;
         //if (debugBool && StrongDebugBool){ cout << "lower = " << lower << " upper = " << upper << endl;}
 
-            float hit_distance_low = Tracker::DCA_simple(lower, xTrack);
-            float hit_distance_up = Tracker::DCA_simple(upper, xTrack); 
+            float hit_distance_low = Tracker::DCA(lower, xTrack);
+            float hit_distance_up = Tracker::DCA(upper, xTrack); 
 
             if (hit_distance_low < strawRadius && hit_distance_up < strawRadius){
                 if (debugBool){cout << "Multiple straws in layer were hit!" << endl;}
@@ -238,29 +182,10 @@ float Tracker::GetIdealPoint(int x_det_ID, float x_det_dca, float LRSign, vector
     return x_IdealPoint;
 }
 
-// Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
-// @ Inputs: ideal points (x,z)
-// Algorithm based on SLR: https://en.wikipedia.org/wiki/Simple_linear_regression#Fitting_the_regression_line
-vector<float> Tracker::GetResiduals(vector<float> IdealPoints, vector<float> distanceZ){
-
-    //XXX Hack: for now this is just the smearing
-    //TODO implement best fit line
-    vector<float> residuals; //to store residuals after fit
-    for (int i_size=0; i_size<IdealPoints.size(); i_size++){
-        //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
-        float residual_i=IdealPoints[i_size]; 
-    
-        float rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-        residual_i = residual_i + rand_gaus * resolution; // smeared resolution 
-        residuals.push_back(residual_i);
-    }
-    return residuals;
-}
-
 // Function to return residuals to the fitted line to a parallel tracks: SIMPLE: sum(x)/N(x)
 // @ Inputs: ideal points (x,z)
 // Algorithm based on SLR: https://en.wikipedia.org/wiki/Simple_linear_regression#Fitting_the_regression_line
-ResidualData Tracker::GetResiduals_simple(vector<float> IdealPoints, ofstream& plot_fit){
+ResidualData Tracker::GetResiduals(vector<float> IdealPoints, ofstream& plot_fit){
 
     ResidualData resData;
     float SumX=0;
@@ -349,7 +274,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
             //xTrack = (distance[z_counter]-x_intercept)/x_slope;   // true track position [from line] WRONGG.... XXX need dca here
             float xTrack = x0; // always the same for parallel line 
             //the dca between xTrack and the xStraw [misaligned]
-            DCAData x_MisDetector= Tracker::DCAHit_simple(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, debugBool); // position on the detector [from dca]           
+            DCAData x_MisDetector= Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, debugBool); // position on the detector [from dca]           
             float x_mis_dca =  x_MisDetector.dca;  //dca of the hit straw
 
             //Rejection of hits due to geometry (i.e. missed hits)  
@@ -434,7 +359,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
 
     //This happens once per MC function call [as we now accumulated x coordinates of "ideal" point for all hits
     // and need to do a simultaneous fit once - to return #hits of residuals]
-    ResidualData res_Data = Tracker::GetResiduals_simple(x_idealPoints, plot_fit);
+    ResidualData res_Data = Tracker::GetResiduals(x_idealPoints, plot_fit);
     vector<float> residuals = res_Data.residuals;
     vector<float> x_fitted=res_Data.x_fitted; 
 

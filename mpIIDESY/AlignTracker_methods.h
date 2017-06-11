@@ -126,21 +126,13 @@ class Tracker {
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
 	
+	float DCA(float, float);
 
-	float DCA(float ,float ,float ,float ,float ,float);
-	
-	//TODO rewrite like DCA_simple struc. 
-	float DCAHit(std::vector<float>, float, float, float, float, float, float, float, bool);
-
-	float DCA_simple(float, float);
-
-	DCAData DCAHit_simple(std::vector<float>, float, float, bool);
+	DCAData DCAHit(std::vector<float>, float, float, bool);
 
 	float GetIdealPoint(int, float, float, std::vector<float>);
 
-	vector<float> GetResiduals(std::vector<float>, std::vector<float>);
-
-	ResidualData GetResiduals_simple(std::vector<float>, std::ofstream&);
+	ResidualData GetResiduals(std::vector<float>, std::ofstream&);
 
 	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
