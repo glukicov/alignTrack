@@ -114,12 +114,12 @@ with open("Tracker_p_fit.txt") as f:
 ##################PLOTING##############################
 #Misaligned Geometry and Generated tracks 
 plt.figure(1)
-plt.subplot(121)
+plt.subplot(211)
 axes = plt.gca()
 
 #First draw tracks and straws with hits
 for i_track in range(0, trackN):
-	dataM = [[gen[i_track][0],gen[i_track][2]], [gen[i_track][1],gen[i_track][3]]]
+	dataM = [[gen[i_track][2],gen[i_track][0]], [gen[i_track][3],gen[i_track][1]]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))),
 	    color = 'red', marker = 'x')
@@ -129,8 +129,8 @@ for i_track in range(0, trackN):
 			for i_layer in range(0, layerN):
 				for i_straw in range(0, strawN):
 					if (hitList[i_track][i_totalLayers] == str(i_straw)):
-						circle = plt.Circle((Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers]), 0.25, color='green', fill=True)
-						plt.plot(Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers], color="black", marker = ",")
+						circle = plt.Circle((Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw]), 0.25, color='green', fill=True)
+						plt.plot(Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 						axes.add_artist(circle)						
 				i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
@@ -140,25 +140,25 @@ for i_module in range(0, moduleN):
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
-				circle = plt.Circle((Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers]), 0.25, color='black', fill=False)
-				plt.plot(Mis[i_module][i_view][i_layer][i_straw], Mzs[i_totalLayers], color="black", marker = ",")
+				circle = plt.Circle((Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw]), 0.25, color='black', fill=False)
+				plt.plot(Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes.add_artist(circle)
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
 
-axes.set_xlim([beamX0-1,beamX1+1])
-axes.set_ylim([beamZ0-1,beamZ1+1])
-plt.ylabel("z [cm]")
-plt.xlabel("x [cm]")
+axes.set_ylim([beamX0-1,beamX1+1])
+axes.set_xlim([beamZ0-1,beamZ1+1])
+plt.xlabel("z [cm]")
+plt.ylabel("x [cm]")
 plt.title("Misaligned Geometry with generated tracks")
 
 #Ideal Geometry and Fitted tracks 
-plt.subplot(122)
+plt.subplot(212)
 axes2 = plt.gca()
 
 #First draw tracks and straws with hits
 for i_track in range(0, trackN):
-	dataI = [[fit[i_track][0],fit[i_track][2]], [fit[i_track][1],fit[i_track][3]]]
+	dataI = [[fit[i_track][2],fit[i_track][0]], [fit[i_track][3],fit[i_track][1]]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataI, 2))),
 	    color = 'red', marker = 'x')
@@ -168,8 +168,8 @@ for i_track in range(0, trackN):
 			for i_layer in range(0, layerN):
 				for i_straw in range(0, strawN):
 					if (hitList[i_track][i_totalLayers] == str(i_straw)):
-						circle = plt.Circle((Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers]), 0.25, color='purple', fill=True)
-						plt.plot(Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers], color="black", marker = ",")
+						circle = plt.Circle((Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw]), 0.25, color='purple', fill=True)
+						plt.plot(Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 						axes2.add_artist(circle)						
 				i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
@@ -179,15 +179,15 @@ for i_module in range(0, moduleN):
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
-				circle = plt.Circle((Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers]), 0.25, color='black', fill=False)
-				plt.plot(Ideal[i_module][i_view][i_layer][i_straw], Izs[i_totalLayers], color="black", marker = ",")
+				circle = plt.Circle((Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw]), 0.25, color='black', fill=False)
+				plt.plot(Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes2.add_artist(circle)	
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 	
-axes.set_xlim([beamX0-1,beamX1+1])
-axes.set_ylim([beamZ0-1,beamZ1+1])
-plt.ylabel("z [cm]")
-plt.xlabel("x [cm]")
+axes2.set_ylim([beamX0-1,beamX1+1])
+axes2.set_xlim([beamZ0-1,beamZ1+1])
+plt.xlabel("z [cm]")
+plt.ylabel("x [cm]")
 plt.title("Ideal Geometry with fitted tracks")
 
 plt.show()
