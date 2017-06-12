@@ -36,9 +36,6 @@ struct MCData {
 	std::vector<float> strawID;
 	std::vector<float> LR;
 
-	std::vector<float> x_m; // generated slopes
-	std::vector<float> x_c; //generated intercepts
-
 };
 
 // DCA structure - calculated for each hit
@@ -131,13 +128,13 @@ class Tracker {
 
 	float generate_uniform(); // using the RandomBuffer class
 
-	float DCA(float ,float ,float ,float ,float ,float);
-	
-	DCAData DCAHit(std::vector<float>, float, float, float, float, float, float, float, bool);
-	
+	float DCA(float, float);
+
+	DCAData DCAHit(std::vector<float>, float, float, bool);
+
 	float GetIdealPoint(int, float, float, std::vector<float>);
 
-	ResidualData GetResiduals(std::vector<float>, std::vector<float>, std::ofstream&, bool);
+	ResidualData GetResiduals(std::vector<float>, std::ofstream&);
 
 	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 

@@ -195,8 +195,6 @@ int main(int argc, char* argv[]){
      // Book histograms [once only]
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  500,  Tracker::instance()->getResolution()-0.01, Tracker::instance()->getResolution()+0.01); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, -0.2, 0.2);
-    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
-    TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
     TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
@@ -406,8 +404,7 @@ int main(int argc, char* argv[]){
 
             //Fill for tracks [once only]
             if (hitCount ==0){
-                h_slope->Fill(generated_MC.x_m[hitCount]);
-                h_c->Fill(generated_MC.x_c[hitCount]);
+                
             }
             if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits

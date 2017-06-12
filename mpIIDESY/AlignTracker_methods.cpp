@@ -55,9 +55,9 @@ float Tracker::generate_uniform(){
   
    @return dca
 */
-float Tracker::DCA(float xPoint,float yPoint,float x1,float y1,float x2,float y2){
+float Tracker::DCA(float xTrack,float xStraw){
 
-    float dca = abs((y2-y1)*xPoint-(x2-x1)*yPoint+x2*y1-y2*x1)/sqrt((y2-y1)*(y2-y1)+(x2-x1)*(x2-x1));
+    float dca = sqrt((xTrack-xStraw)*(xTrack-xStraw));
 
     return dca;
 }
@@ -69,7 +69,7 @@ float Tracker::DCA(float xPoint,float yPoint,float x1,float y1,float x2,float y2
   
     @return hit_distance - dca of the straw that was hit, or x coordinate of the line on the same z as a straw
 */
-DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float x1, float z1,float x2, float z2, float c, float m, bool debugBool){ 
+DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float xTrack, bool debugBool){
 
     DCAData dca_data;
 
@@ -78,14 +78,13 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float x1, float
     //Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
       
     float lower, upper, hitDistance;
-    float xTrack = (zStraw-c)/m;
     int lastID = strawN-1; // the ID of the very last straw in the vector
     float comparator; // to find the ID
     float LR; //L or R hit
 
     if (debugBool && StrongDebugBool){
-        cout << "Track (line) point in-line with the layer at ( " << xTrack << " , "  << zStraw << " ); belongs to the line with  generated points: ( " << x1 <<" , " << beamStart << ");" <<endl;
-        cout << "( " << x2 << " , " << beamStop << " );" << endl;
+        cout << "Track (line) point in-line with the layer at ( " << xTrack << " , "  << zStraw << " ); belongs to the line with  generated points: ( " << xTrack <<" , " << beamStart << ");" <<endl;
+        cout << "( " << xTrack << " , " << beamStop << " );" << endl;
     }
 
     //Iterator to find two straws between the hit:
@@ -96,7 +95,7 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float x1, float
         upper = *it; 
         if (debugBool && StrongDebugBool){ cout << " upper = " << upper << endl;}
          // hit distance is the dca from the L of the straw 0
-        hitDistance = Tracker::DCA(upper, zStraw, x1, z1, x2, z2);
+        hitDistance = Tracker::DCA(upper, xTrack);
         comparator = upper;
         LR=-1.0;
         if (debugBool && StrongDebugBool && (hitDistance > strawSpacing/2)){
@@ -109,7 +108,7 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float x1, float
         lower = *(it-1); 
         if (debugBool && StrongDebugBool){ cout << "lower = " << lower << endl;}
         // hit distance is the dca from the R of the last straw
-        hitDistance = Tracker::DCA(lower, zStraw, x1, z1, x2, z2); // hit distance is the dca from the L of the straw 0
+        hitDistance = Tracker::DCA(lower, xTrack); // hit distance is the dca from the L of the straw 0
         comparator = lower;
         LR=1.0;
         if (debugBool && StrongDebugBool && (hitDistance > strawSpacing/2)){
@@ -122,8 +121,8 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float x1, float
         upper = *it;
         if (debugBool && StrongDebugBool){ cout << "lower = " << lower << " upper = " << upper << endl;}
 
-            float hit_distance_low = Tracker::DCA(lower, zStraw, x1, z1, x2, z2);
-            float hit_distance_up = Tracker::DCA(upper, zStraw, x1, z1, x2, z2); 
+            float hit_distance_low = Tracker::DCA(lower, xTrack);
+            float hit_distance_up = Tracker::DCA(upper, xTrack); 
 
             if (hit_distance_low < strawRadius && hit_distance_up < strawRadius){
                 if (debugBool){cout << "Multiple straws in layer were hit!" << endl;}
@@ -183,14 +182,14 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float x1, float
 }
 
 
-// Adds dca to the ideal geometry XXX how to add DCA properly 
+// Adds dca to the ideal geometry 
 float Tracker::GetIdealPoint(int x_det_ID, float x_det_dca, float LRSign, vector<float> xLayer){
     
     bool StrongDebugBool=false; //quick hack XXX for even more debug output
 
     float x_IdealStraw=xLayer[x_det_ID];
 
-    float x_IdealPoint = x_IdealStraw + (LRSign * x_det_dca); //add dca for R  //XXX this is wrong in a 2D space
+    float x_IdealPoint = x_IdealStraw + (LRSign * x_det_dca); //add dca for R  
 
     if (StrongDebugBool){ cout << "x_IdealPoint= " << x_IdealPoint << "; x_IdealStraw= " << x_IdealStraw << " LRSign = " << LRSign  <<  " x_det_dca= " << x_det_dca << endl;}
 
@@ -199,52 +198,29 @@ float Tracker::GetIdealPoint(int x_det_ID, float x_det_dca, float LRSign, vector
 
 // Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
 // @ Inputs: ideal points (x,z)
-// Algorithm based on SLR: https://en.wikipedia.org/wiki/Simple_linear_regression#Fitting_the_regression_line
-ResidualData Tracker::GetResiduals(vector<float> x_idealPoints, vector<float> z_idealPoints, ofstream& plot_fit, bool debugBool){
+
+ResidualData Tracker::GetResiduals(vector<float> IdealPoints, ofstream& plot_fit){
 
     ResidualData resData;
-    //from: http://www.bragitoff.com/2015/09/c-program-to-linear-fit-the-data-using-least-squares-method/
-    int i,j,k,n;
-    //the no. of data pairs to be used
-    n=x_idealPoints.size(); // # points to fit = number of layers that saw a hit 
-
-    double slope,intercept;
-        
-    double xsum=0,x2sum=0,ysum=0,xysum=0;                //variables for sums/sigma of xi,yi,xi^2,xiyi etc
-    for (i=0;i<n;i++)
-    {
-        xsum=xsum+z_idealPoints[i];                        //calculate sigma(xi)
-        ysum=ysum+x_idealPoints[i];                        //calculate sigma(yi)
-        x2sum=x2sum+pow(z_idealPoints[i],2);                //calculate sigma(x^2i)
-        xysum=xysum+z_idealPoints[i]*x_idealPoints[i];                    //calculate sigma(xi*yi)
-    }
-    slope=(n*xysum-xsum*ysum)/(n*x2sum-xsum*xsum);            //calculate slope
-    intercept=(x2sum*ysum-xsum*xysum)/(x2sum*n-xsum*xsum);            //calculate intercept
-                             
-    vector<double> x_fit;  //an array to store the new fitted values of y  
-    for (i=0;i<n;i++)
-        x_fit.push_back(slope*z_idealPoints[i]+intercept);                    //to calculate y(fitted) at given x points
-    
-    if (debugBool){
-        cout<<"S.no"<<setw(5)<<"z"<<setw(19)<<"x(observed)"<<setw(19)<<"x(fitted)"<<endl;
-        cout<<"-----------------------------------------------------------------\n";
-        for (i=0;i<n;i++)
-            cout<<i+1<<"."<<setw(8)<<z_idealPoints[i]<<setw(15)<<x_idealPoints[i]<<setw(18)<<x_fit[i]<<endl;//print a table of x,y(obs.) and y(fit.)    
-        cout<<"\nThe linear fit line is of the form:\n\n"<<slope<<"x + "<<intercept<<endl;        //print the best fit line
-    }
-
-        
-    for (int i_size=0; i_size<x_idealPoints.size(); i_size++){
+    float SumX=0;
+    for (int i_size=0; i_size<IdealPoints.size(); i_size++){
         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
-        float rand_gaus=Tracker::generate_gaus();
-        float residual_i = abs(x_fit[i_size]-x_idealPoints[i_size])+rand_gaus*resolution;
+        SumX+=IdealPoints[i_size];
+    }
+   
+    float x_fit=SumX/IdealPoints.size(); 
+    plot_fit << x_fit << " "  << x_fit << " " << beamStart << " " << beamStop << endl;
+    
+    for (int i_size=0; i_size<IdealPoints.size(); i_size++){
+        //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
+        float residual_i = abs(x_fit-IdealPoints[i_size]);
         resData.residuals.push_back(residual_i);
-        resData.x_fitted.push_back(x_fit[i_size]);
+        resData.x_fitted.push_back(x_fit);
     }
 
-    if (debugBool){ plot_fit <<  slope*beamStart+intercept << " "  << slope*beamStop+intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
 }
+   
 
 
 /**
@@ -268,11 +244,6 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
    // Track parameters for rand-generated line MC [start and end positions outside of detectors]
     rand_num = Tracker::generate_uniform();
     float x0 = beamPositionLength * (rand_num)+beamOffset; //uniform vertex
-    rand_num = Tracker::generate_uniform();
-    float x1 = beamPositionLength * (rand_num)+beamOffset; //uniform exit point: so fitting a line to these two points
-
-    float xSlope=(beamStop-beamStart)/(x1-x0); //m=dz/dx Slope for a line with coordinates (x_0, beamStart), (x_1, beamStop)
-    float xIntercept = beamStart - xSlope*x0; // for line z=mx+c -> c= z - mx
 
     float xTrack; //true track position x=(z_straw-c)/m; 
         
@@ -287,10 +258,10 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
         	for (int i_layer=0; i_layer<layerN; i_layer++){ //per layer
 	            hitLayerCounter++;
 
-	            xTrack = (distance[z_counter]-xIntercept)/xSlope;   // true track position [from line]
+	            xTrack = x0;   // true track position [from line]
 	           
 	            //the dca between xTrack and the xStraw [misaligned]
-	            DCAData x_MisDetector= Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], x0, beamStart, x1, beamStop, xIntercept, xSlope, debugBool); // position on the detector [from dca]           
+	            DCAData x_MisDetector= Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, debugBool); // position on the detector [from dca]  
 	            float x_mis_dca =  x_MisDetector.dca;  //dca of the hit straw
 
 	            //Rejection of hits due to geometry (i.e. missed hits)  
@@ -346,8 +317,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
 	            
 	            //Sanity Plots: Tracks
 	            if (MC.hit_count == 0){
-	                MC.x_m.push_back(xSlope);
-	                MC.x_c.push_back(xIntercept);                
+	                           
 	            } 
 
 	            MC.hit_count++;
@@ -360,7 +330,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
     if (debugBool){cout << "Calculating residuals:" << endl;}
     //This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
     // and need to do a simultaneous fit once - to return #hits worth of residuals]
-    ResidualData res_Data = Tracker::GetResiduals(x_idealPoints, MC.z_hits, plot_fit, debugBool);
+    ResidualData res_Data = Tracker::GetResiduals(x_idealPoints, plot_fit);
     vector<float> residuals = res_Data.residuals;
     vector<float> x_fitted=res_Data.x_fitted; 
 
@@ -371,7 +341,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
     }
     
     if(debugBool){
-                        plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " ";
+                        plot_gen << x0 << " " << x0 << " " << beamStart << " " << beamStop << " ";
                         for (int i=0; i<MC.absolute_straw_hit.size(); i++){
                         plot_gen     << MC.absolute_straw_hit[i] << " ";
                              }
