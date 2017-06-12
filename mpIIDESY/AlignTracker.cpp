@@ -1,11 +1,4 @@
-    /*
-*  TODO: 
-    -TTree,Ntuples, etc for ROOT plotting - separate macro: use more advances ROOT methods properly 
-    -Graphically plot what's going on pyROOT/Python
-    -Use git tag for new version: small increments 0.x, large changes x.0, additional features
-        (e.g MF) use a, b, c i.e. v1.3a. Keep version history wiki on git (read-up on that...)
-    -End of programme print out more used const and non-const par. 
-*
+/*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
 *   Modified: 3 May 2017 
@@ -16,30 +9,27 @@ experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 
 ============================= Test Model v0.1 =======================================
-*Simple 2D case (1D alignment along x) of simplified tracker station of 2 small trackers.
+*Simple 2D case (1D alignment along x).
 * No B-field, straight tracks, no MS, 100% efficiency. 
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted] 
 
-(!) Module, Straw, View, etc. labelling starts from 0 [+1 is put by hand as MP2 doesn't seem to accept 0 as a label]
+(!) Module, Straw, View, Layer labelling starts from 0 [+1 is put by hand as MP2 doesn't accept 0 as a label]
 
-Terminology: for now straw=central wire, detector=module (==the alignment object)
+Terminology: detector=module (==the alignment object)
 
-2 trackers with 16 straws in length (instead of 32), 4 layers per tracker: 64 straws per tracker.
-    total of 128 straws in 8 layers. 
 Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
 Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
-    tracks are lines between z=0 and z=25, with x1 and x2 = 10 * rand[0,1] (=0-10)
-Resolution (i.e. tracker systematic) is   100um = 0.01 cm 
+    tracks are lines between z=beamStart and z=beamStop, with x1 and x2 = Constant * rand[0,1]
+Resolution (i.e. tracker systematic) is implemented. 
 Misalignment manually by 0.15 for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
 
 Hit rejection:  1) outside of layer
                 2) more than 0.25 cm away from straw centre (i.e straw radius) 
 
-Labels Module 0, Module 1. 
-Constrains TODO ??? 
-Steering options TODO  ??? do some reading
-                                    Tracker Geometry:
-First layer fist straw (A1) is at z=50, x=0; spacing (in x) between straws in layer is 0.606 [strawSpacing]
+Constrains TODO 
+Steering options TODO 
+                       			--Tracker Geometry--:
+Spacing (in x) between straws in layer is 0.606 [strawSpacing]
 Spacing between layers in same view is 0.515 [layerSpacing]
 Spacing between U and V views (last and first layers in views) is 2.020 [viewSpaing]
 Spacing between modules (last and first layers in modules) 13.735 [moduleSpacing]
@@ -52,7 +42,7 @@ http://gm2-docdb.fnal.gov:8080/cgi-bin/RetrieveFile?docid=4375&filename=Orientat
 
 #TODO Model type is implemented via imodel = 0, 1 .....  
 
-#Verbosity level implemented via command line command: n = normal, d = debug [e.g. './AlignTracker d']
+#Verbosity level implemented via command line command: n = normal, d = debug, p=plotting (./PlotGen.py) [e.g. './AlignTracker d']
 
 Private (for now) Git repository: https://github.com/glukicov/alignTrack [further instructions are there]
 Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
@@ -96,10 +86,7 @@ int main(int argc, char* argv[]){
     string compareStr; //for debug vs. normal output as specified by the user
     int tracksInput; // number of tracks to generate as specified by the user 
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
-    bool plotBool = false; // './AlignTracker p' - for plotting small stats
-    bool debugBoolStrong = true; //XXX hack
-    //float rand_num; //to store random (int number from buffer + max )/(2.0 * max) [0, 1]   
-    //float twoR = 2.0;  //For normalisation of uniform random numbers [0,1]
+    bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py 
     //Set up counters for hits and records (tracks)
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks
@@ -150,7 +137,7 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.1) - Gleb Lukicov (UCL) - May 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.1) - Gleb Lukicov (UCL) - June 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
@@ -196,9 +183,7 @@ int main(int argc, char* argv[]){
     string gen_plotFileName = "Tracker_p_gen.txt"; //
     string fit_plotFileName = "Tracker_p_fit.txt"; //
     string contsants_plotFileName = "Tracker_p_constants.txt"; // passing constants (e.g. strawN to python script)
-  
-        
-    // TODO TTree -> separate Macro for plotting [see Mark's suggested code: check correct implementation for future] 
+          
     //output ROOT file
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
     //create a subdirectories 
@@ -209,13 +194,14 @@ int main(int argc, char* argv[]){
     TDirectory* cd_Tracks = file->mkdir("Tracks");
      // Book histograms [once only]
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  500,  Tracker::instance()->getResolution()-0.01, Tracker::instance()->getResolution()+0.01); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, 0.0, 0.1);
-    //TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
-    //TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, -0.2, 0.2);
+    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
+    TH1F* h_c = new TH1F("h_c", "Intercept ",  500,  -300, 300);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
     TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
+    TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", Tracker::instance()->getModuleN()+1 , 0, Tracker::instance()->getModuleN()+1);
     h_sigma->SetXTitle( "[cm]");
     h_hits_MP2->SetXTitle( "[cm]");
     h_det->SetXTitle( "DCA [cm]");
@@ -229,8 +215,6 @@ int main(int argc, char* argv[]){
     h_ideal->SetDirectory(cd_All_Hits);
     h_fit->SetDirectory(cd_All_Hits);
 
-    //TODO create a directory in root file 
-    
     std::stringstream h_name;
     std::stringstream h_title;
     //Booking histograms for TOTAL # layers
@@ -240,7 +224,6 @@ int main(int argc, char* argv[]){
         auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 500,  -0.05, 0.4);
         h1->GetXaxis()->SetTitle("[cm]");
         
-       
         h_name.str(""); h_name << "h_strawID_layer_" << i;
         h_title.str(""); h_title << "strawID in layer " << i;
         auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), 5, -1, Tracker::instance()->getStrawN());
@@ -337,7 +320,7 @@ int main(int argc, char* argv[]){
         << "*regularisation 1.0 0.01 ! regularisation factor, pre-sigma"<< endl
         << " " << endl
         << "*bandwidth 0         ! width of precond. band matrix"<< endl
-        << "method HIP 3 0.001 ! diagonalization      "<< endl   // XXX
+        << "method HIP 3 0.001 ! diagonalization      "<< endl   // XXX this method ignores constraints 
         << "method diagonalization 3 0.001 ! diagonalization      "<< endl
         << "*method fullMINRES       3 0.01 ! minimal residual     "<< endl
         << "*method sparseMINRES     3 0.01 ! minimal residual     "<< endl
@@ -354,7 +337,7 @@ int main(int argc, char* argv[]){
     cout<< "Calculating residuals..." << endl;
     //Generating particles with energies: 10-100 [GeV]
     for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  //Track number is set in methods XXX is it the best place for it? 
-        //rand_num = (RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max());
+        //rand_num = Tracker::instance()->generate_uniform();
         //float p=pow(10.0, 1+rand_num);
         //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
         scatterError = 0; // set no scatterError for now 
@@ -377,16 +360,14 @@ int main(int argc, char* argv[]){
             int label_mp2 = generated_MC.i_hits[hitCount]; //label to associate hits within different layers with a correct module
 
             //Local derivatives
-            // TODO check the maths...
             float dlc1=Tracker::instance()->getProjectionX(label_mp2);
             float dlc2=generated_MC.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
             float derlc[nalc] = {dlc1, dlc2};
             //Global derivatives
             float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
             float dergl[nagl] = {dgl1};  
-            //Labels 
-            /// TODO check that properly
-            int l1 = label_mp2; //Millepede doesn't like 0 as a label XXX 
+            //Labels
+            int l1 = label_mp2; 
             int label[nagl] = {l1}; 
             if (debugBool){cout << "l1 = " << l1 << endl;}
              
@@ -397,23 +378,19 @@ int main(int argc, char* argv[]){
             float rMeas_mp2 =  generated_MC.x_hits[hitCount]; 
             float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; 
 
-            //XXX passing by reference/pointer vs as variable (?) - makes any difference
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
             
             //Sanity Plots
-
             //Fill for all hits
-            //cd_All_Hits->cd();    // ROOT dir
             h_hits_MP2 -> Fill (rMeas_mp2); 
             h_sigma -> Fill(sigma_mp2);
             h_det->Fill(generated_MC.x_mis_dca[hitCount]);
             h_true->Fill(generated_MC.x_track[hitCount]);
             h_ideal->Fill(generated_MC.x_ideal[hitCount]);
             h_fit->Fill(generated_MC.x_fitted[hitCount]);
+            h_labels->Fill(l1);
            
             //Fill for hits in layers
-            //cd_Layers->cd();    // ROOT dir
-            //file->cd();
             h_name.str("");
             h_name << "h_det_layer_" << hitCount;
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
@@ -427,24 +404,16 @@ int main(int argc, char* argv[]){
             TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
             h3 ->Fill(generated_MC.LR[hitCount]);
 
-
             //Fill for tracks [once only]
             if (hitCount ==0){
-                // cd_Tracks->cd();    // ROOT dir TODO
-                // h_slope->Fill(generated_MC.x_m[hitCount]);
-                // h_c->Fill(generated_MC.x_c[hitCount]);
+                h_slope->Fill(generated_MC.x_m[hitCount]);
+                h_c->Fill(generated_MC.x_c[hitCount]);
             }
-            debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;
+            if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits
         } // end of hits loop
         
       
-        // for (int i_layer=0; i_layer < Tracker::instance()->getLayerN(); i_layer++){
-        //     sh.str(""); sh << "h_det_layer_" << i_layer;
-        //     auto h = rm_->Get<TH1F*>(currentDirName.str(),sh.str());
-        //     h->Fill(generated_MC.x_mis_dca[i_layer]);
-        // }
-
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
 
@@ -492,9 +461,7 @@ int main(int argc, char* argv[]){
     debug_mc.close();
     debug_con.close();
     
-    
     //ROOT stuff
-
     file->Write();
     file->Close(); //good habit!
     

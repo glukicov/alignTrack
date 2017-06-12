@@ -41,13 +41,14 @@ struct MCData {
 
 };
 
-
+// DCA structure - calculated for each hit
 struct DCAData{
 	int strawID; 
 	float dca;
 	float LRSign; // L=-ive, R=+ive 
 };
 
+// Returned - calculated once per track
 struct ResidualData{
 	std::vector<float> residuals; // residual between  
 	std::vector<float> x_fitted;   // the x-coordinate of the fitted line in a layer [z-coordinate corresponds to distance vector]
@@ -73,10 +74,10 @@ class Tracker {
     int multipleHitsLayer=0; // passed over from DCAData
 	
 	//initialising physics variables
- 	//XXX for later 
+ 	//XXX for later MS, MF...
 	
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 4; //number of movable detectors/module [independent modules]
+	static const int moduleN = 2; //number of movable detectors/module [independent modules]
 	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
@@ -97,7 +98,7 @@ class Tracker {
 	
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.25; //thickness/width of a plane (X0) // [cm]
-	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // for later 3D versions
+	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
 
 	int hitLayerCounter; 
 	
@@ -126,13 +127,17 @@ class Tracker {
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
 	
-	float DCA(float, float);
+	float generate_gaus(); // using the RandomBuffer class
 
-	DCAData DCAHit(std::vector<float>, float, float, bool);
+	float generate_uniform(); // using the RandomBuffer class
 
+	float DCA(float ,float ,float ,float ,float ,float);
+	
+	DCAData DCAHit(std::vector<float>, float, float, float, float, float, float, float, bool);
+	
 	float GetIdealPoint(int, float, float, std::vector<float>);
 
-	ResidualData GetResiduals(std::vector<float>, std::ofstream&);
+	ResidualData GetResiduals(std::vector<float>, std::vector<float>, std::ofstream&, bool);
 
 	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
