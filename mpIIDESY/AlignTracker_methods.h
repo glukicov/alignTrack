@@ -86,6 +86,8 @@ class Tracker {
 	static constexpr float viewSpacing = 2.020; // z distance between views in a modules
 	static constexpr float moduleSpacing = 13.735; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
 	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
+	//std::vector<float> staircaseXDisplacment = [0, 7.230, 9.790, ];  // TODO staircase for MF in future
+	//[ 6880.52, 6873.29, 6863.50, 6851.12, 6836.09, 6818.54, 6798.46, 6775.87]; 
 
 	//Beam parameters [all distances are in cm]
 	static constexpr float beamPositionLength = strawN*strawSpacing; // max x coordinate = beamPositionLength + beamOffset
