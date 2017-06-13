@@ -8,7 +8,7 @@ PEDE routine, to align the tracking detector for the g-2
 experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 
-============================= Test Model v0.1 =======================================
+============================= Test Model v0.2 =======================================
 *Simple 2D case (1D alignment along x).
 * No B-field, straight tracks, no MS, 100% efficiency. 
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted] 
@@ -91,6 +91,8 @@ int main(int argc, char* argv[]){
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
+    float residuals_track_sum_2=0.0;
+    float residuals_fit_sum_2=0.0;
     
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -137,7 +139,7 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.1) - Gleb Lukicov (UCL) - June 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.2) - Gleb Lukicov (UCL) - June 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
@@ -147,9 +149,10 @@ int main(int argc, char* argv[]){
     cout << "["<< Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
     cout << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl; 
     cout << "No B-field, Straight (parallel) Tracks, 100% efficiency." << endl;
-    cout << "Hit rejection: DCA > StrawRadius [" << Tracker::instance()->getStrawRadius() << " cm]." << endl;
+    cout << "No Hit rejection:" << endl;
+    // DCA > StrawSpacing [" << Tracker::instance()->getStrawSpacing() << " cm]." << endl;
     cout << "Parallel Tracks: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
-    cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [not used yet/no hit smearing]." << endl;  
+    cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;  
 
 
     // See https://github.com/glukicov/alignTrack for instructions to generate random numbers
@@ -183,6 +186,35 @@ int main(int argc, char* argv[]){
     string gen_plotFileName = "Tracker_p_gen.txt"; //
     string fit_plotFileName = "Tracker_p_fit.txt"; //
     string contsants_plotFileName = "Tracker_p_constants.txt"; // passing constants (e.g. strawN to python script)
+    string hits_gen_plotFileName = "Tracker_p_hits_gen.txt"; //
+
+     // file streams for constrain, steering, and debug files 
+    ofstream constraint_file(conFileName);
+    ofstream steering_file(strFileName);
+    ofstream debug_mp2(mp2_debugFileName);
+    ofstream debug_calc(cacl_debugFileName);
+    ofstream debug_mis(mis_debugFileName);
+    ofstream debug_geom(geom_debugFileName);
+    ofstream debug_off(off_debugFileName);
+    ofstream debug_mc(MC_debugFileName); 
+    ofstream debug_con(con_debugFileName);
+    ofstream plot_gen(gen_plotFileName);
+    ofstream plot_fit(fit_plotFileName);
+    ofstream contsants_plot(contsants_plotFileName);
+    ofstream plot_hits_gen(hits_gen_plotFileName);
+    
+    // Setting fixed precision for floating point values
+    cout << fixed << setprecision(6); 
+    debug_mp2 << fixed << setprecision(6); 
+    debug_calc << fixed << setprecision(6); 
+    debug_mis << fixed << setprecision(6); 
+    debug_geom << fixed << setprecision(6); 
+    debug_off << fixed << setprecision(6); 
+    debug_mc << fixed << setprecision(6); 
+    debug_con << fixed << setprecision(6);
+    plot_gen << fixed << setprecision(6);
+    plot_fit << fixed << setprecision(6);
+    contsants_plot << fixed << setprecision(6);
           
     //output ROOT file
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
@@ -197,21 +229,37 @@ int main(int argc, char* argv[]){
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, -0.2, 0.2);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
-    TH1F* h_ideal = new TH1F("h_x_ideal", "Ideal X position of the hits: dca (from mis.) + ideal position of a straw",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
+    TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", Tracker::instance()->getModuleN()+1 , 0, Tracker::instance()->getModuleN()+1);
+    TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.1, 0.1);
+    TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 200, -1, 50);
+    TH1F* h_chi2_ndf_track = new TH1F("h_chi2_ndf_track", "Chi2/ndf for generated tracks", 200, -1, 5);
+    TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.1, 0.1);
+    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 200, -1, 50);
+    TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 5);
+    TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 20 , 0, 20);
     h_sigma->SetXTitle( "[cm]");
     h_hits_MP2->SetXTitle( "[cm]");
     h_det->SetXTitle( "DCA [cm]");
     h_true->SetXTitle( "[cm]");
-    h_ideal->SetXTitle( "[cm]");
+    h_recon->SetXTitle( "[cm]");
     h_fit->SetXTitle( "[cm]");
+    h_resiudal_track->SetXTitle( "[cm]");
     h_sigma->SetDirectory(cd_All_Hits);
     h_hits_MP2->SetDirectory(cd_All_Hits);
     h_det->SetDirectory(cd_All_Hits);
     h_true->SetDirectory(cd_All_Hits);
-    h_ideal->SetDirectory(cd_All_Hits);
+    h_recon->SetDirectory(cd_All_Hits);
     h_fit->SetDirectory(cd_All_Hits);
+    h_labels->SetDirectory(cd_All_Hits);
+    h_resiudal_track->SetDirectory(cd_All_Hits);
+    h_chi2_track->SetDirectory(cd_All_Hits);
+    h_chi2_ndf_track->SetDirectory(cd_All_Hits);
+    h_resiudal_fit->SetDirectory(cd_All_Hits);
+    h_chi2_fit->SetDirectory(cd_All_Hits);
+    h_chi2_ndf_fit->SetDirectory(cd_All_Hits);
+    h_hitCount->SetDirectory(cd_All_Hits);
 
     std::stringstream h_name;
     std::stringstream h_title;
@@ -237,34 +285,7 @@ int main(int argc, char* argv[]){
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
     cout << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
-   
-    // file streams for constrain, steering, and debug files 
-    ofstream constraint_file(conFileName);
-    ofstream steering_file(strFileName);
-    ofstream debug_mp2(mp2_debugFileName);
-    ofstream debug_calc(cacl_debugFileName);
-    ofstream debug_mis(mis_debugFileName);
-    ofstream debug_geom(geom_debugFileName);
-    ofstream debug_off(off_debugFileName);
-    ofstream debug_mc(MC_debugFileName); 
-    ofstream debug_con(con_debugFileName);
-    ofstream plot_gen(gen_plotFileName);
-    ofstream plot_fit(fit_plotFileName);
-    ofstream contsants_plot(contsants_plotFileName);
-    
-    // Setting fixed precision for floating point values
-    cout << fixed << setprecision(6); 
-    debug_mp2 << fixed << setprecision(6); 
-    debug_calc << fixed << setprecision(6); 
-    debug_mis << fixed << setprecision(6); 
-    debug_geom << fixed << setprecision(6); 
-    debug_off << fixed << setprecision(6); 
-    debug_mc << fixed << setprecision(6); 
-    debug_con << fixed << setprecision(6);
-    plot_gen << fixed << setprecision(6);
-    plot_fit << fixed << setprecision(6);
-    contsants_plot << fixed << setprecision(6);
-    
+       
     //Passing constants to plotting script
     if (plotBool){
         contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " " 
@@ -309,7 +330,7 @@ int main(int argc, char* argv[]){
         << "                ! (not yet!)"            << endl
         << "*printrecord   1  2      ! debug printout for records" << endl
        // << "" << endl
-        << "*printrecord  -1 -1      ! debug printout for bad data records" << endl
+        << "printrecord  -1 -1      ! debug printout for bad data records" << endl
         //<< "" << endl
         << "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
         << "*dwfractioncut      0.2  ! 0 < value < 0.5"<< endl
@@ -319,11 +340,11 @@ int main(int argc, char* argv[]){
         << " " << endl
         << "*bandwidth 0         ! width of precond. band matrix"<< endl
         << "method HIP 3 0.001 ! diagonalization      "<< endl   // XXX this method ignores constraints 
-        << "method diagonalization 3 0.001 ! diagonalization      "<< endl
+        << "*method diagonalization 3 0.001 ! diagonalization      "<< endl
         << "*method fullMINRES       3 0.01 ! minimal residual     "<< endl
         << "*method sparseMINRES     3 0.01 ! minimal residual     "<< endl
         << "*mrestol      1.0D-8          ! epsilon for MINRES"<< endl
-        << "method inversion       3 0.001 ! Gauss matrix inversion"<< endl
+        << "*method inversion       3 0.001 ! Gauss matrix inversion"<< endl
         << "* last method is applied"<< endl
         << "*matiter      3  ! recalculate matrix in iterations" << endl
         << "printrecord 1 -1" << endl     // XXX produces mpdebug.txt
@@ -335,8 +356,7 @@ int main(int argc, char* argv[]){
     cout<< "Calculating residuals..." << endl;
     //Generating particles with energies: 10-100 [GeV]
     for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  //Track number is set in methods XXX is it the best place for it? 
-        //rand_num = Tracker::instance()->generate_uniform();
-        //float p=pow(10.0, 1+rand_num);
+        //float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
         //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
         scatterError = 0; // set no scatterError for now 
         
@@ -345,22 +365,24 @@ int main(int argc, char* argv[]){
         }
 
         //Generating tracks 
-        MCData generated_MC = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, debugBool);
+        MCData generated_MC = Tracker::instance()->MC(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen, debugBool);
 
             
         for (int hitCount=0; hitCount<generated_MC.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
             //Number of local and global parameters 
-            const int nalc = 2;  
+            //const int nalc = 2;
+            const int nalc = 1; 
             const int nagl = 1;  
 
             int label_mp2 = generated_MC.i_hits[hitCount]; //label to associate hits within different layers with a correct module
 
             //Local derivatives
             float dlc1=Tracker::instance()->getProjectionX(label_mp2);
-            float dlc2=generated_MC.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
-            float derlc[nalc] = {dlc1, dlc2};
+            //float dlc2=generated_MC.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
+            //float derlc[nalc] = {dlc1, dlc2};
+            float derlc[nalc] = {dlc1};
             //Global derivatives
             float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
             float dergl[nagl] = {dgl1};  
@@ -373,7 +395,7 @@ int main(int argc, char* argv[]){
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
            
-            float rMeas_mp2 =  generated_MC.x_hits[hitCount]; 
+            float rMeas_mp2 =  generated_MC.x_residuals[hitCount]; 
             float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; 
 
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
@@ -384,10 +406,17 @@ int main(int argc, char* argv[]){
             h_sigma -> Fill(sigma_mp2);
             h_det->Fill(generated_MC.x_mis_dca[hitCount]);
             h_true->Fill(generated_MC.x_track[hitCount]);
-            h_ideal->Fill(generated_MC.x_ideal[hitCount]);
+            h_recon->Fill(generated_MC.x_recon[hitCount]);
             h_fit->Fill(generated_MC.x_fitted[hitCount]);
             h_labels->Fill(l1);
-           
+            
+            //Calculating Chi2 stats:
+            float residual_gen = generated_MC.residuals_gen[hitCount]; 
+            h_resiudal_track->Fill(residual_gen);
+            residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
+            h_resiudal_fit->Fill(rMeas_mp2); //already used as input to mille
+            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_mp2,2);
+            
             //Fill for hits in layers
             h_name.str("");
             h_name << "h_det_layer_" << hitCount;
@@ -403,14 +432,27 @@ int main(int argc, char* argv[]){
             h3 ->Fill(generated_MC.LR[hitCount]);
 
             //Fill for tracks [once only]
-            if (hitCount ==0){
+            if (hitCount ==generated_MC.hit_count-1){
+                //Filling once per tracks
                 
             }
             if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits
         } // end of hits loop
+        //For generated tracks
+        float chi2_track=residuals_track_sum_2;
+        h_chi2_track->Fill(chi2_track);
+        h_chi2_track->Fit("P"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
+        h_chi2_ndf_track->Fill(chi2_track/generated_MC.hit_count-1);  //ndf=#points - constraint [1 = linear] 
+        //For fitted tracks
+        float chi2_fit=residuals_fit_sum_2;
+        h_chi2_fit->Fill(chi2_fit);
+        h_chi2_ndf_fit->Fill(chi2_fit/generated_MC.hit_count-1);  //ndf=#points - constraint [1 = linear] 
+        //Resetting counters for next track
+        residuals_track_sum_2=0;
+        residuals_fit_sum_2=0;
+        h_hitCount->Fill(generated_MC.hit_count);
         
-      
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
 
@@ -419,6 +461,7 @@ int main(int argc, char* argv[]){
     
        
     } // end of track count
+
     
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;

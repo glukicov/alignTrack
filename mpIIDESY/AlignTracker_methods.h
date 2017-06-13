@@ -22,7 +22,7 @@
 struct MCData {
 	int hit_count; /** Number of hits in detector */
 	std::vector<float> z_hits; /** Z-positions of generated hits in detector */ //distances 
-	std::vector<float> x_hits; /** X-positions of residuals between ideal and real geometry */
+	std::vector<float> x_residuals; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
 	std::vector<int> hit_list;  // same of layers (absolute)
@@ -31,11 +31,12 @@ struct MCData {
 
 	std::vector<float> x_track; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
 	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
-	std::vector<float> x_ideal; // ideal straw hit position + dca (from mis.)
+	std::vector<float> x_recon; // ideal straw hit position + dca (from mis.)
 	std::vector<float> x_fitted; // reconstructed x position of the line 
 	std::vector<float> strawID;
 	std::vector<float> LR;
-
+	std::vector<float> residuals_gen;
+	std::vector<float> residuals_fit; 
 };
 
 // DCA structure - calculated for each hit
@@ -61,20 +62,19 @@ class Tracker {
 	static Tracker* s_instance; // Pointer to instance of class
 
 	int trackNumber; // Number of tracks (i.e. records) to be simulated passing through detector - passed as command line argument
-	float resolution; //decide if this is a constant  [value is assigned in the constructor]
-	float dispX; // [value is assigned in the constructor]
+	static constexpr float dispX=0.05; // manual misalignment
 	
 	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
- 	//Rejection counters // TODO implement as vectors for layers
+ 	//Rejection counters //
     int rejectedHitsDCA=0;
     int multipleHitsLayer=0; // passed over from DCAData
 	
 	//initialising physics variables
- 	//XXX for later MS, MF...
+ 	float resolution; //hit smearing  [value is assigned in the constructor]
 	
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 2; //number of movable detectors/module [independent modules]
+	static const int moduleN = 4; //number of movable detectors/module [independent modules]
 	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
@@ -90,8 +90,8 @@ class Tracker {
 	//[ 6880.52, 6873.29, 6863.50, 6851.12, 6836.09, 6818.54, 6798.46, 6775.87]; 
 
 	//Beam parameters [all distances are in cm]
-	static constexpr float beamPositionLength = strawN*strawSpacing; // max x coordinate = beamPositionLength + beamOffset
-	static constexpr float beamOffset=startingXDistanceStraw0-0.3; // offset from 0 in x
+	static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
+	static constexpr float beamOffset=startingXDistanceStraw0+dispX+0.5*strawSpacing; // offset from 0 in x
 	static constexpr float beamStart = startingZDistanceStraw0-5; // z 
 	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*layerN)*moduleN;  // z  
 	
@@ -134,11 +134,11 @@ class Tracker {
 
 	DCAData DCAHit(std::vector<float>, float, float, bool);
 
-	float GetIdealPoint(int, float, float, std::vector<float>);
+	float HitRecon(int, float, float, std::vector<float>);
 
 	ResidualData GetResiduals(std::vector<float>, std::ofstream&);
 
-	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
+	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement 
 

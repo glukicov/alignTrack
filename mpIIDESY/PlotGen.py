@@ -111,6 +111,19 @@ with open("Tracker_p_fit.txt") as f:
         	fit[i_track][i] = float(number_str[i])
         i_track+=1
 
+gen_hitX=[]
+gen_hitZ=[]
+fit_hitX=[]
+fit_hitZ=[]
+with open("Tracker_p_hits_gen.txt") as f:
+	for line in f:  #Line is a string
+		number_str = line.split()
+		gen_hitX.append(float(number_str[0]))
+		gen_hitZ.append(float(number_str[1]))
+		fit_hitX.append(float(number_str[2]))
+		fit_hitZ.append(float(number_str[3]))
+
+
 ##################PLOTING##############################
 #Misaligned Geometry and Generated tracks 
 plt.figure(1)
@@ -145,6 +158,8 @@ for i_module in range(0, moduleN):
 				axes.add_artist(circle)
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
+for i_hits in range(0, len(gen_hitX)):
+	plt.plot(gen_hitZ[i_hits], gen_hitX[i_hits], color="black", marker = "x")
 
 axes.set_ylim([beamX0-1,beamX1+1])
 axes.set_xlim([beamZ0-1,beamZ1+1])
@@ -183,6 +198,9 @@ for i_module in range(0, moduleN):
 				plt.plot(Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes2.add_artist(circle)	
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
+
+for i_hits in range(0, len(fit_hitX)):
+	plt.plot(fit_hitZ[i_hits], fit_hitX[i_hits], color="brown", marker = "x")
 	
 axes2.set_ylim([beamX0-1,beamX1+1])
 axes2.set_xlim([beamZ0-1,beamZ1+1])

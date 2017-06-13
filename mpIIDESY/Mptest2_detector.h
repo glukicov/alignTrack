@@ -41,7 +41,7 @@ class Detector {
 
 	static Detector* s_instance; // Pointer to instance of class
 
-	static const int trackCount=1; /** Number of tracks to be simulated passing through detector */
+	static const int trackCount=25000; /** Number of tracks to be simulated passing through detector */
  
 	///initialsing physics varibles
 	static const int detectorN = 10; //number of detector layers
