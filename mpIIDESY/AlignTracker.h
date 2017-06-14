@@ -20,7 +20,8 @@
 #include <typeinfo>
 #include <stdlib.h>
 #include <cmath> 
-#include <TH1D.h> 
+#include <TH1D.h>
+#include <TF1.h> 
 #include <TH2D.h> //2D Histo Root class
 #include <TH3D.h> //3D Histo Root class
 #include <TFile.h> // data records for ROOT 

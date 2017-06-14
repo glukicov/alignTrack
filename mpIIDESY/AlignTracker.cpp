@@ -233,11 +233,11 @@ int main(int argc, char* argv[]){
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", Tracker::instance()->getModuleN()+1 , 0, Tracker::instance()->getModuleN()+1);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.1, 0.1);
-    TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 200, -1, 50);
-    TH1F* h_chi2_ndf_track = new TH1F("h_chi2_ndf_track", "Chi2/ndf for generated tracks", 200, -1, 5);
+    TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 39);
+    TH1F* h_chi2_ndf_track = new TH1F("h_chi2_ndf_track", "Chi2/ndf for generated tracks", 60, -1, 5);
     TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.1, 0.1);
-    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 200, -1, 50);
-    TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 5);
+    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 200, -1, 500);
+    TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 30);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 20 , 0, 20);
     h_sigma->SetXTitle( "[cm]");
     h_hits_MP2->SetXTitle( "[cm]");
@@ -442,12 +442,11 @@ int main(int argc, char* argv[]){
         //For generated tracks
         float chi2_track=residuals_track_sum_2;
         h_chi2_track->Fill(chi2_track);
-        h_chi2_track->Fit("P"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
-        h_chi2_ndf_track->Fill(chi2_track/generated_MC.hit_count-1);  //ndf=#points - constraint [1 = linear] 
+        h_chi2_ndf_track->Fill(chi2_track/generated_MC.hit_count);  //ndf=#points - constraint [1 = linear] hit count goes from 0 to N points -1 
         //For fitted tracks
         float chi2_fit=residuals_fit_sum_2;
         h_chi2_fit->Fill(chi2_fit);
-        h_chi2_ndf_fit->Fill(chi2_fit/generated_MC.hit_count-1);  //ndf=#points - constraint [1 = linear] 
+        h_chi2_ndf_fit->Fill(chi2_fit/generated_MC.hit_count);  //ndf=#points - constraint [1 = linear] 
         //Resetting counters for next track
         residuals_track_sum_2=0;
         residuals_fit_sum_2=0;
@@ -502,8 +501,21 @@ int main(int argc, char* argv[]){
     debug_con.close();
     
     //ROOT stuff
+    cout << endl;
+    cout << "-------------------------------------------------------------------------"<< endl; 
+    cout << "ROOT fitting parameters:" << endl; 
+    
+    TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
+    chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
+    h_chi2_track->Fit("chi2pdf"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
+    TF1* chi2pdf_ndf = new TF1("chi2pdf_ndf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0, 6);
+    chi2pdf_ndf->SetParameters(8, 0.8, h_chi2_ndf_track->Integral("WIDTH")); 
+    h_chi2_ndf_track->Fit("chi2pdf_ndf");
+    
     file->Write();
     file->Close(); //good habit!
+    cout << "-------------------------------------------------------------------------"<< endl; 
+    cout << endl;
     
     cout << fixed << setprecision(4);
     t_cpu = clock() - t_cpu;

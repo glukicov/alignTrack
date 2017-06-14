@@ -196,7 +196,7 @@ float Tracker::HitRecon(int x_det_ID, float x_det_dca, float LRSign, vector<floa
 
 ResidualData Tracker::GetResiduals(vector<float> ReconPoints, ofstream& plot_fit){
 
-    bool StrongDebugBool=true;
+    bool StrongDebugBool=false;
     ResidualData resData;
     float SumX=0;
     for (int i_size=0; i_size<ReconPoints.size(); i_size++){
