@@ -71,16 +71,18 @@ class Tracker {
     int multipleHitsLayer=0; // passed over from DCAData
 	
 	//initialising physics variables
- 	float resolution; //hit smearing  [value is assigned in the constructor]
+ 	//float resolution; //hit smearing  [value is assigned in the constructor]
+
+ 	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
 	
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 4; //number of movable detectors/module [independent modules]
-	static const int strawN = 4; //number of measurement elements in x direction  [number of straws per layer]
+	static const int moduleN = 6; //number of movable detectors/module [independent modules]
+	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
 	static const int layerTotalN = layerN*viewN*moduleN; // total number of layers 
 	static constexpr float startingZDistanceStraw0 = 5.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
-	static constexpr float startingXDistanceStraw0 = 0.0; // distance of the very first layer [the first straw] in x // [cm]
+	static constexpr float startingXDistanceStraw0 = -2.0; // distance of the very first layer [the first straw] in x // [cm]
 	static constexpr float strawSpacing = 0.606;  // x distance between straws in a layer
 	static constexpr float layerSpacing = 0.515; // z distance between layers in a view
 	static constexpr float viewSpacing = 2.020; // z distance between views in a modules
@@ -90,7 +92,8 @@ class Tracker {
 	//[ 6880.52, 6873.29, 6863.50, 6851.12, 6836.09, 6818.54, 6798.46, 6775.87]; 
 
 	//Beam parameters [all distances are in cm]
-	static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
+	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
+	static constexpr float beamPositionLength = 2; 
 	static constexpr float beamOffset=startingXDistanceStraw0+dispX+0.5*strawSpacing; // offset from 0 in x
 	static constexpr float beamStart = startingZDistanceStraw0-5; // z 
 	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*layerN)*moduleN;  // z  
@@ -138,7 +141,7 @@ class Tracker {
 
 	ResidualData GetResiduals(std::vector<float>, std::ofstream&);
 
-	MCData MC(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
+	MCData MC_launch(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement 
 

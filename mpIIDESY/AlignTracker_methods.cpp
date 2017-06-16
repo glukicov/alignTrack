@@ -14,8 +14,6 @@ Constructor for tracker class.
  */
 Tracker::Tracker() {
   // non-static variables definition here 
-    resolution=0.015;  // 150um = 0.015 cm for hit smearing
-    //dispX = 0.05;  // manual displacement by 0.05 cm = 500 um
 
 }
 
@@ -228,7 +226,7 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints, ofstream& plot_fit
   
    @return MCData struct containing data about detector hits.
 */
-MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, ofstream& plot_gen, ofstream& plot_hits_gen, bool debugBool) {
+MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, ofstream& plot_gen, ofstream& plot_hits_gen, bool debugBool) {
   
     // Set up new container for track data, with hit count set to zero
     MCData MC;
@@ -308,7 +306,7 @@ MCData Tracker::MC(float scatterError, ofstream& debug_calc, ofstream& debug_off
 	      
 	            //Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
 	            MC.z_hits.push_back(distance[z_counter]);
-	            MC.hit_sigmas.push_back(resolution); 
+	            MC.hit_sigmas.push_back(Tracker::instance()->getResolution()); 
 	                
 	            //Sanity Plots: Hits
 	            MC.x_mis_dca.push_back(x_mis_dca);
@@ -357,7 +355,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
     		for (int i_layer=0; i_layer<layerN; i_layer++){
     			distance.push_back(dZ); // vector will contain all z coordinates of layers 
     			layer.push_back(layer_n);  // layer label array [starting from 0th layer]
-				resolutionLayer.push_back(resolution); //resolution in each layer
+				//resolutionLayer.push_back(resolution); //resolution in each layer
 				projectionX.push_back(float(1.0));  // x projection of hits in each layer
 				layer_n++; 
     			if (i_layer==0){ dZ+=layerSpacing; } // increment spacing between layers in a view once only 
@@ -433,7 +431,10 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
             misDispX=0;
             sign=1.0;
         }
-        else{
+        if (i_module==3 || i_module==4){
+            misDispX=dispX*2;
+        }
+        else if(i_module==1 || i_module==2){
             misDispX=dispX;
         }
         float dX = startingXDistanceStraw0+(misDispX*sign); // starting on the x-axis (z, 0+disp)

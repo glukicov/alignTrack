@@ -200,7 +200,7 @@ for i_module in range(0, moduleN):
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
 for i_hits in range(0, len(fit_hitX)):
-	plt.plot(fit_hitZ[i_hits], fit_hitX[i_hits], color="brown", marker = "x")
+	plt.plot(fit_hitZ[i_hits], fit_hitX[i_hits], color="black", marker = "x")
 	
 axes2.set_ylim([beamX0-1,beamX1+1])
 axes2.set_xlim([beamZ0-1,beamZ1+1])
