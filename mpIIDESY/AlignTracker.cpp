@@ -224,6 +224,7 @@ int main(int argc, char* argv[]){
     TDirectory* cd_Modules = file->mkdir("Modules");
     TDirectory* cd_Views = file->mkdir("Views");
     TDirectory* cd_Tracks = file->mkdir("Tracks");
+    TDirectory* cd_Debug = file->mkdir("Debug");
      // Book histograms [once only]
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  500,  Tracker::instance()->getResolution()-0.01, Tracker::instance()->getResolution()+0.01); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, -0.2, 0.2);
@@ -239,6 +240,14 @@ int main(int argc, char* argv[]){
     TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 200, -1, 1500);
     TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 30);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 20 , 0, 20);
+
+    TH1F* h_det_large = new TH1F("h_det_large", "large DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+    TH1F* h_det_normal = new TH1F("h_det_normal", "normal DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+    TH1I* h_id_large = new TH1I("h_id_large", "ID for DCA too large", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+    TH1I* h_id_normal = new TH1I("h_id_normal", "ID for DCA normal", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+    TH1I* h_moduleID_large = new TH1I("h_moduleID_large", "Module ID for DCA large", Tracker::instance()->getModuleN(), 0, Tracker::instance()->getModuleN());
+
+
     h_sigma->SetXTitle( "[cm]");
     h_hits_MP2->SetXTitle( "[cm]");
     h_det->SetXTitle( "DCA [cm]");
@@ -260,6 +269,11 @@ int main(int argc, char* argv[]){
     h_chi2_fit->SetDirectory(cd_All_Hits);
     h_chi2_ndf_fit->SetDirectory(cd_All_Hits);
     h_hitCount->SetDirectory(cd_All_Hits);
+    h_det_large  ->SetDirectory(cd_Debug); 
+    h_det_normal->SetDirectory(cd_Debug);
+    h_id_large ->SetDirectory(cd_Debug);
+    h_id_normal ->SetDirectory(cd_Debug);
+    h_moduleID_large->SetDirectory(cd_Debug);
 
     std::stringstream h_name;
     std::stringstream h_title;
@@ -267,12 +281,12 @@ int main(int argc, char* argv[]){
     for (int i = 0 ; i < Tracker::instance()->getLayerTotalN(); i++) {
         h_name.str(""); h_name << "h_det_layer_" << i;
         h_title.str(""); h_title << "DCA in layer " << i;
-        auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 500,  -0.05, 0.4);
+        auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 00,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
         h1->GetXaxis()->SetTitle("[cm]");
         
         h_name.str(""); h_name << "h_strawID_layer_" << i;
         h_title.str(""); h_title << "strawID in layer " << i;
-        auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), 5, -1, Tracker::instance()->getStrawN());
+        auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
         h2->GetXaxis()->SetTitle("Straw ID [0-31]");
 
         h_name.str(""); h_name << "h_LR_layer_" << i;
@@ -409,6 +423,17 @@ int main(int argc, char* argv[]){
             h_recon->Fill(generated_MC.x_recon[hitCount]);
             h_fit->Fill(generated_MC.x_fitted[hitCount]);
             h_labels->Fill(l1);
+
+            //Debug Plots
+            if (generated_MC.x_mis_dca[hitCount]>0.5*Tracker::instance()->getStrawSpacing()){
+                h_det_large ->Fill(generated_MC.x_mis_dca[hitCount]);
+                h_id_large ->Fill(generated_MC.strawID[hitCount]);
+                h_moduleID_large -> Fill(generated_MC.largeDCA_moduleID[hitCount]);
+            }
+            if (generated_MC.x_mis_dca[hitCount]<=0.5*Tracker::instance()->getStrawSpacing()){
+                h_det_normal->Fill(generated_MC.x_mis_dca[hitCount]);
+                h_id_normal ->Fill(generated_MC.strawID[hitCount]);
+            }
             
             //Calculating Chi2 stats:
             float residual_gen = generated_MC.residuals_gen[hitCount]; 

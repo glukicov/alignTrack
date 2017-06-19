@@ -36,7 +36,10 @@ struct MCData {
 	std::vector<float> strawID;
 	std::vector<float> LR;
 	std::vector<float> residuals_gen;
-	std::vector<float> residuals_fit; 
+	std::vector<int> residuals_fit; 
+
+	//DEBUG
+	std::vector<float> largeDCA_moduleID;
 };
 
 // DCA structure - calculated for each hit
@@ -71,12 +74,12 @@ class Tracker {
     int multipleHitsLayer=0; // passed over from DCAData
 	
 	//initialising physics variables
- 	//float resolution; //hit smearing  [value is assigned in the constructor]
+ 	// MF + inhomogeneity, E_loss, MS
 
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
 	
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 6; //number of movable detectors/module [independent modules]
+	static const int moduleN = 4; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
@@ -99,7 +102,7 @@ class Tracker {
 	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*layerN)*moduleN;  // z  
 	
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
-	static constexpr float strawRadius = 0.25; //thickness/width of a plane (X0) // [cm]
+	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
 
 	int hitLayerCounter; 

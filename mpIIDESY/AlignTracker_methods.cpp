@@ -238,7 +238,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     xReconPoints.clear();
     
    //Track parameters for rand-generated line MC [start and end positions outside of detectors]
-    float x0 = 0.6*beamPositionLength * Tracker::generate_uniform(); //uniform vertex
+    //float x0 = 0.6*beamPositionLength * Tracker::generate_uniform(); //uniform vertex
+    float x0 = Tracker::generate_uniform(); //XXX
 
     float xTrack=x0; //true track position always the same for parallel track
         
@@ -280,7 +281,13 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            MC.strawID.push_back(x_mis_ID);
 	            MC.LR.push_back(x_mis_LRSign);
 
-	            //Recording hit information
+                //DEBUG
+                if (x_mis_dca > 0.5*strawSpacing){
+                    MC.largeDCA_moduleID.push_back(i_module);
+                    //cout << "i_module= " << i_module << endl;
+                }
+
+                //Recording hit information
 	            MC.hit_list.push_back(hitLayerCounter); //push back the absolute layer # into the hit list
 	            MC.hit_bool.push_back(1);  // 1 = hit
 	            stringstream absolute_hit;
@@ -431,9 +438,9 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
             misDispX=0;
             sign=1.0;
         }
-        if (i_module==3 || i_module==4){
-            misDispX=dispX*2;
-        }
+        // if (i_module==3 || i_module==4){
+        //     misDispX=dispX*2;
+        // }
         else if(i_module==1 || i_module==2){
             misDispX=dispX;
         }
