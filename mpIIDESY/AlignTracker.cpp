@@ -238,12 +238,12 @@ int main(int argc, char* argv[]){
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 50);
     TH1F* h_chi2_ndf_track = new TH1F("h_chi2_ndf_track", "Chi2/ndf for generated tracks", 60, -1, 5);
-    TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.4, 0.4);
-    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 200, -1, 1500);
+    TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.6, 0.6);
+    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 1500, -1, 1000);
     TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 30);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
-    TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  500,  -0.1, 0.1);
+    TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  499,  -0.1, 0.1);
 
     TH1F* h_det_large = new TH1F("h_det_large", "large DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_det_normal = new TH1F("h_det_normal", "normal DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
@@ -508,7 +508,8 @@ int main(int argc, char* argv[]){
             h_resiudal_track->Fill(residual_gen);
             residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_resiudal_fit->Fill(rMeas_mp2); //already used as input to mille
-            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_mp2,2);
+            float sigma_true = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,2)));
+            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_true,2);
             
             //Fill for hits in layers
             h_name.str("");
@@ -607,12 +608,9 @@ int main(int argc, char* argv[]){
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
     h_chi2_track->Fit("chi2pdf"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
-    //h_chi2_ndf_fit->Fit("chi2pdf");
-    TF1* chi2pdf_ndf = new TF1("chi2pdf_ndf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0, 6);
-    //chi2pdf_ndf->SetParameters(8, 0.8, h_chi2_ndf_track->Integral("WIDTH")); 
-   // h_chi2_fit->Fit("chi2pdf_ndf");
+    //h_chi2_fit->Fit("chi2pdf");
     h_resiudal_track->Fit("gaus");
-    //h_resiudal_fit->Fit("gaus", -0.025, 0.25); //TODO fit 3 gaussians
+    //h_resiudal_fit->Fit("gaus"); 
     
     file->Write();
     file->Close(); //good habit!
