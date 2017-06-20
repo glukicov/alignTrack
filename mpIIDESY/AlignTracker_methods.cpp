@@ -238,8 +238,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     xReconPoints.clear();
     
    //Track parameters for rand-generated line MC [start and end positions outside of detectors]
-    //float x0 = 0.6*beamPositionLength * Tracker::generate_uniform(); //uniform vertex
-    float x0 = Tracker::generate_uniform(); //XXX
+    float x0 = 2.0 * Tracker::generate_uniform()-1.0; //uniform vertex
+    //float x0 = Tracker::generate_uniform(); //XXX
 
     float xTrack=x0; //true track position always the same for parallel track
         
@@ -282,10 +282,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            MC.LR.push_back(x_mis_LRSign);
 
                 //DEBUG
-                if (x_mis_dca > 0.5*strawSpacing){
-                    MC.largeDCA_moduleID.push_back(i_module);
-                    //cout << "i_module= " << i_module << endl;
-                }
+                
 
                 //Recording hit information
 	            MC.hit_list.push_back(hitLayerCounter); //push back the absolute layer # into the hit list
@@ -385,7 +382,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
                         mod_lyr_strawIdealPosition[i_module][i_view][i_layer].push_back(dX); 
                         dX=strawSpacing+dX; //while we are in the same layer: increment straw spacing in x
                     } //end of Straws loop
-            if (i_view==0){ dX=layerDisplacement; } //set displacement in x for the next layer in the view
+            if (i_view==0){ dX=layerDisplacement+startingXDistanceStraw0; } //set displacement in x for the next layer in the view
             if (i_view==1){ dX=startingXDistanceStraw0; } //set displacement in x for the next layer in the view
             }//end of Layers loop
         }// end of View loop
@@ -438,12 +435,21 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
             misDispX=0;
             sign=1.0;
         }
-        // if (i_module==3 || i_module==4){
-        //     misDispX=dispX*2;
-        // }
-        else if(i_module==1 || i_module==2){
-            misDispX=dispX;
+        if (i_module==1){
+             misDispX=0.05;
         }
+        else if(i_module==2){
+            misDispX=0.1;
+        }
+
+        else if(i_module==3){
+            misDispX=-0.03;
+        }
+
+        else if(i_module==4){
+            misDispX=-0.045;
+        }
+        
         float dX = startingXDistanceStraw0+(misDispX*sign); // starting on the x-axis (z, 0+disp)
     	    	sdevX.push_back(misDispX*sign);  // vector of misalignment 
         mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
@@ -455,11 +461,11 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
                         mod_lyr_strawMisPosition[i_module][i_view][i_layer].push_back(dX); 
                         dX=strawSpacing+dX; //while we are in the same layer: increment straw spacing in x
                     } //end of Straws loop
-            if (i_view==0){ dX=layerDisplacement+(misDispX*sign); } //set displacement in x for the next layer in the view
+            if (i_view==0){ dX=layerDisplacement+startingXDistanceStraw0+(misDispX*sign); } //set displacement in x for the next layer in the view
             if (i_view==1){ dX=startingXDistanceStraw0+(misDispX*sign); } //set displacement in x for the next layer in the view
             }//end of Layers loop
         }// end of View loop 
-        sign=-sign;
+        sign=sign;
     }//Modules  
 
 

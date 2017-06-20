@@ -229,9 +229,9 @@ int main(int argc, char* argv[]){
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  500,  Tracker::instance()->getResolution()-0.01, Tracker::instance()->getResolution()+0.01); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, -0.2, 0.2);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
-    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
-    TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
-    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -Tracker::instance()->getBeamOffset()-1, Tracker::instance()->getBeamPositionLength()+1);
+    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  300,  -1.5, 1.5);
+    TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -1.5, 1.5);
+    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", Tracker::instance()->getModuleN()+1 , 0, Tracker::instance()->getModuleN()+1);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 50);
@@ -246,8 +246,10 @@ int main(int argc, char* argv[]){
     TH1I* h_id_large = new TH1I("h_id_large", "ID for DCA too large", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     TH1I* h_id_normal = new TH1I("h_id_normal", "ID for DCA normal", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     TH1I* h_moduleID_large = new TH1I("h_moduleID_large", "Module ID for DCA large", Tracker::instance()->getModuleN(), 0, Tracker::instance()->getModuleN());
-
-
+    TH1F* h_reconMinusTrue = new TH1F("h_reconMinusTrue", "Reconstructed - Fitted X position of the hits in ideal detector",  500,  0, 0.08);
+    TH1F* h_rightTail = new TH1F("h_rightTail", "Reconstructed X hits > 1",  50, 0.9, 1.1);
+    TH1F* h_leftTail = new TH1F("h_leftTail", "Reconstructed X hits < -1",  50,  -0.9,-1.1);
+    
     h_sigma->SetXTitle( "[cm]");
     h_hits_MP2->SetXTitle( "[cm]");
     h_det->SetXTitle( "DCA [cm]");
@@ -274,6 +276,9 @@ int main(int argc, char* argv[]){
     h_id_large ->SetDirectory(cd_Debug);
     h_id_normal ->SetDirectory(cd_Debug);
     h_moduleID_large->SetDirectory(cd_Debug);
+    h_reconMinusTrue->SetDirectory(cd_Debug);
+    h_rightTail->SetDirectory(cd_Debug);
+    h_leftTail->SetDirectory(cd_Debug);
 
     std::stringstream h_name;
     std::stringstream h_title;
@@ -423,12 +428,24 @@ int main(int argc, char* argv[]){
             h_recon->Fill(generated_MC.x_recon[hitCount]);
             h_fit->Fill(generated_MC.x_fitted[hitCount]);
             h_labels->Fill(l1);
+            h_reconMinusTrue->Fill(generated_MC.x_track[hitCount]-generated_MC.x_fitted[hitCount]);
+
 
             //Debug Plots
+            if (generated_MC.x_recon[hitCount] > 1.0){
+                h_rightTail -> Fill(generated_MC.x_recon[hitCount]);
+                h_rightTail -> Fill(2-generated_MC.x_recon[hitCount]);
+            }
+
+            if ( generated_MC.x_recon[hitCount] < -1.0){
+                h_leftTail -> Fill(generated_MC.x_recon[hitCount]);
+                h_leftTail -> Fill(-2+abs(generated_MC.x_recon[hitCount]));
+            }
+
             if (generated_MC.x_mis_dca[hitCount]>0.5*Tracker::instance()->getStrawSpacing()){
                 h_det_large ->Fill(generated_MC.x_mis_dca[hitCount]);
                 h_id_large ->Fill(generated_MC.strawID[hitCount]);
-                h_moduleID_large -> Fill(generated_MC.largeDCA_moduleID[hitCount]);
+                h_moduleID_large -> Fill(label_mp2-1); // convert back to normal labelling 
             }
             if (generated_MC.x_mis_dca[hitCount]<=0.5*Tracker::instance()->getStrawSpacing()){
                 h_det_normal->Fill(generated_MC.x_mis_dca[hitCount]);
