@@ -318,6 +318,12 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            MC.x_hit_recon.push_back(xRecon);   // Reconstructed hit position
 	            MC.residuals_gen.push_back(residualTrack); // Residual between the XHit and the generated track
                 MC.x_hit_true.push_back(xHit);  //True (smeared) hit position
+
+                MC.Module_i.push_back(i_module);
+                MC.View_i.push_back(i_view);
+                MC.Layer_i.push_back(i_layer);
+                MC.Straw_i.push_back(x_mis_ID);
+
 	            //Sanity Plots: Tracks
 	            if (MC.hit_count == 0){
 	                           
@@ -429,7 +435,6 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
      
     //Now misaligning detectors in x
     float misDispX; // effective misalignment 
-    float sign = -1.0; // for up/down +/- direction
     for (int i_module=0; i_module<moduleN; i_module++){
     	//Fix first and last modules with no misalignment
         if (i_module==0 || i_module==moduleN-1){
@@ -439,7 +444,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
         else{
             misDispX=dispX[i_module];
         }       
-        float dX = startingXDistanceStraw0+(misDispX*sign); // starting on the x-axis (z, 0+disp)
+        float dX = startingXDistanceStraw0+(misDispX); // starting on the x-axis (z, 0+disp)
     	    	sdevX.push_back(misDispX);  // vector to store the actual of misalignment 
         mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
          for (int i_view=0; i_view<viewN; i_view++){

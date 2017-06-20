@@ -225,6 +225,7 @@ int main(int argc, char* argv[]){
     TDirectory* cd_Views = file->mkdir("Views");
     TDirectory* cd_Tracks = file->mkdir("Tracks");
     TDirectory* cd_Debug = file->mkdir("Debug");
+    TDirectory* cd_Straws = file->mkdir("Straws");
      // Book histograms [once only]
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  500,  Tracker::instance()->getResolution()-0.01, Tracker::instance()->getResolution()+0.01); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, -0.2, 0.2);
@@ -242,7 +243,7 @@ int main(int argc, char* argv[]){
     TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 30);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
-    TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  500,  -2, 2);
+    TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  500,  -0.1, 0.1);
 
     TH1F* h_det_large = new TH1F("h_det_large", "large DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_det_normal = new TH1F("h_det_normal", "normal DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
@@ -251,6 +252,8 @@ int main(int argc, char* argv[]){
     TH1I* h_moduleID_large = new TH1I("h_moduleID_large", "Module ID for DCA large", Tracker::instance()->getModuleN(), 0, Tracker::instance()->getModuleN());
     TH1F* h_rightTail = new TH1F("h_rightTail", "Reconstructed X hits > 1",  50, 0.9, 1.1);
     TH1F* h_leftTail = new TH1F("h_leftTail", "Reconstructed X hits < -1",  50,  -0.9,-1.1);
+    TH1F* h_rightTail_true = new TH1F("h_rightTail_true", "True X hits > 1",  50, 0.9, 1.1);
+    TH1F* h_leftTail_true = new TH1F("h_leftTail_true", "True X hits < -1",  50,  -0.9,-1.1);
     
     h_sigma->SetXTitle( "[cm]");
     h_hits_MP2->SetXTitle( "[cm]");
@@ -275,17 +278,17 @@ int main(int argc, char* argv[]){
     h_chi2_ndf_fit->SetDirectory(cd_All_Hits);
     h_hitCount->SetDirectory(cd_All_Hits);
     h_hits_true->SetDirectory(cd_All_Hits);
-    h_reconMinusTrue_hits->SetDirectory(cd_Debug);
-    h_reconMinusTrue_track->SetDirectory(cd_Debug);
-
+    h_reconMinusTrue_hits->SetDirectory(cd_All_Hits);
+    h_reconMinusTrue_track->SetDirectory(cd_All_Hits);
     h_det_large  ->SetDirectory(cd_Debug); 
     h_det_normal->SetDirectory(cd_Debug);
     h_id_large ->SetDirectory(cd_Debug);
     h_id_normal ->SetDirectory(cd_Debug);
     h_moduleID_large->SetDirectory(cd_Debug);
-    
     h_rightTail->SetDirectory(cd_Debug);
     h_leftTail->SetDirectory(cd_Debug);
+    h_rightTail_true->SetDirectory(cd_Debug);
+    h_leftTail_true->SetDirectory(cd_Debug);
     
 
     std::stringstream h_name;
@@ -321,6 +324,21 @@ int main(int argc, char* argv[]){
         hm->GetXaxis()->SetTitle("[cm]");
         hm->SetDirectory(cd_Modules);
     }
+
+    for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
+         for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer< Tracker::instance()->getLayerN(); i_layer++){ 
+                for (int i_straw=0; i_straw< Tracker::instance()->getStrawN(); i_straw++){
+                        h_name.str(""); h_name << "h_DCA_Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
+                        h_title.str(""); h_title<< "DCA in Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
+                        auto hs = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 500, -0.1, 0.4);
+                        hs->GetXaxis()->SetTitle("[cm]");
+                        hs->SetDirectory(cd_Straws);
+                }
+            }
+        }
+    }
+
 
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -465,6 +483,16 @@ int main(int argc, char* argv[]){
                 h_leftTail -> Fill(-2+abs(generated_MC.x_hit_recon[hitCount]));
             }
 
+            if (generated_MC.x_hit_true[hitCount] > 1.0){
+                h_rightTail_true -> Fill(generated_MC.x_hit_true[hitCount]);
+                h_rightTail_true -> Fill(2-generated_MC.x_hit_true[hitCount]);
+            }
+
+            if ( generated_MC.x_hit_true[hitCount] < -1.0){
+                h_leftTail_true -> Fill(generated_MC.x_hit_true[hitCount]);
+                h_leftTail_true -> Fill(-2+abs(generated_MC.x_hit_true[hitCount]));
+            }
+
             if (generated_MC.x_mis_dca[hitCount]>0.5*Tracker::instance()->getStrawSpacing()){
                 h_det_large ->Fill(generated_MC.x_mis_dca[hitCount]);
                 h_id_large ->Fill(generated_MC.strawID[hitCount]);
@@ -500,6 +528,11 @@ int main(int argc, char* argv[]){
             h_name << "Modules/h_Residuals_module_" << label_mp2-1; //convert back to sensible labelling 0, 1 ...
             TH1F* h4 = (TH1F*)file->Get(h_name.str().c_str() );
             h4->Fill(rMeas_mp2);
+
+            h_name.str("");
+            h_name << "Straws/h_DCA_Module_" << generated_MC.Module_i[hitCount] <<"_View_" <<  generated_MC.View_i[hitCount] << "_Layer_"<< generated_MC.Layer_i[hitCount]<<"_Straw_"<< generated_MC.Straw_i[hitCount];
+            TH1F* h5 = (TH1F*)file->Get(h_name.str().c_str() );       
+            h5->Fill(generated_MC.x_mis_dca[hitCount]);
 
             
             if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
@@ -570,7 +603,7 @@ int main(int argc, char* argv[]){
     cout << endl;
     cout << "-------------------------------------------------------------------------"<< endl; 
     cout << "ROOT fitting parameters:" << endl; 
-    
+    h_reconMinusTrue_track->Fit("gaus");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
     h_chi2_track->Fit("chi2pdf"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
