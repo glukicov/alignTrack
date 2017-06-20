@@ -29,10 +29,11 @@ struct MCData {
 	std::vector<int> hit_bool;  // same of layers (absolute) +1 = hit 0=no hit
  	std::vector<string> absolute_straw_hit; // MVLS - 5 digit string (e.g. 111-3 = M1V1L1S3; 11113=M1V1L1S13)
 
-	std::vector<float> x_track; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
+	std::vector<float> x_track_true; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
+	std::vector<float> x_track_recon; // reconstructed x position of the line 
 	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
-	std::vector<float> x_recon; // ideal straw hit position + dca (from mis.)
-	std::vector<float> x_fitted; // reconstructed x position of the line 
+	std::vector<float> x_hit_recon; // ideal straw hit position + dca (from mis.)
+	std::vector<float> x_hit_true; // true xHit position
 	std::vector<float> strawID;
 	std::vector<float> LR;
 	std::vector<float> residuals_gen;
@@ -65,7 +66,6 @@ class Tracker {
 	static Tracker* s_instance; // Pointer to instance of class
 
 	int trackNumber; // Number of tracks (i.e. records) to be simulated passing through detector - passed as command line argument
-	static constexpr float dispX=0.05; // manual misalignment
 	
 	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
@@ -76,8 +76,10 @@ class Tracker {
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
+    float dispX[8] = {0.05, 0.05, 0.1, -0.035, -0.045, 0.05, 0.05, 0.05}; // manual misalignment
+
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
-	
+ 	  
 	// define detector geometry [all distances are in cm]
 	static const int moduleN = 6; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
@@ -96,10 +98,10 @@ class Tracker {
 
 	//Beam parameters [all distances are in cm]
 	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
-	static constexpr float beamPositionLength = 2; 
-	static constexpr float beamOffset=startingXDistanceStraw0+dispX+0.5*strawSpacing; // offset from 0 in x
-	static constexpr float beamStart = startingZDistanceStraw0-5; // z 
-	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*layerN)*moduleN;  // z  
+	static constexpr float beamPositionLength = 2.0; 
+	static constexpr float beamOffset=1.0; // offset from 0 in x
+	static constexpr float beamStart = startingZDistanceStraw0-5.0; // z 
+	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*float(layerN))*float(moduleN);  // z  
 	
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
@@ -236,10 +238,7 @@ class Tracker {
 		return moduleN;
 	}
 
-    float getDispX(){
-		return dispX;
-	}
-	
+    	
 	float getBeamStart(){
 		return beamStart;
 	}

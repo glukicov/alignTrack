@@ -13,8 +13,8 @@ Tracker* Tracker::s_instance = NULL;
 Constructor for tracker class.
  */
 Tracker::Tracker() {
-  // non-static variables definition here 
-
+    // non-static variables definition here 
+    
 }
 
 /** 
@@ -238,7 +238,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     xReconPoints.clear();
     
    //Track parameters for rand-generated line MC [start and end positions outside of detectors]
-    float x0 = 2.0 * Tracker::generate_uniform()-1.0; //uniform vertex
+    float x0 = beamPositionLength * Tracker::generate_uniform()-1.0; //uniform vertex
     //float x0 = Tracker::generate_uniform(); //XXX
 
     float xTrack=x0; //true track position always the same for parallel track
@@ -313,10 +313,11 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            MC.hit_sigmas.push_back(Tracker::instance()->getResolution()); 
 	                
 	            //Sanity Plots: Hits
-	            MC.x_mis_dca.push_back(x_mis_dca);
-	            MC.x_track.push_back(xTrack);
-	            MC.x_recon.push_back(xRecon);
-	            MC.residuals_gen.push_back(residualTrack);
+	            MC.x_mis_dca.push_back(x_mis_dca); // DCA
+	            MC.x_track_true.push_back(xTrack);  // True (gen.) track position
+	            MC.x_hit_recon.push_back(xRecon);   // Reconstructed hit position
+	            MC.residuals_gen.push_back(residualTrack); // Residual between the XHit and the generated track
+                MC.x_hit_true.push_back(xHit);  //True (smeared) hit position
 	            //Sanity Plots: Tracks
 	            if (MC.hit_count == 0){
 	                           
@@ -334,7 +335,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     // and need to do a simultaneous fit once - to return #hits worth of residuals]
     ResidualData res_Data = Tracker::GetResiduals(xReconPoints, plot_fit);
     MC.x_residuals = res_Data.residuals;
-    MC.x_fitted=res_Data.x_fitted; //Sanity Plot 
+    MC.x_track_recon=res_Data.x_fitted; //Sanity Plot: fitted (reconstructed) x of the track
     
     if(debugBool){
                         plot_gen << x0 << " " << x0 << " " << beamStart << " " << beamStop << " ";
@@ -432,26 +433,14 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     for (int i_module=0; i_module<moduleN; i_module++){
     	//Fix first and last modules with no misalignment
         if (i_module==0 || i_module==moduleN-1){
-            misDispX=0;
-            sign=1.0;
+            misDispX=0;    
         }
-        if (i_module==1){
-             misDispX=0.05;
-        }
-        else if(i_module==2){
-            misDispX=0.1;
-        }
-
-        else if(i_module==3){
-            misDispX=-0.03;
-        }
-
-        else if(i_module==4){
-            misDispX=-0.045;
-        }
-        
+        // the rest of the modules get misalignment parameter from the vector 
+        else{
+            misDispX=dispX[i_module];
+        }       
         float dX = startingXDistanceStraw0+(misDispX*sign); // starting on the x-axis (z, 0+disp)
-    	    	sdevX.push_back(misDispX*sign);  // vector of misalignment 
+    	    	sdevX.push_back(misDispX);  // vector to store the actual of misalignment 
         mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
          for (int i_view=0; i_view<viewN; i_view++){
          	 mod_lyr_strawMisPosition[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
@@ -461,11 +450,11 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
                         mod_lyr_strawMisPosition[i_module][i_view][i_layer].push_back(dX); 
                         dX=strawSpacing+dX; //while we are in the same layer: increment straw spacing in x
                     } //end of Straws loop
-            if (i_view==0){ dX=layerDisplacement+startingXDistanceStraw0+(misDispX*sign); } //set displacement in x for the next layer in the view
-            if (i_view==1){ dX=startingXDistanceStraw0+(misDispX*sign); } //set displacement in x for the next layer in the view
+            if (i_view==0){ dX=layerDisplacement+startingXDistanceStraw0+(misDispX); } //set displacement in x for the next layer in the view
+            if (i_view==1){ dX=startingXDistanceStraw0+(misDispX); } //set displacement in x for the next layer in the view
             }//end of Layers loop
         }// end of View loop 
-        sign=sign;
+        
     }//Modules  
 
 

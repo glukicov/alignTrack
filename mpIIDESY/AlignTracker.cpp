@@ -229,24 +229,26 @@ int main(int argc, char* argv[]){
     TH1F* h_sigma = new TH1F("h_sigma", "Sigma [cm]",  500,  Tracker::instance()->getResolution()-0.01, Tracker::instance()->getResolution()+0.01); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Hits: Residuals from fitted line to ideal geometry (with DCAs from misaligned geom.) [cm]",  1000, -0.2, 0.2);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
-    TH1F* h_true = new TH1F("h_true", "True hits (the x of the track in-line with a layer)",  300,  -1.5, 1.5);
+    TH1F* h_true = new TH1F("h_true", "True track position (the x of the generated track in-line with a layer)",  300,  -1.5, 1.5);
+    TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -1.5, 1.5);
     TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -1.5, 1.5);
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
-    TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", Tracker::instance()->getModuleN()+1 , 0, Tracker::instance()->getModuleN()+1);
+    TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 50);
     TH1F* h_chi2_ndf_track = new TH1F("h_chi2_ndf_track", "Chi2/ndf for generated tracks", 60, -1, 5);
     TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 200, -1, 1500);
     TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 30);
-    TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 20 , 0, 20);
+    TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
+    TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
+    TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  500,  -2, 2);
 
     TH1F* h_det_large = new TH1F("h_det_large", "large DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_det_normal = new TH1F("h_det_normal", "normal DCA",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1I* h_id_large = new TH1I("h_id_large", "ID for DCA too large", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     TH1I* h_id_normal = new TH1I("h_id_normal", "ID for DCA normal", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     TH1I* h_moduleID_large = new TH1I("h_moduleID_large", "Module ID for DCA large", Tracker::instance()->getModuleN(), 0, Tracker::instance()->getModuleN());
-    TH1F* h_reconMinusTrue = new TH1F("h_reconMinusTrue", "Reconstructed - Fitted X position of the hits in ideal detector",  500,  0, 0.08);
     TH1F* h_rightTail = new TH1F("h_rightTail", "Reconstructed X hits > 1",  50, 0.9, 1.1);
     TH1F* h_leftTail = new TH1F("h_leftTail", "Reconstructed X hits < -1",  50,  -0.9,-1.1);
     
@@ -257,6 +259,7 @@ int main(int argc, char* argv[]){
     h_recon->SetXTitle( "[cm]");
     h_fit->SetXTitle( "[cm]");
     h_resiudal_track->SetXTitle( "[cm]");
+    h_hits_true->SetXTitle( "[cm]");
     h_sigma->SetDirectory(cd_All_Hits);
     h_hits_MP2->SetDirectory(cd_All_Hits);
     h_det->SetDirectory(cd_All_Hits);
@@ -271,14 +274,19 @@ int main(int argc, char* argv[]){
     h_chi2_fit->SetDirectory(cd_All_Hits);
     h_chi2_ndf_fit->SetDirectory(cd_All_Hits);
     h_hitCount->SetDirectory(cd_All_Hits);
+    h_hits_true->SetDirectory(cd_All_Hits);
+    h_reconMinusTrue_hits->SetDirectory(cd_Debug);
+    h_reconMinusTrue_track->SetDirectory(cd_Debug);
+
     h_det_large  ->SetDirectory(cd_Debug); 
     h_det_normal->SetDirectory(cd_Debug);
     h_id_large ->SetDirectory(cd_Debug);
     h_id_normal ->SetDirectory(cd_Debug);
     h_moduleID_large->SetDirectory(cd_Debug);
-    h_reconMinusTrue->SetDirectory(cd_Debug);
+    
     h_rightTail->SetDirectory(cd_Debug);
     h_leftTail->SetDirectory(cd_Debug);
+    
 
     std::stringstream h_name;
     std::stringstream h_title;
@@ -286,19 +294,32 @@ int main(int argc, char* argv[]){
     for (int i = 0 ; i < Tracker::instance()->getLayerTotalN(); i++) {
         h_name.str(""); h_name << "h_det_layer_" << i;
         h_title.str(""); h_title << "DCA in layer " << i;
-        auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 00,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+        auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 100,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
         h1->GetXaxis()->SetTitle("[cm]");
+        
         
         h_name.str(""); h_name << "h_strawID_layer_" << i;
         h_title.str(""); h_title << "strawID in layer " << i;
         auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
         h2->GetXaxis()->SetTitle("Straw ID [0-31]");
+        
 
         h_name.str(""); h_name << "h_LR_layer_" << i;
         h_title.str(""); h_title << "Left-Right hit distribution in layer" << i;
         auto h3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
         h3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 ");
 
+        h1->SetDirectory(cd_Layers);
+        h2->SetDirectory(cd_Layers);
+        h3->SetDirectory(cd_Layers);
+    }
+
+    for (int i = 0 ; i < Tracker::instance()->getModuleN(); i++) {
+        h_name.str(""); h_name << "h_Residuals_module_" << i;
+        h_title.str(""); h_title << "Residuals in Module " << i;
+        auto hm = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 500, -0.4, 0.4);
+        hm->GetXaxis()->SetTitle("[cm]");
+        hm->SetDirectory(cd_Modules);
     }
 
     // Creating .bin, steering, and constrain files
@@ -421,25 +442,27 @@ int main(int argc, char* argv[]){
             
             //Sanity Plots
             //Fill for all hits
-            h_hits_MP2 -> Fill (rMeas_mp2); 
-            h_sigma -> Fill(sigma_mp2);
-            h_det->Fill(generated_MC.x_mis_dca[hitCount]);
-            h_true->Fill(generated_MC.x_track[hitCount]);
-            h_recon->Fill(generated_MC.x_recon[hitCount]);
-            h_fit->Fill(generated_MC.x_fitted[hitCount]);
+            h_hits_MP2 -> Fill (rMeas_mp2); // residuals 
+            h_sigma -> Fill(sigma_mp2); // errors 
+            h_det->Fill(generated_MC.x_mis_dca[hitCount]); // DCA
+            h_hits_true->Fill(generated_MC.x_hit_true[hitCount]); // True (smeared) hit position
+            h_true->Fill(generated_MC.x_track_true[hitCount]); // True (generated) track position
+            h_recon->Fill(generated_MC.x_hit_recon[hitCount]); // Reconstructed hit position
+            h_fit->Fill(generated_MC.x_track_recon[hitCount]); // Reconstructed (fitted) track position
             h_labels->Fill(l1);
-            h_reconMinusTrue->Fill(generated_MC.x_track[hitCount]-generated_MC.x_fitted[hitCount]);
+            h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+            h_reconMinusTrue_hits->Fill(generated_MC.x_hit_true[hitCount]-generated_MC.x_hit_recon[hitCount]);
 
 
             //Debug Plots
-            if (generated_MC.x_recon[hitCount] > 1.0){
-                h_rightTail -> Fill(generated_MC.x_recon[hitCount]);
-                h_rightTail -> Fill(2-generated_MC.x_recon[hitCount]);
+            if (generated_MC.x_hit_recon[hitCount] > 1.0){
+                h_rightTail -> Fill(generated_MC.x_hit_recon[hitCount]);
+                h_rightTail -> Fill(2-generated_MC.x_hit_recon[hitCount]);
             }
 
-            if ( generated_MC.x_recon[hitCount] < -1.0){
-                h_leftTail -> Fill(generated_MC.x_recon[hitCount]);
-                h_leftTail -> Fill(-2+abs(generated_MC.x_recon[hitCount]));
+            if ( generated_MC.x_hit_recon[hitCount] < -1.0){
+                h_leftTail -> Fill(generated_MC.x_hit_recon[hitCount]);
+                h_leftTail -> Fill(-2+abs(generated_MC.x_hit_recon[hitCount]));
             }
 
             if (generated_MC.x_mis_dca[hitCount]>0.5*Tracker::instance()->getStrawSpacing()){
@@ -461,23 +484,24 @@ int main(int argc, char* argv[]){
             
             //Fill for hits in layers
             h_name.str("");
-            h_name << "h_det_layer_" << hitCount;
+            h_name << "Layers/h_det_layer_" << hitCount;
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
             h1->Fill(generated_MC.x_mis_dca[hitCount]);
             h_name.str("");
-            h_name << "h_strawID_layer_" << hitCount;
+            h_name << "Layers/h_strawID_layer_" << hitCount;
             TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
             h2 ->Fill(generated_MC.strawID[hitCount]);
             h_name.str("");
-            h_name << "h_LR_layer_" << hitCount;
+            h_name << "Layers/h_LR_layer_" << hitCount;
             TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
             h3 ->Fill(generated_MC.LR[hitCount]);
 
-            //Fill for tracks [once only]
-            if (hitCount ==generated_MC.hit_count-1){
-                //Filling once per tracks
-                
-            }
+            h_name.str("");
+            h_name << "Modules/h_Residuals_module_" << label_mp2-1; //convert back to sensible labelling 0, 1 ...
+            TH1F* h4 = (TH1F*)file->Get(h_name.str().c_str() );
+            h4->Fill(rMeas_mp2);
+
+            
             if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits
         } // end of hits loop
