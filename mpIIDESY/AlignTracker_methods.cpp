@@ -438,7 +438,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     for (int i_module=0; i_module<moduleN; i_module++){
     	//Fix first and last modules with no misalignment
         if (i_module==0 || i_module==moduleN-1){
-            misDispX=0;    
+            misDispX=0.0;    
         }
         // the rest of the modules get misalignment parameter from the vector 
         else{
@@ -503,12 +503,12 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
         float one = 1.0;
         
         for (int i_module = 0; i_module < moduleN; i_module++){ 
-            constraint_file << "Constraint 0.0" << endl;
-                int labelt=i_module+1; // Millepede doesn't like 0 as a label...
-                //Fixing module 0 and the last module
-                if (i_module==0 || i_module==moduleN-1){
+            if (i_module==0 || i_module==moduleN-1){
+            	constraint_file << "Constraint 0.0" << endl;
+                	int labelt=i_module+1; // Millepede doesn't like 0 as a label...
+                	//Fixing module 0 and the last module
                     constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
-                }
+                	}
                 //sdevX[i]=0.0;     // fix centre modules at 0. XXX
            // constraint_file << "Constraint 0.0" << endl;
         } // end of detectors loop 

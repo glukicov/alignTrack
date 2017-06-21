@@ -19,6 +19,7 @@
 #include <chrono>
 #include <typeinfo>
 #include <stdlib.h>
+#include <stdio.h>
 #include <cmath> 
 #include <TH1D.h>
 #include <TF1.h> 
@@ -37,6 +38,7 @@
 #include <TLine.h>
 #include <TApplication.h> //for Displaying Canvas
 #include <TDirectory.h>
+#include <THStack.h>
 
 int main(int argc, char* argv[]);  
 
