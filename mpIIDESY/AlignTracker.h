@@ -39,6 +39,8 @@
 #include <TApplication.h> //for Displaying Canvas
 #include <TDirectory.h>
 #include <THStack.h>
+#include <TText.h>
+#include <TLegend.h>
 
 int main(int argc, char* argv[]);  
 

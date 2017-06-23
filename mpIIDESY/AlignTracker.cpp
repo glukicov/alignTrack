@@ -83,7 +83,7 @@ int main(int argc, char* argv[]){
 
     //////----Variable Initialisation-------///////////
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.]
-    int setPrecision = 6; // precision of printout for debug text files and cout
+    int setPrecision = 6; // precision (# decimal points) of printout for debug text files and cout
     string compareStr; //for debug vs. normal output as specified by the user
     int tracksInput; // number of tracks to generate as specified by the user 
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]){
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     float residuals_track_sum_2=0.0;
     float residuals_fit_sum_2=0.0;
-    const Color_t colourVector[]={kRed, kWhite, kBlue, kGreen, kGray, kOrange, kRed, kWhite, kBlue, kGreen, kGray, kOrange, kRed, kWhite, kBlue, kGreen};
+    const Color_t colourVector[]={kWhite, kBlack, kBlue, kGreen, kYellow, kRed, kGray, kMagenta};
        
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -177,6 +177,10 @@ int main(int argc, char* argv[]){
     //Constraints and Steering files are the inputs to Pede (together with binary file). 
     string conFileName = "Tracker_con.txt";
     string strFileName = "Tracker_str.txt";
+    ofstream constraint_file(conFileName);
+    ofstream steering_file(strFileName);
+    cout << fixed << setprecision(setPrecision); // set precision of standard screen output
+
     //Debug files [only filled with "d" option]
     string mp2_debugFileName = "Tracker_d_mille.txt"; // Inputs into binary files
     string cacl_debugFileName = "Tracker_d_calc.txt"; // intermediate calculation 
@@ -185,14 +189,12 @@ int main(int argc, char* argv[]){
     string off_debugFileName = "Tracker_d_off.txt";  // Offsets/Missed hits
     string MC_debugFileName = "Tracker_d_MC.txt";  // Final results from MC
     string con_debugFileName = "Tracker_d_con.txt"; //Constraints
-    string gen_plotFileName = "Tracker_p_gen.txt"; //
-    string fit_plotFileName = "Tracker_p_fit.txt"; //
+    string gen_plotFileName = "Tracker_p_gen.txt"; // Truth Track points
+    string fit_plotFileName = "Tracker_p_fit.txt"; // Reconstructed Track points
     string contsants_plotFileName = "Tracker_p_constants.txt"; // passing constants (e.g. strawN to python script)
-    string hits_gen_plotFileName = "Tracker_p_hits_gen.txt"; //
+    string hits_gen_plotFileName = "Tracker_p_hits_gen.txt"; // Truth Hits points
 
-     // file streams for constrain, steering, and debug files 
-    ofstream constraint_file(conFileName);
-    ofstream steering_file(strFileName);
+    // file streams for debug files 
     ofstream debug_mp2(mp2_debugFileName);
     ofstream debug_calc(cacl_debugFileName);
     ofstream debug_mis(mis_debugFileName);
@@ -206,8 +208,7 @@ int main(int argc, char* argv[]){
     ofstream plot_hits_gen(hits_gen_plotFileName);
     
     // Setting fixed precision for floating point values
-    cout << fixed << setprecision(setPrecision); 
-   	debug_mp2 << fixed << setprecision(setPrecision); 
+    debug_mp2 << fixed << setprecision(setPrecision); 
     debug_calc << fixed << setprecision(setPrecision); 
     debug_mis << fixed << setprecision(setPrecision); 
     debug_geom << fixed << setprecision(setPrecision); 
@@ -217,7 +218,8 @@ int main(int argc, char* argv[]){
     plot_gen << fixed << setprecision(setPrecision);
     plot_fit << fixed << setprecision(setPrecision);
     contsants_plot << fixed << setprecision(setPrecision);
-          
+    
+    
     //output ROOT file
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
     //create a subdirectories 
@@ -247,7 +249,7 @@ int main(int argc, char* argv[]){
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  499,  -0.1, 0.1);
     
-    TH1I* h_id_dca = new TH1I("h_id_normal", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+    TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     TH1F* h_rightTail = new TH1F("h_rightTail", "Reconstructed X hits > 1",  50, 0.9, 1.1);
     TH1F* h_leftTail = new TH1F("h_leftTail", "Reconstructed X hits < -1",  50,  -0.9,-1.1);
     TH1F* h_rightTail_true = new TH1F("h_rightTail_true", "True X hits > 1",  50, 0.9, 1.1);
@@ -304,14 +306,47 @@ int main(int argc, char* argv[]){
         auto hm = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 500, -0.4, 0.4);
         hm->GetXaxis()->SetTitle("[cm]");
         hm->SetDirectory(cd_Modules);
-    }
+    } 
 
-    for (int i = 0 ; i < Tracker::instance()->getModuleN(); i++) {
-        h_name.str(""); h_name << "h_DCA_Module_" << i;
-        h_title.str(""); h_title << "DCA in Module " << i;
-        auto hm_dca = new THStack(h_name.str().c_str(),h_title.str().c_str());
-     }
-        
+    //Booking stack plots for canvas 
+    THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
+    THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
+    THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
+    THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
+
+    TH1F* h0_straw1 = new TH1F("h0_straw1", "DCA Straw 1-M0", 99, -0.1, 0.4);
+    TH1F* h0_straw2 = new TH1F("h0_straw2", "DCA Straw 2-M0", 99, -0.1, 0.4);
+    TH1F* h0_straw3 = new TH1F("h0_straw3", "DCA Straw 3-M0", 99, -0.1, 0.4);
+    TH1F* h0_straw4 = new TH1F("h0_straw4", "DCA Straw 4-M0", 99, -0.1, 0.4);
+    TH1F* h0_straw5 = new TH1F("h0_straw5", "DCA Straw 5-M0", 99, -0.1, 0.4);
+
+    TH1F* h1_straw1 = new TH1F("h2_straw1", "DCA Straw 1-M1", 99, -0.1, 0.4);
+    TH1F* h1_straw2 = new TH1F("h2_straw2", "DCA Straw 2-M1", 99, -0.1, 0.4);
+    TH1F* h1_straw3 = new TH1F("h2_straw3", "DCA Straw 3-M1", 99, -0.1, 0.4);
+    TH1F* h1_straw4 = new TH1F("h2_straw4", "DCA Straw 4-M1", 99, -0.1, 0.4);
+    TH1F* h1_straw5 = new TH1F("h2_straw5", "DCA Straw 5-M1", 99, -0.1, 0.4);
+
+    TH1F* h2_straw1 = new TH1F("h3_straw1", "DCA Straw 1-M2", 99, -0.1, 0.4);
+    TH1F* h2_straw2 = new TH1F("h3_straw2", "DCA Straw 2-M2", 99, -0.1, 0.4);
+    TH1F* h2_straw3 = new TH1F("h3_straw3", "DCA Straw 3-M2", 99, -0.1, 0.4);
+    TH1F* h2_straw4 = new TH1F("h3_straw4", "DCA Straw 4-M2", 99, -0.1, 0.4);
+    TH1F* h2_straw5 = new TH1F("h1_straw5", "DCA Straw 5-M2", 99, -0.1, 0.4);
+
+    TH1F* h3_straw1 = new TH1F("h4_straw1", "DCA Straw 1-M3", 99, -0.1, 0.4);
+    TH1F* h3_straw2 = new TH1F("h4_straw2", "DCA Straw 2-M3", 99, -0.1, 0.4);
+    TH1F* h3_straw3 = new TH1F("h4_straw3", "DCA Straw 3-M3", 99, -0.1, 0.4);
+    TH1F* h3_straw4 = new TH1F("h4_straw4", "DCA Straw 4-M3", 99, -0.1, 0.4);
+    TH1F* h3_straw5 = new TH1F("h4_straw5", "DCA Straw 5-M3", 99, -0.1, 0.4);
+
+
+    TH1F* h_DCA_Module_0 = new TH1F ("h_DCA_Module_0", "DCA in Module 0", 99, -0.1, 0.4);
+    TH1F* h_DCA_Module_1 = new TH1F ("h_DCA_Module_1", "DCA in Module 1", 99, -0.1, 0.4);
+    TH1F* h_DCA_Module_2 = new TH1F ("h_DCA_Module_2", "DCA in Module 2", 99, -0.1, 0.4);
+    TH1F* h_DCA_Module_3 = new TH1F ("h_DCA_Module_3", "DCA in Module 3", 99, -0.1, 0.4);
+    h_DCA_Module_0 -> SetDirectory(cd_Modules);
+    h_DCA_Module_1 -> SetDirectory(cd_Modules);
+    h_DCA_Module_2 -> SetDirectory(cd_Modules);
+    h_DCA_Module_3 -> SetDirectory(cd_Modules);
 
     for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
          for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
@@ -489,7 +524,8 @@ int main(int argc, char* argv[]){
             h_resiudal_track->Fill(residual_gen);
             residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_resiudal_fit->Fill(rMeas_mp2); //already used as input to mille
-            float sigma_true = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,2)));
+            float sigma_true = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
+            //cout << "sigma_true= " << sigma_true ; 
             residuals_fit_sum_2+=pow(rMeas_mp2/sigma_true,2);
             
             //Fill for hits in layers
@@ -511,9 +547,58 @@ int main(int argc, char* argv[]){
             h_name.str(""); h_name << "Straws/h_DCA_Module_" << generated_MC.Module_i[hitCount] <<"_View_" <<  generated_MC.View_i[hitCount] << "_Layer_"<< generated_MC.Layer_i[hitCount]<<"_Straw_"<< generated_MC.Straw_i[hitCount];
             TH1F* h5 = (TH1F*)file->Get(h_name.str().c_str() );       
             h5->Fill(generated_MC.x_mis_dca[hitCount]);
-            h5->SetFillColor(colourVector[hitCount]);
-
+            h5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
             
+        #if 0
+            if (generated_MC.Layer_i[hitCount] ==0 && generated_MC.View_i[hitCount] ==0 ){
+            if (generated_MC.Module_i[hitCount] == 0){
+                //hs_DCA_Module_0->Add(h5);
+                h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
+
+                if (generated_MC.Straw_i[hitCount]== 1){ h0_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+                if (generated_MC.Straw_i[hitCount]== 2){ h0_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+                if (generated_MC.Straw_i[hitCount]== 3){ h0_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+                if (generated_MC.Straw_i[hitCount]== 4){ h0_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+                if (generated_MC.Straw_i[hitCount]== 5){ h0_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            
+            }
+            if (generated_MC.Module_i[hitCount] == 1){
+            //hs_DCA_Module_1->Add(h5);
+            h_DCA_Module_1->Fill(generated_MC.x_mis_dca[hitCount]);
+            
+            if (generated_MC.Straw_i[hitCount]== 1){ h1_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 2){ h1_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 3){ h1_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 4){ h1_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 5){ h1_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            
+
+            }
+            
+            if (generated_MC.Module_i[hitCount] == 2){
+            //hs_DCA_Module_2->Add(h5);
+            h_DCA_Module_2->Fill(generated_MC.x_mis_dca[hitCount]);
+            if (generated_MC.Straw_i[hitCount]== 1){ h2_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 2){ h2_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 3){ h2_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 4){ h2_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 5){ h2_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            
+            }
+            
+            if (generated_MC.Module_i[hitCount] == 3){
+            //hs_DCA_Module_3->Add(h5);
+            h_DCA_Module_3->Fill(generated_MC.x_mis_dca[hitCount]);
+            if (generated_MC.Straw_i[hitCount]== 1){ h3_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 2){ h3_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 3){ h3_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 4){ h3_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+            if (generated_MC.Straw_i[hitCount]== 5){ h3_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+        
+            }
+        }
+        #endif
+
             if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits
         } // end of hits loop
@@ -590,23 +675,59 @@ int main(int argc, char* argv[]){
     h_resiudal_track->Fit("gaus");
     //h_resiudal_fit->Fit("gaus"); 
 
+#if 0
+    TCanvas *cs = new TCanvas("cs","cs",700,900);
+    TText T; T.SetTextFont(42); T.SetTextAlign(21);
+    hs_DCA_Module_0->Add(h0_straw1);
+    hs_DCA_Module_0->Add(h0_straw2);
+    hs_DCA_Module_0->Add(h0_straw3);
+    hs_DCA_Module_0->Add(h0_straw4);
+    hs_DCA_Module_0->Add(h0_straw5);
 
-    for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
-    	h_name.str(""); h_name << "h_DCA_Module_" << i_module;
-		THStack* hm_dca = (THStack*)file->Get(h_name.str().c_str() );
-        for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer< Tracker::instance()->getLayerN(); i_layer++){ 
-                for (int i_straw=0; i_straw< Tracker::instance()->getStrawN(); i_straw++){
-                		 h_name.str(""); h_name << "Straws/h_DCA_Module_" << i_module <<"_View_" <<  i_view << "_Layer_"<< i_layer <<"_Straw_"<< i_straw;
-            			 TH1F* hs_dca = (TH1F*)file->Get(h_name.str().c_str() );       
-     					 //hm_dca->Add(hs_dca);
-                }
-            }
-        }
-    //hm_dca->Draw();
-    }
+    hs_DCA_Module_1->Add(h1_straw1);
+    hs_DCA_Module_1->Add(h1_straw2);
+    hs_DCA_Module_1->Add(h1_straw3);
+    hs_DCA_Module_1->Add(h1_straw4);
+    hs_DCA_Module_1->Add(h1_straw5);
+
+    hs_DCA_Module_2->Add(h2_straw1);
+    hs_DCA_Module_2->Add(h2_straw2);
+    hs_DCA_Module_2->Add(h2_straw3);
+    hs_DCA_Module_2->Add(h2_straw4);
+    hs_DCA_Module_2->Add(h2_straw5);
+
+    hs_DCA_Module_3->Add(h3_straw1);
+    hs_DCA_Module_3->Add(h3_straw2);
+    hs_DCA_Module_3->Add(h3_straw3);
+    hs_DCA_Module_3->Add(h3_straw4);
+    hs_DCA_Module_3->Add(h3_straw5);
+    cs->Divide(2,2);
+    cs->cd(1); hs_DCA_Module_0->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
+    cs->cd(2); hs_DCA_Module_1->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
+    cs->cd(3); hs_DCA_Module_2->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
+    cs->cd(4); hs_DCA_Module_3->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
     
-    
+    cs->Print("stack_4.png");
+
+
+    TCanvas *cs = new TCanvas("cs","cs",700,900);
+    TText T; T.SetTextFont(42); T.SetTextAlign(21);
+    cs->Divide(2,2);
+    cs->cd(1); hs_DCA_Module_0->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
+    cs->cd(2); hs_DCA_Module_1->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
+    cs->cd(3); hs_DCA_Module_2->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
+    cs->cd(4); hs_DCA_Module_3->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
+    cs->Print("stack.png");
+    TCanvas *css = new TCanvas("css","css",700,900);
+    TText Ts; Ts.SetTextFont(42); Ts.SetTextAlign(21);
+    css->Divide(2,2);
+    css->cd(1); hs_DCA_Module_0->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 0 DCA per straw: stacked");
+    css->cd(2); hs_DCA_Module_1->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 1 DCA per straw: stacked");
+    css->cd(3); hs_DCA_Module_2->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 2 DCA per straw: stacked");
+    css->cd(4); hs_DCA_Module_3->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 3 DCA per straw: stacked");
+    css->Print("stack_s.png");
+#endif
+
     file->Write();
     file->Close(); //good habit!
     cout << "-------------------------------------------------------------------------"<< endl; 
@@ -621,4 +742,4 @@ int main(int argc, char* argv[]){
     cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. The C++ compiler used: " << true_cxx << " " << true_cxx_ver<<" Job finished on: " << dt << endl;
     //if(plotBool){theApp.Run();} //ctrl+c to exit //for Canvas in ROOT
     return 0; 
-} //end of main 
+} //end of main
