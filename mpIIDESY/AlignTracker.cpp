@@ -300,14 +300,13 @@ int main(int argc, char* argv[]){
         h3->SetDirectory(cd_Layers);
     }
 
-    for (int i = 0 ; i < Tracker::instance()->getModuleN(); i++) {
-        h_name.str(""); h_name << "h_Residuals_module_" << i;
-        h_title.str(""); h_title << "Residuals in Module " << i;
-        auto hm = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 500, -0.4, 0.4);
-        hm->GetXaxis()->SetTitle("[cm]");
-        hm->SetDirectory(cd_Modules);
-    } 
-
+   
+    
+    TH1F* hres_0 = new TH1F("h_Residuals_module_0","", 200, -0.2, 0.2);
+    TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
+    TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
+    TH1F* hres_3 = new TH1F("h_Residuals_module_3","Residuals in Module 3", 200, -0.2, 0.2);
+    
     //Booking stack plots for canvas 
     THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
     THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
@@ -540,15 +539,21 @@ int main(int argc, char* argv[]){
             h3 ->Fill(generated_MC.LR[hitCount]);
 
 
-            h_name.str(""); h_name << "Modules/h_Residuals_module_" << generated_MC.Module_i[hitCount];
-            TH1F* h4 = (TH1F*)file->Get(h_name.str().c_str() );
-            h4->Fill(rMeas_mp2);
+            // h_name.str(""); h_name << "Modules/h_Residuals_module_" << generated_MC.Module_i[hitCount];
+            // TH1F* h4 = (TH1F*)file->Get(h_name.str().c_str() );
+            // h4->Fill(rMeas_mp2);
            
             h_name.str(""); h_name << "Straws/h_DCA_Module_" << generated_MC.Module_i[hitCount] <<"_View_" <<  generated_MC.View_i[hitCount] << "_Layer_"<< generated_MC.Layer_i[hitCount]<<"_Straw_"<< generated_MC.Straw_i[hitCount];
             TH1F* h5 = (TH1F*)file->Get(h_name.str().c_str() );       
             h5->Fill(generated_MC.x_mis_dca[hitCount]);
             h5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
             
+       
+            if (generated_MC.Module_i[hitCount] == 0){ hres_0 -> Fill(rMeas_mp2);}
+            if (generated_MC.Module_i[hitCount] == 1){ hres_1 -> Fill(rMeas_mp2);}
+            if (generated_MC.Module_i[hitCount] == 2){ hres_2 -> Fill(rMeas_mp2);}
+            if (generated_MC.Module_i[hitCount] == 3){ hres_3 -> Fill(rMeas_mp2);}
+
         #if 0
             if (generated_MC.Layer_i[hitCount] ==0 && generated_MC.View_i[hitCount] ==0 ){
             if (generated_MC.Module_i[hitCount] == 0){
@@ -674,6 +679,31 @@ int main(int argc, char* argv[]){
     //h_chi2_fit->Fit("chi2pdf");
     h_resiudal_track->Fit("gaus");
     //h_resiudal_fit->Fit("gaus"); 
+
+    //hres_0->Draw(); 
+    TCanvas *cs = new TCanvas("cs","cs",700,900);
+    TText T; T.SetTextFont(42); T.SetTextAlign(21);
+    hres_0->Add(hres_3);
+    hres_0->Draw();
+    
+    T.DrawTextNDC(.5,.95,"Residuals in all Modules");
+    hres_1->Draw("same");
+    hres_2->Draw("same");
+    TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08 , 0.08);
+    gaussian0->SetParameters(4480, 0, 0.01452);
+    TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.12 , 0.04);
+    gaussian1->SetParameters(2230, -0.05, 0.01452);
+    TF1* gaussian2 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.04, 0.12);
+    gaussian2->SetParameters(2230, 0.05, 0.01452);
+    gaussian0->SetLineColor(kRed);
+    gaussian1->SetLineColor(kBlack);
+    gaussian2->SetLineColor(kGreen);
+    gaussian0->Draw("same");
+    gaussian1->Draw("same");
+    gaussian2->Draw("same");
+    gStyle->SetOptStat("oue");
+    cs->Print("residuals_func.png");
+    //gROOT->ForceStyle();
 
 #if 0
     TCanvas *cs = new TCanvas("cs","cs",700,900);
