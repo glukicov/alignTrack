@@ -471,7 +471,7 @@ int main(int argc, char* argv[]){
             //Labels
             int l1 = label_mp2; 
             int label[nagl] = {l1}; 
-            if (debugBool){cout << "l1 = " << l1 << endl;}
+            
              
             //TODO multiple scattering errors (no correlations) (for imodel == 1)
             //add break points multiple scattering later XXX (for imodel == 2)
@@ -523,9 +523,9 @@ int main(int argc, char* argv[]){
             h_resiudal_track->Fill(residual_gen);
             residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_resiudal_fit->Fill(rMeas_mp2); //already used as input to mille
-            float sigma_true = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
-            //cout << "sigma_true= " << sigma_true ; 
-            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_true,2);
+            float sigma_fit = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
+            //cout << "sigma_fit= " << sigma_fit ; 
+            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit,2);
             
             //Fill for hits in layers
             h_name.str(""); h_name << "Layers/h_det_layer_" << hitCount;
@@ -555,7 +555,8 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 3){ hres_3 -> Fill(rMeas_mp2);}
 
         #if 0
-            if (generated_MC.Layer_i[hitCount] ==0 && generated_MC.View_i[hitCount] ==0 ){
+            if (generated_MC.Layer_i[hitCount] ==1 && generated_MC.View_i[hitCount] ==0 ){
+            //if (1==1){
             if (generated_MC.Module_i[hitCount] == 0){
                 //hs_DCA_Module_0->Add(h5);
                 h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
@@ -604,7 +605,7 @@ int main(int argc, char* argv[]){
         }
         #endif
 
-            if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
+            if (debugBool){ debug_mp2  << nalc << " " << derlc[0] <<  " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits
         } // end of hits loop
         //For generated tracks
@@ -680,13 +681,14 @@ int main(int argc, char* argv[]){
     h_resiudal_track->Fit("gaus");
     //h_resiudal_fit->Fit("gaus"); 
 
+ 
     //hres_0->Draw(); 
-    TCanvas *cs = new TCanvas("cs","cs",700,900);
-    TText T; T.SetTextFont(42); T.SetTextAlign(21);
+    TCanvas *csg = new TCanvas("cs","cs",700,900);
+    TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
     hres_0->Add(hres_3);
     hres_0->Draw();
     
-    T.DrawTextNDC(.5,.95,"Residuals in all Modules");
+    Tg.DrawTextNDC(.5,.95,"Residuals in all Modules");
     hres_1->Draw("same");
     hres_2->Draw("same");
     TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08 , 0.08);
@@ -702,10 +704,10 @@ int main(int argc, char* argv[]){
     gaussian1->Draw("same");
     gaussian2->Draw("same");
     gStyle->SetOptStat("oue");
-    cs->Print("residuals_func.png");
+    csg->Print("residuals_func.png");
     //gROOT->ForceStyle();
 
-#if 0
+   #if 0
     TCanvas *cs = new TCanvas("cs","cs",700,900);
     TText T; T.SetTextFont(42); T.SetTextAlign(21);
     hs_DCA_Module_0->Add(h0_straw1);
@@ -732,31 +734,31 @@ int main(int argc, char* argv[]){
     hs_DCA_Module_3->Add(h3_straw4);
     hs_DCA_Module_3->Add(h3_straw5);
     cs->Divide(2,2);
-    cs->cd(1); hs_DCA_Module_0->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
-    cs->cd(2); hs_DCA_Module_1->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
-    cs->cd(3); hs_DCA_Module_2->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
-    cs->cd(4); hs_DCA_Module_3->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
+    cs->cd(1); hs_DCA_Module_0->Draw(); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
+    cs->cd(2); hs_DCA_Module_1->Draw(); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
+    cs->cd(3); hs_DCA_Module_2->Draw(); T.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
+    cs->cd(4); hs_DCA_Module_3->Draw(); T.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
     
     cs->Print("stack_4.png");
+    #endif
 
+    // TCanvas *csh = new TCanvas("cs","cs",700,900);
+    // TText Th; Th.SetTextFont(42); Th.SetTextAlign(21);
+    // cs->Divide(2,2);
+    // cs->cd(1); hs_DCA_Module_0->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
+    // cs->cd(2); hs_DCA_Module_1->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
+    // cs->cd(3); hs_DCA_Module_2->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
+    // cs->cd(4); hs_DCA_Module_3->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
+    // csh->Print("stack.png");
+    // TCanvas *css = new TCanvas("css","css",700,900);
+    // TText Ts; Ts.SetTextFont(42); Ts.SetTextAlign(21);
+    // css->Divide(2,2);
+    // css->cd(1); hs_DCA_Module_0->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 0 DCA per straw: stacked");
+    // css->cd(2); hs_DCA_Module_1->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 1 DCA per straw: stacked");
+    // css->cd(3); hs_DCA_Module_2->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 2 DCA per straw: stacked");
+    // css->cd(4); hs_DCA_Module_3->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 3 DCA per straw: stacked");
+    // css->Print("stack_s.png");
 
-    TCanvas *cs = new TCanvas("cs","cs",700,900);
-    TText T; T.SetTextFont(42); T.SetTextAlign(21);
-    cs->Divide(2,2);
-    cs->cd(1); hs_DCA_Module_0->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
-    cs->cd(2); hs_DCA_Module_1->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
-    cs->cd(3); hs_DCA_Module_2->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
-    cs->cd(4); hs_DCA_Module_3->Draw("nostack"); T.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
-    cs->Print("stack.png");
-    TCanvas *css = new TCanvas("css","css",700,900);
-    TText Ts; Ts.SetTextFont(42); Ts.SetTextAlign(21);
-    css->Divide(2,2);
-    css->cd(1); hs_DCA_Module_0->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 0 DCA per straw: stacked");
-    css->cd(2); hs_DCA_Module_1->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 1 DCA per straw: stacked");
-    css->cd(3); hs_DCA_Module_2->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 2 DCA per straw: stacked");
-    css->cd(4); hs_DCA_Module_3->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 3 DCA per straw: stacked");
-    css->Print("stack_s.png");
-#endif
 
     file->Write();
     file->Close(); //good habit!

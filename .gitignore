@@ -238,6 +238,8 @@ readPedeHists_C_ACLiC_dict_rdict.pcm
 /python_toy_tracker/toytraceback.pyc
 *.d
 .depend
+millepede.eve~
+*.png
 
 ### files NOT to ignore 
 

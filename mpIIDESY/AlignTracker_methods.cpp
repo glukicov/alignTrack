@@ -227,7 +227,8 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints, ofstream& plot_fit
    @return MCData struct containing data about detector hits.
 */
 MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, ofstream& plot_gen, ofstream& plot_hits_gen, bool debugBool) {
-  
+    
+    bool StrongDebugBool = false; // HACK
     // Set up new container for track data, with hit count set to zero
     MCData MC;
     MC.hit_count = 0; //count only counts through detector
@@ -292,13 +293,13 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            absolute_hit << x_mis_ID;
 	            MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());         
 
-	            if(debugBool){cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;}
+	            if(debugBool && StrongDebugBool){cout << "DCA is= " << x_mis_dca << " for straw ID= " << x_mis_ID << " was hit from " << x_mis_LRSign << endl;}
 
 	            //Reconstructing the hit as seen from the ideal detector
 	            float xRecon = Tracker::HitRecon(x_mis_ID, x_mis_dca, x_mis_LRSign, mod_lyr_strawIdealPosition[i_module][i_view][i_layer]);
 	            xReconPoints.push_back(xRecon); // vector to store x coordinates of the track as seen from the ideal detector
-	            if (debugBool){plot_hits_gen << xRecon << " " << distance[z_counter] << endl;}
-	            if(debugBool){cout << "Recon x= " << xRecon << endl;}
+	            if (debugBool && StrongDebugBool){plot_hits_gen << xRecon << " " << distance[z_counter] << endl;}
+	            if(debugBool && StrongDebugBool){cout << "Recon x= " << xRecon << endl;}
 	            
 	            //Module number [for labelling] - after (if) passing the rejection.
 	            ostringstream oss;
