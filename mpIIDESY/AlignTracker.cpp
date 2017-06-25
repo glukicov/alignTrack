@@ -302,10 +302,12 @@ int main(int argc, char* argv[]){
 
    
     
-    TH1F* hres_0 = new TH1F("h_Residuals_module_0","", 200, -0.2, 0.2);
+    TH1F* hres_0 = new TH1F("h_Residuals_module_0", "", 200, -0.2, 0.2);
     TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
     TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
     TH1F* hres_3 = new TH1F("h_Residuals_module_3","Residuals in Module 3", 200, -0.2, 0.2);
+    TH1F* hres_4 = new TH1F("h_Residuals_module_4","Residuals in Module 4", 200, -0.2, 0.2);
+    TH1F* hres_5 = new TH1F("h_Residuals_module_5","Residuals in Module 5", 200, -0.2, 0.2);
     
     //Booking stack plots for canvas 
     THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
@@ -436,13 +438,16 @@ int main(int argc, char* argv[]){
     cout<< "Steering file was generated! [see Tracker_con.txt]" << endl;
 
     cout<< "Calculating residuals..." << endl;
-    //Generating particles with energies: 10-100 [GeV]
+    
+
+    bool StrongDebugBool = false;
+    //Generating tracks 
     for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  //Track number is set in methods XXX is it the best place for it? 
         //float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
         //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
         scatterError = 0; // set no scatterError for now 
         
-        if (debugBool){
+        if (debugBool && StrongDebugBool){
             cout << "Track: " << trackCount << endl;
         }
 
@@ -553,6 +558,8 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 1){ hres_1 -> Fill(rMeas_mp2);}
             if (generated_MC.Module_i[hitCount] == 2){ hres_2 -> Fill(rMeas_mp2);}
             if (generated_MC.Module_i[hitCount] == 3){ hres_3 -> Fill(rMeas_mp2);}
+            if (generated_MC.Module_i[hitCount] == 4){ hres_4 -> Fill(rMeas_mp2);}
+            if (generated_MC.Module_i[hitCount] == 5){ hres_5 -> Fill(rMeas_mp2);}
 
         #if 0
             if (generated_MC.Layer_i[hitCount] ==1 && generated_MC.View_i[hitCount] ==0 ){
@@ -685,24 +692,37 @@ int main(int argc, char* argv[]){
     //hres_0->Draw(); 
     TCanvas *csg = new TCanvas("cs","cs",700,900);
     TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
-    hres_0->Add(hres_3);
+    hres_0->Add(hres_5);
     hres_0->Draw();
     
     Tg.DrawTextNDC(.5,.95,"Residuals in all Modules");
     hres_1->Draw("same");
     hres_2->Draw("same");
+    hres_3->Draw("same");
+    hres_4->Draw("same");
     TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08 , 0.08);
     gaussian0->SetParameters(4480, 0, 0.01452);
-    TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.12 , 0.04);
-    gaussian1->SetParameters(2230, -0.05, 0.01452);
-    TF1* gaussian2 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.04, 0.12);
-    gaussian2->SetParameters(2230, 0.05, 0.01452);
+    TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.16 , 0.08);
+    gaussian1->SetParameters(2230, -0.1, 0.01452);
+    TF1* gaussian2 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.08, 0.16);
+    gaussian2->SetParameters(2230, 0.1, 0.01452);
+
+    TF1* gaussian3 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.12 , 0.04);
+    gaussian3->SetParameters(2230, -0.05, 0.01452);
+    TF1* gaussian4 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.04, 0.12);
+    gaussian4->SetParameters(2230, 0.05, 0.01452);
+
+
     gaussian0->SetLineColor(kRed);
     gaussian1->SetLineColor(kBlack);
     gaussian2->SetLineColor(kGreen);
+    gaussian3->SetLineColor(kYellow);
+    gaussian4->SetLineColor(kBlue);
     gaussian0->Draw("same");
     gaussian1->Draw("same");
     gaussian2->Draw("same");
+    gaussian3->Draw("same");
+    gaussian4->Draw("same");
     gStyle->SetOptStat("oue");
     csg->Print("residuals_func.png");
     //gROOT->ForceStyle();

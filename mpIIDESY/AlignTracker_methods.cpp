@@ -248,7 +248,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     // Then looping over layers [we know there will be at most 1 hit per layer] and views
     // within layers we will have loops over straws in that layer [to find out which straw was hit and dca]
     int z_counter=0; // distance in z is incremented from 0 to TotalLayerN 
-    if (debugBool){cout << "Calculating hits/dca:" << endl;}
+    if (debugBool && StrongDebugBool){cout << "Calculating hits/dca:" << endl;}
     //loops over modules, views, layers
     for(int i_module=0; i_module<moduleN; i_module++){    
     	for (int i_view=0; i_view<viewN; i_view++){
@@ -337,7 +337,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
         }// end of View loop
     }// end of looping over modules
 
-    if (debugBool){cout << "Calculating residuals:" << endl;}
+    if (debugBool && StrongDebugBool){cout << "Calculating residuals:" << endl;}
     //This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
     // and need to do a simultaneous fit once - to return #hits worth of residuals]
     ResidualData res_Data = Tracker::GetResiduals(xReconPoints, plot_fit);
