@@ -13,7 +13,7 @@ Tracker* Tracker::s_instance = NULL;
 Constructor for tracker class.
  */
 Tracker::Tracker() {
-    // non-static variables definition here 
+    // non-static variables definition here      
     
 }
 
@@ -485,6 +485,11 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
         cout << endl;
         }//Modules 
     }
+
+float sum_of_elems;
+for(std::vector<float>::iterator it = sdevX.begin(); it != sdevX.end(); ++it)
+    sum_of_elems += *it;
+overallMis=sum_of_elems/moduleN;
 
 }//end of misalign
 

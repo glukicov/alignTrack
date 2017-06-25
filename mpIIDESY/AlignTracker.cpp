@@ -389,6 +389,7 @@ int main(int argc, char* argv[]){
     cout << "Module " << i_moduel <<" : " << Tracker::instance()->getSdevX(i_moduel) << " cm. ";
     }
     cout << endl;
+    cout << "The overall misalignment was " << Tracker::instance()->getOverallMis() << " cm" <<  endl;
     // Write a constraint file, for use with pede
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
     cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
@@ -700,28 +701,28 @@ int main(int argc, char* argv[]){
     hres_2->Draw("same");
     hres_3->Draw("same");
     hres_4->Draw("same");
-    TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08 , 0.08);
-    gaussian0->SetParameters(4480, 0, 0.01452);
+    TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis() , 0.08-Tracker::instance()->getOverallMis());
+    gaussian0->SetParameters(4480, 0-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.16 , 0.08);
-    gaussian1->SetParameters(2230, -0.1, 0.01452);
-    TF1* gaussian2 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.08, 0.16);
-    gaussian2->SetParameters(2230, 0.1, 0.01452);
+    gaussian1->SetParameters(2230, -0.3, 0.01452);
+    TF1* gaussian2 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis(), 0.16-Tracker::instance()->getOverallMis());
+    gaussian2->SetParameters(2230, 0.1-Tracker::instance()->getOverallMis(), 0.01452);
 
-    TF1* gaussian3 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.12 , 0.04);
-    gaussian3->SetParameters(2230, -0.05, 0.01452);
-    TF1* gaussian4 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.04, 0.12);
-    gaussian4->SetParameters(2230, 0.05, 0.01452);
+    TF1* gaussian3 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.12 , 0.04);
+     gaussian3->SetParameters(2230, -0.045, 0.01452);
+    TF1* gaussian4 = new TF1("gaussian4","[0]*TMath::Gaus(x,[1],[2])", -0.04-Tracker::instance()->getOverallMis(), 0.12-Tracker::instance()->getOverallMis());
+    gaussian4->SetParameters(2230, 0.05-Tracker::instance()->getOverallMis(), 0.01452);
 
 
     gaussian0->SetLineColor(kRed);
-    gaussian1->SetLineColor(kBlack);
+    //gaussian1->SetLineColor(kBlack);
     gaussian2->SetLineColor(kGreen);
-    gaussian3->SetLineColor(kYellow);
+    //gaussian3->SetLineColor(kYellow);
     gaussian4->SetLineColor(kBlue);
     gaussian0->Draw("same");
-    gaussian1->Draw("same");
+    // gaussian1->Draw("same");
     gaussian2->Draw("same");
-    gaussian3->Draw("same");
+    //gaussian3->Draw("same");
     gaussian4->Draw("same");
     gStyle->SetOptStat("oue");
     csg->Print("residuals_func.png");

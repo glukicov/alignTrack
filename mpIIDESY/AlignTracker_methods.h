@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <stdexcept>
 #include <cmath>
+#include <numeric>
 
 
 /**
@@ -81,7 +82,8 @@ class Tracker {
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {0.0, -0.05, 0.05, -0.1, 0.1, 0.0, 0.0, 0.0}; // manual misalignment
+    float dispX[8] = {0.0, 0.05, 0.1, -0.03, -0.045, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    float overallMis; // the overall misalignment - calculated in the misalignment method  
 
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
  	  
@@ -196,6 +198,10 @@ class Tracker {
 
 	float getSdevX(int i) {
 		return sdevX[i];
+	}
+
+	float getOverallMis() {
+		return overallMis;
 	}
 
 	int getRejectedHitsDCA(){
