@@ -192,7 +192,7 @@ float Tracker::HitRecon(int x_det_ID, float x_det_dca, float LRSign, vector<floa
 // Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
 // @ Inputs: ideal points (x,z)
 
-ResidualData Tracker::GetResiduals(vector<float> ReconPoints, ofstream& plot_fit){
+ResidualData Tracker::GetResiduals(vector<float> ReconPoints, ofstream& plot_fit, bool debugBool){
 
     bool StrongDebugBool=false;
     ResidualData resData;
@@ -206,7 +206,7 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints, ofstream& plot_fit
 
     float x_fit=SumX/ReconPoints.size(); 
    
-    plot_fit << x_fit << " "  << x_fit << " " << beamStart << " " << beamStop << endl;
+    if (debugBool) {plot_fit << x_fit << " "  << x_fit << " " << beamStart << " " << beamStop << endl;}
     
     for (int i_size=0; i_size<ReconPoints.size(); i_size++){
         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
@@ -340,7 +340,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     if (debugBool && StrongDebugBool){cout << "Calculating residuals:" << endl;}
     //This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
     // and need to do a simultaneous fit once - to return #hits worth of residuals]
-    ResidualData res_Data = Tracker::GetResiduals(xReconPoints, plot_fit);
+    ResidualData res_Data = Tracker::GetResiduals(xReconPoints, plot_fit, debugBool);
     MC.x_residuals = res_Data.residuals;
     MC.x_track_recon=res_Data.x_fitted; //Sanity Plot: fitted (reconstructed) x of the track
     

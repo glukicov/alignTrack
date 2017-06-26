@@ -243,7 +243,7 @@ int main(int argc, char* argv[]){
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 50);
     //TH1F* h_chi2_ndf_track = new TH1F("h_chi2_ndf_track", "Chi2/ndf for generated tracks", 60, -1, 5);
     TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.6, 0.6);
-    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 1500, -1, 1000);
+    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 100, 50, 450);
     //TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 30);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]){
     }
 
    
-    
+#if 0 
     TH1F* hres_0 = new TH1F("h_Residuals_module_0", "", 200, -0.2, 0.2);
     TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
     TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
@@ -348,6 +348,7 @@ int main(int argc, char* argv[]){
     h_DCA_Module_1 -> SetDirectory(cd_Modules);
     h_DCA_Module_2 -> SetDirectory(cd_Modules);
     h_DCA_Module_3 -> SetDirectory(cd_Modules);
+#endif
 
     for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
          for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
@@ -390,15 +391,18 @@ int main(int argc, char* argv[]){
     float layers_per_modules = float(Tracker::instance()->getViewN())*Tracker::instance()->getLayerN();
     cout << "Manual Misalignment: " << endl;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-        cout << "Module " << i_module <<" :: Relative:  " << Tracker::instance()->getSdevX(i_module) << " cm. ";
+        cout << showpos << "Module " << i_module <<" :: Characteristic:  " << Tracker::instance()->getSdevX(i_module) << " cm. ";
         float indivMis = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
-        cout << "Individual: " << indivMis << " cm." << endl;
+        cout << showpos << "Relative: " << indivMis << " cm." << endl;
         //cout << " Chi2_calc" << Chi2_calc << endl;
         Chi2_calc += layers_per_modules * (pow(indivMis,2) - 2*sigma_calc*indivMis)/(pow(sigma_calc,2));
     }
     
+    cout << noshowpos; 
     cout << "The overall misalignment was " << Tracker::instance()->getOverallMis() << " cm" <<  endl;
-    cout << "The catapulted Chi2 = " << Chi2_calc <<  endl;
+    cout << "The estimated mean residual fit Chi2 = " << Chi2_calc <<  endl;
+    cout << "The estimated residual resolution is = " << sigma_calc << " cm" <<  endl;
+    cout << "The estimated track 'jitter' is = " << Tracker::instance()->getResolution()/sqrt(Tracker::instance()->getLayerTotalN())  << " cm" <<  endl;
    
     // Write a constraint file, for use with pede
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
@@ -564,7 +568,7 @@ int main(int argc, char* argv[]){
             h5->Fill(generated_MC.x_mis_dca[hitCount]);
             h5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
             
-       
+        #if 0
             if (generated_MC.Module_i[hitCount] == 0){ hres_0 -> Fill(rMeas_mp2);}
             if (generated_MC.Module_i[hitCount] == 1){ hres_1 -> Fill(rMeas_mp2);}
             if (generated_MC.Module_i[hitCount] == 2){ hres_2 -> Fill(rMeas_mp2);}
@@ -572,7 +576,7 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 4){ hres_4 -> Fill(rMeas_mp2);}
             if (generated_MC.Module_i[hitCount] == 5){ hres_5 -> Fill(rMeas_mp2);}
 
-        #if 0
+       
             if (generated_MC.Layer_i[hitCount] ==1 && generated_MC.View_i[hitCount] ==0 ){
             //if (1==1){
             if (generated_MC.Module_i[hitCount] == 0){
@@ -701,6 +705,7 @@ int main(int argc, char* argv[]){
     //h_resiudal_fit->Fit("gaus"); 
 
 
+    #if 0
     //hres_0->Draw(); 
     TCanvas *csg = new TCanvas("cs","cs",700,900);
     TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
@@ -713,15 +718,15 @@ int main(int argc, char* argv[]){
     hres_3->Draw("same");
     hres_4->Draw("same");
     TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis() , 0.08-Tracker::instance()->getOverallMis());
-    gaussian0->SetParameters(4480, 0-Tracker::instance()->getOverallMis(), 0.01452);
+    gaussian0->SetParameters(Tracker::instance()->getTrackNumber()*0.5, 0-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.16 -Tracker::instance()->getOverallMis() , 0.08 -Tracker::instance()->getOverallMis());
-    gaussian1->SetParameters(2230, -0.03-Tracker::instance()->getOverallMis(), 0.01452);
+    gaussian1->SetParameters(Tracker::instance()->getTrackNumber()*0.25, -0.03-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian2 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis(), 0.16-Tracker::instance()->getOverallMis());
-    gaussian2->SetParameters(2230, 0.1-Tracker::instance()->getOverallMis(), 0.01452);
+    gaussian2->SetParameters(Tracker::instance()->getTrackNumber()*0.25, 0.1-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian3 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.12 -Tracker::instance()->getOverallMis() , 0.04 -Tracker::instance()->getOverallMis());
-     gaussian3->SetParameters(2230, -0.045-Tracker::instance()->getOverallMis(), 0.01452);
+     gaussian3->SetParameters(Tracker::instance()->getTrackNumber()*0.25, -0.045-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian4 = new TF1("gaussian4","[0]*TMath::Gaus(x,[1],[2])", -0.04-Tracker::instance()->getOverallMis(), 0.12-Tracker::instance()->getOverallMis());
-    gaussian4->SetParameters(2230, 0.05-Tracker::instance()->getOverallMis(), 0.01452);
+    gaussian4->SetParameters(Tracker::instance()->getTrackNumber()*0.25, 0.05-Tracker::instance()->getOverallMis(), 0.01452);
 
 
     gaussian0->SetLineColor(kRed);
@@ -738,7 +743,7 @@ int main(int argc, char* argv[]){
     csg->Print("residuals_func.png");
     //gROOT->ForceStyle();
 
-   #if 0
+   
     TCanvas *cs = new TCanvas("cs","cs",700,900);
     TText T; T.SetTextFont(42); T.SetTextAlign(21);
     hs_DCA_Module_0->Add(h0_straw1);

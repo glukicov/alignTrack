@@ -45,7 +45,7 @@ f = TFile('MP2Tracker.root','RECREATE')
 
 h_nlc  = TH1I("h_nlc", "NLC", 500, 0, 2)
 h_ngl  = TH1I("h_ngl", "NGL", 500, 0, 2)
-h_label_1  = TH1I("h_label_1", "$label 1", 100, 0, 8)
+h_label_1  = TH1I("h_label_1", "label_1", 100, 0, 8)
 h_derLc1  = TH1F("h_derLc1", "lc1", 500, 0, 2)
 h_derGl1  = TH1F("h_derGl1", "gl1", 500, 0, 2)
 h_hits  = TH1F("h_hits", "hits [cm]", 400, -0.2, 0.2)
