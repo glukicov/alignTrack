@@ -382,14 +382,24 @@ int main(int argc, char* argv[]){
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
+    
     Tracker::instance()->misalign(debug_mis, debugBool); 
     cout<< "Misalignment is complete!" << endl;
-    cout << "Manual Misalignment was ";
-    for (int i_moduel=0; i_moduel<Tracker::instance()->getModuleN(); i_moduel++){
-    cout << "Module " << i_moduel <<" : " << Tracker::instance()->getSdevX(i_moduel) << " cm. ";
+    float sigma_calc = sqrt(pow(Tracker::instance()->getResolution(),2)-pow(Tracker::instance()->getResolution(),2)/float(Tracker::instance()->getLayerTotalN()));
+    float Chi2_calc=float(Tracker::instance()->getLayerTotalN());
+    float layers_per_modules = float(Tracker::instance()->getViewN())*Tracker::instance()->getLayerN();
+    cout << "Manual Misalignment: " << endl;
+    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        cout << "Module " << i_module <<" :: Relative:  " << Tracker::instance()->getSdevX(i_module) << " cm. ";
+        float indivMis = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
+        cout << "Individual: " << indivMis << " cm." << endl;
+        //cout << " Chi2_calc" << Chi2_calc << endl;
+        Chi2_calc += layers_per_modules * (pow(indivMis,2) - 2*sigma_calc*indivMis)/(pow(sigma_calc,2));
     }
-    cout << endl;
+    
     cout << "The overall misalignment was " << Tracker::instance()->getOverallMis() << " cm" <<  endl;
+    cout << "The catapulted Chi2 = " << Chi2_calc <<  endl;
+   
     // Write a constraint file, for use with pede
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
     cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
@@ -681,6 +691,7 @@ int main(int argc, char* argv[]){
     cout << endl;
     cout << "-------------------------------------------------------------------------"<< endl; 
     cout << "ROOT fitting parameters:" << endl; 
+    
     h_reconMinusTrue_track->Fit("gaus");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
@@ -689,7 +700,7 @@ int main(int argc, char* argv[]){
     h_resiudal_track->Fit("gaus");
     //h_resiudal_fit->Fit("gaus"); 
 
- 
+
     //hres_0->Draw(); 
     TCanvas *csg = new TCanvas("cs","cs",700,900);
     TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
@@ -703,26 +714,25 @@ int main(int argc, char* argv[]){
     hres_4->Draw("same");
     TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis() , 0.08-Tracker::instance()->getOverallMis());
     gaussian0->SetParameters(4480, 0-Tracker::instance()->getOverallMis(), 0.01452);
-    TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.16 , 0.08);
-    gaussian1->SetParameters(2230, -0.3, 0.01452);
+    TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.16 -Tracker::instance()->getOverallMis() , 0.08 -Tracker::instance()->getOverallMis());
+    gaussian1->SetParameters(2230, -0.03-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian2 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis(), 0.16-Tracker::instance()->getOverallMis());
     gaussian2->SetParameters(2230, 0.1-Tracker::instance()->getOverallMis(), 0.01452);
-
-    TF1* gaussian3 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.12 , 0.04);
-     gaussian3->SetParameters(2230, -0.045, 0.01452);
+    TF1* gaussian3 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.12 -Tracker::instance()->getOverallMis() , 0.04 -Tracker::instance()->getOverallMis());
+     gaussian3->SetParameters(2230, -0.045-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian4 = new TF1("gaussian4","[0]*TMath::Gaus(x,[1],[2])", -0.04-Tracker::instance()->getOverallMis(), 0.12-Tracker::instance()->getOverallMis());
     gaussian4->SetParameters(2230, 0.05-Tracker::instance()->getOverallMis(), 0.01452);
 
 
     gaussian0->SetLineColor(kRed);
-    //gaussian1->SetLineColor(kBlack);
+    gaussian1->SetLineColor(kBlack);
     gaussian2->SetLineColor(kGreen);
-    //gaussian3->SetLineColor(kYellow);
+    gaussian3->SetLineColor(kOrange);
     gaussian4->SetLineColor(kBlue);
     gaussian0->Draw("same");
-    // gaussian1->Draw("same");
+    gaussian1->Draw("same");
     gaussian2->Draw("same");
-    //gaussian3->Draw("same");
+    gaussian3->Draw("same");
     gaussian4->Draw("same");
     gStyle->SetOptStat("oue");
     csg->Print("residuals_func.png");
