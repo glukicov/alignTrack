@@ -411,42 +411,14 @@ int main(int argc, char* argv[]){
     //Now writing the steering file
     //TODO what steering parameters does the tracker require? 
     if(steering_file.is_open()){
-        
-        steering_file <<  "*            Default test steering file" << endl
-        << "Cfiles ! following bin files are Cfiles" << endl 
+        steering_file <<  "* g-2 Tracker Alignment: PEDE Steering File" << endl
+        << " "  << endl
         << "Tracker_con.txt   ! constraints text file " << endl
+        << "Cfiles ! following bin files are Cfiles" << endl 
         << "Tracker_data.bin   ! binary data file" << endl
-         << "fortranfiles ! following bin files are fortran" << endl
-        //<< "*outlierrejection 100.0 ! reject if Chi^2/Ndf >" << endl
-        //<< "*outliersuppression 3   ! 3 local_fit iterations" << endl
-        << "*hugecut 50.0     !cut factor in iteration 0" << endl
-        << "*chisqcut 1.0 1.0 ! cut factor in iterations 1 and 2" << endl
-        << "*entries  10 ! lower limit on number of entries/parameter" << endl
-        //<< "" << endl 
-        << "*pairentries 10 ! lower limit on number of parameter pairs"  << endl
-        << "                ! (not yet!)"            << endl
-        << "*printrecord   1  2      ! debug printout for records" << endl
-       // << "" << endl
+        << "method diagonalization 3 0.001" << endl
         << "printrecord  -1 -1      ! debug printout for bad data records" << endl
-        //<< "" << endl
-        << "*outlierdownweighting  2 ! number of internal iterations (> 1)"<< endl
-        << "*dwfractioncut      0.2  ! 0 < value < 0.5"<< endl
-        << "*presigma           0.01 ! default value for presigma"<< endl
-        << "*regularisation 1.0      ! regularisation factor"<< endl
-        << "*regularisation 1.0 0.01 ! regularisation factor, pre-sigma"<< endl
-        << " " << endl
-        << "*bandwidth 0         ! width of precond. band matrix"<< endl
-        << "*method HIP 3 0.001 ! diagonalization      "<< endl   // XXX this method ignores constraints
-        << "*method bandcholesky 3 0.001 ! diagonalization      "<< endl 
-        << "*method cholesky 3 0.001 ! diagonalization      "<< endl 
-        << "*method diagonalization 3 0.001 ! diagonalization      "<< endl
-        << "*method fullMINRES       3 0.01 ! minimal residual     "<< endl
-        << "*method sparseMINRES     3 0.01 ! minimal residual     "<< endl
-        << "*mrestol      1.0D-8          ! epsilon for MINRES"<< endl
-        << "*method inversion       3 0.001 ! Gauss matrix inversion"<< endl
-        << "* last method is applied"<< endl
-        << "*matiter      3  ! recalculate matrix in iterations" << endl
-        << "printrecord 1 -1" << endl     // XXX produces mpdebug.txt
+        << "printrecord 1 -1 ! produces mpdebug.txt"<< endl     //  
         << " "  << endl
         << "end ! optional for end-of-data"<< endl;
     } // end of str file 
