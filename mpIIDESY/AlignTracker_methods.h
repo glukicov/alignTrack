@@ -88,7 +88,7 @@ class Tracker {
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
  	  
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 6; //number of movable detectors/module [independent modules]
+	static const int moduleN = 4; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]

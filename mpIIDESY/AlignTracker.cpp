@@ -83,7 +83,7 @@ int main(int argc, char* argv[]){
 
     //////----Variable Initialisation-------///////////
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.]
-    int setPrecision = 6; // precision (# decimal points) of printout for debug text files and cout
+    int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
     string compareStr; //for debug vs. normal output as specified by the user
     int tracksInput; // number of tracks to generate as specified by the user 
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
@@ -193,6 +193,7 @@ int main(int argc, char* argv[]){
     string fit_plotFileName = "Tracker_p_fit.txt"; // Reconstructed Track points
     string contsants_plotFileName = "Tracker_p_constants.txt"; // passing constants (e.g. strawN to python script)
     string hits_gen_plotFileName = "Tracker_p_hits_gen.txt"; // Truth Hits points
+    string pede_misFileName = "Tracker_pede_mis.txt"; // Misalignments 
 
     // file streams for debug files 
     ofstream debug_mp2(mp2_debugFileName);
@@ -206,6 +207,7 @@ int main(int argc, char* argv[]){
     ofstream plot_fit(fit_plotFileName);
     ofstream contsants_plot(contsants_plotFileName);
     ofstream plot_hits_gen(hits_gen_plotFileName);
+    ofstream pede_mis(pede_misFileName);
     
     // Setting fixed precision for floating point values
     debug_mp2 << fixed << setprecision(setPrecision); 
@@ -218,6 +220,7 @@ int main(int argc, char* argv[]){
     plot_gen << fixed << setprecision(setPrecision);
     plot_fit << fixed << setprecision(setPrecision);
     contsants_plot << fixed << setprecision(setPrecision);
+    pede_mis << fixed << setprecision(setPrecision);
     
     
     //output ROOT file
@@ -370,7 +373,7 @@ int main(int argc, char* argv[]){
     cout << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
        
     //Passing constants to plotting script
-    if (plotBool){
+    if (plotBool || debugBool){
         contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " " 
                       << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << Tracker::instance()->getTrackNumber() << " " 
                       << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()  << "  " << Tracker::instance()->getBeamStop() <<  endl;
@@ -392,6 +395,7 @@ int main(int argc, char* argv[]){
     cout << "Manual Misalignment: " << endl;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         cout << showpos << "Module " << i_module <<" :: Characteristic:  " << Tracker::instance()->getSdevX(i_module) << " cm. ";
+        if (plotBool || debugBool){pede_mis << Tracker::instance()->getSdevX(i_module) << " "; }
         float indivMis = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
         cout << showpos << "Relative: " << indivMis << " cm." << endl;
         //cout << " Chi2_calc" << Chi2_calc << endl;
@@ -666,14 +670,14 @@ int main(int argc, char* argv[]){
     //ROOT stuff
     cout << endl;
     cout << "-------------------------------------------------------------------------"<< endl; 
-    cout << "ROOT fitting parameters:" << endl; 
+    cout << "ROOT fitting parameters and output:" << endl; 
     
-    h_reconMinusTrue_track->Fit("gaus");
+    h_reconMinusTrue_track->Fit("gaus", "Q");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
-    h_chi2_track->Fit("chi2pdf"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
+    h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
     //h_chi2_fit->Fit("chi2pdf");
-    h_resiudal_track->Fit("gaus");
+    h_resiudal_track->Fit("gaus", "Q");
     //h_resiudal_fit->Fit("gaus"); 
 
 

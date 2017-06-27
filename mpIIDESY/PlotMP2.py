@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 
+
+####################################################################
+# PEDE inputs plots for AlginTracker
+#
+# 
+#
+# Created: 16 May 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
+# Modified: 16 May 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
+#####################################################################
+
 import os
 import string
 import time
 import decimal
 from ROOT import *
-#import numpy as np # TODO 
 
 
 nlc=[]
