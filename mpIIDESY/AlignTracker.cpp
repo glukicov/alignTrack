@@ -420,7 +420,7 @@ int main(int argc, char* argv[]){
         << "Tracker_con.txt   ! constraints text file " << endl
         << "Cfiles ! following bin files are Cfiles" << endl 
         << "Tracker_data.bin   ! binary data file" << endl
-        << "method diagonalization 3 0.001" << endl
+        << "method inversion 1 0.01" << endl
         << "printrecord  -1 -1      ! debug printout for bad data records" << endl
         << "printrecord 1 -1 ! produces mpdebug.txt"<< endl     //  
         << " "  << endl
