@@ -509,7 +509,8 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
         float one = 1.0;
         
         for (int i_module = 0; i_module < moduleN; i_module++){ 
-            if (i_module==0 || i_module==moduleN-1){
+            //if (i_module==0 || i_module==moduleN-1){
+            if (i_module==0 ){
             	constraint_file << "Constraint 0.0" << endl;
                 	int labelt=i_module+1; // Millepede doesn't like 0 as a label...
                 	//Fixing module 0 and the last module

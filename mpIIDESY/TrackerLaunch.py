@@ -38,7 +38,7 @@ with open("Tracker_pede_mis.txt") as f:
 		number_str = line.split()
         
         for i_module in range(0, moduleN):
-        	mis_C[i_module]=abs(float(number_str[i_module]))
+        	mis_C[i_module]=float(number_str[i_module])
      
 
 Labels = [[0 for i_module in xrange(moduleN)] for i_lines in xrange(lineN)] 
@@ -76,7 +76,7 @@ with open("PEDE_Mis.txt") as f:
 
 
 
-#Plot un-normalised difference for all modules
+#Plot difference for all modules
 plt.figure(1)
 for i_module in range(0, moduleN):
 		
@@ -120,6 +120,7 @@ for i_module in range(0, moduleN):
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1])
+		axes.set_ylim(-20, 20)
 
 	if(i_module==moduleN-1 or i_module==moduleN-2): 
 		plt.xlabel("Number of Tracks")
@@ -174,6 +175,7 @@ for i_module in range(1, moduleN-1):
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1])
+		axes.set_ylim(-20, 20)
 		smalldM=min(comparatorM)
 		hugedM=max(comparatorM)
 		hugeError=max(comparatorError)
@@ -192,54 +194,6 @@ plt.subplots_adjust(hspace=.5)
 plt.savefig("FoM_Mis.png")
 
 print("Files produced: FoM_Mis.png and FoM_All.png")
-
-# Chi2ndf_1=[]
-# Chi2ndf_2=[]
-# Tracks1=[]
-# Tracks2=[]
-
-# for i_module in range(1, moduleN-1):
-# 	for i_cut in range(0, lineN-4):
-# 		for i_lines in range(i_cut, lineN):
-# 			dM=(Misals[i_lines][i_module]-mis_C[i_module])*1e4
-# 			errorM=Errors[i_lines][i_module]*1e4
-# 			if (i_module==1):
-# 				Sum_Chi2_1=Sum_Chi2_1+(dM*dM)/(errorM*errorM)
-# 				#print Sum_Chi2_1
-# 			if (i_module==2):	
-# 				Sum_Chi2_2=Sum_Chi2_2+(dM*dM)/(errorM*errorM)
-# 		ndf=lineN-1-i_cut
-		
-# 		#print "ndf=", ndf, "at cut ", Tracks[i_cut]
-# 		if (i_module==1):
-# 			Chi2ndf_1.append(Sum_Chi2_1/ndf)
-# 			Tracks1.append(float(trackN[i_cut]))
-# 		if (i_module==2):
-# 			Chi2ndf_2.append(Sum_Chi2_2/ndf)
-# 			Tracks2.append(float(trackN[i_cut]))
-		
-# 		Sum_Chi2_1=0
-# 		Sum_Chi2_2=0
-		
-
-
-# plt.figure(2)			
-# if(i_module==1):
-# 	plotID=211
-# if(i_module==2):
-# 	plotID=212
-# plt.subplot(plotID)
-# axes = plt.gca()
-# for i_items in range(0, len(Tracks1)-1):
-# 	plt.plot(Tracks1[i_items], Chi2ndf_1[i_items], color="red", marker="x")
-# 	#plt.plot(Tracks2[i_items] ,Chi2ndf_2[i_items], color="green", marker="x")
-
-# plt.xlabel("Exclusive Track-cut (>= # Tracks)")
-# plt.ylabel("Chi2 [um]")
-# plt.title("Chi^2 for M1 (red) and M2 (green)")
-# axes.set_xlim(-1000,trackN[lineN-1])
-# plt.show()
-
 
 
 

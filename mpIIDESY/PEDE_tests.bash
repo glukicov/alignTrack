@@ -13,7 +13,7 @@ do
 	sleep 8
 	"./pede" Tracker_str.txt
 	sleep 3
-	python ConcatenatePEDE.py &i
+	python ConcatenatePEDE.py &
 	sleep 0.2
 done
 ./TrackerLaunch.py &

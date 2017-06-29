@@ -70,6 +70,7 @@ for n in range(0, len(nlc)):
     h_erros.Fill(float(errors[n]))
 
 
+gStyle.SetOptStat(111111)
 c1 = TCanvas("c1","c1",700,900)
 c1.Divide(2,2)
 c1.cd(1) 
