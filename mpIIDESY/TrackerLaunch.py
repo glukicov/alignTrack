@@ -57,7 +57,11 @@ with open("PEDE_Mis.txt") as f:
 			Misals[line_i][i_module]=abs(float(number_str[1+i_module*3]))
 			Errors[line_i][i_module]=float(number_str[2+i_module*3])
 	
-		trackN.append(int(number_str[12]))
+		if (moduleN==4):
+			trackN.append(int(number_str[12]))
+		if (moduleN==6):
+		    trackN.append(int(number_str[18]))
+				#print number_str[18]
 		line_i = line_i + 1
 		
 
@@ -76,21 +80,32 @@ with open("PEDE_Mis.txt") as f:
 plt.figure(1)
 for i_module in range(0, moduleN):
 		
-	if(i_module==0):
-		plotID=221
-	if(i_module==1):
-		plotID=222
-	if(i_module==2):
-		plotID=223
-	if(i_module==3):
-		plotID=224
-	if(i_module==4):
-		plotID=231
-	if(i_module==5):
-		plotID=213
+	if (moduleN==4):
+		if(i_module==0):
+			plotID=221
+		if(i_module==1):
+			plotID=222
+		if(i_module==2):
+			plotID=223
+		if(i_module==3):
+			plotID=224
+	if (moduleN==6):
+		if(i_module==0):
+			plotID=421
+		if(i_module==1):
+			plotID=422
+		if(i_module==2):
+			plotID=423
+		if(i_module==3):
+			plotID=424
+		if(i_module==4):
+			plotID=425
+		if(i_module==5):
+			plotID=426
 
 	plt.subplot(plotID)
 	axes = plt.gca()
+	axes.locator_params(nbins=4, axis='y')
 	line = [[0,0], [trackN[lineN-1], 0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
@@ -104,12 +119,14 @@ for i_module in range(0, moduleN):
 		
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
-		axes.set_xlim(-1000,trackN[lineN-1])
+		axes.set_xlim(-500,trackN[lineN-1])
 
-	if(i_module==2 or i_module==3): 
+	if(i_module==moduleN-1 or i_module==moduleN-2): 
 		plt.xlabel("Number of Tracks")
-	if (i_module==0 or i_module==2):
+	if (i_module==2):
 		plt.ylabel("$\Delta$ Misalignment [um]")
+plt.subplots_adjust(hspace=.9)
+
 plt.savefig("FoM_All.png")
 #plt.show()
 
@@ -122,14 +139,22 @@ Sum_Chi2_2=0
 plt.figure(1)
 for i_module in range(1, moduleN-1):
 			
-	if(i_module==1):
-		plotID=211
-	if(i_module==2):
-		plotID=212
-	if(i_module==3):
-		plotID=224
-	if(i_module==4):
-		plotID=231
+	
+	if (moduleN==4):
+		if(i_module==1):
+			plotID=211
+		if(i_module==2):
+			plotID=212
+	if (moduleN==6):	
+		if(i_module==1):
+			plotID=221
+		if(i_module==2):
+			plotID=222
+		if(i_module==3):
+			plotID=223
+		if(i_module==4):
+			plotID=224
+		
 
 	plt.subplot(plotID)
 	axes = plt.gca()
@@ -146,21 +171,23 @@ for i_module in range(1, moduleN-1):
 		plt.errorbar(trackN[i_lines], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
 		#plt.plot(trackN[i_lines], dM, marker="x", color="black")
 		
-		plt.ylabel("$\Delta$ Misalignment [um]")
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
-		axes.set_xlim(-1000,trackN[lineN-1])
+		axes.set_xlim(-500,trackN[lineN-1])
 		smalldM=min(comparatorM)
 		hugedM=max(comparatorM)
 		hugeError=max(comparatorError)
 		smallError=min(comparatorError)
 		
 	
-	print "In Module", i_module, ": Smallest Error=", smallError, " um, Largest Error=", hugeError, " um, Smallest dM=", smalldM, "um Largest dM=", hugedM, "um"
+	print "In Module", i_module,": Smallest Error=", smallError, "um, Largest Error=", hugeError, "um, Smallest dM=", smalldM, "um Largest dM=", hugedM, "um"
 	del comparatorM[:]
 	del comparatorError[:]
-
-plt.xlabel("Number of Tracks")
+	if(i_module==1 or i_module==moduleN-3): 
+		plt.ylabel("$\Delta$ Misalignment [um]")
+	if(i_module==moduleN-2 or i_module==moduleN-3): 
+		plt.xlabel("Number of Tracks")
+plt.subplots_adjust(hspace=.5)
 #plt.show()
 plt.savefig("FoM_Mis.png")
 

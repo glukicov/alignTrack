@@ -7,6 +7,7 @@
 *.txt
 *.bin
 *.root
+*.txt.BK
 Mptest2
 Mptest2.root
 clean_pede/.svn/
