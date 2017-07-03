@@ -54,7 +54,7 @@ with open("PEDE_Mis.txt") as f:
 		
 		for i_module in range(0, moduleN):
 			Labels[line_i][i_module]=int(number_str[0+i_module*3])
-			Misals[line_i][i_module]=abs(float(number_str[1+i_module*3]))
+			Misals[line_i][i_module]=float(number_str[1+i_module*3])
 			Errors[line_i][i_module]=float(number_str[2+i_module*3])
 	
 		if (moduleN==4):
@@ -74,7 +74,8 @@ with open("PEDE_Mis.txt") as f:
 # 		dM=Misals[i_lines][i_module] - mis_C[i_module]
 # 		print dM
 
-
+if (moduleN==6):
+	plt.rcParams.update({'font.size': 8})
 
 #Plot difference for all modules
 plt.figure(1)
@@ -104,6 +105,7 @@ for i_module in range(0, moduleN):
 			plotID=426
 
 	plt.subplot(plotID)
+	plt.tight_layout()
 	axes = plt.gca()
 	axes.locator_params(nbins=4, axis='y')
 	line = [[0,0], [trackN[lineN-1], 0]]
@@ -119,14 +121,15 @@ for i_module in range(0, moduleN):
 		
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
-		axes.set_xlim(-500,trackN[lineN-1])
-		axes.set_ylim(-20, 20)
+		axes.set_xlim(-500,trackN[lineN-1]+100)
+		axes.set_ylim(-30, 35)
 
-	if(i_module==moduleN-1 or i_module==moduleN-2): 
+
 		plt.xlabel("Number of Tracks")
-	if (i_module==2):
-		plt.ylabel("$\Delta$ Misalignment [um]")
+		if (i_module!=2 or i_module!=3):
+			plt.ylabel("$\Delta$ Misalignment [um]")
 plt.subplots_adjust(hspace=.9)
+plt.gcf().subplots_adjust(bottom=0.15)
 
 plt.savefig("FoM_All.png")
 #plt.show()
@@ -145,7 +148,7 @@ for i_module in range(1, moduleN-1):
 		if(i_module==1):
 			plotID=211
 		if(i_module==2):
-			plotID=212
+	 		plotID=212
 	if (moduleN==6):	
 		if(i_module==1):
 			plotID=221
@@ -158,6 +161,7 @@ for i_module in range(1, moduleN-1):
 		
 
 	plt.subplot(plotID)
+	plt.tight_layout()
 	axes = plt.gca()
 	line = [[0,0], [trackN[lineN-1], 0]]
 	plt.plot(
@@ -174,8 +178,8 @@ for i_module in range(1, moduleN-1):
 		
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
-		axes.set_xlim(-500,trackN[lineN-1])
-		axes.set_ylim(-20, 20)
+		axes.set_xlim(-500,trackN[lineN-1]+100)
+		axes.set_ylim(-30, 35)
 		smalldM=min(comparatorM)
 		hugedM=max(comparatorM)
 		hugeError=max(comparatorError)
@@ -185,11 +189,13 @@ for i_module in range(1, moduleN-1):
 	print "In Module", i_module,": Smallest Error=", smallError, "um, Largest Error=", hugeError, "um, Smallest dM=", smalldM, "um Largest dM=", hugedM, "um"
 	del comparatorM[:]
 	del comparatorError[:]
-	if(i_module==1 or i_module==moduleN-3): 
+	
+	if (i_module!=2 or i_module!=3):
 		plt.ylabel("$\Delta$ Misalignment [um]")
-	if(i_module==moduleN-2 or i_module==moduleN-3): 
-		plt.xlabel("Number of Tracks")
+	
+	plt.xlabel("Number of Tracks")
 plt.subplots_adjust(hspace=.5)
+plt.gcf().subplots_adjust(bottom=0.15)
 #plt.show()
 plt.savefig("FoM_Mis.png")
 
