@@ -78,12 +78,26 @@ h_dm3  = TH1F("h_dm3", "dM Module 3", 49, -6, 6)
 h_dm4  = TH1F("h_dm4", "dM Module 4", 49, -6, 6)
 h_dm5  = TH1F("h_dm5", "dM Module 5", 49, -6, 6)
 
-h_er0  = TH1F("h_er0", "er Module 0", 19, -0.1, 0.1)
-h_er1  = TH1F("h_er1", "er Module 1", 19, 1.2, 1.4)
-h_er2  = TH1F("h_er2", "er Module 2", 19, 1.2, 1.4)
-h_er3  = TH1F("h_er3", "er Module 3", 19, -0.1, 0.1)
-h_er4  = TH1F("h_er4", "er Module 4", 1000, -1, 1)
-h_er5  = TH1F("h_er5", "er Module 5", 1000, -1, 1)
+h_er0  = TH1F("h_er0", "error Module 0", 19, -0.1, 0.1)
+h_er1  = TH1F("h_er1", "error Module 1", 19, 1.2, 1.8)
+h_er2  = TH1F("h_er2", "error Module 2", 19, 1.2, 1.8)
+h_er3  = TH1F("h_er3", "error Module 3", 19, 1.2, 1.8)
+h_er4  = TH1F("h_er4", "error Module 4", 1000, -1, 1)
+h_er5  = TH1F("h_er5", "error Module 5", 1000, -1, 1)
+
+h_dm0.GetXaxis().SetTitle("[um]");
+h_dm1.GetXaxis().SetTitle("[um]");
+h_dm2.GetXaxis().SetTitle("[um]");
+h_dm3.GetXaxis().SetTitle("[um]");
+h_dm4.GetXaxis().SetTitle("[um]");
+h_dm5.GetXaxis().SetTitle("[um]");
+
+h_er0.GetXaxis().SetTitle("[um]");
+h_er1.GetXaxis().SetTitle("[um]");
+h_er2.GetXaxis().SetTitle("[um]");
+h_er3.GetXaxis().SetTitle("[um]");
+h_er4.GetXaxis().SetTitle("[um]");
+h_er5.GetXaxis().SetTitle("[um]");
 
 
 for i_module in range(0, moduleN):
