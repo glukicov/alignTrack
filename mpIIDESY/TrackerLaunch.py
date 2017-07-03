@@ -116,13 +116,13 @@ for i_module in range(0, moduleN):
 		dM=(Misals[i_lines][i_module]-mis_C[i_module])*1e4
 		errorM=Errors[i_lines][i_module]*1e4
 		plt.errorbar(trackN[i_lines], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
-		#plt.plot(trackN[i_lines], dM, marker="x", color="black")
+		plt.plot(trackN[i_lines], dM, marker="_", color="red")
 		
 		
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
-		axes.set_ylim(-30, 35)
+		axes.set_ylim(-20, 40)
 
 
 		plt.xlabel("Number of Tracks")
@@ -174,12 +174,12 @@ for i_module in range(1, moduleN-1):
 		comparatorM.append(abs(dM))
 		comparatorError.append(abs(errorM))
 		plt.errorbar(trackN[i_lines], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
-		#plt.plot(trackN[i_lines], dM, marker="x", color="black")
+		plt.plot(trackN[i_lines], dM,  marker="_", color="red")
 		
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
-		axes.set_ylim(-30, 35)
+		axes.set_ylim(-20, 40)
 		smalldM=min(comparatorM)
 		hugedM=max(comparatorM)
 		hugeError=max(comparatorError)

@@ -79,9 +79,9 @@ h_dm4  = TH1F("h_dm4", "dM Module 4", 49, -6, 6)
 h_dm5  = TH1F("h_dm5", "dM Module 5", 49, -6, 6)
 
 h_er0  = TH1F("h_er0", "error Module 0", 19, -0.1, 0.1)
-h_er1  = TH1F("h_er1", "error Module 1", 19, 1.2, 1.8)
-h_er2  = TH1F("h_er2", "error Module 2", 19, 1.2, 1.8)
-h_er3  = TH1F("h_er3", "error Module 3", 19, 1.2, 1.8)
+h_er1  = TH1F("h_er1", "error Module 1", 19, 1.1, 1.7)
+h_er2  = TH1F("h_er2", "error Module 2", 19, 1.1, 1.7)
+h_er3  = TH1F("h_er3", "error Module 3", 19, 0.1, 0.1)
 h_er4  = TH1F("h_er4", "error Module 4", 1000, -1, 1)
 h_er5  = TH1F("h_er5", "error Module 5", 1000, -1, 1)
 
