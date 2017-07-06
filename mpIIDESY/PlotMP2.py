@@ -42,20 +42,22 @@ with open("Tracker_d_mille.txt") as f:
         number = lineC.split()
         nlc.append(number[0])
         derLC_1.append(float(number[1]))
-        ngl.append(number[2])
-        derGL_1.append(float(number[3]))
-        label_1.append(number[4])
-        hits.append(float(number[5]))
-        errors.append(float(number[6]))
+        derLC_2.append(float(number[2]))
+        ngl.append(number[3])
+        derGL_1.append(float(number[4]))
+        label_1.append(number[5])
+        hits.append(float(number[6]))
+        errors.append(float(number[7]))
            
   
 # Make a root file 
 f = TFile('MP2Tracker.root','RECREATE')
 
-h_nlc  = TH1I("h_nlc", "NLC", 500, 0, 2)
+h_nlc  = TH1I("h_nlc", "NLC", 500, 0, 4)
 h_ngl  = TH1I("h_ngl", "NGL", 500, 0, 2)
 h_label_1  = TH1I("h_label_1", "label_1", 100, 0, 8)
 h_derLc1  = TH1F("h_derLc1", "lc1", 500, 0, 2)
+h_derLc2  = TH1F("h_derLc2", "lc2", 500, 0, 70)
 h_derGl1  = TH1F("h_derGl1", "gl1", 500, 0, 2)
 h_hits  = TH1F("h_hits", "hits [cm]", 400, -0.2, 0.2)
 h_errors  = TH1F("h_erros", "errors [cm]", 100, 0.01, 0.02)
@@ -65,6 +67,7 @@ for n in range(0, len(nlc)):
     h_ngl.Fill(int(ngl[n]))
     h_label_1.Fill(int(label_1[n]))
     h_derLc1.Fill(float(derLC_1[n]))
+    h_derLc2.Fill(float(derLC_2[n]))
     h_derGl1.Fill(float(derGL_1[n]))
     h_hits.Fill(float(hits[n]))
     h_erros.Fill(float(errors[n]))
@@ -91,7 +94,10 @@ c2.cd(2)
 h_hits.Draw()
 c2.cd(3) 
 h_erros.Draw()
+c2.cd(4)
+h_derLc2.Draw()
 c2.Print("c2_mp2.png")
+
 
 
 f.Write()

@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
-*   Modified: 3 May 2017 
+*   Modified: 6 July 2017 
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
 PEDE routine, to align the tracking detector for the g-2 
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.2) - Gleb Lukicov (UCL) - June 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.3) - Gleb Lukicov (UCL) - July 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
@@ -243,7 +243,7 @@ int main(int argc, char* argv[]){
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
     TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  500,  -300, 300);
     TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  500,  -3, 3);
-    TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track [from x0 and m,c]",  500,  -3, 3);
+    TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  500,  -3, 3);
 
     TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -1.5, 1.5);
     TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -1.5, 1.5);
@@ -252,7 +252,7 @@ int main(int argc, char* argv[]){
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 50);
     TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.6, 0.6);
-    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 100, 50, 450);
+    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 100, 0, 450);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  499,  -0.1, 0.1);
@@ -269,11 +269,15 @@ int main(int argc, char* argv[]){
     	TH1F* temp = cmTitle[i];
     	cmTitle[i]->SetXTitle("[cm]");
     }
-    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_det, h_true, h_intercept, h_slope, h_x0, h_x1, h_recon, h_fit, h_hits_true, h_resiudal_track, h_chi2_track, h_resiudal_fit, h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
+    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_det, h_true, h_recon, h_fit, h_hits_true, h_resiudal_track, h_chi2_track, h_resiudal_fit, h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
+    TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     TH1F* cdDebug[] = {h_rightTail, h_leftTail, h_rightTail_true, h_leftTail_true};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
     	cdAllHits_F[i]->SetDirectory(cd_All_Hits);
+    }
+    for (int i=0; i<(int) sizeof( cdTracks_F ) / sizeof( cdTracks_F[0] ); i++){
+        cdTracks_F[i]->SetDirectory(cd_Tracks);
     }
     for (int i=0; i<(int) sizeof( cdAllHits_I ) / sizeof( cdAllHits_I[0] ); i++){
     	cdAllHits_I[i]->SetDirectory(cd_All_Hits);
@@ -495,12 +499,7 @@ int main(int argc, char* argv[]){
             h_reconMinusTrue_hits->Fill(generated_MC.x_hit_true[hitCount]-generated_MC.x_hit_recon[hitCount]);
  			h_id_dca ->Fill(generated_MC.strawID[hitCount]);
 
-            h_slope->Fill(generated_MC.slope[hitCount]);
-            h_intercept->Fill(generated_MC.intercept[hitCount]);
-            h_x0->Fill(generated_MC.x0[hitCount]);
-            h_x1->Fill(generated_MC.x1[hitCount]);
-
-
+            
             //Debug Plots
             if (generated_MC.x_hit_recon[hitCount] > 1.0){
                 h_rightTail -> Fill(generated_MC.x_hit_recon[hitCount]);
@@ -612,7 +611,7 @@ int main(int argc, char* argv[]){
         }
         #endif
 
-            if (debugBool){ debug_mp2  << nalc << " " << derlc[0] <<  " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
+            if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits
         } // end of hits loop
         //For generated tracks
@@ -627,6 +626,11 @@ int main(int argc, char* argv[]){
         residuals_track_sum_2=0;
         residuals_fit_sum_2=0;
         h_hitCount->Fill(generated_MC.hit_count);
+
+        h_slope->Fill(generated_MC.slope);
+        h_intercept->Fill(generated_MC.intercept);
+        h_x0->Fill(generated_MC.x0);
+        h_x1->Fill(generated_MC.x1);
         
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
@@ -681,7 +685,7 @@ int main(int argc, char* argv[]){
     cout << "-------------------------------------------------------------------------"<< endl; 
     cout << "ROOT fitting parameters and output:" << endl; 
     
-    h_reconMinusTrue_track->Fit("gaus", "Q");
+    //h_reconMinusTrue_track->Fit("gaus", "Q");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
     h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.

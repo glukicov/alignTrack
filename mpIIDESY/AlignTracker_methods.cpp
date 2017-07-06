@@ -267,10 +267,10 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
     float xTrack; //true track position x=(z_straw-c)/m; 
 
-    MC.x0.push_back(x0);
-    MC.x1.push_back(x1);
-    MC.slope.push_back(xSlope);
-    MC.intercept.push_back(xIntercept);
+    MC.x0 = x0;
+    MC.x1 = x1;
+    MC.slope = xSlope;
+    MC.intercept = xIntercept;
         
     //The main loop is for modules [they produce label of Global Parameters]: 
     // Then looping over layers [we know there will be at most 1 hit per layer] and views

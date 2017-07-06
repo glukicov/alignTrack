@@ -46,10 +46,10 @@ struct MCData {
 	std::vector<int> Straw_i;
 
 	//Generated track parameters
-	std::vector<float> x0;
-	std::vector<float> x1;
-	std::vector<float> slope;
-	std::vector<float> intercept;
+	float x0;
+	float x1;
+	float slope;
+	float intercept;
 
 	//DEBUG
 	
