@@ -21,10 +21,9 @@ Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
 Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
     tracks are lines between z=beamStart and z=beamStop, with x1 and x2 = Constant * rand[0,1]
 Resolution (i.e. tracker systematic) is implemented. 
-Misalignment manually by 0.15 for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
+Misalignment is implemented "manually" for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
 
-Hit rejection:  1) outside of layer
-                2) more than 0.25 cm away from straw centre (i.e straw radius) 
+Hit rejection:  -not implemented 
 
 Constrains TODO 
 Steering options TODO 
@@ -150,7 +149,7 @@ int main(int argc, char* argv[]){
     cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer." << endl;
     cout << "["<< Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
     cout << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl; 
-    cout << "No B-field, Straight (parallel) Tracks, 100% efficiency." << endl;
+    cout << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
     cout << "No Hit rejection:" << endl;
     // DCA > StrawSpacing [" << Tracker::instance()->getStrawSpacing() << " cm]." << endl;
     cout << "Parallel Tracks: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
@@ -193,6 +192,7 @@ int main(int argc, char* argv[]){
     string fit_plotFileName = "Tracker_p_fit.txt"; // Reconstructed Track points
     string contsants_plotFileName = "Tracker_p_constants.txt"; // passing constants (e.g. strawN to python script)
     string hits_gen_plotFileName = "Tracker_p_hits_gen.txt"; // Truth Hits points
+    string hits_fit_plotFileName = "Tracker_p_hits_fit.txt"; // Truth Hits points
     string pede_misFileName = "Tracker_pede_mis.txt"; // Misalignments 
 
     // file streams for debug files 
@@ -207,6 +207,7 @@ int main(int argc, char* argv[]){
     ofstream plot_fit(fit_plotFileName);
     ofstream contsants_plot(contsants_plotFileName);
     ofstream plot_hits_gen(hits_gen_plotFileName);
+    ofstream plot_hits_fit(hits_fit_plotFileName);
     ofstream pede_mis(pede_misFileName);
     
     // Setting fixed precision for floating point values
@@ -234,20 +235,24 @@ int main(int argc, char* argv[]){
     TDirectory* cd_Debug = file->mkdir("Debug");
     TDirectory* cd_Straws = file->mkdir("Straws");
      // Book histograms [once only]
-    TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  500,  Tracker::instance()->getResolution()-0.001, Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
+    TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  1000, -0.2, 0.2);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_true = new TH1F("h_true", "True track position (the x of the generated track in-line with a layer)",  300,  -1.5, 1.5);
+    
+    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
+    TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  500,  -300, 300);
+    TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  500,  -3, 3);
+    TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track [from x0 and m,c]",  500,  -3, 3);
+
     TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -1.5, 1.5);
     TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -1.5, 1.5);
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 50);
-    //TH1F* h_chi2_ndf_track = new TH1F("h_chi2_ndf_track", "Chi2/ndf for generated tracks", 60, -1, 5);
     TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.6, 0.6);
     TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 100, 50, 450);
-    //TH1F* h_chi2_ndf_fit = new TH1F("h_chi2_ndf_fit", "Chi2/ndf for fitted tracks", 200, -1, 30);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  499,  -0.1, 0.1);
@@ -259,12 +264,12 @@ int main(int argc, char* argv[]){
     TH1F* h_leftTail_true = new TH1F("h_leftTail_true", "True X hits < -1",  50,  -0.9,-1.1);
     
     //Use array of pointer of type TH1x to set axis titles and directories 
-    TH1F* cmTitle[] = {h_sigma, h_hits_MP2, h_det, h_true, h_recon, h_fit, h_resiudal_track, h_hits_true, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
+    TH1F* cmTitle[] = {h_sigma, h_hits_MP2, h_det, h_true, h_recon, h_intercept, h_x0, h_x1, h_fit, h_resiudal_track, h_hits_true, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
     	TH1F* temp = cmTitle[i];
     	cmTitle[i]->SetXTitle("[cm]");
     }
-    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_det, h_true, h_recon, h_fit, h_hits_true, h_resiudal_track, h_chi2_track, h_resiudal_fit, h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
+    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_det, h_true, h_intercept, h_slope, h_x0, h_x1, h_recon, h_fit, h_hits_true, h_resiudal_track, h_chi2_track, h_resiudal_fit, h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     TH1F* cdDebug[] = {h_rightTail, h_leftTail, h_rightTail_true, h_leftTail_true};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
@@ -443,24 +448,22 @@ int main(int argc, char* argv[]){
         }
 
         //Generating tracks 
-        MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen, debugBool);
+        MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen, plot_hits_fit, debugBool);
 
             
         for (int hitCount=0; hitCount<generated_MC.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
             
             //Number of local and global parameters 
-            //const int nalc = 2;
-            const int nalc = 1; 
+            const int nalc = 2;
             const int nagl = 1;  
 
             int label_mp2 = generated_MC.i_hits[hitCount]; //label to associate hits within different layers with a correct module
 
             //Local derivatives
             float dlc1=Tracker::instance()->getProjectionX(label_mp2);
-            //float dlc2=generated_MC.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
-            //float derlc[nalc] = {dlc1, dlc2};
-            float derlc[nalc] = {dlc1};
+            float dlc2=generated_MC.z_hits[hitCount]*Tracker::instance()->getProjectionX(label_mp2);
+            float derlc[nalc] = {dlc1, dlc2};
             //Global derivatives
             float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
             float dergl[nagl] = {dgl1};  
@@ -491,6 +494,12 @@ int main(int argc, char* argv[]){
             h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
             h_reconMinusTrue_hits->Fill(generated_MC.x_hit_true[hitCount]-generated_MC.x_hit_recon[hitCount]);
  			h_id_dca ->Fill(generated_MC.strawID[hitCount]);
+
+            h_slope->Fill(generated_MC.slope[hitCount]);
+            h_intercept->Fill(generated_MC.intercept[hitCount]);
+            h_x0->Fill(generated_MC.x0[hitCount]);
+            h_x1->Fill(generated_MC.x1[hitCount]);
+
 
             //Debug Plots
             if (generated_MC.x_hit_recon[hitCount] > 1.0){
