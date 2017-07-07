@@ -218,7 +218,7 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     for (i=0;i<n;i++)
         x_fit.push_back(slope*z_distance[i]+intercept);                    //to calculate y(fitted) at given x points
     
-    if (debugBool){
+    if (debugBool && StrongDebugBool){
         cout<<"S.no"<<setw(5)<<"z"<<setw(19)<<"x(observed)"<<setw(19)<<"x(fitted)"<<endl;
         cout<<"-----------------------------------------------------------------\n";
         for (i=0;i<n;i++)

@@ -87,13 +87,14 @@ int main(int argc, char* argv[]){
     int tracksInput; // number of tracks to generate as specified by the user 
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
     bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py 
+    bool strongPlotting = true;
     //Set up counters for hits and records (tracks)
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     float residuals_track_sum_2=0.0;
     float residuals_fit_sum_2=0.0;
-    const Color_t colourVector[]={kWhite, kBlack, kBlue, kGreen, kYellow, kRed, kGray, kMagenta};
+    const Color_t colourVector[]={kGray, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kMagenta};
        
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -240,8 +241,8 @@ int main(int argc, char* argv[]){
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_true = new TH1F("h_true", "True track position (the x of the generated track in-line with a layer)",  300,  -1.5, 1.5);
     
-    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -300, 300);
-    TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  500,  -300, 300);
+    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -800, 800);
+    TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  500,  -800, 800);
     TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  500,  -3, 3);
     TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  500,  -3, 3);
 
@@ -250,9 +251,9 @@ int main(int argc, char* argv[]){
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
-    TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 50);
+    TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 100);
     TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.6, 0.6);
-    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 100, 0, 450);
+    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 100, 0, 1000);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  499,  -0.1, 0.1);
@@ -311,9 +312,7 @@ int main(int argc, char* argv[]){
         h2->SetDirectory(cd_Layers);
         h3->SetDirectory(cd_Layers);
     }
-
-   
-#if 0 
+//---------------------------------------------------------------------------------------------------// 
     TH1F* hres_0 = new TH1F("h_Residuals_module_0", "", 200, -0.2, 0.2);
     TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
     TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
@@ -360,7 +359,7 @@ int main(int argc, char* argv[]){
     h_DCA_Module_1 -> SetDirectory(cd_Modules);
     h_DCA_Module_2 -> SetDirectory(cd_Modules);
     h_DCA_Module_3 -> SetDirectory(cd_Modules);
-#endif
+//---------------------------------------------------------------------------------------------------// 
 
     for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
          for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
@@ -552,7 +551,7 @@ int main(int argc, char* argv[]){
             h5->Fill(generated_MC.x_mis_dca[hitCount]);
             h5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
             
-        #if 0
+  if(strongPlotting){
             if (generated_MC.Module_i[hitCount] == 0){ hres_0 -> Fill(rMeas_mp2);}
             if (generated_MC.Module_i[hitCount] == 1){ hres_1 -> Fill(rMeas_mp2);}
             if (generated_MC.Module_i[hitCount] == 2){ hres_2 -> Fill(rMeas_mp2);}
@@ -561,8 +560,8 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 5){ hres_5 -> Fill(rMeas_mp2);}
 
        
-            if (generated_MC.Layer_i[hitCount] ==1 && generated_MC.View_i[hitCount] ==0 ){
-            //if (1==1){
+            //if (generated_MC.Layer_i[hitCount] ==1 && generated_MC.View_i[hitCount] ==0 ){
+            if (1==1){
             if (generated_MC.Module_i[hitCount] == 0){
                 //hs_DCA_Module_0->Add(h5);
                 h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
@@ -609,7 +608,7 @@ int main(int argc, char* argv[]){
         
             }
         }
-        #endif
+} // strong plotting 
 
             if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
             hitsN++; //count hits
@@ -694,7 +693,7 @@ int main(int argc, char* argv[]){
     //h_resiudal_fit->Fit("gaus"); 
 
 
-    #if 0
+if (strongPlotting){
     //hres_0->Draw(); 
     TCanvas *csg = new TCanvas("cs","cs",700,900);
     TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
@@ -702,6 +701,10 @@ int main(int argc, char* argv[]){
     hres_0->Draw();
     
     Tg.DrawTextNDC(.5,.95,"Residuals in all Modules");
+    hres_0->SetFillColor(kYellow);
+    hres_1->SetFillColor(kRed);
+    hres_2->SetFillColor(kGreen);
+    hres_3->SetFillColor(kBlue);
     hres_1->Draw("same");
     hres_2->Draw("same");
     hres_3->Draw("same");
@@ -723,12 +726,15 @@ int main(int argc, char* argv[]){
     gaussian2->SetLineColor(kGreen);
     gaussian3->SetLineColor(kOrange);
     gaussian4->SetLineColor(kBlue);
-    gaussian0->Draw("same");
-    gaussian1->Draw("same");
-    gaussian2->Draw("same");
-    gaussian3->Draw("same");
-    gaussian4->Draw("same");
-    gStyle->SetOptStat("oue");
+
+
+
+    // gaussian0->Draw("same");
+    // gaussian1->Draw("same");
+    // gaussian2->Draw("same");
+    // gaussian3->Draw("same");
+    // gaussian4->Draw("same");
+    //gStyle->SetOptStat("oue");
     csg->Print("residuals_func.png");
     //gROOT->ForceStyle();
 
@@ -763,9 +769,8 @@ int main(int argc, char* argv[]){
     cs->cd(2); hs_DCA_Module_1->Draw(); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
     cs->cd(3); hs_DCA_Module_2->Draw(); T.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
     cs->cd(4); hs_DCA_Module_3->Draw(); T.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
-    
     cs->Print("stack_4.png");
-    #endif
+
 
     // TCanvas *csh = new TCanvas("cs","cs",700,900);
     // TText Th; Th.SetTextFont(42); Th.SetTextAlign(21);
@@ -784,7 +789,7 @@ int main(int argc, char* argv[]){
     // css->cd(4); hs_DCA_Module_3->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 3 DCA per straw: stacked");
     // css->Print("stack_s.png");
 
-
+}
     file->Write();
     file->Close(); //good habit!
     cout << "-------------------------------------------------------------------------"<< endl; 
