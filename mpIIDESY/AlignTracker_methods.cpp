@@ -134,8 +134,11 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float xHit, boo
             }
             
             if (hit_distance_up==hit_distance_low){
-                hitDistance = hit_distance_low; cout << "Ambiguity which straw registered hit" << endl;
-                exit(0);
+                hitDistance = hit_distance_low; 
+                if (debugBool){cout << "Ambiguity which straw registered hit" << endl;}
+                cout << "Ambiguity which straw registered hit" << endl;
+                incAmbiguityHit();
+                //exit(0);
             } 
             if (debugBool && StrongDebugBool && 1==0){
                 cout <<  "Hit at " << xHit << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs "<< hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl; 
@@ -260,12 +263,25 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     
     //Track parameters for rand-generated line MC [start and end positions outside of detectors]
     float x0 = beamPositionLength * Tracker::generate_uniform()-1.0; //uniform vertex
-    float x1 = beamPositionLength * Tracker::generate_uniform()-1.0; //uniform vertex
 
-    float xSlope=(beamStop-beamStart)/(x1-x0); //m=dz/dx Slope for a line with coordinates (x_0, beamStart), (x_1, beamStop)
-    float xIntercept = beamStart - xSlope*x0; // for line z=mx+c -> c= z - mx
+    float signXSlope;
 
-    float xTrack; //true track position x=(z_straw-c)/m; 
+    if (Tracker::generate_uniform() >= 0.5){
+    	signXSlope=1.0;
+    }
+    else{
+    	signXSlope=-1.0;
+    }  
+    
+    float xSlope = (Tracker::generate_uniform()*signXSlope) * (beamPositionLength/beamStop); 
+
+    float xIntercept =x0; 
+
+    float x1 = xSlope*beamStop + xIntercept;
+
+    //cout << "xSlope= " << xSlope << " x0= " << x0 << " beamPositionLength= " << beamPositionLength << " beamStop= " << beamStop << " x1= " << x1 << endl;  
+
+    float xTrack; //true track position x=ym+c 
 
     MC.x0 = x0;
     MC.x1 = x1;
@@ -284,7 +300,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            hitLayerCounter++;
          
                //The registered hit position on the misaligned detector is smeared by its resolution 
-               xTrack = (distance[z_counter]-xIntercept)/xSlope;   // true track position [from line]
+               //xTrack = (distance[z_counter]-xIntercept)/xSlope;   // true track position [from line]
+               xTrack = xSlope*distance[z_counter]+xIntercept;
                MC.x_track_true.push_back(xTrack);  // True (gen.) track position
 
                float xHit=xTrack+resolution*Tracker::generate_gaus();

@@ -241,10 +241,10 @@ int main(int argc, char* argv[]){
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1F* h_true = new TH1F("h_true", "True track position (the x of the generated track in-line with a layer)",  300,  -1.5, 1.5);
     
-    TH1F* h_slope = new TH1F("h_slope", "Slope ",  500,  -800, 800);
-    TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  500,  -800, 800);
-    TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  500,  -3, 3);
-    TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  500,  -3, 3);
+    TH1F* h_slope = new TH1F("h_slope", "Slope ",  99,  -0.05, 0.05);
+    TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
+    TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
+    TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
 
     TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -1.5, 1.5);
     TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -1.5, 1.5);
@@ -649,6 +649,7 @@ int main(int argc, char* argv[]){
     cout << fixed << setprecision(1);
     cout << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << ". [" << rejectsFrac*100 << "%]" << endl;
     cout << "Multiple hits (for all layers): " << Tracker::instance()->getMultipleHitsLayer() << "." << endl;
+    cout << "Ambiguity Hits: " << Tracker::instance()->getAmbiguityHit() << "." << endl;
     cout << " " << endl;
     cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
     cout << "Sanity Plots: root Tracker.root" << endl;

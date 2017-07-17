@@ -84,17 +84,18 @@ class Tracker {
  	//Rejection counters //
     int rejectedHitsDCA=0;
     int multipleHitsLayer=0; // passed over from DCAData
+    int ambiguityHit=0; //Exactly in the middle of 2 straws
 	
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {0.0, 0.05, 0.1, -0.03, -0.045, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    float dispX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
     float overallMis; // the overall misalignment - calculated in the misalignment method  
 
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
  	  
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 6; //number of movable detectors/module [independent modules]
+	static const int moduleN = 4; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
@@ -189,6 +190,10 @@ class Tracker {
 	void incMultipleHitsLayer(){
 		multipleHitsLayer=multipleHitsLayer+1;
 	}
+
+	void incAmbiguityHit(){
+		ambiguityHit=ambiguityHit+1;
+	}
     
 	//
 	// Getter methods
@@ -216,6 +221,10 @@ class Tracker {
 
 	int getMultipleHitsLayer(){
 		return multipleHitsLayer;
+	}
+
+	int getAmbiguityHit(){
+		return ambiguityHit;
 	}
 
 
