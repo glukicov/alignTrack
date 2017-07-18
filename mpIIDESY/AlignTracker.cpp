@@ -133,7 +133,7 @@ int main(int argc, char* argv[]){
     Tracker::instance()->setTrackNumber(tracksInput); 
     }
     else{
-        Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");
+        Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");
     }
     
     Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
@@ -239,21 +239,21 @@ int main(int argc, char* argv[]){
     TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  1000, -0.2, 0.2);
     TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
-    TH1F* h_true = new TH1F("h_true", "True track position (the x of the generated track in-line with a layer)",  300,  -1.5, 1.5);
+    TH1F* h_true = new TH1F("h_true", "True track position (the x of the generated track in-line with a layer)",  300,  -3, 3);
     
-    TH1F* h_slope = new TH1F("h_slope", "Slope ",  99,  -0.05, 0.05);
+    TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
     TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
     TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
     TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
 
-    TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -1.5, 1.5);
-    TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -1.5, 1.5);
+    TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -3, 3);
+    TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -3, 3);
     TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 100);
-    TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.6, 0.6);
-    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 100, 0, 1000);
+    TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.06, 0.06);
+    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 40, -1, 100);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  499,  -0.1, 0.1);
@@ -359,6 +359,15 @@ int main(int argc, char* argv[]){
     h_DCA_Module_1 -> SetDirectory(cd_Modules);
     h_DCA_Module_2 -> SetDirectory(cd_Modules);
     h_DCA_Module_3 -> SetDirectory(cd_Modules);
+
+    TH1F* h_reconMinusTrue_line_Module_0 = new TH1F ("h_reconMinusTrue_line_Module_0", "Recon vs True Track in Module 0", 99, -0.06, 0.06);
+    TH1F* h_reconMinusTrue_line_Module_1 = new TH1F ("h_reconMinusTrue_line_Module_1", "Recon vs True Track in Module 1", 99, -0.06, 0.06);
+    TH1F* h_reconMinusTrue_line_Module_2 = new TH1F ("h_reconMinusTrue_line_Module_2", "Recon vs True Track in Module 2", 99, -0.06, 0.06);
+    TH1F* h_reconMinusTrue_line_Module_3 = new TH1F ("h_reconMinusTrue_line_Module_3", "Recon vs True Track in Module 3", 99, -0.06, 0.06);
+    h_reconMinusTrue_line_Module_0 -> SetDirectory(cd_Modules);
+    h_reconMinusTrue_line_Module_1 -> SetDirectory(cd_Modules);
+    h_reconMinusTrue_line_Module_2 -> SetDirectory(cd_Modules);
+    h_reconMinusTrue_line_Module_3 -> SetDirectory(cd_Modules);
 //---------------------------------------------------------------------------------------------------// 
 
     for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
@@ -526,7 +535,8 @@ int main(int argc, char* argv[]){
             h_resiudal_track->Fill(residual_gen);
             residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_resiudal_fit->Fill(rMeas_mp2); //already used as input to mille
-            float sigma_fit = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
+            //float sigma_fit = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
+            float sigma_fit = 0.0140; 
             //cout << "sigma_fit= " << sigma_fit ; 
             residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit,2);
             
@@ -565,6 +575,7 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 0){
                 //hs_DCA_Module_0->Add(h5);
                 h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
+                h_reconMinusTrue_line_Module_0->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
 
                 if (generated_MC.Straw_i[hitCount]== 1){ h0_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
                 if (generated_MC.Straw_i[hitCount]== 2){ h0_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
@@ -576,7 +587,8 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 1){
             //hs_DCA_Module_1->Add(h5);
             h_DCA_Module_1->Fill(generated_MC.x_mis_dca[hitCount]);
-            
+            h_reconMinusTrue_line_Module_1->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+
             if (generated_MC.Straw_i[hitCount]== 1){ h1_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
             if (generated_MC.Straw_i[hitCount]== 2){ h1_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
             if (generated_MC.Straw_i[hitCount]== 3){ h1_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
@@ -589,6 +601,8 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 2){
             //hs_DCA_Module_2->Add(h5);
             h_DCA_Module_2->Fill(generated_MC.x_mis_dca[hitCount]);
+            h_reconMinusTrue_line_Module_2->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+
             if (generated_MC.Straw_i[hitCount]== 1){ h2_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
             if (generated_MC.Straw_i[hitCount]== 2){ h2_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
             if (generated_MC.Straw_i[hitCount]== 3){ h2_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
@@ -600,6 +614,8 @@ int main(int argc, char* argv[]){
             if (generated_MC.Module_i[hitCount] == 3){
             //hs_DCA_Module_3->Add(h5);
             h_DCA_Module_3->Fill(generated_MC.x_mis_dca[hitCount]);
+            h_reconMinusTrue_line_Module_3->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+
             if (generated_MC.Straw_i[hitCount]== 1){ h3_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
             if (generated_MC.Straw_i[hitCount]== 2){ h3_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
             if (generated_MC.Straw_i[hitCount]== 3){ h3_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
@@ -689,9 +705,11 @@ int main(int argc, char* argv[]){
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
     h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
-    //h_chi2_fit->Fit("chi2pdf");
+    h_chi2_fit->Fit("chi2pdf");
+	TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
+    gausFit->SetParameters(0.01405, 0.0, h_resiudal_track->Integral("WIDTH"));     
     h_resiudal_track->Fit("gaus", "Q");
-    //h_resiudal_fit->Fit("gaus"); 
+    h_resiudal_fit->Fit("gausFit"); 
 
 
 if (strongPlotting){

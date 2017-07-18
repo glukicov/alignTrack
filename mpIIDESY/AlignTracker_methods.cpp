@@ -262,21 +262,17 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     xReconPoints.clear();
     
     //Track parameters for rand-generated line MC [start and end positions outside of detectors]
+    // redefining the track as x=ym+c
     float x0 = beamPositionLength * Tracker::generate_uniform()-1.0; //uniform vertex
-
     float signXSlope;
-
     if (Tracker::generate_uniform() >= 0.5){
     	signXSlope=1.0;
     }
     else{
     	signXSlope=-1.0;
     }  
-    
-    float xSlope = (Tracker::generate_uniform()*signXSlope) * (beamPositionLength/beamStop); 
-
-    float xIntercept =x0; 
-
+    float xSlope = (Tracker::generate_uniform()*signXSlope) * (0.5*beamPositionLength/beamStop); 
+    float xIntercept =x0; // by definition 
     float x1 = xSlope*beamStop + xIntercept;
 
     //cout << "xSlope= " << xSlope << " x0= " << x0 << " beamPositionLength= " << beamPositionLength << " beamStop= " << beamStop << " x1= " << x1 << endl;  
@@ -300,8 +296,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            hitLayerCounter++;
          
                //The registered hit position on the misaligned detector is smeared by its resolution 
-               //xTrack = (distance[z_counter]-xIntercept)/xSlope;   // true track position [from line]
-               xTrack = xSlope*distance[z_counter]+xIntercept;
+               xTrack = xSlope*distance[z_counter]+xIntercept;  // true track position [from line x=ym+c]
                MC.x_track_true.push_back(xTrack);  // True (gen.) track position
 
                float xHit=xTrack+resolution*Tracker::generate_gaus();
