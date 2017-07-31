@@ -237,6 +237,8 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
         resData.residuals.push_back(residual_i);
         resData.x_fitted.push_back(x_fit[i_size]);
     }
+    resData.intercept_recon = intercept;
+    resData.slope_recon = slope;
 
     if (debugBool){ plot_fit <<  slope*beamStart+intercept << " "  << slope*beamStop+intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
@@ -385,6 +387,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, plot_fit, debugBool);
     MC.x_residuals = res_Data.residuals;
     MC.x_track_recon=res_Data.x_fitted; //Sanity Plot: fitted (reconstructed) x of the track
+    MC.slope_recon = res_Data.slope_recon;
+    MC.intercept_recon = res_Data.intercept_recon;
     
     if(debugBool){
                         plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " ";
