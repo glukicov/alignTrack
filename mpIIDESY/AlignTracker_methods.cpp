@@ -281,8 +281,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
     MC.x0 = x0;
     MC.x1 = x1;
-    MC.slope = xSlope;
-    MC.intercept = xIntercept;
+    MC.slope_truth = xSlope;
+    MC.intercept_truth = xIntercept;
         
     //The main loop is for modules [they produce label of Global Parameters]: 
     // Then looping over layers [we know there will be at most 1 hit per layer] and views

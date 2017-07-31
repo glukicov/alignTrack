@@ -48,8 +48,10 @@ struct MCData {
 	//Generated track parameters
 	float x0;
 	float x1;
-	float slope;
-	float intercept;
+	float slope_truth;
+	float intercept_truth;
+	float slope_recon;
+	float intercept_recon;
 
 	//DEBUG
 	
@@ -66,6 +68,8 @@ struct DCAData{
 struct ResidualData{
 	std::vector<float> residuals; // residual between  
 	std::vector<float> x_fitted;   // the x-coordinate of the fitted line in a layer [z-coordinate corresponds to distance vector]
+	float slope_recon;
+	float intercept_recon;
 };
 
 /**
@@ -89,7 +93,7 @@ class Tracker {
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {0.0, -0.05, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    float dispX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
     float overallMis; // the overall misalignment - calculated in the misalignment method  
 
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing

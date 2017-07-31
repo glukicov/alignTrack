@@ -94,7 +94,7 @@ int main(int argc, char* argv[]){
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     float residuals_track_sum_2=0.0;
     float residuals_fit_sum_2=0.0;
-    const Color_t colourVector[]={kGray, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kMagenta};
+    const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack};
        
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -238,17 +238,17 @@ int main(int argc, char* argv[]){
      // Book histograms [once only]
     TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  1000, -0.2, 0.2);
-    TH1F* h_det = new TH1F("h_det", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
-    TH1F* h_true = new TH1F("h_true", "True track position (the x of the generated track in-line with a layer)",  300,  -3, 3);
-    
+    TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+        
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
     TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
     TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
     TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
 
+    TH1F* h_track_true = new TH1F("h_track_true", "True track position (the x of the generated track in-line with a layer)",  300,  -3, 3);
     TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -3, 3);
-    TH1F* h_recon = new TH1F("h_recon", "Reconstructed X position of the hits in ideal detector",  500,  -3, 3);
-    TH1F* h_fit = new TH1F("h_fit", "Reconstructed x of the fitted line (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
+    TH1F* h_hits_recon = new TH1F("h_hits_recon", "Reconstructed x position of the hits in ideal detector",  500,  -3, 3);
+    TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 100);
@@ -265,12 +265,12 @@ int main(int argc, char* argv[]){
     TH1F* h_leftTail_true = new TH1F("h_leftTail_true", "True X hits < -1",  50,  -0.9,-1.1);
     
     //Use array of pointer of type TH1x to set axis titles and directories 
-    TH1F* cmTitle[] = {h_sigma, h_hits_MP2, h_det, h_true, h_recon, h_intercept, h_x0, h_x1, h_fit, h_resiudal_track, h_hits_true, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
+    TH1F* cmTitle[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_intercept, h_x0, h_x1, h_resiudal_track, h_hits_true, h_hits_recon, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
     	TH1F* temp = cmTitle[i];
     	cmTitle[i]->SetXTitle("[cm]");
     }
-    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_det, h_true, h_recon, h_fit, h_hits_true, h_resiudal_track, h_chi2_track, h_resiudal_fit, h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
+    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_resiudal_track, h_chi2_track, h_resiudal_fit, h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
     TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     TH1F* cdDebug[] = {h_rightTail, h_leftTail, h_rightTail_true, h_leftTail_true};
@@ -291,7 +291,7 @@ int main(int argc, char* argv[]){
     std::stringstream h_title;
     //Booking histograms for TOTAL # layers
     for (int i = 0 ; i < Tracker::instance()->getLayerTotalN(); i++) {
-        h_name.str(""); h_name << "h_det_layer_" << i;
+        h_name.str(""); h_name << "h_dca_layer_" << i;
         h_title.str(""); h_title << "DCA in layer " << i;
         auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 100,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
         h1->GetXaxis()->SetTitle("[cm]");
@@ -313,6 +313,7 @@ int main(int argc, char* argv[]){
         h3->SetDirectory(cd_Layers);
     }
 //---------------------------------------------------------------------------------------------------// 
+    
     TH1F* hres_0 = new TH1F("h_Residuals_module_0", "", 200, -0.2, 0.2);
     TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
     TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
@@ -320,41 +321,37 @@ int main(int argc, char* argv[]){
     TH1F* hres_4 = new TH1F("h_Residuals_module_4","Residuals in Module 4", 200, -0.2, 0.2);
     TH1F* hres_5 = new TH1F("h_Residuals_module_5","Residuals in Module 5", 200, -0.2, 0.2);
     
-    //Booking stack plots for canvas 
+    //Booking stack plots for canvas
     THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
     THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
     THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
     THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
 
-    TH1F* h0_straw1 = new TH1F("h0_straw1", "DCA Straw 1-M0", 99, -0.1, 0.4);
-    TH1F* h0_straw2 = new TH1F("h0_straw2", "DCA Straw 2-M0", 99, -0.1, 0.4);
-    TH1F* h0_straw3 = new TH1F("h0_straw3", "DCA Straw 3-M0", 99, -0.1, 0.4);
-    TH1F* h0_straw4 = new TH1F("h0_straw4", "DCA Straw 4-M0", 99, -0.1, 0.4);
-    TH1F* h0_straw5 = new TH1F("h0_straw5", "DCA Straw 5-M0", 99, -0.1, 0.4);
+    THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
+    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+        h_name.str(""); h_name << "hs_hits_recon_M" << i_module;
+        h_title.str(""); h_title << " ";
+        auto hsR = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 99, -2.5, 2.5);
+        hsR->GetXaxis()->SetTitle("[cm]");
+        hsR->SetDirectory(cd_Modules);
+    }
+       
 
-    TH1F* h1_straw1 = new TH1F("h2_straw1", "DCA Straw 1-M1", 99, -0.1, 0.4);
-    TH1F* h1_straw2 = new TH1F("h2_straw2", "DCA Straw 2-M1", 99, -0.1, 0.4);
-    TH1F* h1_straw3 = new TH1F("h2_straw3", "DCA Straw 3-M1", 99, -0.1, 0.4);
-    TH1F* h1_straw4 = new TH1F("h2_straw4", "DCA Straw 4-M1", 99, -0.1, 0.4);
-    TH1F* h1_straw5 = new TH1F("h2_straw5", "DCA Straw 5-M1", 99, -0.1, 0.4);
-
-    TH1F* h2_straw1 = new TH1F("h3_straw1", "DCA Straw 1-M2", 99, -0.1, 0.4);
-    TH1F* h2_straw2 = new TH1F("h3_straw2", "DCA Straw 2-M2", 99, -0.1, 0.4);
-    TH1F* h2_straw3 = new TH1F("h3_straw3", "DCA Straw 3-M2", 99, -0.1, 0.4);
-    TH1F* h2_straw4 = new TH1F("h3_straw4", "DCA Straw 4-M2", 99, -0.1, 0.4);
-    TH1F* h2_straw5 = new TH1F("h1_straw5", "DCA Straw 5-M2", 99, -0.1, 0.4);
-
-    TH1F* h3_straw1 = new TH1F("h4_straw1", "DCA Straw 1-M3", 99, -0.1, 0.4);
-    TH1F* h3_straw2 = new TH1F("h4_straw2", "DCA Straw 2-M3", 99, -0.1, 0.4);
-    TH1F* h3_straw3 = new TH1F("h4_straw3", "DCA Straw 3-M3", 99, -0.1, 0.4);
-    TH1F* h3_straw4 = new TH1F("h4_straw4", "DCA Straw 4-M3", 99, -0.1, 0.4);
-    TH1F* h3_straw5 = new TH1F("h4_straw5", "DCA Straw 5-M3", 99, -0.1, 0.4);
-
+    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+        for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
+            h_name.str(""); h_name << "h" << i_module << "_straw" << i_straw;
+            h_title.str(""); h_title << "DCA Straw " << i_straw << "M" << i_module;
+            auto h4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 99, -0.1, 0.4);
+            h4->GetXaxis()->SetTitle("[cm]");
+            h4->SetDirectory(cd_Straws);
+        }
+    }
 
     TH1F* h_DCA_Module_0 = new TH1F ("h_DCA_Module_0", "DCA in Module 0", 99, -0.1, 0.4);
     TH1F* h_DCA_Module_1 = new TH1F ("h_DCA_Module_1", "DCA in Module 1", 99, -0.1, 0.4);
     TH1F* h_DCA_Module_2 = new TH1F ("h_DCA_Module_2", "DCA in Module 2", 99, -0.1, 0.4);
     TH1F* h_DCA_Module_3 = new TH1F ("h_DCA_Module_3", "DCA in Module 3", 99, -0.1, 0.4);
+    
     h_DCA_Module_0 -> SetDirectory(cd_Modules);
     h_DCA_Module_1 -> SetDirectory(cd_Modules);
     h_DCA_Module_2 -> SetDirectory(cd_Modules);
@@ -364,25 +361,27 @@ int main(int argc, char* argv[]){
     TH1F* h_reconMinusTrue_line_Module_1 = new TH1F ("h_reconMinusTrue_line_Module_1", "Recon vs True Track in Module 1", 99, -0.06, 0.06);
     TH1F* h_reconMinusTrue_line_Module_2 = new TH1F ("h_reconMinusTrue_line_Module_2", "Recon vs True Track in Module 2", 99, -0.06, 0.06);
     TH1F* h_reconMinusTrue_line_Module_3 = new TH1F ("h_reconMinusTrue_line_Module_3", "Recon vs True Track in Module 3", 99, -0.06, 0.06);
+    
     h_reconMinusTrue_line_Module_0 -> SetDirectory(cd_Modules);
     h_reconMinusTrue_line_Module_1 -> SetDirectory(cd_Modules);
     h_reconMinusTrue_line_Module_2 -> SetDirectory(cd_Modules);
     h_reconMinusTrue_line_Module_3 -> SetDirectory(cd_Modules);
 //---------------------------------------------------------------------------------------------------// 
 
-    for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
-         for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer< Tracker::instance()->getLayerN(); i_layer++){ 
-                for (int i_straw=0; i_straw< Tracker::instance()->getStrawN(); i_straw++){
-                        h_name.str(""); h_name << "h_DCA_Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
-                        h_title.str(""); h_title<< "DCA in Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
-                        auto hs = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 50, -0.1, 0.4);
-                        hs->GetXaxis()->SetTitle("[cm]");
-                        hs->SetDirectory(cd_Straws);
-                }
-            }
-        }
-    }
+    // XXX redundant 
+    // for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
+    //      for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
+    //         for (int i_layer=0; i_layer< Tracker::instance()->getLayerN(); i_layer++){ 
+    //             for (int i_straw=0; i_straw< Tracker::instance()->getStrawN(); i_straw++){
+    //                     h_name.str(""); h_name << "h_DCA_Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
+    //                     h_title.str(""); h_title<< "DCA in Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
+    //                     auto hs = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 50, -0.1, 0.4);
+    //                     hs->GetXaxis()->SetTitle("[cm]");
+    //                     hs->SetDirectory(cd_Straws);
+    //             }
+    //         }
+    //     }
+    // }
 
 
     // Creating .bin, steering, and constrain files
@@ -497,11 +496,11 @@ int main(int argc, char* argv[]){
             //Fill for all hits
             h_hits_MP2 -> Fill (rMeas_mp2); // residuals 
             h_sigma -> Fill(sigma_mp2); // errors 
-            h_det->Fill(generated_MC.x_mis_dca[hitCount]); // DCA
+            h_dca->Fill(generated_MC.x_mis_dca[hitCount]); // DCA
             h_hits_true->Fill(generated_MC.x_hit_true[hitCount]); // True (smeared) hit position
-            h_true->Fill(generated_MC.x_track_true[hitCount]); // True (generated) track position
-            h_recon->Fill(generated_MC.x_hit_recon[hitCount]); // Reconstructed hit position
-            h_fit->Fill(generated_MC.x_track_recon[hitCount]); // Reconstructed (fitted) track position
+            h_track_true->Fill(generated_MC.x_track_true[hitCount]); // True (generated) track position
+            h_hits_recon->Fill(generated_MC.x_hit_recon[hitCount]); // Reconstructed hit position
+            h_track_recon->Fill(generated_MC.x_track_recon[hitCount]); // Reconstructed (fitted) track position
             h_labels->Fill(l1);
             h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
             h_reconMinusTrue_hits->Fill(generated_MC.x_hit_true[hitCount]-generated_MC.x_hit_recon[hitCount]);
@@ -541,7 +540,7 @@ int main(int argc, char* argv[]){
             residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit,2);
             
             //Fill for hits in layers
-            h_name.str(""); h_name << "Layers/h_det_layer_" << hitCount;
+            h_name.str(""); h_name << "Layers/h_dca_layer_" << hitCount;
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
             h1->Fill(generated_MC.x_mis_dca[hitCount]);
             h_name.str(""); h_name << "Layers/h_strawID_layer_" << hitCount;
@@ -552,82 +551,64 @@ int main(int argc, char* argv[]){
             h3 ->Fill(generated_MC.LR[hitCount]);
 
 
-            // h_name.str(""); h_name << "Modules/h_Residuals_module_" << generated_MC.Module_i[hitCount];
-            // TH1F* h4 = (TH1F*)file->Get(h_name.str().c_str() );
-            // h4->Fill(rMeas_mp2);
-           
-            h_name.str(""); h_name << "Straws/h_DCA_Module_" << generated_MC.Module_i[hitCount] <<"_View_" <<  generated_MC.View_i[hitCount] << "_Layer_"<< generated_MC.Layer_i[hitCount]<<"_Straw_"<< generated_MC.Straw_i[hitCount];
-            TH1F* h5 = (TH1F*)file->Get(h_name.str().c_str() );       
-            h5->Fill(generated_MC.x_mis_dca[hitCount]);
-            h5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
+            // XXX redundant 
+            // h_name.str(""); h_name << "Straws/h_DCA_Module_" << generated_MC.Module_i[hitCount] <<"_View_" <<  generated_MC.View_i[hitCount] << "_Layer_"<< generated_MC.Layer_i[hitCount]<<"_Straw_"<< generated_MC.Straw_i[hitCount];
+            // TH1F* h5 = (TH1F*)file->Get(h_name.str().c_str() );       
+            // h5->Fill(generated_MC.x_mis_dca[hitCount]);
+            // h5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
+
+            h_name.str(""); h_name << "Straws/h" << generated_MC.Module_i[hitCount] << "_straw" << generated_MC.Straw_i[hitCount];
+            TH1F* hs6 = (TH1F*)file->Get( h_name.str().c_str() );
+            hs6->Fill(generated_MC.x_mis_dca[hitCount]);
+            hs6 -> SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
+
+            h_name.str(""); h_name << "Modules/hs_hits_recon_M" << generated_MC.Module_i[hitCount];
+            TH1F* hs7 = (TH1F*)file->Get( h_name.str().c_str() );
+            hs7->Fill(generated_MC.x_hit_recon[hitCount]);
+            hs7 -> SetFillColor(colourVector[generated_MC.Module_i[hitCount]]);
             
-  if(strongPlotting){
-            if (generated_MC.Module_i[hitCount] == 0){ hres_0 -> Fill(rMeas_mp2);}
-            if (generated_MC.Module_i[hitCount] == 1){ hres_1 -> Fill(rMeas_mp2);}
-            if (generated_MC.Module_i[hitCount] == 2){ hres_2 -> Fill(rMeas_mp2);}
-            if (generated_MC.Module_i[hitCount] == 3){ hres_3 -> Fill(rMeas_mp2);}
-            if (generated_MC.Module_i[hitCount] == 4){ hres_4 -> Fill(rMeas_mp2);}
-            if (generated_MC.Module_i[hitCount] == 5){ hres_5 -> Fill(rMeas_mp2);}
+            if(strongPlotting){
+                if (generated_MC.Module_i[hitCount] == 0){ hres_0 -> Fill(rMeas_mp2);}
+                if (generated_MC.Module_i[hitCount] == 1){ hres_1 -> Fill(rMeas_mp2);}
+                if (generated_MC.Module_i[hitCount] == 2){ hres_2 -> Fill(rMeas_mp2);}
+                if (generated_MC.Module_i[hitCount] == 3){ hres_3 -> Fill(rMeas_mp2);}
+                if (generated_MC.Module_i[hitCount] == 4){ hres_4 -> Fill(rMeas_mp2);}
+                if (generated_MC.Module_i[hitCount] == 5){ hres_5 -> Fill(rMeas_mp2);}
 
        
             //if (generated_MC.Layer_i[hitCount] ==1 && generated_MC.View_i[hitCount] ==0 ){
-            if (1==1){
-            if (generated_MC.Module_i[hitCount] == 0){
-                //hs_DCA_Module_0->Add(h5);
-                h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
-                h_reconMinusTrue_line_Module_0->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+            if (1==1){   
 
-                if (generated_MC.Straw_i[hitCount]== 1){ h0_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-                if (generated_MC.Straw_i[hitCount]== 2){ h0_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-                if (generated_MC.Straw_i[hitCount]== 3){ h0_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-                if (generated_MC.Straw_i[hitCount]== 4){ h0_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-                if (generated_MC.Straw_i[hitCount]== 5){ h0_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h0_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
+                if (generated_MC.Module_i[hitCount] == 0){
+                    
+                    h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
+                    h_reconMinusTrue_line_Module_0->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+
+                }
+                if (generated_MC.Module_i[hitCount] == 1){
+                
+                    h_DCA_Module_1->Fill(generated_MC.x_mis_dca[hitCount]);
+                    h_reconMinusTrue_line_Module_1->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+
+                }
+                
+                if (generated_MC.Module_i[hitCount] == 2){
+                
+                    h_DCA_Module_2->Fill(generated_MC.x_mis_dca[hitCount]);
+                    h_reconMinusTrue_line_Module_2->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+       
+                }
+                
+                if (generated_MC.Module_i[hitCount] == 3){
             
+                    h_DCA_Module_3->Fill(generated_MC.x_mis_dca[hitCount]);
+                    h_reconMinusTrue_line_Module_3->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+                }
             }
-            if (generated_MC.Module_i[hitCount] == 1){
-            //hs_DCA_Module_1->Add(h5);
-            h_DCA_Module_1->Fill(generated_MC.x_mis_dca[hitCount]);
-            h_reconMinusTrue_line_Module_1->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-
-            if (generated_MC.Straw_i[hitCount]== 1){ h1_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 2){ h1_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 3){ h1_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 4){ h1_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 5){ h1_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h1_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            
-
-            }
-            
-            if (generated_MC.Module_i[hitCount] == 2){
-            //hs_DCA_Module_2->Add(h5);
-            h_DCA_Module_2->Fill(generated_MC.x_mis_dca[hitCount]);
-            h_reconMinusTrue_line_Module_2->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-
-            if (generated_MC.Straw_i[hitCount]== 1){ h2_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 2){ h2_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 3){ h2_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 4){ h2_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 5){ h2_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h2_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            
-            }
-            
-            if (generated_MC.Module_i[hitCount] == 3){
-            //hs_DCA_Module_3->Add(h5);
-            h_DCA_Module_3->Fill(generated_MC.x_mis_dca[hitCount]);
-            h_reconMinusTrue_line_Module_3->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-
-            if (generated_MC.Straw_i[hitCount]== 1){ h3_straw1 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw1->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 2){ h3_straw2 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw2->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 3){ h3_straw3 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw3->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 4){ h3_straw4 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw4->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-            if (generated_MC.Straw_i[hitCount]== 5){ h3_straw5 -> Fill(generated_MC.x_mis_dca[hitCount]); h3_straw5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);}
-        
-            }
-        }
 } // strong plotting 
 
-            if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
-            hitsN++; //count hits
+        if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
+        hitsN++; //count hits
         } // end of hits loop
         //For generated tracks
         float chi2_track=residuals_track_sum_2;
@@ -714,7 +695,7 @@ int main(int argc, char* argv[]){
 
 if (strongPlotting){
     //hres_0->Draw(); 
-    TCanvas *csg = new TCanvas("cs","cs",700,900);
+    TCanvas *csg = new TCanvas("csg","csg",700,900);
     TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
     hres_0->Add(hres_5);
     hres_0->Draw();
@@ -760,29 +741,16 @@ if (strongPlotting){
    
     TCanvas *cs = new TCanvas("cs","cs",700,900);
     TText T; T.SetTextFont(42); T.SetTextAlign(21);
-    hs_DCA_Module_0->Add(h0_straw1);
-    hs_DCA_Module_0->Add(h0_straw2);
-    hs_DCA_Module_0->Add(h0_straw3);
-    hs_DCA_Module_0->Add(h0_straw4);
-    hs_DCA_Module_0->Add(h0_straw5);
-
-    hs_DCA_Module_1->Add(h1_straw1);
-    hs_DCA_Module_1->Add(h1_straw2);
-    hs_DCA_Module_1->Add(h1_straw3);
-    hs_DCA_Module_1->Add(h1_straw4);
-    hs_DCA_Module_1->Add(h1_straw5);
-
-    hs_DCA_Module_2->Add(h2_straw1);
-    hs_DCA_Module_2->Add(h2_straw2);
-    hs_DCA_Module_2->Add(h2_straw3);
-    hs_DCA_Module_2->Add(h2_straw4);
-    hs_DCA_Module_2->Add(h2_straw5);
-
-    hs_DCA_Module_3->Add(h3_straw1);
-    hs_DCA_Module_3->Add(h3_straw2);
-    hs_DCA_Module_3->Add(h3_straw3);
-    hs_DCA_Module_3->Add(h3_straw4);
-    hs_DCA_Module_3->Add(h3_straw5);
+    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+        for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
+            h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
+            TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
+            if (i_module == 0){hs_DCA_Module_0->Add(hs3);}
+            if (i_module == 1){hs_DCA_Module_1->Add(hs3);}
+            if (i_module == 2){hs_DCA_Module_2->Add(hs3);}
+            if (i_module == 3){hs_DCA_Module_3->Add(hs3);}
+        }
+    }    
     cs->Divide(2,2);
     cs->cd(1); hs_DCA_Module_0->Draw(); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
     cs->cd(2); hs_DCA_Module_1->Draw(); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
@@ -791,24 +759,19 @@ if (strongPlotting){
     cs->Print("stack_4.png");
 
 
-    // TCanvas *csh = new TCanvas("cs","cs",700,900);
-    // TText Th; Th.SetTextFont(42); Th.SetTextAlign(21);
-    // cs->Divide(2,2);
-    // cs->cd(1); hs_DCA_Module_0->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
-    // cs->cd(2); hs_DCA_Module_1->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
-    // cs->cd(3); hs_DCA_Module_2->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
-    // cs->cd(4); hs_DCA_Module_3->Draw("nostack"); Th.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
-    // csh->Print("stack.png");
-    // TCanvas *css = new TCanvas("css","css",700,900);
-    // TText Ts; Ts.SetTextFont(42); Ts.SetTextAlign(21);
-    // css->Divide(2,2);
-    // css->cd(1); hs_DCA_Module_0->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 0 DCA per straw: stacked");
-    // css->cd(2); hs_DCA_Module_1->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 1 DCA per straw: stacked");
-    // css->cd(3); hs_DCA_Module_2->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 2 DCA per straw: stacked");
-    // css->cd(4); hs_DCA_Module_3->Draw(""); Ts.DrawTextNDC(.5,.95,"Module 3 DCA per straw: stacked");
-    // css->Print("stack_s.png");
+    TCanvas *csr = new TCanvas("csr","csr",700,900);
+    T.SetTextFont(42); T.SetTextAlign(21);
+    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+            h_name.str(""); h_name << "Modules/hs_hits_recon_M" << i_module;
+            TH1F* hs4 = (TH1F*)file->Get( h_name.str().c_str() );
+            hs_hits_recon->Add(hs4);
+    }    
+    csr->Divide(1,1);
+    csr->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5,.95,"Recon Hits per Module");
+    csr->Print("stack_recon_hits.png");
 
-}
+} // strong plotting 
+
     file->Write();
     file->Close(); //good habit!
     cout << "-------------------------------------------------------------------------"<< endl; 
