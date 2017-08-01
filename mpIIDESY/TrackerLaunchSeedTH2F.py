@@ -46,7 +46,7 @@ M1=[]
 M2=[]
 
 
-with open("PEDE_Mis_SeedBoth.txt") as f:
+with open("PEDE_Mis.txt") as f:
 	line_i = 0
 	for line in f:  #Line is a string
 		number_str = line.split()

@@ -122,7 +122,7 @@ for i_module in range(0, moduleN):
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
-		axes.set_ylim(-20, 40)
+		axes.set_ylim(-10, 35)
 
 
 		plt.xlabel("Number of Tracks")
@@ -179,7 +179,7 @@ for i_module in range(1, moduleN-1):
 		plt.title('FoM Module %s' %(i_module))
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
-		axes.set_ylim(-20, 40)
+		axes.set_ylim(-10, 35)
 		smalldM=min(comparatorM)
 		hugedM=max(comparatorM)
 		hugeError=max(comparatorError)

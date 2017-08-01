@@ -7,19 +7,19 @@ echo "Staring PEDE tests..."
 x=0
 #mv g_seed.txt g_seed.txt.BK
 #mv u_seed.txt u_seed.txt.BK
-while [ $x -le 427 ]
+while [ $x -le 1000 ]
 
 do
 	y=$(( ( RANDOM % 1000000 )  + 1 ))
-	python randomIntGenerator.py -g True -o gaussian_ran.txt -s $y -n 80000
+	python randomIntGenerator.py -g True -o gaussian_ran.txt -s $y -n 160000
 	echo $y >> g_seed.txt 
-	sleep 1.2
+	sleep 1.0
 	z=$(( ( RANDOM % 1000000 )  + 1 )) 
-	python randomIntGenerator.py -u True -o uniform_ran.txt -s $z -n 5000
+	python randomIntGenerator.py -u True -o uniform_ran.txt -s $z -n 15000
 	echo $z >> u_seed.txt 
-	sleep 0.5
+	sleep 0.8
 	"./AlignTracker" d 5000
-	sleep 2.2
+	sleep 3.5
 	"./pede" Tracker_str.txt
 	sleep 1
 	python ConcatenatePEDE.py &
