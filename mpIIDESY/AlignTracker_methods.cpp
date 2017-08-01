@@ -134,8 +134,15 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float xHit, boo
             }
             
             if (hit_distance_up==hit_distance_low){
-                hitDistance = hit_distance_low; 
-                if (debugBool){cout << "Ambiguity which straw registered hit" << endl;}
+                cout << "BIAS" << endl;
+                float random = Tracker::generate_uniform();
+                if (random<0.5){
+                    hitDistance = hit_distance_low;
+                }
+                if (random>0.5){
+                    hitDistance = hit_distance_up;
+                }
+                if (1==1){cout << "Ambiguity which straw registered hit" << endl;}
                 cout << "Ambiguity which straw registered hit" << endl;
                 incAmbiguityHit();
                 //exit(0);
@@ -197,7 +204,7 @@ float Tracker::HitRecon(int x_det_ID, float x_det_dca, float LRSign, vector<floa
 
 ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_distance, ofstream& plot_fit, bool debugBool){
 
-    bool StrongDebugBool=false;
+    bool StrongDebugBool=true;
      ResidualData resData;
     //from: http://www.bragitoff.com/2015/09/c-program-to-linear-fit-the-data-using-least-squares-method/
     int i,j,k,n;
@@ -222,17 +229,16 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
         x_fit.push_back(slope*z_distance[i]+intercept);                    //to calculate y(fitted) at given x points
     
     if (debugBool && StrongDebugBool){
-        cout<<"S.no"<<setw(5)<<"z"<<setw(19)<<"x(observed)"<<setw(19)<<"x(fitted)"<<endl;
+        cout<<"# "<<setw(5)<<"z"<<setw(19)<<"x(observed)"<<setw(19)<<"x(fitted)"<<endl;
         cout<<"-----------------------------------------------------------------\n";
         for (i=0;i<n;i++)
-            cout<<i+1<<"."<<setw(8)<<z_distance[i]<<setw(15)<<ReconPoints[i]<<setw(18)<<x_fit[i]<<endl;//print a table of x,y(obs.) and y(fit.)    
-        cout<<"\nThe linear fit line is of the form:\n\n"<<slope<<"x + "<<intercept<<endl;        //print the best fit line
+            cout<<i+1<<". "<<setw(8)<<z_distance[i]<<setw(15)<<ReconPoints[i]<<setw(18)<<x_fit[i]<<endl;//print a table of x,y(obs.) and y(fit.)    
+        cout<<"\nThe linear fit line is of the form:\nx="<<slope<<"z + "<<intercept<<endl << endl;        //print the best fit line
     }
 
         
     for (int i_size=0; i_size<n; i_size++){
-        //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position *
-        float rand_gaus=Tracker::generate_gaus();
+        //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position
         float residual_i = x_fit[i_size]-ReconPoints[i_size];
         resData.residuals.push_back(residual_i);
         resData.x_fitted.push_back(x_fit[i_size]);
