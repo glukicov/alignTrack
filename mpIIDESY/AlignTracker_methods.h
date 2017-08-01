@@ -162,7 +162,9 @@ class Tracker {
 
 	float HitRecon(int, float, float, std::vector<float>);
 
-	ResidualData GetResiduals(std::vector<float>,  std::vector<float>, std::ofstream&, bool);
+	//ResidualData GetResiduals(std::vector<float>,  std::vector<float>, std::ofstream&, bool);
+
+	ResidualData GetResiduals(std::vector<float>,  std::vector<float>, int, std::ofstream&, bool);
 
 	MCData MC_launch(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 

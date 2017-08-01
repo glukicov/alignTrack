@@ -202,54 +202,155 @@ float Tracker::HitRecon(int x_det_ID, float x_det_dca, float LRSign, vector<floa
 // Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
 // @ Inputs: ideal points (x,z)
 
-ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_distance, ofstream& plot_fit, bool debugBool){
+// ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_distance, ofstream& plot_fit, bool debugBool){
 
-    bool StrongDebugBool=true;
-     ResidualData resData;
-    //from: http://www.bragitoff.com/2015/09/c-program-to-linear-fit-the-data-using-least-squares-method/
-    int i,j,k,n;
-    //the no. of data pairs to be used
-    n=ReconPoints.size(); // # points to fit = number of layers that saw a hit 
+//     bool StrongDebugBool=true;
+//      ResidualData resData;
+//     //from: http://www.bragitoff.com/2015/09/c-program-to-linear-fit-the-data-using-least-squares-method/
+//     int i,j,k,n;
+//     //the no. of data pairs to be used
+//     n=ReconPoints.size(); // # points to fit = number of layers that saw a hit 
 
-    double slope,intercept;
+//     double slope,intercept;
         
-    double xsum=0,x2sum=0,ysum=0,xysum=0;                //variables for sums/sigma of xi,yi,xi^2,xiyi etc
-    for (i=0;i<n;i++)
-    {
-        xsum=xsum+z_distance[i];                        //calculate sigma(xi)
-        ysum=ysum+ReconPoints[i];                        //calculate sigma(yi)
-        x2sum=x2sum+pow(z_distance[i],2);                //calculate sigma(x^2i)
-        xysum=xysum+z_distance[i]*ReconPoints[i];                    //calculate sigma(xi*yi)
-    }
-    slope=(n*xysum-xsum*ysum)/(n*x2sum-xsum*xsum);            //calculate slope
-    intercept=(x2sum*ysum-xsum*xysum)/(x2sum*n-xsum*xsum);            //calculate intercept
+//     double xsum=0,x2sum=0,ysum=0,xysum=0;                //variables for sums/sigma of xi,yi,xi^2,xiyi etc
+//     for (i=0;i<n;i++)
+//     {
+//         xsum=xsum+z_distance[i];                        //calculate sigma(xi)
+//         ysum=ysum+ReconPoints[i];                        //calculate sigma(yi)
+//         x2sum=x2sum+pow(z_distance[i],2);                //calculate sigma(x^2i)
+//         xysum=xysum+z_distance[i]*ReconPoints[i];                    //calculate sigma(xi*yi)
+//     }
+//     slope=(n*xysum-xsum*ysum)/(n*x2sum-xsum*xsum);            //calculate slope
+//     intercept=(x2sum*ysum-xsum*xysum)/(x2sum*n-xsum*xsum);            //calculate intercept
                              
-    vector<double> x_fit;  //an array to store the new fitted values of y  
-    for (i=0;i<n;i++)
-        x_fit.push_back(slope*z_distance[i]+intercept);                    //to calculate y(fitted) at given x points
+//     vector<double> x_fit;  //an array to store the new fitted values of y  
+//     for (i=0;i<n;i++)
+//         x_fit.push_back(slope*z_distance[i]+intercept);                    //to calculate y(fitted) at given x points
     
-    if (debugBool && StrongDebugBool){
-        cout<<"# "<<setw(5)<<"z"<<setw(19)<<"x(observed)"<<setw(19)<<"x(fitted)"<<endl;
-        cout<<"-----------------------------------------------------------------\n";
-        for (i=0;i<n;i++)
-            cout<<i+1<<". "<<setw(8)<<z_distance[i]<<setw(15)<<ReconPoints[i]<<setw(18)<<x_fit[i]<<endl;//print a table of x,y(obs.) and y(fit.)    
-        cout<<"\nThe linear fit line is of the form:\nx="<<slope<<"z + "<<intercept<<endl << endl;        //print the best fit line
-    }
+//     if (debugBool && StrongDebugBool){
+//         cout<<"# "<<setw(5)<<"z"<<setw(19)<<"x(observed)"<<setw(19)<<"x(fitted)"<<endl;
+//         cout<<"-----------------------------------------------------------------\n";
+//         for (i=0;i<n;i++)
+//             cout<<i+1<<". "<<setw(8)<<z_distance[i]<<setw(15)<<ReconPoints[i]<<setw(18)<<x_fit[i]<<endl;//print a table of x,y(obs.) and y(fit.)    
+//         cout<<"\nThe linear fit line is of the form:\nx="<<slope<<"z + "<<intercept<<endl << endl;        //print the best fit line
+//     }
 
         
-    for (int i_size=0; i_size<n; i_size++){
-        //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position
-        float residual_i = x_fit[i_size]-ReconPoints[i_size];
-        resData.residuals.push_back(residual_i);
-        resData.x_fitted.push_back(x_fit[i_size]);
-    }
-    resData.intercept_recon = intercept;
-    resData.slope_recon = slope;
+//     for (int i_size=0; i_size<n; i_size++){
+//         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position
+//         float residual_i = x_fit[i_size]-ReconPoints[i_size];
+//         resData.residuals.push_back(residual_i);
+//         resData.x_fitted.push_back(x_fit[i_size]);
+//     }
+//     resData.intercept_recon = intercept;
+//     resData.slope_recon = slope;
 
-    if (debugBool){ plot_fit <<  slope*beamStart+intercept << " "  << slope*beamStop+intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
+//     if (debugBool){ plot_fit <<  slope*beamStart+intercept << " "  << slope*beamStop+intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
+//     return resData;
+// }
+   
+ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_distance, int dataSize, ofstream& plot_fit, bool debugBool){
+
+    ResidualData resData;
+
+    bool StrongDebugBool = false; 
+
+    //from: http://codesam.blogspot.com/2011/06/least-square-linear-regression-of-data.html
+    double SUMx = 0;     //sum of x values
+    double SUMy = 0;     //sum of y values
+    double SUMxy = 0;    //sum of x * y
+    double SUMxx = 0;    //sum of x^2
+    double SUMres = 0;   //sum of squared residue
+    double res = 0;      //residue squared
+    double slope = 0;    //slope of regression line
+    double y_intercept = 0; //y intercept of regression line
+    double SUM_Yres = 0; //sum of squared of the discrepancies
+    double AVGy = 0;     //mean of y
+    double AVGx = 0;     //mean of x
+    double Yres = 0;     //squared of the discrepancies
+    double Rsqr = 0;     //coefficient of determination
+
+    //calculate various sums 
+    for (int i = 0; i < dataSize; i++){
+        //sum of x
+        SUMx = SUMx + z_distance[i];
+        //sum of y
+        SUMy = SUMy + ReconPoints[i];
+        //sum of squared x*y
+        SUMxy = SUMxy +z_distance[i] * ReconPoints[i];
+        //sum of squared x
+        SUMxx = SUMxx + z_distance[i] * z_distance[i];
+    }
+
+    //calculate the means of x and y
+    AVGy = SUMy / dataSize;
+    AVGx = SUMx / dataSize;
+
+    //slope or a1
+    slope = (dataSize * SUMxy - SUMx * SUMy) / (dataSize * SUMxx - SUMx*SUMx);
+
+    //y itercept or a0
+    y_intercept = AVGy - slope * AVGx;
+
+    if (StrongDebugBool){
+        printf("x mean(AVGx) = %0.5E\n", AVGx);
+        printf("y mean(AVGy) = %0.5E\n", AVGy);
+        printf ("\n");
+        printf ("The linear equation that best fits the given data:\n");
+        printf ("       y = %2.8lfx + %2.8f\n", slope, y_intercept);
+        printf ("------------------------------------------------------------\n");
+        printf ("   Original (x,y)   (y_i - y_avg)^2     (y_i - a_o - a_1*x_i)^2\n");
+        printf ("------------------------------------------------------------\n");
+    }
+
+    //calculate squared residues, their sum etc.
+    for (int i = 0; i < dataSize; i++) {
+        //current (y_i - a0 - a1 * x_i)^2
+        Yres = pow((ReconPoints[i] - y_intercept - (slope * z_distance[i])), 2);
+        
+        float xFit = slope*z_distance[i]+y_intercept; 
+        resData.x_fitted.push_back(xFit);
+        float xRes = xFit - ReconPoints[i];
+        resData.residuals.push_back(xRes); 
+        
+        //sum of (y_i - a0 - a1 * x_i)^2
+        SUM_Yres += Yres;
+
+        //current residue squared (y_i - AVGy)^2
+        res = pow(ReconPoints[i] - AVGy, 2);
+
+        //sum of squared residues
+        SUMres += res;
+
+        if (StrongDebugBool){
+            printf ("   (%0.2f %0.2f)      %0.5E         %0.5E\n", 
+            z_distance[i], ReconPoints[i], res, Yres);
+        }
+    }
+
+    //calculate r^2 coefficient of determination
+    Rsqr = (SUMres - SUM_Yres) / SUMres;
+
+    if (StrongDebugBool){
+        printf("--------------------------------------------------\n");
+        printf("Sum of (y_i - y_avg)^2 = %0.5E\t\n", SUMres);
+        printf("Sum of (y_i - a_o - a_1*x_i)^2 = %0.5E\t\n", SUM_Yres);
+        printf("Standard deviation(St) = %0.5E\n", sqrt(SUMres / (dataSize - 1)));
+        printf("Standard error of the estimate(Sr) = %0.5E\t\n", sqrt(SUM_Yres / (dataSize-2)));
+        printf("Coefficient of determination(r^2) = %0.5E\t\n", (SUMres - SUM_Yres)/SUMres);
+        printf("Correlation coefficient(r) = %0.5E\t\n", sqrt(Rsqr));
+    }
+    
+    resData.slope_recon=slope;
+    resData.intercept_recon=y_intercept;
+
     return resData;
 }
-   
+
+
+
+
 
 
 /**
@@ -390,7 +491,9 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     if (debugBool && StrongDebugBool){cout << "Calculating residuals:" << endl;}
     //This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
     // and need to do a simultaneous fit once - to return #hits worth of residuals]
-    ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, plot_fit, debugBool);
+    //ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, plot_fit, debugBool);
+    
+    ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, MC.hit_count, plot_fit, debugBool);
     MC.x_residuals = res_Data.residuals;
     MC.x_track_recon=res_Data.x_fitted; //Sanity Plot: fitted (reconstructed) x of the track
     MC.slope_recon = res_Data.slope_recon;
