@@ -201,62 +201,14 @@ float Tracker::HitRecon(int x_det_ID, float x_det_dca, float LRSign, vector<floa
 
 // Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
 // @ Inputs: ideal points (x,z)
-
-// ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_distance, ofstream& plot_fit, bool debugBool){
-
-//     bool StrongDebugBool=true;
-//      ResidualData resData;
-//     //from: http://www.bragitoff.com/2015/09/c-program-to-linear-fit-the-data-using-least-squares-method/
-//     int i,j,k,n;
-//     //the no. of data pairs to be used
-//     n=ReconPoints.size(); // # points to fit = number of layers that saw a hit 
-
-//     double slope,intercept;
-        
-//     double xsum=0,x2sum=0,ysum=0,xysum=0;                //variables for sums/sigma of xi,yi,xi^2,xiyi etc
-//     for (i=0;i<n;i++)
-//     {
-//         xsum=xsum+z_distance[i];                        //calculate sigma(xi)
-//         ysum=ysum+ReconPoints[i];                        //calculate sigma(yi)
-//         x2sum=x2sum+pow(z_distance[i],2);                //calculate sigma(x^2i)
-//         xysum=xysum+z_distance[i]*ReconPoints[i];                    //calculate sigma(xi*yi)
-//     }
-//     slope=(n*xysum-xsum*ysum)/(n*x2sum-xsum*xsum);            //calculate slope
-//     intercept=(x2sum*ysum-xsum*xysum)/(x2sum*n-xsum*xsum);            //calculate intercept
-                             
-//     vector<double> x_fit;  //an array to store the new fitted values of y  
-//     for (i=0;i<n;i++)
-//         x_fit.push_back(slope*z_distance[i]+intercept);                    //to calculate y(fitted) at given x points
-    
-//     if (debugBool && StrongDebugBool){
-//         cout<<"# "<<setw(5)<<"z"<<setw(19)<<"x(observed)"<<setw(19)<<"x(fitted)"<<endl;
-//         cout<<"-----------------------------------------------------------------\n";
-//         for (i=0;i<n;i++)
-//             cout<<i+1<<". "<<setw(8)<<z_distance[i]<<setw(15)<<ReconPoints[i]<<setw(18)<<x_fit[i]<<endl;//print a table of x,y(obs.) and y(fit.)    
-//         cout<<"\nThe linear fit line is of the form:\nx="<<slope<<"z + "<<intercept<<endl << endl;        //print the best fit line
-//     }
-
-        
-//     for (int i_size=0; i_size<n; i_size++){
-//         //RESIDUAL between a point (dca on a straw due to misalignment + ideal position) and detected position
-//         float residual_i = x_fit[i_size]-ReconPoints[i_size];
-//         resData.residuals.push_back(residual_i);
-//         resData.x_fitted.push_back(x_fit[i_size]);
-//     }
-//     resData.intercept_recon = intercept;
-//     resData.slope_recon = slope;
-
-//     if (debugBool){ plot_fit <<  slope*beamStart+intercept << " "  << slope*beamStop+intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
-//     return resData;
-// }
-   
+  
 ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_distance, int dataSize, ofstream& plot_fit, bool debugBool){
 
     ResidualData resData;
 
     bool StrongDebugBool = false; 
 
-    //from: http://codesam.blogspot.com/2011/06/least-square-linear-regression-of-data.html
+    //LSR fit from: http://codesam.blogspot.com/2011/06/least-square-linear-regression-of-data.html
     double SUMx = 0;     //sum of x values
     double SUMy = 0;     //sum of y values
     double SUMxy = 0;    //sum of x * y
@@ -345,12 +297,9 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     resData.slope_recon=slope;
     resData.intercept_recon=y_intercept;
 
+    if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
 }
-
-
-
-
 
 
 /**
@@ -592,14 +541,8 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     //Now misaligning detectors in x
     float misDispX; // effective misalignment 
     for (int i_module=0; i_module<moduleN; i_module++){
-    	//Fix first and last modules with no misalignment
-        if (i_module==0 || i_module==moduleN-1){
-            misDispX=0.0;    
-        }
-        // the rest of the modules get misalignment parameter from the vector 
-        else{
-            misDispX=dispX[i_module];
-        }       
+    	misDispX=dispX[i_module];
+               
         float dX = startingXDistanceStraw0+(misDispX); // starting on the x-axis (z, 0+disp)
     	    	sdevX.push_back(misDispX);  // vector to store the actual of misalignment 
         mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
@@ -664,7 +607,6 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
         float one = 1.0;
         
         for (int i_module = 0; i_module < moduleN; i_module++){ 
-            //if (i_module==0){
             if (i_module==0 || i_module==moduleN-1){
             	constraint_file << "Constraint 0.0" << endl;
                 	int labelt=i_module+1; // Millepede doesn't like 0 as a label...

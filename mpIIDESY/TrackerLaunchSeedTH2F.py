@@ -62,6 +62,16 @@ with open("PEDE_Mis.txt") as f:
 		line_i = line_i + 1
 		
 
+meanBias=[]
+meanBiasError=[]
+
+
+with open("bias.txt") as f:
+	for line in f:  #Line is a string
+		number_str = line.split()
+		
+		meanBias.append(float(number_str[0]))
+		meanBiasError.append(float(number_str[1])) 
 
 ##################PLOTING##############################
 
@@ -71,17 +81,19 @@ with open("PEDE_Mis.txt") as f:
 f = TFile('h_12.root','RECREATE')
 
 h_12  = TH2F("h_12", "dM Module 1 vs 2", 49, -5, 5, 49, -5, 5)
-
 h_12.GetXaxis().SetTitle("dM1 [um]");
 h_12.GetYaxis().SetTitle("dM2 [um]");
-
-
 
 for i in range(0, len(M1)):
 	h_12.Fill(M1[i], M2[i])
 
 
+h_bias = TH1F("h_bias", "Distribution of Mean 'Line Jitters'", 37, -0.0005, 0.0005)
+h_biasError = TH1F("h_biasError", "Distribution of Errors on the Mean 'Line Jitters'", 149, 0, 0.0005)
 
+for i in range(0, len(meanBias)):
+	h_bias.Fill(meanBias[i])
+	h_biasError.Fill(meanBiasError[i])
 
 
 print "sigma(dM1)=", h_12.GetStdDev(1)

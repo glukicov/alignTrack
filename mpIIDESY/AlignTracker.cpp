@@ -181,35 +181,21 @@ int main(int argc, char* argv[]){
     ofstream steering_file(strFileName);
     cout << fixed << setprecision(setPrecision); // set precision of standard screen output
 
-    //Debug files [only filled with "d" option]
-    string mp2_debugFileName = "Tracker_d_mille.txt"; // Inputs into binary files
-    string cacl_debugFileName = "Tracker_d_calc.txt"; // intermediate calculation 
-    string mis_debugFileName = "Tracker_d_mis.txt";  // Misalignment 
-    string geom_debugFileName = "Tracker_d_geom.txt"; // Geometry 
-    string off_debugFileName = "Tracker_d_off.txt";  // Offsets/Missed hits
-    string MC_debugFileName = "Tracker_d_MC.txt";  // Final results from MC
-    string con_debugFileName = "Tracker_d_con.txt"; //Constraints
-    string gen_plotFileName = "Tracker_p_gen.txt"; // Truth Track points
-    string fit_plotFileName = "Tracker_p_fit.txt"; // Reconstructed Track points
-    string contsants_plotFileName = "Tracker_p_constants.txt"; // passing constants (e.g. strawN to python script)
-    string hits_gen_plotFileName = "Tracker_p_hits_gen.txt"; // Truth Hits points
-    string hits_fit_plotFileName = "Tracker_p_hits_fit.txt"; // Truth Hits points
-    string pede_misFileName = "Tracker_pede_mis.txt"; // Misalignments 
-
-    // file streams for debug files 
-    ofstream debug_mp2(mp2_debugFileName);
-    ofstream debug_calc(cacl_debugFileName);
-    ofstream debug_mis(mis_debugFileName);
-    ofstream debug_geom(geom_debugFileName);
-    ofstream debug_off(off_debugFileName);
-    ofstream debug_mc(MC_debugFileName); 
-    ofstream debug_con(con_debugFileName);
-    ofstream plot_gen(gen_plotFileName);
-    ofstream plot_fit(fit_plotFileName);
-    ofstream contsants_plot(contsants_plotFileName);
-    ofstream plot_hits_gen(hits_gen_plotFileName);
-    ofstream plot_hits_fit(hits_fit_plotFileName);
-    ofstream pede_mis(pede_misFileName);
+    //Debug files [only filled with "d" option]: file streams for debug files 
+    ofstream debug_mp2("Tracker_d_mille.txt");               //Inputs into binary files
+    ofstream debug_calc("Tracker_d_calc.txt");    // intermediate calculation 
+    ofstream debug_mis("Tracker_d_mis.txt");    // Misalignment 
+    ofstream debug_geom("Tracker_d_geom.txt");    // Geometry 
+    ofstream debug_off("Tracker_d_off.txt");    // Offsets/Missed hits
+    ofstream debug_mc("Tracker_d_MC.txt");     // Final results from MC
+    ofstream debug_con("Tracker_d_con.txt");    //Constraints
+    ofstream plot_gen("Tracker_p_gen.txt");    //Truth Track points
+    ofstream plot_fit("Tracker_p_fit.txt");    //Reconstructed Track points
+    ofstream contsants_plot("Tracker_p_constants.txt");    // passing constants (e.g. strawN to python script)
+    ofstream plot_hits_gen("Tracker_p_hits_gen.txt");    // Truth Hits points
+    ofstream plot_hits_fit("Tracker_p_hits_fit.txt");    // Truth Hits points
+    ofstream pede_mis("Tracker_pede_mis.txt");    // Misalignments 
+    ofstream bias; bias.open("bias.txt", ios_base::app);
     
     // Setting fixed precision for floating point values
     debug_mp2 << fixed << setprecision(setPrecision); 
@@ -237,26 +223,26 @@ int main(int argc, char* argv[]){
     TDirectory* cd_Straws = file->mkdir("Straws");
      // Book histograms [once only]
     TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  1000, -0.2, 0.2);
-    TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  500,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  99, -0.2, 0.2);
+    TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
         
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
     TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
     TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
     TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
 
-    TH1F* h_track_true = new TH1F("h_track_true", "True track position (the x of the generated track in-line with a layer)",  300,  -3, 3);
-    TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  300,  -3, 3);
-    TH1F* h_hits_recon = new TH1F("h_hits_recon", "Reconstructed x position of the hits in ideal detector",  500,  -3, 3);
-    TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  500,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
+    TH1F* h_track_true = new TH1F("h_track_true", "True track position (the x of the generated track in-line with a layer)",  49,  -3, 3);
+    TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  149,  -3, 3);
+    TH1F* h_hits_recon = new TH1F("h_hits_recon", "Reconstructed x position of the hits in ideal detector",  149,  -3, 3);
+    TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  149,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 100);
     TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.2, 0.2);
     TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 59, -1, 250);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
-    TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  500,  -0.1, 0.1);
-    TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  499,  -0.1, 0.2);
+    TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
+    TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
     TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  99,  -0.002, 0.002);
     TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  99,  -0.06, 0.07);
     
@@ -293,13 +279,7 @@ int main(int argc, char* argv[]){
     }
 //---------------------------------------------------------------------------------------------------// 
     
-    TH1F* hres_0 = new TH1F("h_Residuals_module_0", "", 200, -0.2, 0.2);
-    TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
-    TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
-    TH1F* hres_3 = new TH1F("h_Residuals_module_3","Residuals in Module 3", 200, -0.2, 0.2);
-    TH1F* hres_4 = new TH1F("h_Residuals_module_4","Residuals in Module 4", 200, -0.2, 0.2);
-    TH1F* hres_5 = new TH1F("h_Residuals_module_5","Residuals in Module 5", 200, -0.2, 0.2);
-    
+       
     //Booking stack plots for canvas
     THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
     THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
@@ -310,7 +290,7 @@ int main(int argc, char* argv[]){
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
         h_name.str(""); h_name << "hs_hits_recon_M" << i_module;
         h_title.str(""); h_title << " ";
-        auto hsR = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 99, -2.5, 2.5);
+        auto hsR = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 49, -2.5, 2.5);
         hsR->GetXaxis()->SetTitle("[cm]");
         hsR->SetDirectory(cd_Modules);
     }
@@ -320,34 +300,29 @@ int main(int argc, char* argv[]){
         for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
             h_name.str(""); h_name << "h" << i_module << "_straw" << i_straw;
             h_title.str(""); h_title << "DCA Straw " << i_straw << "M" << i_module;
-            auto h4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 99, -0.1, 0.4);
+            auto h4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 49, -0.1, 0.4);
             h4->GetXaxis()->SetTitle("[cm]");
             h4->SetDirectory(cd_Straws);
         }
     }
 
-    TH1F* h_DCA_Module_0 = new TH1F ("h_DCA_Module_0", "DCA in Module 0", 99, -0.1, 0.4);
-    TH1F* h_DCA_Module_1 = new TH1F ("h_DCA_Module_1", "DCA in Module 1", 99, -0.1, 0.4);
-    TH1F* h_DCA_Module_2 = new TH1F ("h_DCA_Module_2", "DCA in Module 2", 99, -0.1, 0.4);
-    TH1F* h_DCA_Module_3 = new TH1F ("h_DCA_Module_3", "DCA in Module 3", 99, -0.1, 0.4);
-    
-    h_DCA_Module_0 -> SetDirectory(cd_Modules);
-    h_DCA_Module_1 -> SetDirectory(cd_Modules);
-    h_DCA_Module_2 -> SetDirectory(cd_Modules);
-    h_DCA_Module_3 -> SetDirectory(cd_Modules);
+    TH1F* h_DCA_Module_0 = new TH1F ("h_DCA_Module_0", "DCA in Module 0", 49, -0.1, 0.4);
+    TH1F* h_DCA_Module_1 = new TH1F ("h_DCA_Module_1", "DCA in Module 1", 49, -0.1, 0.4);
+    TH1F* h_DCA_Module_2 = new TH1F ("h_DCA_Module_2", "DCA in Module 2", 49, -0.1, 0.4);
+    TH1F* h_DCA_Module_3 = new TH1F ("h_DCA_Module_3", "DCA in Module 3", 49, -0.1, 0.4);
 
-    TH1F* h_reconMinusTrue_line_Module_0 = new TH1F ("h_reconMinusTrue_line_Module_0", "Recon vs True Track in Module 0", 99, -0.06, 0.06);
-    TH1F* h_reconMinusTrue_line_Module_1 = new TH1F ("h_reconMinusTrue_line_Module_1", "Recon vs True Track in Module 1", 99, -0.06, 0.06);
-    TH1F* h_reconMinusTrue_line_Module_2 = new TH1F ("h_reconMinusTrue_line_Module_2", "Recon vs True Track in Module 2", 99, -0.06, 0.06);
-    TH1F* h_reconMinusTrue_line_Module_3 = new TH1F ("h_reconMinusTrue_line_Module_3", "Recon vs True Track in Module 3", 99, -0.06, 0.06);
+    TH1F* hres_0 = new TH1F("h_Residuals_module_0", "", 200, -0.2, 0.2);
+    TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
+    TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
+    TH1F* hres_3 = new TH1F("h_Residuals_module_3","Residuals in Module 3", 200, -0.2, 0.2);
     
-    h_reconMinusTrue_line_Module_0 -> SetDirectory(cd_Modules);
-    h_reconMinusTrue_line_Module_1 -> SetDirectory(cd_Modules);
-    h_reconMinusTrue_line_Module_2 -> SetDirectory(cd_Modules);
-    h_reconMinusTrue_line_Module_3 -> SetDirectory(cd_Modules);
-
+    TH1F* h_reconMinusTrue_line_Module_0 = new TH1F ("h_reconMinusTrue_line_Module_0", "Recon vs True Track in Module 0", 49, -0.06, 0.06);
+    TH1F* h_reconMinusTrue_line_Module_1 = new TH1F ("h_reconMinusTrue_line_Module_1", "Recon vs True Track in Module 1", 49, -0.06, 0.06);
+    TH1F* h_reconMinusTrue_line_Module_2 = new TH1F ("h_reconMinusTrue_line_Module_2", "Recon vs True Track in Module 2", 49, -0.06, 0.06);
+    TH1F* h_reconMinusTrue_line_Module_3 = new TH1F ("h_reconMinusTrue_line_Module_3", "Recon vs True Track in Module 3", 49, -0.06, 0.06);
+    
     //Use array of pointer of type TH1x to set axis titles and directories 
-    TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, hres_0, hres_1, hres_2, hres_3,  h_reconMinusTrue_track_slope, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_intercept, h_x0, h_x1, h_resiudal_track, h_hits_true, h_hits_recon, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
+    TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, hres_0, hres_1, hres_2, hres_3, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_intercept, h_x0, h_x1, h_resiudal_track, h_hits_true, h_hits_recon, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
         TH1F* temp = cmTitle[i];
         cmTitle[i]->SetXTitle("[cm]");
@@ -356,6 +331,7 @@ int main(int argc, char* argv[]){
     TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     TH1F* cdDebug[] = {h_rightTail, h_leftTail, h_rightTail_true, h_leftTail_true};
+    TH1F* cdModules[] = {hres_0, hres_1, hres_2, hres_3, h_DCA_Module_0, h_DCA_Module_1, h_DCA_Module_2, h_DCA_Module_3, h_reconMinusTrue_line_Module_0, h_reconMinusTrue_line_Module_1, h_reconMinusTrue_line_Module_2, h_reconMinusTrue_line_Module_3};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
         cdAllHits_F[i]->SetDirectory(cd_All_Hits);
     }
@@ -368,24 +344,11 @@ int main(int argc, char* argv[]){
     for (int i=0; i<(int) sizeof( cdDebug ) / sizeof( cdDebug[0] ); i++){
         cdDebug[i]->SetDirectory(cd_Debug);
     }
+    for (int i=0; i<(int) sizeof( cdModules ) / sizeof( cdModules[0] ); i++){
+        cdModules[i]->SetDirectory(cd_Modules);
+    }
 
 //---------------------------------------------------------------------------------------------------// 
-
-    // XXX redundant 
-    // for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
-    //      for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
-    //         for (int i_layer=0; i_layer< Tracker::instance()->getLayerN(); i_layer++){ 
-    //             for (int i_straw=0; i_straw< Tracker::instance()->getStrawN(); i_straw++){
-    //                     h_name.str(""); h_name << "h_DCA_Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
-    //                     h_title.str(""); h_title<< "DCA in Module_" << i_module <<"_View_" << i_view << "_Layer_"<<i_layer<<"_Straw_"<<i_straw;
-    //                     auto hs = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 50, -0.1, 0.4);
-    //                     hs->GetXaxis()->SetTitle("[cm]");
-    //                     hs->SetDirectory(cd_Straws);
-    //             }
-    //         }
-    //     }
-    // }
-
 
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -510,8 +473,7 @@ int main(int argc, char* argv[]){
             h_track_true->Fill(generated_MC.x_track_true[hitCount]); // True (generated) track position
             h_track_recon->Fill(generated_MC.x_track_recon[hitCount]); // Reconstructed (fitted) track position
             h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-
-            
+                        
             //Debug Plots
             if (generated_MC.x_hit_recon[hitCount] > 1.0){
                 h_rightTail -> Fill(generated_MC.x_hit_recon[hitCount]);
@@ -555,13 +517,6 @@ int main(int argc, char* argv[]){
             TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
             h3 ->Fill(generated_MC.LR[hitCount]);
 
-
-            // XXX redundant 
-            // h_name.str(""); h_name << "Straws/h_DCA_Module_" << generated_MC.Module_i[hitCount] <<"_View_" <<  generated_MC.View_i[hitCount] << "_Layer_"<< generated_MC.Layer_i[hitCount]<<"_Straw_"<< generated_MC.Straw_i[hitCount];
-            // TH1F* h5 = (TH1F*)file->Get(h_name.str().c_str() );       
-            // h5->Fill(generated_MC.x_mis_dca[hitCount]);
-            // h5->SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
-
             h_name.str(""); h_name << "Straws/h" << generated_MC.Module_i[hitCount] << "_straw" << generated_MC.Straw_i[hitCount];
             TH1F* hs6 = (TH1F*)file->Get( h_name.str().c_str() );
             hs6->Fill(generated_MC.x_mis_dca[hitCount]);
@@ -573,43 +528,27 @@ int main(int argc, char* argv[]){
             hs7 -> SetFillColor(colourVector[generated_MC.Module_i[hitCount]]);
             
             if(strongPlotting){
-                if (generated_MC.Module_i[hitCount] == 0){ hres_0 -> Fill(rMeas_mp2);}
-                if (generated_MC.Module_i[hitCount] == 1){ hres_1 -> Fill(rMeas_mp2);}
-                if (generated_MC.Module_i[hitCount] == 2){ hres_2 -> Fill(rMeas_mp2);}
-                if (generated_MC.Module_i[hitCount] == 3){ hres_3 -> Fill(rMeas_mp2);}
-                if (generated_MC.Module_i[hitCount] == 4){ hres_4 -> Fill(rMeas_mp2);}
-                if (generated_MC.Module_i[hitCount] == 5){ hres_5 -> Fill(rMeas_mp2);}
-
-       
-            //if (generated_MC.Layer_i[hitCount] ==1 && generated_MC.View_i[hitCount] ==0 ){
-            if (1==1){   
-
-                if (generated_MC.Module_i[hitCount] == 0){
-                    
-                    h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
+                if (generated_MC.Module_i[hitCount] == 0){ 
+                	hres_0 -> Fill(rMeas_mp2);
+                	h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
                     h_reconMinusTrue_line_Module_0->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-
                 }
-                if (generated_MC.Module_i[hitCount] == 1){
-                
-                    h_DCA_Module_1->Fill(generated_MC.x_mis_dca[hitCount]);
+                if (generated_MC.Module_i[hitCount] == 1){ 
+                	hres_1 -> Fill(rMeas_mp2);
+                	h_DCA_Module_1->Fill(generated_MC.x_mis_dca[hitCount]);
                     h_reconMinusTrue_line_Module_1->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-
                 }
-                
                 if (generated_MC.Module_i[hitCount] == 2){
-                
-                    h_DCA_Module_2->Fill(generated_MC.x_mis_dca[hitCount]);
+                 	hres_2 -> Fill(rMeas_mp2);
+                 	h_DCA_Module_2->Fill(generated_MC.x_mis_dca[hitCount]);
                     h_reconMinusTrue_line_Module_2->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-       
-                }
-                
-                if (generated_MC.Module_i[hitCount] == 3){
-            
-                    h_DCA_Module_3->Fill(generated_MC.x_mis_dca[hitCount]);
+             	}
+                if (generated_MC.Module_i[hitCount] == 3){ 
+                	hres_3 -> Fill(rMeas_mp2);
+                	h_DCA_Module_3->Fill(generated_MC.x_mis_dca[hitCount]);
                     h_reconMinusTrue_line_Module_3->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
                 }
-            }
+            
 } // strong plotting 
 
         if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
@@ -701,12 +640,15 @@ int main(int argc, char* argv[]){
     h_resiudal_track->Fit("gaus", "Q");
     //h_resiudal_fit->Fit("gausFit"); 
 
+    float biasMean = h_reconMinusTrue_track->GetMean();
+    float biasMeanError = h_reconMinusTrue_track->GetMeanError();
+
+    bias << biasMean << " " << biasMeanError << endl;
 
 if (strongPlotting){
     //hres_0->Draw(); 
     TCanvas *csg = new TCanvas("csg","csg",700,900);
     TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
-    hres_0->Add(hres_5);
     hres_0->Draw();
     
     Tg.DrawTextNDC(.5,.95,"Residuals in all Modules");
@@ -717,7 +659,6 @@ if (strongPlotting){
     hres_1->Draw("same");
     hres_2->Draw("same");
     hres_3->Draw("same");
-    hres_4->Draw("same");
     TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis() , 0.08-Tracker::instance()->getOverallMis());
     gaussian0->SetParameters(Tracker::instance()->getTrackNumber()*0.5, 0-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.16 -Tracker::instance()->getOverallMis() , 0.08 -Tracker::instance()->getOverallMis());
@@ -728,16 +669,11 @@ if (strongPlotting){
      gaussian3->SetParameters(Tracker::instance()->getTrackNumber()*0.25, -0.045-Tracker::instance()->getOverallMis(), 0.01452);
     TF1* gaussian4 = new TF1("gaussian4","[0]*TMath::Gaus(x,[1],[2])", -0.04-Tracker::instance()->getOverallMis(), 0.12-Tracker::instance()->getOverallMis());
     gaussian4->SetParameters(Tracker::instance()->getTrackNumber()*0.25, 0.05-Tracker::instance()->getOverallMis(), 0.01452);
-
-
     gaussian0->SetLineColor(kRed);
     gaussian1->SetLineColor(kBlack);
     gaussian2->SetLineColor(kGreen);
     gaussian3->SetLineColor(kOrange);
     gaussian4->SetLineColor(kBlue);
-
-
-
     // gaussian0->Draw("same");
     // gaussian1->Draw("same");
     // gaussian2->Draw("same");
