@@ -316,10 +316,10 @@ int main(int argc, char* argv[]){
     TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
     TH1F* hres_3 = new TH1F("h_Residuals_module_3","Residuals in Module 3", 200, -0.2, 0.2);
     
-    TH1F* h_reconMinusTrue_line_Module_0 = new TH1F ("h_reconMinusTrue_line_Module_0", "Recon vs True Track in Module 0", 49, -0.06, 0.06);
-    TH1F* h_reconMinusTrue_line_Module_1 = new TH1F ("h_reconMinusTrue_line_Module_1", "Recon vs True Track in Module 1", 49, -0.06, 0.06);
-    TH1F* h_reconMinusTrue_line_Module_2 = new TH1F ("h_reconMinusTrue_line_Module_2", "Recon vs True Track in Module 2", 49, -0.06, 0.06);
-    TH1F* h_reconMinusTrue_line_Module_3 = new TH1F ("h_reconMinusTrue_line_Module_3", "Recon vs True Track in Module 3", 49, -0.06, 0.06);
+    TH1F* h_reconMinusTrue_line_Module_0 = new TH1F ("h_reconMinusTrue_line_Module_0", "Recon vs True Track in Module 0", 49, -0.1, 0.1);
+    TH1F* h_reconMinusTrue_line_Module_1 = new TH1F ("h_reconMinusTrue_line_Module_1", "Recon vs True Track in Module 1", 49, -0.1, 0.1);
+    TH1F* h_reconMinusTrue_line_Module_2 = new TH1F ("h_reconMinusTrue_line_Module_2", "Recon vs True Track in Module 2", 49, -0.1, 0.1);
+    TH1F* h_reconMinusTrue_line_Module_3 = new TH1F ("h_reconMinusTrue_line_Module_3", "Recon vs True Track in Module 3", 49, -0.1, 0.1);
     
     //Use array of pointer of type TH1x to set axis titles and directories 
     TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, hres_0, hres_1, hres_2, hres_3, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_intercept, h_x0, h_x1, h_resiudal_track, h_hits_true, h_hits_recon, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
