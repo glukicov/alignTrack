@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
-*   Modified: 6 July 2017 
+*   Modified: 4 August 2017 
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
 PEDE routine, to align the tracking detector for the g-2 
@@ -80,14 +80,15 @@ int main(int argc, char* argv[]){
         ver_string(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
     #endif
 
-    //////----Variable Initialisation-------///////////
+ //------------------------------------------Variable Initialisation---------------------------------------------------------//  
+
     int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.]
     int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
     string compareStr; //for debug vs. normal output as specified by the user
     int tracksInput; // number of tracks to generate as specified by the user 
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
     bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py 
-    bool strongPlotting = true;
+    bool strongPlotting = true;  // For canvas to be drawn and saved as .png
     //Set up counters for hits and records (tracks)
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks
@@ -101,7 +102,7 @@ int main(int argc, char* argv[]){
     //Tell the logger to throw exceptions when ERROR messages are received
     Logger::Instance()->enableCriticalErrorThrow();
 
-    //TApplication theApp("App",&argc, argv); //for Canvas in ROOT
+    //TApplication theApp("App",&argc, argv); //for Canvas display 
 
     // Check if correct number of arguments specified, exiting if not
     if (argc > 3) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");} 
@@ -141,13 +142,14 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.3) - Gleb Lukicov (UCL) - July 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.3) - Gleb Lukicov (UCL) - August 2017            " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
 
-    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() << " straws per layer." << endl;
+    cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN() 
+    	<< " straws per layer." << endl;
     cout << "["<< Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
     cout << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl; 
     cout << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
@@ -168,7 +170,8 @@ int main(int argc, char* argv[]){
         cerr << "Please ensure valid filenames are specified!" << endl; 
         return 1;
         } 
-    
+ //------------------------------------------Setting Output Files---------------------------------------------------------//     
+ 
     //arguments for Mille constructor:
     const char* outFileName = "Tracker_data.bin"; 
     bool asBinary = true; // set false for debugging
@@ -209,32 +212,35 @@ int main(int argc, char* argv[]){
     plot_fit << fixed << setprecision(setPrecision);
     contsants_plot << fixed << setprecision(setPrecision);
     pede_mis << fixed << setprecision(setPrecision);
-    
-    
+  
+   //------------------------------------------ROOT: Booking etc.---------------------------------------------------------//   
+
     //output ROOT file
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
     //create a subdirectories 
     TDirectory* cd_All_Hits = file->mkdir("All_Hits");
     TDirectory* cd_Layers = file->mkdir("Layers");
     TDirectory* cd_Modules = file->mkdir("Modules");
-    TDirectory* cd_Views = file->mkdir("Views");
     TDirectory* cd_Tracks = file->mkdir("Tracks");
-    TDirectory* cd_Debug = file->mkdir("Debug");
     TDirectory* cd_Straws = file->mkdir("Straws");
-     // Book histograms [once only]
-    TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
+    // Book histograms [once only]
+    // Key quantities 
+    TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, 
+    	Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
     TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  99, -0.2, 0.2);
     TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
-        
+    TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+    // Track-generation-based
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
     TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
     TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
     TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
-
+    //Track/Hits-based
     TH1F* h_track_true = new TH1F("h_track_true", "True track position (the x of the generated track in-line with a layer)",  49,  -3, 3);
     TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  149,  -3, 3);
     TH1F* h_hits_recon = new TH1F("h_hits_recon", "Reconstructed x position of the hits in ideal detector",  149,  -3, 3);
-    TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  149,  -(Tracker::instance()->getBeamOffset()+3), Tracker::instance()->getBeamPositionLength()+1);
+    TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  149,  -(Tracker::instance()->getBeamOffset()+3), 
+    	Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
     TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 100);
@@ -245,12 +251,10 @@ int main(int argc, char* argv[]){
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
     TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  99,  -0.002, 0.002);
     TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  99,  -0.06, 0.07);
-    
-    TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
-    TH1F* h_rightTail = new TH1F("h_rightTail", "Reconstructed X hits > 1",  50, 0.9, 1.1);
-    TH1F* h_leftTail = new TH1F("h_leftTail", "Reconstructed X hits < -1",  50,  -0.9,-1.1);
-    TH1F* h_rightTail_true = new TH1F("h_rightTail_true", "True X hits > 1",  50, 0.9, 1.1);
-    TH1F* h_leftTail_true = new TH1F("h_leftTail_true", "True X hits < -1",  50,  -0.9,-1.1);
+    TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(Recon-True)/True Track slope",  99,  -0.1, 0.1);
+    TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(Recon-True)/True Track intercept",  99,  -0.1, 0.1);
+
+    THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
     
     std::stringstream h_name;
     std::stringstream h_title;
@@ -258,80 +262,81 @@ int main(int argc, char* argv[]){
     for (int i = 0 ; i < Tracker::instance()->getLayerTotalN(); i++) {
         h_name.str(""); h_name << "h_dca_layer_" << i;
         h_title.str(""); h_title << "DCA in layer " << i;
-        auto h1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 100,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
-        h1->GetXaxis()->SetTitle("[cm]");
-        
+        auto hl1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 100,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+        hl1->GetXaxis()->SetTitle("[cm]"); hl1->SetDirectory(cd_Layers);
         
         h_name.str(""); h_name << "h_strawID_layer_" << i;
         h_title.str(""); h_title << "strawID in layer " << i;
-        auto h2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
-        h2->GetXaxis()->SetTitle("Straw ID [0-31]");
+        auto hl2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+        hl2->GetXaxis()->SetTitle("Straw ID [0-31]"); hl2->SetDirectory(cd_Layers);
         
-
         h_name.str(""); h_name << "h_LR_layer_" << i;
         h_title.str(""); h_title << "Left-Right hit distribution in layer" << i;
-        auto h3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
-        h3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 ");
+        auto hl3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
+        hl3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 "); hl3->SetDirectory(cd_Layers);
 
-        h1->SetDirectory(cd_Layers);
-        h2->SetDirectory(cd_Layers);
-        h3->SetDirectory(cd_Layers);
+        h_name.str(""); h_name << "h_resiudal_fit_layer_" << i;
+        h_title.str(""); h_title << "Residuals to recon line for layer " << i;
+        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  49, -0.02, 0.02);
+        hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_Layers);
+
+        h_name.str(""); h_name << "h_line_jitter_layer_" << i;
+        h_title.str(""); h_title << "Line Jitter for layer " << i;
+        auto hl5 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  49, -0.02, 0.02);
+        hl5->GetXaxis()->SetTitle("[cm]"); hl5->SetDirectory(cd_Layers);
     }
-//---------------------------------------------------------------------------------------------------// 
-    
        
-    //Booking stack plots for canvas
-    THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
-    THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
-    THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
-    THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
-
-    THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
+  	//Modules
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
         h_name.str(""); h_name << "hs_hits_recon_M" << i_module;
         h_title.str(""); h_title << " ";
-        auto hsR = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 49, -2.5, 2.5);
-        hsR->GetXaxis()->SetTitle("[cm]");
-        hsR->SetDirectory(cd_Modules);
+        auto hm1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 49, -2.5, 2.5);
+        hm1->GetXaxis()->SetTitle("[cm]"); hm1->SetDirectory(cd_Modules);
+
+        h_name.str(""); h_name << "h_reconMinusTrue_line_Module_" << i_module;
+    	h_title.str(""); h_title << "Recon vs True Track in Module " << i_module;
+    	auto hm2 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  49, -0.01, 0.01);
+    	hm2->GetXaxis()->SetTitle("[cm]"); hm2->SetDirectory(cd_Modules);
+
+    	h_name.str(""); h_name << "h_DCA_Module_" << i_module;
+    	h_title.str(""); h_title << "DCA in Module " << i_module;
+    	auto hm3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  49, -0.1, 0.4);
+    	hm3->GetXaxis()->SetTitle("[cm]"); hm3->SetDirectory(cd_Modules);
+
+    	h_name.str(""); h_name << "h_Residuals_module_" << i_module;
+    	h_title.str(""); h_title << "Residuals in Module " << i_module;
+    	auto hm4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  199, -0.2, 0.2);
+    	hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
+
+    	h_name.str(""); h_name << "hs_DCA_Module_" << i_module;
+    	auto hm5 = new THStack(h_name.str().c_str(), "");
+    	// THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
+	    // THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
+	    // THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
+	    // THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
     }
        
-
+    // Modules and Straws ["combing 4 layers into 1"]
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
         for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
             h_name.str(""); h_name << "h" << i_module << "_straw" << i_straw;
-            h_title.str(""); h_title << "DCA Straw " << i_straw << "M" << i_module;
-            auto h4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 49, -0.1, 0.4);
-            h4->GetXaxis()->SetTitle("[cm]");
-            h4->SetDirectory(cd_Straws);
+            h_title.str(""); h_title << "DCA Straw " << i_straw << " M" << i_module;
+            auto hms1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 49, -0.1, 0.4);
+            hms1->GetXaxis()->SetTitle("[cm]"); hms1->SetDirectory(cd_Straws);
         }
     }
-
-    TH1F* h_DCA_Module_0 = new TH1F ("h_DCA_Module_0", "DCA in Module 0", 49, -0.1, 0.4);
-    TH1F* h_DCA_Module_1 = new TH1F ("h_DCA_Module_1", "DCA in Module 1", 49, -0.1, 0.4);
-    TH1F* h_DCA_Module_2 = new TH1F ("h_DCA_Module_2", "DCA in Module 2", 49, -0.1, 0.4);
-    TH1F* h_DCA_Module_3 = new TH1F ("h_DCA_Module_3", "DCA in Module 3", 49, -0.1, 0.4);
-
-    TH1F* hres_0 = new TH1F("h_Residuals_module_0", "", 200, -0.2, 0.2);
-    TH1F* hres_1 = new TH1F("h_Residuals_module_1","Residuals in Module 1", 200, -0.2, 0.2);
-    TH1F* hres_2 = new TH1F("h_Residuals_module_2","Residuals in Module 2", 200, -0.2, 0.2);
-    TH1F* hres_3 = new TH1F("h_Residuals_module_3","Residuals in Module 3", 200, -0.2, 0.2);
-    
-    TH1F* h_reconMinusTrue_line_Module_0 = new TH1F ("h_reconMinusTrue_line_Module_0", "Recon vs True Track in Module 0", 49, -0.1, 0.1);
-    TH1F* h_reconMinusTrue_line_Module_1 = new TH1F ("h_reconMinusTrue_line_Module_1", "Recon vs True Track in Module 1", 49, -0.1, 0.1);
-    TH1F* h_reconMinusTrue_line_Module_2 = new TH1F ("h_reconMinusTrue_line_Module_2", "Recon vs True Track in Module 2", 49, -0.1, 0.1);
-    TH1F* h_reconMinusTrue_line_Module_3 = new TH1F ("h_reconMinusTrue_line_Module_3", "Recon vs True Track in Module 3", 49, -0.1, 0.1);
     
     //Use array of pointer of type TH1x to set axis titles and directories 
-    TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, hres_0, hres_1, hres_2, hres_3, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_intercept, h_x0, h_x1, h_resiudal_track, h_hits_true, h_hits_recon, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
+    TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, 
+    	h_intercept, h_x0, h_x1, h_resiudal_track, h_hits_true, h_hits_recon, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
         TH1F* temp = cmTitle[i];
         cmTitle[i]->SetXTitle("[cm]");
     }
-    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_resiudal_track, h_chi2_track, h_resiudal_fit, h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
-    TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept}; 
+    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_resiudal_track, h_chi2_track, h_resiudal_fit, 
+    	h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
+    TH1F* cdTracks_F[] = {h_frac_Dintercept, h_frac_Dslope, h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
-    TH1F* cdDebug[] = {h_rightTail, h_leftTail, h_rightTail_true, h_leftTail_true};
-    TH1F* cdModules[] = {hres_0, hres_1, hres_2, hres_3, h_DCA_Module_0, h_DCA_Module_1, h_DCA_Module_2, h_DCA_Module_3, h_reconMinusTrue_line_Module_0, h_reconMinusTrue_line_Module_1, h_reconMinusTrue_line_Module_2, h_reconMinusTrue_line_Module_3};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
         cdAllHits_F[i]->SetDirectory(cd_All_Hits);
     }
@@ -341,14 +346,8 @@ int main(int argc, char* argv[]){
     for (int i=0; i<(int) sizeof( cdAllHits_I ) / sizeof( cdAllHits_I[0] ); i++){
         cdAllHits_I[i]->SetDirectory(cd_All_Hits);
     }
-    for (int i=0; i<(int) sizeof( cdDebug ) / sizeof( cdDebug[0] ); i++){
-        cdDebug[i]->SetDirectory(cd_Debug);
-    }
-    for (int i=0; i<(int) sizeof( cdModules ) / sizeof( cdModules[0] ); i++){
-        cdModules[i]->SetDirectory(cd_Modules);
-    }
 
-//---------------------------------------------------------------------------------------------------// 
+//------------------------------------------Mille Routines---------------------------------------------------------// 
 
     // Creating .bin, steering, and constrain files
     Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
@@ -358,7 +357,8 @@ int main(int argc, char* argv[]){
     if (plotBool || debugBool){
         contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " " 
                       << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << Tracker::instance()->getTrackNumber() << " " 
-                      << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()  << "  " << Tracker::instance()->getBeamStop() <<  endl;
+                      << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()  
+                      << "  " << Tracker::instance()->getBeamStop() <<  endl;
     }
 
     // SETTING GEOMETRY
@@ -368,7 +368,6 @@ int main(int argc, char* argv[]){
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
-    
     Tracker::instance()->misalign(debug_mis, debugBool); 
     cout<< "Misalignment is complete!" << endl;
     float sigma_calc = sqrt(pow(Tracker::instance()->getResolution(),2)-pow(Tracker::instance()->getResolution(),2)/float(Tracker::instance()->getLayerTotalN()));
@@ -395,7 +394,6 @@ int main(int argc, char* argv[]){
     cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
 
     //Now writing the steering file
-    //TODO what steering parameters does the tracker require? 
     if(steering_file.is_open()){
         steering_file <<  "* g-2 Tracker Alignment: PEDE Steering File" << endl
         << " "  << endl
@@ -412,10 +410,10 @@ int main(int argc, char* argv[]){
 
     cout<< "Calculating residuals..." << endl;
     
-
+ //------------------------------------------Main Mille Track Loop---------------------------------------------------------//    
     bool StrongDebugBool = false;
     //Generating tracks 
-    for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  //Track number is set in methods XXX is it the best place for it? 
+    for (int trackCount=0; trackCount<Tracker::instance()->getTrackNumber(); trackCount++){  
         //float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
         //scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
         scatterError = 0; // set no scatterError for now 
@@ -425,8 +423,8 @@ int main(int argc, char* argv[]){
         }
 
         //Generating tracks 
-        MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen, plot_hits_fit, debugBool);
-
+        MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen, 
+        	plot_hits_fit, debugBool);
             
         for (int hitCount=0; hitCount<generated_MC.hit_count; hitCount++){  //counting only hits going though detector
             //calculating the layer and pixel from the hit number 
@@ -458,7 +456,7 @@ int main(int argc, char* argv[]){
 
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
             
-            //Sanity Plots
+            //***********************************Sanity Plots******************************************//
             //Fill for all hits
             h_hits_MP2 -> Fill (rMeas_mp2); // residuals 
             h_sigma -> Fill(sigma_mp2); // errors 
@@ -473,87 +471,56 @@ int main(int argc, char* argv[]){
             h_track_true->Fill(generated_MC.x_track_true[hitCount]); // True (generated) track position
             h_track_recon->Fill(generated_MC.x_track_recon[hitCount]); // Reconstructed (fitted) track position
             h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-                        
-            //Debug Plots
-            if (generated_MC.x_hit_recon[hitCount] > 1.0){
-                h_rightTail -> Fill(generated_MC.x_hit_recon[hitCount]);
-                h_rightTail -> Fill(2-generated_MC.x_hit_recon[hitCount]);
-            }
-
-            if ( generated_MC.x_hit_recon[hitCount] < -1.0){
-                h_leftTail -> Fill(generated_MC.x_hit_recon[hitCount]);
-                h_leftTail -> Fill(-2+abs(generated_MC.x_hit_recon[hitCount]));
-            }
-
-            if (generated_MC.x_hit_true[hitCount] > 1.0){
-                h_rightTail_true -> Fill(generated_MC.x_hit_true[hitCount]);
-                h_rightTail_true -> Fill(2-generated_MC.x_hit_true[hitCount]);
-            }
-
-            if ( generated_MC.x_hit_true[hitCount] < -1.0){
-                h_leftTail_true -> Fill(generated_MC.x_hit_true[hitCount]);
-                h_leftTail_true -> Fill(-2+abs(generated_MC.x_hit_true[hitCount]));
-            }
-
-                        
+                                              
             //Calculating Chi2 stats:
             float residual_gen = generated_MC.residuals_gen[hitCount]; 
             h_resiudal_track->Fill(residual_gen);
             residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_resiudal_fit->Fill(rMeas_mp2); //already used as input to mille
             //float sigma_fit = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
-            float sigma_fit = 0.0140; 
+            float sigma_fit = 0.0140;        // TODO get it from calculation 
             //cout << "sigma_fit= " << sigma_fit ; 
             residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit,2);
             
             //Fill for hits in layers
-            h_name.str(""); h_name << "Layers/h_dca_layer_" << hitCount;
+            h_name.str(""); h_name << "Layers/h_dca_layer_" << generated_MC.Layer_i[hitCount];
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
             h1->Fill(generated_MC.x_mis_dca[hitCount]);
-            h_name.str(""); h_name << "Layers/h_strawID_layer_" << hitCount;
+            h_name.str(""); h_name << "Layers/h_strawID_layer_" << generated_MC.Layer_i[hitCount];
             TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
             h2 ->Fill(generated_MC.strawID[hitCount]);
-            h_name.str(""); h_name << "Layers/h_LR_layer_" << hitCount;
+            h_name.str(""); h_name << "Layers/h_LR_layer_" << generated_MC.Layer_i[hitCount];
             TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
             h3 ->Fill(generated_MC.LR[hitCount]);
 
             h_name.str(""); h_name << "Straws/h" << generated_MC.Module_i[hitCount] << "_straw" << generated_MC.Straw_i[hitCount];
-            TH1F* hs6 = (TH1F*)file->Get( h_name.str().c_str() );
-            hs6->Fill(generated_MC.x_mis_dca[hitCount]);
-            hs6 -> SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
+            TH1F* h4 = (TH1F*)file->Get( h_name.str().c_str() );
+            h4->Fill(generated_MC.x_mis_dca[hitCount]);
+            h4-> SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
 
             h_name.str(""); h_name << "Modules/hs_hits_recon_M" << generated_MC.Module_i[hitCount];
-            TH1F* hs7 = (TH1F*)file->Get( h_name.str().c_str() );
-            hs7->Fill(generated_MC.x_hit_recon[hitCount]);
-            hs7 -> SetFillColor(colourVector[generated_MC.Module_i[hitCount]]);
-            
-            if(strongPlotting){
-                if (generated_MC.Module_i[hitCount] == 0){ 
-                	hres_0 -> Fill(rMeas_mp2);
-                	h_DCA_Module_0->Fill(generated_MC.x_mis_dca[hitCount]);
-                    h_reconMinusTrue_line_Module_0->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-                }
-                if (generated_MC.Module_i[hitCount] == 1){ 
-                	hres_1 -> Fill(rMeas_mp2);
-                	h_DCA_Module_1->Fill(generated_MC.x_mis_dca[hitCount]);
-                    h_reconMinusTrue_line_Module_1->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-                }
-                if (generated_MC.Module_i[hitCount] == 2){
-                 	hres_2 -> Fill(rMeas_mp2);
-                 	h_DCA_Module_2->Fill(generated_MC.x_mis_dca[hitCount]);
-                    h_reconMinusTrue_line_Module_2->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-             	}
-                if (generated_MC.Module_i[hitCount] == 3){ 
-                	hres_3 -> Fill(rMeas_mp2);
-                	h_DCA_Module_3->Fill(generated_MC.x_mis_dca[hitCount]);
-                    h_reconMinusTrue_line_Module_3->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-                }
-            
-} // strong plotting 
+            TH1F* h5 = (TH1F*)file->Get( h_name.str().c_str() );
+            h5->Fill(generated_MC.x_hit_recon[hitCount]);
+            h5 -> SetFillColor(colourVector[generated_MC.Module_i[hitCount]]);
 
-        if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " << rMeas_mp2 << "  " << sigma_mp2 << endl;}
-        hitsN++; //count hits
+            h_name.str(""); h_name << "Modules/h_reconMinusTrue_line_Module_" << generated_MC.Module_i[hitCount];
+            TH1F* h6 = (TH1F*)file->Get( h_name.str().c_str() );
+            h6->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
+
+	        h_name.str(""); h_name << "Modules/h_DCA_Module_" << generated_MC.Module_i[hitCount];
+	        TH1F* h7 = (TH1F*)file->Get( h_name.str().c_str() );
+	        h7->Fill(generated_MC.x_mis_dca[hitCount]);
+
+	        h_name.str(""); h_name << "Modules/h_Residuals_module_" << generated_MC.Module_i[hitCount];
+	        TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
+	        h8->Fill(rMeas_mp2);
+ 
+        	if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " 
+        	<< rMeas_mp2 << "  " << sigma_mp2 << endl;}
+        	hitsN++; //count hits
         } // end of hits loop
+         
+         //***********************************Sanity Plots: Once per Track******************************************//
         //For generated tracks
         float chi2_track=residuals_track_sum_2;
         h_chi2_track->Fill(chi2_track);
@@ -567,7 +534,6 @@ int main(int argc, char* argv[]){
         residuals_fit_sum_2=0;
         h_hitCount->Fill(generated_MC.hit_count);
 
-        
         //Filling Track-based plots 
         h_slope->Fill(generated_MC.slope_truth);
         h_intercept->Fill(generated_MC.intercept_truth);
@@ -575,16 +541,16 @@ int main(int argc, char* argv[]){
         h_x1->Fill(generated_MC.x1);
         h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth-generated_MC.intercept_recon);
         h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth-generated_MC.slope_recon);
+        h_frac_Dintercept->Fill((generated_MC.intercept_truth-generated_MC.intercept_recon)/generated_MC.intercept_truth);
+        h_frac_Dslope->Fill((generated_MC.slope_truth-generated_MC.slope_recon)/generated_MC.slope_truth);
         
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
 
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records (i.e. tracks);
-    
        
     } // end of track count
-
     
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
@@ -625,7 +591,8 @@ int main(int argc, char* argv[]){
     debug_mc.close();
     debug_con.close();
     
-    //ROOT stuff
+    //------------------------------------------ROOT: Fitting Functions---------------------------------------------------------// 
+
     cout << endl;
     cout << "-------------------------------------------------------------------------"<< endl; 
     cout << "ROOT fitting parameters and output:" << endl; 
@@ -633,7 +600,8 @@ int main(int argc, char* argv[]){
     //h_reconMinusTrue_track->Fit("gaus", "Q");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
-    h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). The expected error is instead estimated from the the square-root of the bin function value.
+    h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
+    	//The expected error is instead estimated from the the square-root of the bin function value.
     //h_chi2_fit->Fit("chi2pdf");
 	TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
     gausFit->SetParameters(0.01405, 0.0, h_resiudal_track->Integral("WIDTH"));     
@@ -648,61 +616,37 @@ int main(int argc, char* argv[]){
 if (strongPlotting){
     //hres_0->Draw(); 
     TCanvas *csg = new TCanvas("csg","csg",700,900);
-    TText Tg; Tg.SetTextFont(42); Tg.SetTextAlign(21);
-    hres_0->Draw();
-    
-    Tg.DrawTextNDC(.5,.95,"Residuals in all Modules");
-    hres_0->SetFillColor(kYellow);
-    hres_1->SetFillColor(kRed);
-    hres_2->SetFillColor(kGreen);
-    hres_3->SetFillColor(kBlue);
-    hres_1->Draw("same");
-    hres_2->Draw("same");
-    hres_3->Draw("same");
-    TF1* gaussian0 = new TF1("gaussian","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis() , 0.08-Tracker::instance()->getOverallMis());
-    gaussian0->SetParameters(Tracker::instance()->getTrackNumber()*0.5, 0-Tracker::instance()->getOverallMis(), 0.01452);
-    TF1* gaussian1 = new TF1("gaussian1","[0]*TMath::Gaus(x,[1],[2])", -0.16 -Tracker::instance()->getOverallMis() , 0.08 -Tracker::instance()->getOverallMis());
-    gaussian1->SetParameters(Tracker::instance()->getTrackNumber()*0.25, -0.03-Tracker::instance()->getOverallMis(), 0.01452);
-    TF1* gaussian2 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.08-Tracker::instance()->getOverallMis(), 0.16-Tracker::instance()->getOverallMis());
-    gaussian2->SetParameters(Tracker::instance()->getTrackNumber()*0.25, 0.1-Tracker::instance()->getOverallMis(), 0.01452);
-    TF1* gaussian3 = new TF1("gaussian3","[0]*TMath::Gaus(x,[1],[2])", -0.12 -Tracker::instance()->getOverallMis() , 0.04 -Tracker::instance()->getOverallMis());
-     gaussian3->SetParameters(Tracker::instance()->getTrackNumber()*0.25, -0.045-Tracker::instance()->getOverallMis(), 0.01452);
-    TF1* gaussian4 = new TF1("gaussian4","[0]*TMath::Gaus(x,[1],[2])", -0.04-Tracker::instance()->getOverallMis(), 0.12-Tracker::instance()->getOverallMis());
-    gaussian4->SetParameters(Tracker::instance()->getTrackNumber()*0.25, 0.05-Tracker::instance()->getOverallMis(), 0.01452);
-    gaussian0->SetLineColor(kRed);
-    gaussian1->SetLineColor(kBlack);
-    gaussian2->SetLineColor(kGreen);
-    gaussian3->SetLineColor(kOrange);
-    gaussian4->SetLineColor(kBlue);
-    // gaussian0->Draw("same");
-    // gaussian1->Draw("same");
-    // gaussian2->Draw("same");
-    // gaussian3->Draw("same");
-    // gaussian4->Draw("same");
-    //gStyle->SetOptStat("oue");
-    csg->Print("residuals_func.png");
-    //gROOT->ForceStyle();
-
-   
-    TCanvas *cs = new TCanvas("cs","cs",700,900);
     TText T; T.SetTextFont(42); T.SetTextAlign(21);
-    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-        for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
-            h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
-            TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
-            if (i_module == 0){hs_DCA_Module_0->Add(hs3);}
-            if (i_module == 1){hs_DCA_Module_1->Add(hs3);}
-            if (i_module == 2){hs_DCA_Module_2->Add(hs3);}
-            if (i_module == 3){hs_DCA_Module_3->Add(hs3);}
-        }
-    }    
-    cs->Divide(2,2);
-    cs->cd(1); hs_DCA_Module_0->Draw(); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
-    cs->cd(2); hs_DCA_Module_1->Draw(); T.DrawTextNDC(.5,.95,"Module 1 DCA per straw");
-    cs->cd(3); hs_DCA_Module_2->Draw(); T.DrawTextNDC(.5,.95,"Module 2 DCA per straw");
-    cs->cd(4); hs_DCA_Module_3->Draw(); T.DrawTextNDC(.5,.95,"Module 3 DCA per straw");
-    cs->Print("stack_4.png");
-
+    //TH1F* hres_draw = new TH1F("hres_draw", "", 49, -0.1, 0.1);
+    //hres_draw->Draw(); 
+    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++){
+    	h_name.str(""); h_name << "Modules/h_Residuals_module_" << i_module;
+	    TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
+	    hd1->SetFillColor(colourVector[i_module]);
+	    hd1->Draw("same");
+    }
+    T.DrawTextNDC(.5,.95,"Residuals in all Modules");
+    csg->Print("residuals_func.png");
+     
+    // TCanvas *cs = new TCanvas("cs","cs",700,900);
+    //T.SetTextFont(42); T.SetTextAlign(21);
+    // cs->Divide(Tracker::instance()->getModuleN()/2,Tracker::instance()->getModuleN()/2);
+    // for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+    // 	h_name.str(""); h_name << "Modules/hs_DCA_Module_" << i_module;
+    // 	TH1F* hd2 = (TH1F*)file->Get( h_name.str().c_str() );
+    //     for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
+    //         h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
+	   //      TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
+    // 		hd2->Add(hs3);
+    //     }
+    // }    
+    // for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+    // 	h_name.str(""); h_name << "Modules/hs_DCA_Module_" << i_module;
+    // 	h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
+    // 	TH1F* hd3 = (TH1F*)file->Get( h_name.str().c_str() );
+    // 	cs->cd(i_module); hd3->Draw(); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
+    // }
+    // cs->Print("stack_4.png");
 
     TCanvas *csr = new TCanvas("csr","csr",700,900);
     T.SetTextFont(42); T.SetTextAlign(21);
@@ -717,6 +661,7 @@ if (strongPlotting){
 
 } // strong plotting 
 
+
     file->Write();
     file->Close(); //good habit!
     cout << "-------------------------------------------------------------------------"<< endl; 
@@ -725,10 +670,12 @@ if (strongPlotting){
     cout << fixed << setprecision(4);
     t_cpu = clock() - t_cpu;
     auto t_end = std::chrono::high_resolution_clock::now();
-    cout << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu)/CLOCKS_PER_SEC << " s)." << " Wall clock time passed: " << std::chrono::duration<double>(t_end-t_start).count() << " s." << endl;
+    cout << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu)/CLOCKS_PER_SEC << " s)." << " Wall clock time passed: " 
+    	<< std::chrono::duration<double>(t_end-t_start).count() << " s." << endl;
     time_t now = time(0);
     char* dt = ctime(&now);
-    cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. The C++ compiler used: " << true_cxx << " " << true_cxx_ver<<" Job finished on: " << dt << endl;
+    cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. The C++ compiler used: " << true_cxx << " " << true_cxx_ver
+    	<<" Job finished on: " << dt << endl;
     //if(plotBool){theApp.Run();} //ctrl+c to exit //for Canvas in ROOT
     return 0; 
 } //end of main
