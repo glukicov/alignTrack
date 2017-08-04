@@ -95,6 +95,7 @@ int main(int argc, char* argv[]){
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     float residuals_track_sum_2=0.0;
     float residuals_fit_sum_2=0.0;
+    float sigma_fit_calc;  // estimated value for RMS on the residuals for the fit [need global scope for printout]
     const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack};
        
     //Tell the logger to only show message at INFO level or above
@@ -242,17 +243,17 @@ int main(int argc, char* argv[]){
     TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  149,  -(Tracker::instance()->getBeamOffset()+3), 
     	Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
-    TH1F* h_resiudal_track = new TH1F("h_resiudal_track", "Residuals for generated tracks", 500, -0.4, 0.4);
+    TH1F* h_residual_track = new TH1F("h_residual_track", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 100);
-    TH1F* h_resiudal_fit = new TH1F("h_resiudal_fit", "Residuals for fitted tracks", 500, -0.2, 0.2);
+    TH1F* h_residual_fit = new TH1F("h_residual_fit", "Residuals for fitted tracks", 500, -0.2, 0.2);
     TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 59, -1, 250);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
     TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  99,  -0.002, 0.002);
     TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  99,  -0.06, 0.07);
-    TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(Recon-True)/True Track slope",  99,  -0.1, 0.1);
-    TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(Recon-True)/True Track intercept",  99,  -0.1, 0.1);
+    TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(Recon-True)/True Track slope",  199,  -1.1, 1.1);
+    TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(Recon-True)/True Track intercept",  199,  -1.1, 1.1);
 
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
     
@@ -275,14 +276,14 @@ int main(int argc, char* argv[]){
         auto hl3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
         hl3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 "); hl3->SetDirectory(cd_Layers);
 
-        h_name.str(""); h_name << "h_resiudal_fit_layer_" << i;
+        h_name.str(""); h_name << "h_residual_fit_layer_" << i;
         h_title.str(""); h_title << "Residuals to recon line for layer " << i;
-        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  49, -0.02, 0.02);
+        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.06, 0.06);
         hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_Layers);
 
         h_name.str(""); h_name << "h_line_jitter_layer_" << i;
         h_title.str(""); h_title << "Line Jitter for layer " << i;
-        auto hl5 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  49, -0.02, 0.02);
+        auto hl5 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.03, 0.03);
         hl5->GetXaxis()->SetTitle("[cm]"); hl5->SetDirectory(cd_Layers);
     }
        
@@ -307,13 +308,6 @@ int main(int argc, char* argv[]){
     	h_title.str(""); h_title << "Residuals in Module " << i_module;
     	auto hm4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  199, -0.2, 0.2);
     	hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
-
-    	h_name.str(""); h_name << "hs_DCA_Module_" << i_module;
-    	auto hm5 = new THStack(h_name.str().c_str(), "");
-    	// THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
-	    // THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
-	    // THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
-	    // THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
     }
        
     // Modules and Straws ["combing 4 layers into 1"]
@@ -327,13 +321,13 @@ int main(int argc, char* argv[]){
     }
     
     //Use array of pointer of type TH1x to set axis titles and directories 
-    TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, 
-    	h_intercept, h_x0, h_x1, h_resiudal_track, h_hits_true, h_hits_recon, h_resiudal_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
+    TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon,
+    	h_intercept, h_x0, h_x1, h_residual_track, h_hits_true, h_hits_recon, h_residual_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
         TH1F* temp = cmTitle[i];
         cmTitle[i]->SetXTitle("[cm]");
     }
-    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_resiudal_track, h_chi2_track, h_resiudal_fit, 
+    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_track, h_chi2_track, h_residual_fit, 
     	h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
     TH1F* cdTracks_F[] = {h_frac_Dintercept, h_frac_Dslope, h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
@@ -474,21 +468,22 @@ int main(int argc, char* argv[]){
                                               
             //Calculating Chi2 stats:
             float residual_gen = generated_MC.residuals_gen[hitCount]; 
-            h_resiudal_track->Fill(residual_gen);
+            h_residual_track->Fill(residual_gen);
             residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
-            h_resiudal_fit->Fill(rMeas_mp2); //already used as input to mille
-            //float sigma_fit = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
-            float sigma_fit = 0.0140;        // TODO get it from calculation 
-            //cout << "sigma_fit= " << sigma_fit ; 
-            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit,2);
+            h_residual_fit->Fill(rMeas_mp2); //already used as input to mille
+            sigma_fit_calc = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
+            sigma_fit_calc = 0.0140;        // TODO get it from calculation 
+            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit_calc,2);
             
-            //Fill for hits in layers
+            //Fill for hits in modules/layers/straws
             h_name.str(""); h_name << "Layers/h_dca_layer_" << generated_MC.Layer_i[hitCount];
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
             h1->Fill(generated_MC.x_mis_dca[hitCount]);
+            
             h_name.str(""); h_name << "Layers/h_strawID_layer_" << generated_MC.Layer_i[hitCount];
             TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
             h2 ->Fill(generated_MC.strawID[hitCount]);
+            
             h_name.str(""); h_name << "Layers/h_LR_layer_" << generated_MC.Layer_i[hitCount];
             TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
             h3 ->Fill(generated_MC.LR[hitCount]);
@@ -514,6 +509,14 @@ int main(int argc, char* argv[]){
 	        h_name.str(""); h_name << "Modules/h_Residuals_module_" << generated_MC.Module_i[hitCount];
 	        TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h8->Fill(rMeas_mp2);
+
+	        h_name.str(""); h_name << "Layers/h_residual_fit_layer_" << generated_MC.Layer_i[hitCount];
+	        TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
+	        h9->Fill(rMeas_mp2);
+
+	        h_name.str(""); h_name << "Layers/h_line_jitter_layer_" << generated_MC.Layer_i[hitCount];
+	        TH1F* h10 = (TH1F*)file->Get( h_name.str().c_str() );
+	        h10->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
  
         	if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " 
         	<< rMeas_mp2 << "  " << sigma_mp2 << endl;}
@@ -541,8 +544,17 @@ int main(int argc, char* argv[]){
         h_x1->Fill(generated_MC.x1);
         h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth-generated_MC.intercept_recon);
         h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth-generated_MC.slope_recon);
-        h_frac_Dintercept->Fill((generated_MC.intercept_truth-generated_MC.intercept_recon)/generated_MC.intercept_truth);
-        h_frac_Dslope->Fill((generated_MC.slope_truth-generated_MC.slope_recon)/generated_MC.slope_truth);
+        float frac_c = (generated_MC.intercept_truth-generated_MC.intercept_recon)/generated_MC.intercept_truth;
+        h_frac_Dintercept->Fill(frac_c);
+        if (abs(frac_c) > 1.0){cout << "Frac_c= " << frac_c<<endl;
+        cout<<"generated_MC.intercept_truth= " << generated_MC.intercept_truth << " generated_MC.intercept_recon= " << generated_MC.intercept_recon << endl;
+    	}
+        float frac_m = (generated_MC.slope_truth-generated_MC.slope_recon)/generated_MC.slope_truth;
+        h_frac_Dslope->Fill(frac_m);
+        if (abs(frac_m) > 1.0){cout << "Frac_m= " << frac_m<<endl;
+		cout<<"generated_MC.slope_truth= " << generated_MC.slope_truth << " generated_MC.slope_recon= " << generated_MC.slope_recon << endl;
+		cout << endl;
+    	}
         
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
@@ -553,6 +565,7 @@ int main(int argc, char* argv[]){
     } // end of track count
     
     cout << " " << endl;
+    cout << "****** Calculated Sigma_fit= " << sigma_fit_calc << " *****" << endl; 
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
     float rejectsFrac=Tracker::instance()->getRejectedHitsDCA();
@@ -601,12 +614,12 @@ int main(int argc, char* argv[]){
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
     chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
     h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
-    	//The expected error is instead estimated from the the square-root of the bin function value.
+    //The expected error is instead estimated from the the square-root of the bin function value.
     //h_chi2_fit->Fit("chi2pdf");
 	TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
-    gausFit->SetParameters(0.01405, 0.0, h_resiudal_track->Integral("WIDTH"));     
-    h_resiudal_track->Fit("gaus", "Q");
-    //h_resiudal_fit->Fit("gausFit"); 
+    gausFit->SetParameters(0.01405, 0.0, h_residual_track->Integral("WIDTH"));     
+    h_residual_track->Fit("gaus", "Q");
+    //h_residual_fit->Fit("gausFit"); 
 
     float biasMean = h_reconMinusTrue_track->GetMean();
     float biasMeanError = h_reconMinusTrue_track->GetMeanError();
@@ -614,40 +627,48 @@ int main(int argc, char* argv[]){
     bias << biasMean << " " << biasMeanError << endl;
 
 if (strongPlotting){
-    //hres_0->Draw(); 
+   
+    //Residuals per module 
     TCanvas *csg = new TCanvas("csg","csg",700,900);
     TText T; T.SetTextFont(42); T.SetTextAlign(21);
-    //TH1F* hres_draw = new TH1F("hres_draw", "", 49, -0.1, 0.1);
-    //hres_draw->Draw(); 
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++){
     	h_name.str(""); h_name << "Modules/h_Residuals_module_" << i_module;
 	    TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
 	    hd1->SetFillColor(colourVector[i_module]);
 	    hd1->Draw("same");
+	    gStyle->SetOptStat("");
+	    hd1->SetTitle("");
     }
     T.DrawTextNDC(.5,.95,"Residuals in all Modules");
     csg->Print("residuals_func.png");
      
-    // TCanvas *cs = new TCanvas("cs","cs",700,900);
-    //T.SetTextFont(42); T.SetTextAlign(21);
-    // cs->Divide(Tracker::instance()->getModuleN()/2,Tracker::instance()->getModuleN()/2);
-    // for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-    // 	h_name.str(""); h_name << "Modules/hs_DCA_Module_" << i_module;
-    // 	TH1F* hd2 = (TH1F*)file->Get( h_name.str().c_str() );
-    //     for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
-    //         h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
-	   //      TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
-    // 		hd2->Add(hs3);
-    //     }
-    // }    
-    // for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-    // 	h_name.str(""); h_name << "Modules/hs_DCA_Module_" << i_module;
-    // 	h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
-    // 	TH1F* hd3 = (TH1F*)file->Get( h_name.str().c_str() );
-    // 	cs->cd(i_module); hd3->Draw(); T.DrawTextNDC(.5,.95,"Module 0 DCA per straw");
-    // }
-    // cs->Print("stack_4.png");
+	//Stacked DCA per straw in each module
+	THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
+    THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
+    THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
+    THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
+    THStack* hs_DCA_Module_4 = new THStack("hs_DCA_Module_0", "");
+    THStack* hs_DCA_Module_5 = new THStack("hs_DCA_Module_1", "");
+    THStack* hs_DCA_Module_6 = new THStack("hs_DCA_Module_2", "");
+    THStack* hs_DCA_Module_7 = new THStack("hs_DCA_Module_3", "");
+    THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
+    TCanvas *cs = new TCanvas("cs","cs",700,900);
+    T.SetTextFont(42); T.SetTextAlign(21);
+    cs->Divide((Tracker::instance()->getModuleN()+1)/2,(Tracker::instance()->getModuleN()+1)/2);
+    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+    	for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
+            h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
+	        TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
+    		stackModule[i_module]->Add(hs3);
+        }
+    }    
+    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+    	h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
+    	cs->cd(i_module+1); stackModule[i_module]->Draw(); T.DrawTextNDC(.5,.95,h_title.str().c_str());
+    }
+    cs->Print("stack_dca.png");
 
+    //Stacked reconstructed hits
     TCanvas *csr = new TCanvas("csr","csr",700,900);
     T.SetTextFont(42); T.SetTextAlign(21);
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
@@ -656,11 +677,10 @@ if (strongPlotting){
             hs_hits_recon->Add(hs4);
     }    
     csr->Divide(1,1);
-    csr->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5,.95,"Recon Hits per Module");
+    csr->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5,.95,"Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
     csr->Print("stack_recon_hits.png");
 
 } // strong plotting 
-
 
     file->Write();
     file->Close(); //good habit!

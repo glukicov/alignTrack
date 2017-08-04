@@ -599,18 +599,17 @@ overallMis=sum_of_elems/moduleN;
  */
 // XXX constraints are ignored with HIP method 
 void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool) {
-    // constraints: fix centre straws in first/last layer
     // Check constraints file is open, then write. 
     if (constraint_file.is_open()) {
        
         //Evaluation of constraints
         float one = 1.0;
-        
+        //Fixing module 0 and the last module
         for (int i_module = 0; i_module < moduleN; i_module++){ 
             if (i_module==0 || i_module==moduleN-1){
             	constraint_file << "Constraint 0.0" << endl;
                 	int labelt=i_module+1; // Millepede doesn't like 0 as a label...
-                	//Fixing module 0 and the last module
+                	
                     constraint_file << labelt << " " << fixed << setprecision(5) << one<< endl;
                 	}
                 //sdevX[i]=0.0;     // fix centre modules at 0. XXX
