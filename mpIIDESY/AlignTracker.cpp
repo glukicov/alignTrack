@@ -220,7 +220,7 @@ int main(int argc, char* argv[]){
     TFile* file = new TFile("Tracker.root", "recreate");  // recreate = overwrite if already exists
     //create a subdirectories 
     TDirectory* cd_All_Hits = file->mkdir("All_Hits");
-    TDirectory* cd_Layers = file->mkdir("Layers");
+    TDirectory* cd_UV = file->mkdir("UV");
     TDirectory* cd_Modules = file->mkdir("Modules");
     TDirectory* cd_Tracks = file->mkdir("Tracks");
     TDirectory* cd_Straws = file->mkdir("Straws");
@@ -259,37 +259,47 @@ int main(int argc, char* argv[]){
     
     std::stringstream h_name;
     std::stringstream h_title;
-    //Booking histograms for TOTAL # layers
-    for (int i = 0 ; i < Tracker::instance()->getLayerTotalN(); i++) {
-        h_name.str(""); h_name << "h_dca_layer_" << i;
-        h_title.str(""); h_title << "DCA in layer " << i;
-        auto hl1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 100,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
-        hl1->GetXaxis()->SetTitle("[cm]"); hl1->SetDirectory(cd_Layers);
-        
-        h_name.str(""); h_name << "h_strawID_layer_" << i;
-        h_title.str(""); h_title << "strawID in layer " << i;
-        auto hl2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
-        hl2->GetXaxis()->SetTitle("Straw ID [0-31]"); hl2->SetDirectory(cd_Layers);
-        
-        h_name.str(""); h_name << "h_LR_layer_" << i;
-        h_title.str(""); h_title << "Left-Right hit distribution in layer" << i;
-        auto hl3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
-        hl3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 "); hl3->SetDirectory(cd_Layers);
+    
+    // Modules, views, layers
+	for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
+	    for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
+		    for (int i_layer=0; i_layer< Tracker::instance()->getLayerN(); i_layer++){
 
-        h_name.str(""); h_name << "h_residual_fit_layer_" << i;
-        h_title.str(""); h_title << "Residuals to recon line for layer " << i;
-        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.06, 0.06);
-        hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_Layers);
+		    	string UV = Tracker::instance()->getUVmapping(i_view, i_layer); // converting view/layer ID into conventional labels
 
-        h_name.str(""); h_name << "h_line_jitter_layer_" << i;
-        h_title.str(""); h_title << "Line Jitter for layer " << i;
-        auto hl5 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.03, 0.03);
-        hl5->GetXaxis()->SetTitle("[cm]"); hl5->SetDirectory(cd_Layers);
-    }
+		    	h_name.str(""); h_name << "h_dca_M_" << i_module << "_" << UV;
+		        h_title.str(""); h_title << "DCA in Module " << i_module << " " << UV ;
+		        auto hl1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 100,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+		        hl1->GetXaxis()->SetTitle("[cm]"); hl1->SetDirectory(cd_UV);
+		        
+		        h_name.str(""); h_name << "h_strawID_M_" << i_module << "_" << UV;
+		        h_title.str(""); h_title << "strawID in Module " << i_module << " " << UV ;
+		        auto hl2 = new TH1I(h_name.str().c_str(),h_title.str().c_str(), Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+		        hl2->GetXaxis()->SetTitle("Straw ID [0-31]"); hl2->SetDirectory(cd_UV);
+		        
+		        h_name.str(""); h_name << "h_LR_M_" << i_module << "_" << UV;
+		        h_title.str(""); h_title << "Left-Right hit distribution in Module " << i_module << " " << UV ;
+		        auto hl3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
+		        hl3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 "); hl3->SetDirectory(cd_UV);
+
+		    	h_name.str(""); h_name << "h_residual_fit_M_" << i_module << "_" <<UV;
+		        h_title.str(""); h_title << "Residuals to recon line for Module " << i_module << " " << UV ;
+		        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.06, 0.06);
+		        hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
+
+		        h_name.str(""); h_name << "h_line_jitter_M_" << i_module << "_" << UV;
+		        h_title.str(""); h_title << "Line Jitter for Module " << i_module << " " << UV ;
+		        auto hl5 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.03, 0.03);
+		        hl5->GetXaxis()->SetTitle("[cm]"); hl5->SetDirectory(cd_UV);
+
+		    } // layers
+		} // views
+	} // modules
+
        
   	//Modules
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-        h_name.str(""); h_name << "hs_hits_recon_M" << i_module;
+        h_name.str(""); h_name << "hs_hits_recon_Module" << i_module;
         h_title.str(""); h_title << " ";
         auto hm1 = new TH1F(h_name.str().c_str(),h_title.str().c_str(), 49, -2.5, 2.5);
         hm1->GetXaxis()->SetTitle("[cm]"); hm1->SetDirectory(cd_Modules);
@@ -304,7 +314,7 @@ int main(int argc, char* argv[]){
     	auto hm3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  49, -0.1, 0.4);
     	hm3->GetXaxis()->SetTitle("[cm]"); hm3->SetDirectory(cd_Modules);
 
-    	h_name.str(""); h_name << "h_Residuals_module_" << i_module;
+    	h_name.str(""); h_name << "h_Residuals_Module_" << i_module;
     	h_title.str(""); h_title << "Residuals in Module " << i_module;
     	auto hm4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  199, -0.2, 0.2);
     	hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
@@ -357,13 +367,13 @@ int main(int argc, char* argv[]){
 
     // SETTING GEOMETRY
     Tracker::instance()->setGeometry(debug_geom, debugBool);
-    cout<< "Geometry is set!" << endl;
+    cout<< "Geometry is set!" << endl << endl;
     
     // XXX: definition of broken lines here in the future
    
     // MISALIGNMENT
     Tracker::instance()->misalign(debug_mis, debugBool); 
-    cout<< "Misalignment is complete!" << endl;
+    cout<< "Misalignment is complete!" << endl << endl;
     float sigma_calc = sqrt(pow(Tracker::instance()->getResolution(),2)-pow(Tracker::instance()->getResolution(),2)/float(Tracker::instance()->getLayerTotalN()));
     float Chi2_calc=float(Tracker::instance()->getLayerTotalN());
     float layers_per_modules = float(Tracker::instance()->getViewN())*Tracker::instance()->getLayerN();
@@ -476,15 +486,17 @@ int main(int argc, char* argv[]){
             residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit_calc,2);
             
             //Fill for hits in modules/layers/straws
-            h_name.str(""); h_name << "Layers/h_dca_layer_" << generated_MC.Layer_i[hitCount];
+            string UV = Tracker::instance()->getUVmapping(generated_MC.View_i[hitCount], generated_MC.Layer_i[hitCount]); // converting view/layer ID into conventional labels
+
+            h_name.str(""); h_name << "UV/h_dca_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
             h1->Fill(generated_MC.x_mis_dca[hitCount]);
             
-            h_name.str(""); h_name << "Layers/h_strawID_layer_" << generated_MC.Layer_i[hitCount];
+            h_name.str(""); h_name << "UV/h_strawID_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
             TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
             h2 ->Fill(generated_MC.strawID[hitCount]);
             
-            h_name.str(""); h_name << "Layers/h_LR_layer_" << generated_MC.Layer_i[hitCount];
+            h_name.str(""); h_name << "UV/h_LR_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
             TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
             h3 ->Fill(generated_MC.LR[hitCount]);
 
@@ -493,7 +505,7 @@ int main(int argc, char* argv[]){
             h4->Fill(generated_MC.x_mis_dca[hitCount]);
             h4-> SetFillColor(colourVector[generated_MC.Straw_i[hitCount]]);
 
-            h_name.str(""); h_name << "Modules/hs_hits_recon_M" << generated_MC.Module_i[hitCount];
+            h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << generated_MC.Module_i[hitCount];
             TH1F* h5 = (TH1F*)file->Get( h_name.str().c_str() );
             h5->Fill(generated_MC.x_hit_recon[hitCount]);
             h5 -> SetFillColor(colourVector[generated_MC.Module_i[hitCount]]);
@@ -506,15 +518,15 @@ int main(int argc, char* argv[]){
 	        TH1F* h7 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h7->Fill(generated_MC.x_mis_dca[hitCount]);
 
-	        h_name.str(""); h_name << "Modules/h_Residuals_module_" << generated_MC.Module_i[hitCount];
+	        h_name.str(""); h_name << "Modules/h_Residuals_Module_" << generated_MC.Module_i[hitCount];
 	        TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h8->Fill(rMeas_mp2);
 
-	        h_name.str(""); h_name << "Layers/h_residual_fit_layer_" << generated_MC.Layer_i[hitCount];
+	        h_name.str(""); h_name << "UV/h_residual_fit_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
 	        TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h9->Fill(rMeas_mp2);
 
-	        h_name.str(""); h_name << "Layers/h_line_jitter_layer_" << generated_MC.Layer_i[hitCount];
+	        h_name.str(""); h_name << "UV/h_line_jitter_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
 	        TH1F* h10 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h10->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
  
@@ -546,14 +558,16 @@ int main(int argc, char* argv[]){
         h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth-generated_MC.slope_recon);
         float frac_c = (generated_MC.intercept_truth-generated_MC.intercept_recon)/generated_MC.intercept_truth;
         h_frac_Dintercept->Fill(frac_c);
-        if (abs(frac_c) > 1.0){cout << "Frac_c= " << frac_c<<endl;
-        cout<<"generated_MC.intercept_truth= " << generated_MC.intercept_truth << " generated_MC.intercept_recon= " << generated_MC.intercept_recon << endl;
+        if (abs(frac_c) > 1.0){
+        //cout << "Frac_c= " << frac_c<<endl;
+        //cout<<"generated_MC.intercept_truth= " << generated_MC.intercept_truth << " generated_MC.intercept_recon= " << generated_MC.intercept_recon << endl;
     	}
         float frac_m = (generated_MC.slope_truth-generated_MC.slope_recon)/generated_MC.slope_truth;
         h_frac_Dslope->Fill(frac_m);
-        if (abs(frac_m) > 1.0){cout << "Frac_m= " << frac_m<<endl;
-		cout<<"generated_MC.slope_truth= " << generated_MC.slope_truth << " generated_MC.slope_recon= " << generated_MC.slope_recon << endl;
-		cout << endl;
+        if (abs(frac_m) > 1.0){
+        //cout << "Frac_m= " << frac_m<<endl;
+		//cout<<"generated_MC.slope_truth= " << generated_MC.slope_truth << " generated_MC.slope_recon= " << generated_MC.slope_recon << endl;
+		//cout << endl;
     	}
         
         // XXX additional measurements from MS IF (imodel == 2) THEN
@@ -632,7 +646,7 @@ if (strongPlotting){
     TCanvas *csg = new TCanvas("csg","csg",700,900);
     TText T; T.SetTextFont(42); T.SetTextAlign(21);
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++){
-    	h_name.str(""); h_name << "Modules/h_Residuals_module_" << i_module;
+    	h_name.str(""); h_name << "Modules/h_Residuals_Module_" << i_module;
 	    TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
 	    hd1->SetFillColor(colourVector[i_module]);
 	    hd1->Draw("same");
@@ -672,7 +686,7 @@ if (strongPlotting){
     TCanvas *csr = new TCanvas("csr","csr",700,900);
     T.SetTextFont(42); T.SetTextAlign(21);
     for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-            h_name.str(""); h_name << "Modules/hs_hits_recon_M" << i_module;
+            h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << i_module;
             TH1F* hs4 = (TH1F*)file->Get( h_name.str().c_str() );
             hs_hits_recon->Add(hs4);
     }    

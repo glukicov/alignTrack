@@ -205,6 +205,10 @@ class Tracker {
 	// Getter methods
 	//
 
+	string getUVmapping(int i, int j){
+		return UVmapping[i][j];
+	}
+
 	int getLayer(int i) {
 		return layer[i];
 	}

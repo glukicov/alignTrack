@@ -13,7 +13,17 @@ Tracker* Tracker::s_instance = NULL;
 Constructor for tracker class.
  */
 Tracker::Tracker() {
-    // non-static variables definition here      
+    // non-static variables definition here
+
+    // Set mapping for U0...V1
+    string tempMapping[4] = {"U0", "U1", "V0", "V1"};
+   	for (int i_view=0; i_view<viewN; i_view++){
+        UVmapping.push_back(vector<string> ()); //initialize the first index with a 2D vector
+          for (int i_layer=0; i_layer<layerN; i_layer++){
+             if (i_view==0){UVmapping[i_view].push_back(tempMapping[i_layer]);}
+             if (i_view==1){UVmapping[i_view].push_back(tempMapping[i_layer+2]);}
+         } //layers
+    } // views      
     
 }
 
@@ -499,18 +509,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
             }//end of Layers loop
         }// end of View loop
     }//Modules  
-
-    // Set mapping for U0...V1
-    string tempMapping[4] = {"U0", "U1", "V0", "V1"};
-   	for (int i_view=0; i_view<viewN; i_view++){
-        UVmapping.push_back(vector<string> ()); //initialize the first index with a 2D vector
-          for (int i_layer=0; i_layer<layerN; i_layer++){
-             if (i_view==0){UVmapping[i_view].push_back(tempMapping[i_layer]);}
-             if (i_view==1){UVmapping[i_view].push_back(tempMapping[i_layer+2]);}
-         } //layers
-    } // views
-
-   
+ 
    // Print out:
     if (debugBool){
         int Zcounter=0;
@@ -544,7 +543,7 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
     	misDispX=dispX[i_module];
                
         float dX = startingXDistanceStraw0+(misDispX); // starting on the x-axis (z, 0+disp)
-    	    	sdevX.push_back(misDispX);  // vector to store the actual of misalignment 
+    	    	sdevX.push_back(misDispX);  // vector to store the actual of misalignment
         mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
          for (int i_view=0; i_view<viewN; i_view++){
          	 mod_lyr_strawMisPosition[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
@@ -584,9 +583,10 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
         }//Modules 
     }
 
-float sum_of_elems;
-for(std::vector<float>::iterator it = sdevX.begin(); it != sdevX.end(); ++it)
+float sum_of_elems=0;
+for(vector<float>::iterator it = sdevX.begin(); it != sdevX.end(); ++it){
     sum_of_elems += *it;
+}
 overallMis=sum_of_elems/moduleN;
 
 }//end of misalign
