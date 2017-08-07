@@ -255,6 +255,8 @@ int main(int argc, char* argv[]){
     TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(True-Recon)/True Track slope",  199,  -1.1, 1.1);
     TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(True-Recon)/True Track intercept",  199,  -1.1, 1.1);
     TH1F* h_meanXRecon = new TH1F("h_meanXRecon", "Mean X of recon track", 39, -2.2, 2.2);
+    TH1F* h_corrMC = new TH1F("h_corrMC", "Corr(c,m) ", 39, -1.1, 1.1);
+
 
     // "special" histos
     TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.08, 0.08);
@@ -545,19 +547,18 @@ int main(int argc, char* argv[]){
         bool trackCkeck = true;
         float reconHitCheck = 0.0;  
 
+        // TH2F res vs zdistance for tracks -1<x<1
         for (int i=0; i<generated_MC.hit_count; i++){
             reconHitCheck = generated_MC.x_hit_recon[i];
             if (abs(reconHitCheck)>=1.0){
                 trackCkeck = false;
             }
         }
-
         if (trackCkeck){
              for (int i=0; i<generated_MC.hit_count; i++){
                 h_res_x_z->Fill(generated_MC.z_hits[i], generated_MC.x_residuals[i]);
             }
         }
-
 
         //For generated tracks
         float chi2_track=residuals_track_sum_2;
@@ -572,7 +573,7 @@ int main(int argc, char* argv[]){
         residuals_fit_sum_2=0;
         h_hitCount->Fill(generated_MC.hit_count);
         h_meanXRecon->Fill(generated_MC.meanXReconTrack);
-
+        h_corrMC->Fill(generated_MC.corrMC);
 
         //Filling Track-based plots 
         h_slope->Fill(generated_MC.slope_truth);

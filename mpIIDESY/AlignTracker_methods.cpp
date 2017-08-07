@@ -219,19 +219,21 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     bool StrongDebugBool = false; 
 
     //LSR fit from: http://codesam.blogspot.com/2011/06/least-square-linear-regression-of-data.html
-    double SUMx = 0;     //sum of x values
-    double SUMy = 0;     //sum of y values
-    double SUMxy = 0;    //sum of x * y
-    double SUMxx = 0;    //sum of x^2
-    double SUMres = 0;   //sum of squared residue
-    double res = 0;      //residue squared
-    double slope = 0;    //slope of regression line
-    double y_intercept = 0; //y intercept of regression line
-    double SUM_Yres = 0; //sum of squared of the discrepancies
-    double AVGy = 0;     //mean of y
-    double AVGx = 0;     //mean of x
-    double Yres = 0;     //squared of the discrepancies
-    double Rsqr = 0;     //coefficient of determination
+    float SUMx = 0.0;     //sum of x values
+    float SUMy = 0.0;     //sum of y values
+    float SUMxy = 0.0;    //sum of x * y
+    float SUMxx = 0.0;    //sum of x^2
+    float SUMres = 0.0;   //sum of squared residue
+    float res = 0.0;      //residue squared
+    float slope = 0.0;    //slope of regression line
+    float y_intercept = 0.0; //y intercept of regression line
+    float SUM_Yres = 0.0; //sum of squared of the discrepancies
+    float AVGy = 0.0;     //mean of y
+    float AVGx = 0.0;     //mean of x
+    float Yres = 0.0;     //squared of the discrepancies
+    float Rsqr = 0.0;     //coefficient of determination
+
+    float MSD_sum = 0.0;
 
     //calculate various sums 
     for (int i = 0; i < dataSize; i++){
@@ -285,6 +287,8 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
         //sum of squared residues
         SUMres += res;
 
+        MSD_sum += pow(ReconPoints[i] - AVGy,2);
+
         if (StrongDebugBool){
             printf ("   (%0.2f %0.2f)      %0.5E         %0.5E\n", 
             z_distance[i], ReconPoints[i], res, Yres);
@@ -294,6 +298,10 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     //calculate r^2 coefficient of determination
     Rsqr = (SUMres - SUM_Yres) / SUMres;
 
+    MSD_sum = MSD_sum/dataSize;
+
+    float corr = -AVGy/(sqrt(MSD_sum+AVGy*AVGy));
+
     if (StrongDebugBool){
         printf("--------------------------------------------------\n");
         printf("Sum of (y_i - y_avg)^2 = %0.5E\t\n", SUMres);
@@ -302,11 +310,13 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
         printf("Standard error of the estimate(Sr) = %0.5E\t\n", sqrt(SUM_Yres / (dataSize-2)));
         printf("Coefficient of determination(r^2) = %0.5E\t\n", (SUMres - SUM_Yres)/SUMres);
         printf("Correlation coefficient(r) = %0.5E\t\n", sqrt(Rsqr));
+        cout << "corr= " << corr << endl;
     }
     
     resData.slope_recon=slope;
     resData.intercept_recon=y_intercept;
     resData.meanXReconTrack=AVGy;
+    resData.corrMC=corr;
 
     if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
@@ -459,6 +469,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     MC.slope_recon = res_Data.slope_recon;
     MC.intercept_recon = res_Data.intercept_recon;
     MC.meanXReconTrack=res_Data.meanXReconTrack;
+    MC.corrMC=res_Data.corrMC;
     
     if(debugBool){
                         plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " ";
