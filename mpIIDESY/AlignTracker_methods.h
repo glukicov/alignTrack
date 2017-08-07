@@ -53,6 +53,8 @@ struct MCData {
 	float slope_recon;
 	float intercept_recon;
 
+	float meanXReconTrack;
+
 	//DEBUG
 	
 };
@@ -70,6 +72,7 @@ struct ResidualData{
 	std::vector<float> x_fitted;   // the x-coordinate of the fitted line in a layer [z-coordinate corresponds to distance vector]
 	float slope_recon;
 	float intercept_recon;
+	float meanXReconTrack;
 };
 
 /**

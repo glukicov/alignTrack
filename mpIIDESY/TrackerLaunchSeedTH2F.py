@@ -88,7 +88,7 @@ for i in range(0, len(M1)):
 	h_12.Fill(M1[i], M2[i])
 
 
-h_bias = TH1F("h_bias", "Distribution of Mean 'Line Jitters'", 37, -0.0005, 0.0005)
+h_bias = TH1F("h_bias", "Distribution of Mean 'Line Jitters'", 33, -0.0001, 0.0001)
 h_biasError = TH1F("h_biasError", "Distribution of Errors on the Mean 'Line Jitters'", 149, 0, 0.0005)
 
 for i in range(0, len(meanBias)):

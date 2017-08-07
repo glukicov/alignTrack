@@ -88,7 +88,7 @@ int main(int argc, char* argv[]){
     int tracksInput; // number of tracks to generate as specified by the user 
     bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
     bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py 
-    bool strongPlotting = true;  // For canvas to be drawn and saved as .png
+    bool strongPlotting = false;  // For canvas to be drawn and saved as .png   // XXX HACK (set by hand here)
     //Set up counters for hits and records (tracks)
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks
@@ -228,7 +228,7 @@ int main(int argc, char* argv[]){
     // Key quantities 
     TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, 
     	Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  99, -0.2, 0.2);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  99, -0.1, 0.1);
     TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     // Track-generation-based
@@ -251,10 +251,14 @@ int main(int argc, char* argv[]){
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
     TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  99,  -0.002, 0.002);
-    TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  99,  -0.06, 0.07);
-    TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(Recon-True)/True Track slope",  199,  -1.1, 1.1);
-    TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(Recon-True)/True Track intercept",  199,  -1.1, 1.1);
+    TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  39,  -0.06, 0.07);
+    TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(True-Recon)/True Track slope",  199,  -1.1, 1.1);
+    TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(True-Recon)/True Track intercept",  199,  -1.1, 1.1);
+    TH1F* h_meanXRecon = new TH1F("h_meanXRecon", "Mean X of recon track", 39, -2.2, 2.2);
 
+    // "special" histos
+    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.08, 0.08);
+    h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
     
     std::stringstream h_name;
@@ -284,7 +288,7 @@ int main(int argc, char* argv[]){
 
 		    	h_name.str(""); h_name << "h_residual_fit_M_" << i_module << "_" <<UV;
 		        h_title.str(""); h_title << "Residuals to recon line for Module " << i_module << " " << UV ;
-		        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.06, 0.06);
+		        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.08, 0.08);
 		        hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
 
 		        h_name.str(""); h_name << "h_line_jitter_M_" << i_module << "_" << UV;
@@ -332,14 +336,14 @@ int main(int argc, char* argv[]){
     
     //Use array of pointer of type TH1x to set axis titles and directories 
     TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon,
-    	h_intercept, h_x0, h_x1, h_residual_track, h_hits_true, h_hits_recon, h_residual_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track};
+    	h_intercept, h_x0, h_x1, h_residual_track, h_hits_true, h_hits_recon, h_residual_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track, h_frac_Dintercept, h_meanXRecon};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
         TH1F* temp = cmTitle[i];
         cmTitle[i]->SetXTitle("[cm]");
     }
     TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_track, h_chi2_track, h_residual_fit, 
     	h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
-    TH1F* cdTracks_F[] = {h_frac_Dintercept, h_frac_Dslope, h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept}; 
+    TH1F* cdTracks_F[] = {h_frac_Dintercept, h_frac_Dslope, h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, h_meanXRecon}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
         cdAllHits_F[i]->SetDirectory(cd_All_Hits);
@@ -487,7 +491,7 @@ int main(int argc, char* argv[]){
             
             //Fill for hits in modules/layers/straws
             string UV = Tracker::instance()->getUVmapping(generated_MC.View_i[hitCount], generated_MC.Layer_i[hitCount]); // converting view/layer ID into conventional labels
-
+            
             h_name.str(""); h_name << "UV/h_dca_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
             h1->Fill(generated_MC.x_mis_dca[hitCount]);
@@ -536,6 +540,25 @@ int main(int argc, char* argv[]){
         } // end of hits loop
          
          //***********************************Sanity Plots: Once per Track******************************************//
+        
+        
+        bool trackCkeck = true;
+        float reconHitCheck = 0.0;  
+
+        for (int i=0; i<generated_MC.hit_count; i++){
+            reconHitCheck = generated_MC.x_hit_recon[i];
+            if (abs(reconHitCheck)>=1.0){
+                trackCkeck = false;
+            }
+        }
+
+        if (trackCkeck){
+             for (int i=0; i<generated_MC.hit_count; i++){
+                h_res_x_z->Fill(generated_MC.z_hits[i], generated_MC.x_residuals[i]);
+            }
+        }
+
+
         //For generated tracks
         float chi2_track=residuals_track_sum_2;
         h_chi2_track->Fill(chi2_track);
@@ -548,6 +571,8 @@ int main(int argc, char* argv[]){
         residuals_track_sum_2=0;
         residuals_fit_sum_2=0;
         h_hitCount->Fill(generated_MC.hit_count);
+        h_meanXRecon->Fill(generated_MC.meanXReconTrack);
+
 
         //Filling Track-based plots 
         h_slope->Fill(generated_MC.slope_truth);
@@ -558,18 +583,8 @@ int main(int argc, char* argv[]){
         h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth-generated_MC.slope_recon);
         float frac_c = (generated_MC.intercept_truth-generated_MC.intercept_recon)/generated_MC.intercept_truth;
         h_frac_Dintercept->Fill(frac_c);
-        if (abs(frac_c) > 1.0){
-        //cout << "Frac_c= " << frac_c<<endl;
-        //cout<<"generated_MC.intercept_truth= " << generated_MC.intercept_truth << " generated_MC.intercept_recon= " << generated_MC.intercept_recon << endl;
-    	}
         float frac_m = (generated_MC.slope_truth-generated_MC.slope_recon)/generated_MC.slope_truth;
         h_frac_Dslope->Fill(frac_m);
-        if (abs(frac_m) > 1.0){
-        //cout << "Frac_m= " << frac_m<<endl;
-		//cout<<"generated_MC.slope_truth= " << generated_MC.slope_truth << " generated_MC.slope_recon= " << generated_MC.slope_recon << endl;
-		//cout << endl;
-    	}
-        
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
 

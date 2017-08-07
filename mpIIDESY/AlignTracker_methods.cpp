@@ -65,7 +65,7 @@ float Tracker::generate_uniform(){
 */
 float Tracker::DCA(float xHit,float xStraw){
 
-    float dca = sqrt((xHit-xStraw)*(xHit-xStraw));
+    float dca = sqrt((xHit-xStraw)*(xHit-xStraw));  // "vertical offset"
 
     return dca;
 }
@@ -306,6 +306,7 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     
     resData.slope_recon=slope;
     resData.intercept_recon=y_intercept;
+    resData.meanXReconTrack=AVGy;
 
     if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
@@ -457,6 +458,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     MC.x_track_recon=res_Data.x_fitted; //Sanity Plot: fitted (reconstructed) x of the track
     MC.slope_recon = res_Data.slope_recon;
     MC.intercept_recon = res_Data.intercept_recon;
+    MC.meanXReconTrack=res_Data.meanXReconTrack;
     
     if(debugBool){
                         plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " ";
