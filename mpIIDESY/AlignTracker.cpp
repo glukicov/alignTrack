@@ -95,7 +95,8 @@ int main(int argc, char* argv[]){
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     float residuals_track_sum_2=0.0;
     float residuals_fit_sum_2=0.0;
-    float sigma_fit_calc;  // estimated value for RMS on the residuals for the fit [need global scope for printout]
+    float sigma_fit_estimated_m0uo;  // estimated value for RMS on the residuals for the fit [need global scope for printout]
+    float sigma_fit_actual_m0uo; //
     const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack};
        
     //Tell the logger to only show message at INFO level or above
@@ -380,25 +381,26 @@ int main(int argc, char* argv[]){
     // MISALIGNMENT
     Tracker::instance()->misalign(debug_mis, debugBool); 
     cout<< "Misalignment is complete!" << endl << endl;
-    float sigma_calc = sqrt(pow(Tracker::instance()->getResolution(),2)-pow(Tracker::instance()->getResolution(),2)/float(Tracker::instance()->getLayerTotalN()));
-    float Chi2_calc=float(Tracker::instance()->getLayerTotalN());
-    float layers_per_modules = float(Tracker::instance()->getViewN())*Tracker::instance()->getLayerN();
+     
     cout << "Manual Misalignment: " << endl;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         cout << showpos << "Module " << i_module <<" :: Characteristic:  " << Tracker::instance()->getSdevX(i_module) << " cm. ";
         if (plotBool || debugBool){pede_mis << Tracker::instance()->getSdevX(i_module) << " "; }
         float indivMis = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
         cout << showpos << "Relative: " << indivMis << " cm." << endl;
-        //cout << " Chi2_calc" << Chi2_calc << endl;
-        Chi2_calc += layers_per_modules * (pow(indivMis,2) - 2*sigma_calc*indivMis)/(pow(sigma_calc,2));
-    }
-    
+    } // modules
     cout << noshowpos; 
     cout << "The overall misalignment was " << Tracker::instance()->getOverallMis() << " cm" <<  endl;
-    cout << "The estimated mean residual fit Chi2 = " << Chi2_calc <<  endl;
-    cout << "The estimated residual resolution is = " << sigma_calc << " cm" <<  endl;
-    cout << "The estimated track 'jitter' is = " << Tracker::instance()->getResolution()/sqrt(Tracker::instance()->getLayerTotalN())  << " cm" <<  endl;
-   
+
+
+    float sima_det = Tracker::instance()->getResolution(); // Original detector resolution 
+    float pivotPoint = (Tracker::instance()->getBeamStop() - Tracker::instance()->getBeamStart())/2.0;
+    cout << "pivotPoint" << pivotPoint << endl;
+
+    float Chi2_fit_estimated=0;
+    cout << "Geometrically Estimated SD on fitted residuals M0U0" << sigma_fit_estimated_m0uo << " um"  << endl; // cm -> um
+    cout << "The estimated mean residual fit Chi2 = " << Chi2_fit_estimated <<  endl;
+      
     // Write a constraint file, for use with pede
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
     cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
@@ -483,13 +485,13 @@ int main(int argc, char* argv[]){
             h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
                                               
             //Calculating Chi2 stats:
-            float residual_gen = generated_MC.residuals_gen[hitCount]; 
-            h_residual_track->Fill(residual_gen);
-            residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
-            h_residual_fit->Fill(rMeas_mp2); //already used as input to mille
-            sigma_fit_calc = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
-            sigma_fit_calc = 0.0140;        // TODO get it from calculation 
-            residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit_calc,2);
+            // float residual_gen = generated_MC.residuals_gen[hitCount]; 
+            // h_residual_track->Fill(residual_gen);
+            // residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
+            // h_residual_fit->Fill(rMeas_mp2); //already used as input to mille
+            // //sigma_fit_calc = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
+            // sigma_fit_calc = 0.0140;        // TODO get it from calculation 
+            // residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit_calc,2);
             
             //Fill for hits in modules/layers/straws
             string UV = Tracker::instance()->getUVmapping(generated_MC.View_i[hitCount], generated_MC.Layer_i[hitCount]); // converting view/layer ID into conventional labels
@@ -592,12 +594,104 @@ int main(int argc, char* argv[]){
         m.end(); // Write buffer (set of derivatives with same local parameters) to file.
         recordN++; // count records (i.e. tracks);
        
-    } // end of track count
+    } // end of track count // End of Mille // End of collecting residual records
+    cout << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
+   
+   
+    //------------------------------------------ROOT: Fitting Functions---------------------------------------------------------// 
+
+    cout << endl;
+    cout << "-------------------------------------------------------------------------"<< endl; 
+    cout << "ROOT fitting parameters and output:" << endl; 
     
+    
+    h_name.str(""); h_name << "UV/h_residual_fit_M_0_U0";
+    TH1F* hRes_M0U0 = (TH1F*)file->Get( h_name.str().c_str() );
+    sigma_fit_actual_m0uo = hRes_M0U0->GetStdDev();
+
+
+    //h_reconMinusTrue_track->Fit("gaus", "Q");
+    TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
+    chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
+    h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
+    //The expected error is instead estimated from the the square-root of the bin function value.
+    //h_chi2_fit->Fit("chi2pdf");
+	TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
+    gausFit->SetParameters(0.01405, 0.0, h_residual_track->Integral("WIDTH"));     
+    h_residual_track->Fit("gaus", "Q");
+    //h_residual_fit->Fit("gausFit"); 
+
+    float biasMean = h_reconMinusTrue_track->GetMean();
+    float biasMeanError = h_reconMinusTrue_track->GetMeanError();
+
+    bias << biasMean << " " << biasMeanError << endl;
+
+    if (strongPlotting){
+   
+        //Residuals per module 
+        TCanvas *csg = new TCanvas("csg","csg",700,900);
+        TText T; T.SetTextFont(42); T.SetTextAlign(21);
+        for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++){
+        	h_name.str(""); h_name << "Modules/h_Residuals_Module_" << i_module;
+    	    TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
+    	    hd1->SetFillColor(colourVector[i_module]);
+    	    hd1->Draw("same");
+    	    gStyle->SetOptStat("");
+    	    hd1->SetTitle("");
+        }
+        T.DrawTextNDC(.5,.95,"Residuals in all Modules");
+        csg->Print("residuals_func.png");
+         
+    	//Stacked DCA per straw in each module
+    	THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
+        THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
+        THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
+        THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
+        THStack* hs_DCA_Module_4 = new THStack("hs_DCA_Module_0", "");
+        THStack* hs_DCA_Module_5 = new THStack("hs_DCA_Module_1", "");
+        THStack* hs_DCA_Module_6 = new THStack("hs_DCA_Module_2", "");
+        THStack* hs_DCA_Module_7 = new THStack("hs_DCA_Module_3", "");
+        THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
+        TCanvas *cs = new TCanvas("cs","cs",700,900);
+        T.SetTextFont(42); T.SetTextAlign(21);
+        cs->Divide((Tracker::instance()->getModuleN()+1)/2,(Tracker::instance()->getModuleN()+1)/2);
+        for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+        	for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
+                h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
+    	        TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
+        		stackModule[i_module]->Add(hs3);
+            }
+        }    
+        for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+        	h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
+        	cs->cd(i_module+1); stackModule[i_module]->Draw(); T.DrawTextNDC(.5,.95,h_title.str().c_str());
+        }
+        cs->Print("stack_dca.png");
+
+        //Stacked reconstructed hits
+        TCanvas *csr = new TCanvas("csr","csr",700,900);
+        T.SetTextFont(42); T.SetTextAlign(21);
+        for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+                h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << i_module;
+                TH1F* hs4 = (TH1F*)file->Get( h_name.str().c_str() );
+                hs_hits_recon->Add(hs4);
+        }    
+        csr->Divide(1,1);
+        csr->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5,.95,"Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
+        csr->Print("stack_recon_hits.png");
+
+    } // strong plotting 
+
+    cout << "-------------------------------------------------------------------------"<< endl; 
     cout << " " << endl;
-    cout << "****** Calculated Sigma_fit= " << sigma_fit_calc << " *****" << endl; 
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
+    cout << "Geometrically Estimated SD on fitted residuals M0U0" << sigma_fit_estimated_m0uo << " um"  << endl; // cm -> um
+    cout << "Calculated (from measurements) SD on fitted residuals M0U0 " << sigma_fit_actual_m0uo * 10000 << " um"  << endl; // cm -> um
+    cout << "Geometrically Estimated Pivot Point (avg z)" << pivotPoint_estimated << " cm"  << endl;
+    cout << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual " cm"  << endl; // cm -> um
+    cout << "Geometrically Estimated Mean Chi2" << chi2_estimated <<  endl; // cm -> um
+    cout << "Calculated (from measurements) Mean Chi2 " <<chi2_actual << endl; // cm -> um
     float rejectsFrac=Tracker::instance()->getRejectedHitsDCA();
     rejectsFrac = rejectsFrac/(Tracker::instance()->getLayerTotalN()*recordN);
     cout << fixed << setprecision(1);
@@ -633,88 +727,9 @@ int main(int argc, char* argv[]){
     debug_off.close();
     debug_mc.close();
     debug_con.close();
-    
-    //------------------------------------------ROOT: Fitting Functions---------------------------------------------------------// 
-
-    cout << endl;
-    cout << "-------------------------------------------------------------------------"<< endl; 
-    cout << "ROOT fitting parameters and output:" << endl; 
-    
-    //h_reconMinusTrue_track->Fit("gaus", "Q");
-    TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
-    chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
-    h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
-    //The expected error is instead estimated from the the square-root of the bin function value.
-    //h_chi2_fit->Fit("chi2pdf");
-	TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
-    gausFit->SetParameters(0.01405, 0.0, h_residual_track->Integral("WIDTH"));     
-    h_residual_track->Fit("gaus", "Q");
-    //h_residual_fit->Fit("gausFit"); 
-
-    float biasMean = h_reconMinusTrue_track->GetMean();
-    float biasMeanError = h_reconMinusTrue_track->GetMeanError();
-
-    bias << biasMean << " " << biasMeanError << endl;
-
-if (strongPlotting){
-   
-    //Residuals per module 
-    TCanvas *csg = new TCanvas("csg","csg",700,900);
-    TText T; T.SetTextFont(42); T.SetTextAlign(21);
-    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++){
-    	h_name.str(""); h_name << "Modules/h_Residuals_Module_" << i_module;
-	    TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
-	    hd1->SetFillColor(colourVector[i_module]);
-	    hd1->Draw("same");
-	    gStyle->SetOptStat("");
-	    hd1->SetTitle("");
-    }
-    T.DrawTextNDC(.5,.95,"Residuals in all Modules");
-    csg->Print("residuals_func.png");
-     
-	//Stacked DCA per straw in each module
-	THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
-    THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
-    THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
-    THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
-    THStack* hs_DCA_Module_4 = new THStack("hs_DCA_Module_0", "");
-    THStack* hs_DCA_Module_5 = new THStack("hs_DCA_Module_1", "");
-    THStack* hs_DCA_Module_6 = new THStack("hs_DCA_Module_2", "");
-    THStack* hs_DCA_Module_7 = new THStack("hs_DCA_Module_3", "");
-    THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
-    TCanvas *cs = new TCanvas("cs","cs",700,900);
-    T.SetTextFont(42); T.SetTextAlign(21);
-    cs->Divide((Tracker::instance()->getModuleN()+1)/2,(Tracker::instance()->getModuleN()+1)/2);
-    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-    	for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
-            h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
-	        TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
-    		stackModule[i_module]->Add(hs3);
-        }
-    }    
-    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-    	h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
-    	cs->cd(i_module+1); stackModule[i_module]->Draw(); T.DrawTextNDC(.5,.95,h_title.str().c_str());
-    }
-    cs->Print("stack_dca.png");
-
-    //Stacked reconstructed hits
-    TCanvas *csr = new TCanvas("csr","csr",700,900);
-    T.SetTextFont(42); T.SetTextAlign(21);
-    for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-            h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << i_module;
-            TH1F* hs4 = (TH1F*)file->Get( h_name.str().c_str() );
-            hs_hits_recon->Add(hs4);
-    }    
-    csr->Divide(1,1);
-    csr->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5,.95,"Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
-    csr->Print("stack_recon_hits.png");
-
-} // strong plotting 
 
     file->Write();
     file->Close(); //good habit!
-    cout << "-------------------------------------------------------------------------"<< endl; 
     cout << endl;
     
     cout << fixed << setprecision(4);
