@@ -93,12 +93,10 @@ int main(int argc, char* argv[]){
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
-    float residuals_track_sum_2=0.0;
-    float residuals_fit_sum_2=0.0;
-    float sigma_fit_estimated_m0uo=0.0;  // estimated value for RMS on the residuals for the fit [need global scope for printout]
-    float sigma_fit_actual_m0uo=0.0; //
+    float residuals_true_sum_2=0.0;
+    float residuals_recon_sum_2=0.0;
     float pivotPoint_actual=0.0;
-    float Chi2_fit_actual=0.0;
+    float Chi2_recon_actual=0.0;
     const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack};
        
     //Tell the logger to only show message at INFO level or above
@@ -246,10 +244,10 @@ int main(int argc, char* argv[]){
     TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  149,  -(Tracker::instance()->getBeamOffset()+3), 
     	Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
-    TH1F* h_residual_track = new TH1F("h_residual_track", "Residuals for generated tracks", 500, -0.4, 0.4);
-    TH1F* h_chi2_track = new TH1F("h_chi2_track", "Chi2 for generated tracks", 40, -1, 100);
-    TH1F* h_residual_fit = new TH1F("h_residual_fit", "Residuals for fitted tracks", 500, -0.2, 0.2);
-    TH1F* h_chi2_fit = new TH1F("h_chi2_fit", "Chi2 for fitted tracks", 59, -1, 250);
+    TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.4, 0.4);
+    TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
+    TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.2, 0.2);
+    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for reconstructed tracks", 159, -1, 500);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
@@ -258,9 +256,7 @@ int main(int argc, char* argv[]){
     TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(True-Recon)/True Track slope",  199,  -1.1, 1.1);
     TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(True-Recon)/True Track intercept",  199,  -1.1, 1.1);
     TH1F* h_meanXRecon = new TH1F("h_meanXRecon", "Mean X of recon track", 39, -2.2, 2.2);
-    TH1F* h_corrMC = new TH1F("h_corrMC", "Corr(c,m) ", 39, -1.1, 1.1);
-
-
+    
     // "special" histos
     TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.08, 0.08);
     h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
@@ -291,7 +287,7 @@ int main(int argc, char* argv[]){
 		        auto hl3 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  4, -2, 2);
 		        hl3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 "); hl3->SetDirectory(cd_UV);
 
-		    	h_name.str(""); h_name << "h_residual_fit_M_" << i_module << "_" <<UV;
+		    	h_name.str(""); h_name << "h_residual_recon_M_" << i_module << "_" <<UV;
 		        h_title.str(""); h_title << "Residuals to recon line for Module " << i_module << " " << UV ;
 		        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.08, 0.08);
 		        hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
@@ -341,13 +337,13 @@ int main(int argc, char* argv[]){
     
     //Use array of pointer of type TH1x to set axis titles and directories 
     TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon,
-    	h_intercept, h_x0, h_x1, h_residual_track, h_hits_true, h_hits_recon, h_residual_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track, h_frac_Dintercept, h_meanXRecon};
+    	h_intercept, h_x0, h_x1, h_residual_true, h_hits_true, h_hits_recon, h_residual_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track, h_frac_Dintercept, h_meanXRecon};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
         TH1F* temp = cmTitle[i];
         cmTitle[i]->SetXTitle("[cm]");
     }
-    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_track, h_chi2_track, h_residual_fit, 
-    	h_chi2_fit, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
+    TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_true, h_chi2_true, h_residual_recon, 
+    	h_chi2_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
     TH1F* cdTracks_F[] = {h_frac_Dintercept, h_frac_Dslope, h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, h_meanXRecon}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
@@ -384,25 +380,87 @@ int main(int argc, char* argv[]){
     Tracker::instance()->misalign(debug_mis, debugBool); 
     cout<< "Misalignment is complete!" << endl << endl;
      
+    //TODO: move into GEOM/MIS code methods
+
+    // Estimating fit and misalignment parameters from geometry and assumed constants:
+    // Misalignment
+    vector<float> indivMisM;
     cout << "Manual Misalignment: " << endl;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         cout << showpos << "Module " << i_module <<" :: Characteristic:  " << Tracker::instance()->getSdevX(i_module) << " cm. ";
         if (plotBool || debugBool){pede_mis << Tracker::instance()->getSdevX(i_module) << " "; }
         float indivMis = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
+        indivMisM.push_back(indivMis);
         cout << showpos << "Relative: " << indivMis << " cm." << endl;
     } // modules
     cout << noshowpos; 
     cout << "The overall misalignment was " << Tracker::instance()->getOverallMis() << " cm" <<  endl;
+    
+    // Mean z point (pivot point)
+    float pivotPoint_estimated=0.0;
+    int i_totalLayers=0;
+    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+                pivotPoint_estimated+=Tracker::instance()->getZDistance(i_totalLayers);
+                i_totalLayers++;
+            }// layer
+        } // view 
+    } // modules
+    pivotPoint_estimated = pivotPoint_estimated/Tracker::instance()->getLayerTotalN();
+    
+    vector<float> zDistance_centered; // SD calculations assumes mean z of 0
+    i_totalLayers=0;
+    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+            zDistance_centered.push_back(Tracker::instance()->getZDistance(i_totalLayers)-pivotPoint_estimated);
+            i_totalLayers++;
+            }// layer
+        } // view 
+    } // modules
+
+    // First calculate the z-dependent part of the SD equation
+    float squaredZSum = 0.0;
+    i_totalLayers=0;
+    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+                squaredZSum += pow(zDistance_centered[i_totalLayers],2);
+                i_totalLayers++;
+            }// layer
+        } // view 
+    } // modules
+
+    // SD on fitted residuals    
+    float sigma_det = Tracker::instance()->getResolution(); // Original detector resolution
+    float N = float(Tracker::instance()->getLayerTotalN());
+    vector<float> sigma_recon_estimated;
+    i_totalLayers=0;
+    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+                sigma_recon_estimated.push_back(  sigma_det * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) )  );
+                i_totalLayers++;
+
+            }// layer
+        } // view 
+    } // modules
 
 
-    float sima_det = Tracker::instance()->getResolution(); // Original detector resolution 
-    float pivotPoint_estimated = (Tracker::instance()->getBeamStop() - Tracker::instance()->getBeamStart())/2.0;
-    cout << "pivotPoint" << pivotPoint_estimated << endl;
+   // The Chi2 calculation requires sigma for each plane, and misalignment parameter per module
+   float Chi2_recon_estimated=N; 
+   i_totalLayers=0;
+    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+                Chi2_recon_estimated += ( pow(indivMisM[i_module],2) - 2*sigma_recon_estimated[i_totalLayers]*indivMisM[i_module] )/( pow(sigma_recon_estimated[i_totalLayers],2) ); 
+                i_totalLayers++;
+            }// layer
+        } // view 
+    } // modules
 
-    float Chi2_fit_estimated=0;
-    cout << "Geometrically Estimated SD on fitted residuals M0U0" << sigma_fit_estimated_m0uo << " um"  << endl; // cm -> um
-    cout << "The estimated mean residual fit Chi2 = " << Chi2_fit_estimated <<  endl;
-      
+    
     // Write a constraint file, for use with pede
     Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
     cout<< "Constraints are written! [see Tracker_con.txt]" << endl;
@@ -487,13 +545,12 @@ int main(int argc, char* argv[]){
             h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
                                               
             //Calculating Chi2 stats:
-            // float residual_gen = generated_MC.residuals_gen[hitCount]; 
-            // h_residual_track->Fill(residual_gen);
-            // residuals_track_sum_2+=pow(residual_gen/sigma_mp2,2);
-            // h_residual_fit->Fill(rMeas_mp2); //already used as input to mille
-            // //sigma_fit_calc = sqrt(pow(sigma_mp2,2)-(pow(sigma_mp2,2)/pow(generated_MC.hit_count,1)));
-            // sigma_fit_calc = 0.0140;        // TODO get it from calculation 
-            // residuals_fit_sum_2+=pow(rMeas_mp2/sigma_fit_calc,2);
+            float residual_gen = generated_MC.residuals_gen[hitCount]; 
+            h_residual_true->Fill(residual_gen);
+            residuals_true_sum_2+=pow(residual_gen/sigma_mp2,2);
+            h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
+            //residuals_recon_sum_2+=pow(rMeas_mp2/sigma_recon_estimated[i_module][i_view][i_layer],2); TODO to account for missed hits
+            residuals_recon_sum_2+=pow(rMeas_mp2/sigma_recon_estimated[hitCount],2);
             
             //Fill for hits in modules/layers/straws
             string UV = Tracker::instance()->getUVmapping(generated_MC.View_i[hitCount], generated_MC.Layer_i[hitCount]); // converting view/layer ID into conventional labels
@@ -532,7 +589,7 @@ int main(int argc, char* argv[]){
 	        TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h8->Fill(rMeas_mp2);
 
-	        h_name.str(""); h_name << "UV/h_residual_fit_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
+	        h_name.str(""); h_name << "UV/h_residual_recon_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
 	        TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h9->Fill(rMeas_mp2);
 
@@ -565,20 +622,19 @@ int main(int argc, char* argv[]){
         }
 
         //For generated tracks
-        float chi2_track=residuals_track_sum_2;
-        h_chi2_track->Fill(chi2_track);
+        float chi2_true=residuals_true_sum_2;
+        h_chi2_true->Fill(chi2_true);
         //h_chi2_ndf_track->Fill(chi2_track/generated_MC.hit_count);  //ndf=#points - constraint [1 = linear] hit count goes from 0 to N points -1 
         //For fitted tracks
-        float chi2_fit=residuals_fit_sum_2;
-        h_chi2_fit->Fill(chi2_fit);
-        //h_chi2_ndf_fit->Fill(chi2_fit/generated_MC.hit_count);  //ndf=#points - constraint [1 = linear] 
+        float chi2_recon=residuals_recon_sum_2;
+        h_chi2_recon->Fill(chi2_recon);
+        //h_chi2_ndf_recon->Fill(chi2_recon/generated_MC.hit_count);  //ndf=#points - constraint [1 = linear] 
         //Resetting counters for next track
-        residuals_track_sum_2=0;
-        residuals_fit_sum_2=0;
+        residuals_true_sum_2=0;
+        residuals_recon_sum_2=0;
         h_hitCount->Fill(generated_MC.hit_count);
         h_meanXRecon->Fill(generated_MC.meanXReconTrack);
         pivotPoint_actual=generated_MC.meanZReconTrack;
-        h_corrMC->Fill(generated_MC.corrMC);
 
         //Filling Track-based plots 
         h_slope->Fill(generated_MC.slope_truth);
@@ -608,21 +664,30 @@ int main(int argc, char* argv[]){
     cout << "ROOT fitting parameters and output:" << endl; 
     
     
-    h_name.str(""); h_name << "UV/h_residual_fit_M_0_U0";
-    TH1F* hRes_M0U0 = (TH1F*)file->Get( h_name.str().c_str() );
-    sigma_fit_actual_m0uo = hRes_M0U0->GetStdDev();
-
+    vector<float> sigma_recon_actual;
+    
+    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+                string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
+                h_name.str(""); h_name << "UV/h_residual_recon_M_" << i_module << "_" << UV;
+                TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
+                sigma_recon_actual.push_back(hRes_actual->GetStdDev());
+            }// layer
+        } // view 
+    } // modules
 
     //h_reconMinusTrue_track->Fit("gaus", "Q");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
-    chi2pdf->SetParameters(15, 0., h_chi2_track->Integral("WIDTH")); 
-    h_chi2_track->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
+    chi2pdf->SetParameters(15, 0., h_chi2_true->Integral("WIDTH")); 
+    h_chi2_true->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
     //The expected error is instead estimated from the the square-root of the bin function value.
-    //h_chi2_fit->Fit("chi2pdf");
+    //h_chi2_recon->Fit("chi2pdf");
 	TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
-    gausFit->SetParameters(0.01405, 0.0, h_residual_track->Integral("WIDTH"));     
-    h_residual_track->Fit("gaus", "Q");
-    //h_residual_fit->Fit("gausFit"); 
+    gausFit->SetParameters(0.01405, 0.0, h_residual_true->Integral("WIDTH"));     
+    h_residual_true->Fit("gaus", "Q");
+    //h_residual_recon->Fit("gausFit"); 
+    Chi2_recon_actual = h_chi2_recon->GetMean();
 
     float biasMean = h_reconMinusTrue_track->GetMean();
     float biasMeanError = h_reconMinusTrue_track->GetMeanError();
@@ -689,12 +754,10 @@ int main(int argc, char* argv[]){
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
-    cout << "Geometrically Estimated SD on fitted residuals M0U0" << sigma_fit_estimated_m0uo << " um"  << endl; // cm -> um
-    cout << "Calculated (from measurements) SD on fitted residuals M0U0 " << sigma_fit_actual_m0uo * 10000 << " um"  << endl; // cm -> um
-    cout << "Geometrically Estimated Pivot Point (avg z)" << pivotPoint_estimated << " cm"  << endl;
+    cout << "Geometrically Estimated Pivot Point (avg z) " << pivotPoint_estimated << " cm"  << endl;
     cout << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm"  << endl; // cm -> um
-    cout << "Geometrically Estimated Mean Chi2" << Chi2_fit_estimated <<  endl; // cm -> um
-    cout << "Calculated (from measurements) Mean Chi2 " <<Chi2_fit_actual << endl; // cm -> um
+    cout << "Geometrically Estimated Mean Chi2 " << Chi2_recon_estimated <<  endl; // cm -> um
+    cout << "Calculated (from measurements) Mean Chi2 " <<Chi2_recon_actual << endl; // cm -> um
     float rejectsFrac=Tracker::instance()->getRejectedHitsDCA();
     rejectsFrac = rejectsFrac/(Tracker::instance()->getLayerTotalN()*recordN);
     cout << fixed << setprecision(1);

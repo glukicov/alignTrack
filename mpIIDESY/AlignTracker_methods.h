@@ -216,6 +216,10 @@ class Tracker {
 		return UVmapping[i][j];
 	}
 
+	float getZDistance(int i) {
+		return distance[i];
+	}
+
 	int getLayer(int i) {
 		return layer[i];
 	}

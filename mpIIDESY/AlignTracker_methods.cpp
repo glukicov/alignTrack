@@ -233,8 +233,6 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     float Yres = 0.0;     //squared of the discrepancies
     float Rsqr = 0.0;     //coefficient of determination
 
-    float MSD_sum = 0.0;
-
     //calculate various sums 
     for (int i = 0; i < dataSize; i++){
         //sum of x
@@ -287,8 +285,6 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
         //sum of squared residues
         SUMres += res;
 
-        MSD_sum += pow(ReconPoints[i] - AVGy,2);
-
         if (StrongDebugBool){
             printf ("   (%0.2f %0.2f)      %0.5E         %0.5E\n", 
             z_distance[i], ReconPoints[i], res, Yres);
@@ -298,10 +294,6 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     //calculate r^2 coefficient of determination
     Rsqr = (SUMres - SUM_Yres) / SUMres;
 
-    MSD_sum = MSD_sum/dataSize;
-
-    float corr = -AVGy/(sqrt(MSD_sum+AVGy*AVGy));
-
     if (StrongDebugBool){
         printf("--------------------------------------------------\n");
         printf("Sum of (y_i - y_avg)^2 = %0.5E\t\n", SUMres);
@@ -310,14 +302,13 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
         printf("Standard error of the estimate(Sr) = %0.5E\t\n", sqrt(SUM_Yres / (dataSize-2)));
         printf("Coefficient of determination(r^2) = %0.5E\t\n", (SUMres - SUM_Yres)/SUMres);
         printf("Correlation coefficient(r) = %0.5E\t\n", sqrt(Rsqr));
-        cout << "corr= " << corr << endl;
+    
     }
     
     resData.slope_recon=slope;
     resData.intercept_recon=y_intercept;
     resData.meanXReconTrack=AVGy;
     resData.meanZReconTrack=AVGx;
-    resData.corrMC=corr;
 
     if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
