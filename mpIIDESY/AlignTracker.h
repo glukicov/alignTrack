@@ -41,6 +41,8 @@
 #include <THStack.h>
 #include <TText.h>
 #include <TLegend.h>
+#include <TGaxis.h>
+#include <TRatioPlot.h>
 
 int main(int argc, char* argv[]);  
 

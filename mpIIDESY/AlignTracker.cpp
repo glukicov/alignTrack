@@ -247,7 +247,7 @@ int main(int argc, char* argv[]){
     TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
     TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.2, 0.2);
-    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for reconstructed tracks", 159, -1, 500);
+    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for reconstructed tracks", 79, -1, 60);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
@@ -259,9 +259,14 @@ int main(int argc, char* argv[]){
     
     // "special" histos
     TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.08, 0.08);
-    h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
+    TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 60, 59, 120, 150);
+    TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 60, 59, 120, 150);    
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
+    h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
+    h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
+    h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
     
+
     std::stringstream h_name;
     std::stringstream h_title;
     
@@ -440,14 +445,17 @@ int main(int argc, char* argv[]){
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-                sigma_recon_estimated.push_back(  sigma_det * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) )  );
+                float simga_est = sigma_det * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) );
+                h_SD_z_res_Est->SetMarkerStyle(32);
+                h_SD_z_res_Est->SetMarkerColor(kBlue);
+                sigma_recon_estimated.push_back(simga_est);
+                h_SD_z_res_Est->Fill(Tracker::instance()->getZDistance(i_totalLayers) ,simga_est*10000);
                 i_totalLayers++;
 
             }// layer
         } // view 
     } // modules
-
-
+   
    // The Chi2 calculation requires sigma for each plane, and misalignment parameter per module
    float Chi2_recon_estimated=N; 
    i_totalLayers=0;
@@ -666,6 +674,7 @@ int main(int argc, char* argv[]){
     
     vector<float> sigma_recon_actual;
     
+    int z_counter = 0;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
@@ -673,26 +682,43 @@ int main(int argc, char* argv[]){
                 h_name.str(""); h_name << "UV/h_residual_recon_M_" << i_module << "_" << UV;
                 TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
                 sigma_recon_actual.push_back(hRes_actual->GetStdDev());
+                h_SD_z_res_Recon->Fill(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev()*10000);
+                h_SD_z_res_Recon->SetMarkerStyle(33);
+                h_SD_z_res_Recon->SetMarkerColor(kRed);
+                z_counter++;
             }// layer
         } // view 
     } // modules
 
     //h_reconMinusTrue_track->Fit("gaus", "Q");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
-    chi2pdf->SetParameters(15, 0., h_chi2_true->Integral("WIDTH")); 
+    chi2pdf->SetParameters(16, 0., h_chi2_true->Integral("WIDTH")); 
     h_chi2_true->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
     //The expected error is instead estimated from the the square-root of the bin function value.
-    //h_chi2_recon->Fit("chi2pdf");
-	TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
-    gausFit->SetParameters(0.01405, 0.0, h_residual_true->Integral("WIDTH"));     
+   
+	//TF1* gausFit = new TF1("gausFit","[2]*ROOT::Math::gaussian_pdf(x,[0],[1])", -0.06, 0.06);
     h_residual_true->Fit("gaus", "Q");
+    //gausFit->SetParameters(0.140, 0.0, h_residual_true->Integral("WIDTH"));     
     //h_residual_recon->Fit("gausFit"); 
     Chi2_recon_actual = h_chi2_recon->GetMean();
 
-    float biasMean = h_reconMinusTrue_track->GetMean();
-    float biasMeanError = h_reconMinusTrue_track->GetMeanError();
+    TCanvas *ct = new TCanvas("ct","ct",700,700);
 
-    bias << biasMean << " " << biasMeanError << endl;
+    gStyle->SetOptStat("ourRmMe");
+    gStyle->SetOptFit(1111); 
+    chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_recon->Integral("WIDTH"));
+    h_chi2_recon->Fit("chi2pdf");
+    ct->Clear(); // Fit does not draw into correct pad
+    auto rp1 = new TRatioPlot(h_chi2_recon, "errfunc");
+    rp1->SetGraphDrawOpt("L");
+    rp1->SetSeparationMargin(0.0);
+    rp1->Draw("noconfint");
+    rp1->GetLowerRefGraph()->SetMinimum(-2);
+    rp1->GetLowerRefGraph()->SetMaximum(2);
+    ct->Update();
+    rp1->GetLowerRefYaxis()->SetTitle("Ratio");
+    ct->Print("Chi2_recon_Ratio.png");
+
 
     if (strongPlotting){
    
