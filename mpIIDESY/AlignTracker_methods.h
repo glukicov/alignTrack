@@ -54,6 +54,7 @@ struct MCData {
 	float intercept_recon;
 
 	float meanXReconTrack;
+	float meanZReconTrack;
 	float corrMC;
 
 	//DEBUG
@@ -74,6 +75,7 @@ struct ResidualData{
 	float slope_recon;
 	float intercept_recon;
 	float meanXReconTrack;
+	float meanZReconTrack;
 	float corrMC;
 };
 

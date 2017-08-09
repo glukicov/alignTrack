@@ -95,8 +95,10 @@ int main(int argc, char* argv[]){
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     float residuals_track_sum_2=0.0;
     float residuals_fit_sum_2=0.0;
-    float sigma_fit_estimated_m0uo;  // estimated value for RMS on the residuals for the fit [need global scope for printout]
-    float sigma_fit_actual_m0uo; //
+    float sigma_fit_estimated_m0uo=0.0;  // estimated value for RMS on the residuals for the fit [need global scope for printout]
+    float sigma_fit_actual_m0uo=0.0; //
+    float pivotPoint_actual=0.0;
+    float Chi2_fit_actual=0.0;
     const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack};
        
     //Tell the logger to only show message at INFO level or above
@@ -394,8 +396,8 @@ int main(int argc, char* argv[]){
 
 
     float sima_det = Tracker::instance()->getResolution(); // Original detector resolution 
-    float pivotPoint = (Tracker::instance()->getBeamStop() - Tracker::instance()->getBeamStart())/2.0;
-    cout << "pivotPoint" << pivotPoint << endl;
+    float pivotPoint_estimated = (Tracker::instance()->getBeamStop() - Tracker::instance()->getBeamStart())/2.0;
+    cout << "pivotPoint" << pivotPoint_estimated << endl;
 
     float Chi2_fit_estimated=0;
     cout << "Geometrically Estimated SD on fitted residuals M0U0" << sigma_fit_estimated_m0uo << " um"  << endl; // cm -> um
@@ -575,6 +577,7 @@ int main(int argc, char* argv[]){
         residuals_fit_sum_2=0;
         h_hitCount->Fill(generated_MC.hit_count);
         h_meanXRecon->Fill(generated_MC.meanXReconTrack);
+        pivotPoint_actual=generated_MC.meanZReconTrack;
         h_corrMC->Fill(generated_MC.corrMC);
 
         //Filling Track-based plots 
@@ -689,9 +692,9 @@ int main(int argc, char* argv[]){
     cout << "Geometrically Estimated SD on fitted residuals M0U0" << sigma_fit_estimated_m0uo << " um"  << endl; // cm -> um
     cout << "Calculated (from measurements) SD on fitted residuals M0U0 " << sigma_fit_actual_m0uo * 10000 << " um"  << endl; // cm -> um
     cout << "Geometrically Estimated Pivot Point (avg z)" << pivotPoint_estimated << " cm"  << endl;
-    cout << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual " cm"  << endl; // cm -> um
-    cout << "Geometrically Estimated Mean Chi2" << chi2_estimated <<  endl; // cm -> um
-    cout << "Calculated (from measurements) Mean Chi2 " <<chi2_actual << endl; // cm -> um
+    cout << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm"  << endl; // cm -> um
+    cout << "Geometrically Estimated Mean Chi2" << Chi2_fit_estimated <<  endl; // cm -> um
+    cout << "Calculated (from measurements) Mean Chi2 " <<Chi2_fit_actual << endl; // cm -> um
     float rejectsFrac=Tracker::instance()->getRejectedHitsDCA();
     rejectsFrac = rejectsFrac/(Tracker::instance()->getLayerTotalN()*recordN);
     cout << fixed << setprecision(1);

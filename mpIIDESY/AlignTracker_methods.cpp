@@ -316,6 +316,7 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     resData.slope_recon=slope;
     resData.intercept_recon=y_intercept;
     resData.meanXReconTrack=AVGy;
+    resData.meanZReconTrack=AVGx;
     resData.corrMC=corr;
 
     if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
@@ -469,6 +470,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     MC.slope_recon = res_Data.slope_recon;
     MC.intercept_recon = res_Data.intercept_recon;
     MC.meanXReconTrack=res_Data.meanXReconTrack;
+    MC.meanZReconTrack=res_Data.meanZReconTrack;
     MC.corrMC=res_Data.corrMC;
     
     if(debugBool){
