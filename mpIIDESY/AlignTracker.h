@@ -43,6 +43,11 @@
 #include <TLegend.h>
 #include <TGaxis.h>
 #include <TRatioPlot.h>
+#include <TGraph.h>
+#include <TGraphErrors.h>
+#include <TMarker.h>
+#include <TPaveStats.h>
+
 
 int main(int argc, char* argv[]);  
 

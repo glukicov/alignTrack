@@ -247,7 +247,7 @@ int main(int argc, char* argv[]){
     TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
     TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.2, 0.2);
-    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for reconstructed tracks", 79, -1, 60);
+    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 179, 0, 500);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
@@ -256,6 +256,7 @@ int main(int argc, char* argv[]){
     TH1F* h_frac_Dslope = new TH1F("h_frac_Dslope", "(True-Recon)/True Track slope",  199,  -1.1, 1.1);
     TH1F* h_frac_Dintercept = new TH1F("h_frac_Dintercept", "(True-Recon)/True Track intercept",  199,  -1.1, 1.1);
     TH1F* h_meanXRecon = new TH1F("h_meanXRecon", "Mean X of recon track", 39, -2.2, 2.2);
+    TH1F* h_meanZRecon = new TH1F("h_meanZRecon", "Mean Z of recon track", 39, 20, 40);
     
     // "special" histos
     TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.08, 0.08);
@@ -342,14 +343,16 @@ int main(int argc, char* argv[]){
     
     //Use array of pointer of type TH1x to set axis titles and directories 
     TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon,
-    	h_intercept, h_x0, h_x1, h_residual_true, h_hits_true, h_hits_recon, h_residual_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track, h_frac_Dintercept, h_meanXRecon};
+    	h_intercept, h_x0, h_x1, h_residual_true, h_hits_true, h_hits_recon, h_residual_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track, h_frac_Dintercept, 
+        h_meanXRecon, h_meanZRecon};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
         TH1F* temp = cmTitle[i];
         cmTitle[i]->SetXTitle("[cm]");
     }
     TH1F* cdAllHits_F[] = {h_sigma, h_hits_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_true, h_chi2_true, h_residual_recon, 
     	h_chi2_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
-    TH1F* cdTracks_F[] = {h_frac_Dintercept, h_frac_Dslope, h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, h_meanXRecon}; 
+    TH1F* cdTracks_F[] = {h_frac_Dintercept, h_frac_Dslope, h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, 
+        h_meanXRecon, h_meanZRecon}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
         cdAllHits_F[i]->SetDirectory(cd_All_Hits);
@@ -403,11 +406,13 @@ int main(int argc, char* argv[]){
     
     // Mean z point (pivot point)
     float pivotPoint_estimated=0.0;
+    vector<float> zDistance;
     int i_totalLayers=0;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
                 pivotPoint_estimated+=Tracker::instance()->getZDistance(i_totalLayers);
+                zDistance.push_back(Tracker::instance()->getZDistance(i_totalLayers));
                 i_totalLayers++;
             }// layer
         } // view 
@@ -446,9 +451,9 @@ int main(int argc, char* argv[]){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
                 float simga_est = sigma_det * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) );
-                h_SD_z_res_Est->SetMarkerStyle(32);
-                h_SD_z_res_Est->SetMarkerColor(kBlue);
-                sigma_recon_estimated.push_back(simga_est);
+                h_SD_z_res_Est->SetMarkerStyle(33);
+                h_SD_z_res_Est->SetMarkerColor(kRed);
+                sigma_recon_estimated.push_back(simga_est*10000);
                 h_SD_z_res_Est->Fill(Tracker::instance()->getZDistance(i_totalLayers) ,simga_est*10000);
                 i_totalLayers++;
 
@@ -558,7 +563,7 @@ int main(int argc, char* argv[]){
             residuals_true_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
             //residuals_recon_sum_2+=pow(rMeas_mp2/sigma_recon_estimated[i_module][i_view][i_layer],2); TODO to account for missed hits
-            residuals_recon_sum_2+=pow(rMeas_mp2/sigma_recon_estimated[hitCount],2);
+            residuals_recon_sum_2+=pow(rMeas_mp2/(sigma_recon_estimated[hitCount]/10000),2); //cm -> um
             
             //Fill for hits in modules/layers/straws
             string UV = Tracker::instance()->getUVmapping(generated_MC.View_i[hitCount], generated_MC.Layer_i[hitCount]); // converting view/layer ID into conventional labels
@@ -643,6 +648,7 @@ int main(int argc, char* argv[]){
         h_hitCount->Fill(generated_MC.hit_count);
         h_meanXRecon->Fill(generated_MC.meanXReconTrack);
         pivotPoint_actual=generated_MC.meanZReconTrack;
+        h_meanZRecon->Fill(generated_MC.meanZReconTrack);
 
         //Filling Track-based plots 
         h_slope->Fill(generated_MC.slope_truth);
@@ -673,6 +679,7 @@ int main(int argc, char* argv[]){
     
     
     vector<float> sigma_recon_actual;
+    vector<float> sigmaError_recon_actual;
     
     int z_counter = 0;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
@@ -681,10 +688,12 @@ int main(int argc, char* argv[]){
                 string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
                 h_name.str(""); h_name << "UV/h_residual_recon_M_" << i_module << "_" << UV;
                 TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
-                sigma_recon_actual.push_back(hRes_actual->GetStdDev());
+                sigma_recon_actual.push_back(hRes_actual->GetStdDev()*10000);
                 h_SD_z_res_Recon->Fill(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev()*10000);
-                h_SD_z_res_Recon->SetMarkerStyle(33);
-                h_SD_z_res_Recon->SetMarkerColor(kRed);
+                sigmaError_recon_actual.push_back(hRes_actual->GetStdDevError()*10000);
+                h_SD_z_res_Recon->SetBinError(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev()*10000, hRes_actual->GetStdDevError()*10000);
+                //h_SD_z_res_Recon->SetMarkerStyle(33);
+                //h_SD_z_res_Recon->SetMarkerColor(kRed);
                 z_counter++;
             }// layer
         } // view 
@@ -692,7 +701,7 @@ int main(int argc, char* argv[]){
 
     //h_reconMinusTrue_track->Fit("gaus", "Q");
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
-    chi2pdf->SetParameters(16, 0., h_chi2_true->Integral("WIDTH")); 
+    chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_true->Integral("WIDTH")); 
     h_chi2_true->Fit("chi2pdf", "Q"); //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
     //The expected error is instead estimated from the the square-root of the bin function value.
    
@@ -702,23 +711,48 @@ int main(int argc, char* argv[]){
     //h_residual_recon->Fit("gausFit"); 
     Chi2_recon_actual = h_chi2_recon->GetMean();
 
-    TCanvas *ct = new TCanvas("ct","ct",700,700);
-
+   
+    //The function is used to calculate the residual between the fit and the histogram
+    // The class calculates the difference between the histogram and the fit function at each point and divides it by the uncertainty.
+    TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
     gStyle->SetOptStat("ourRmMe");
     gStyle->SetOptFit(1111); 
     chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_recon->Integral("WIDTH"));
+    h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
     h_chi2_recon->Fit("chi2pdf");
-    ct->Clear(); // Fit does not draw into correct pad
-    auto rp1 = new TRatioPlot(h_chi2_recon, "errfunc");
-    rp1->SetGraphDrawOpt("L");
+    cChi2->Clear(); // Fit does not draw into correct pad
+    auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
+    rp1->SetGraphDrawOpt("P");
     rp1->SetSeparationMargin(0.0);
+    //rp1->SetMarkerColor(kWhite);
+    //cChi2->SetTicks(0, 1);
     rp1->Draw("noconfint");
-    rp1->GetLowerRefGraph()->SetMinimum(-2);
-    rp1->GetLowerRefGraph()->SetMaximum(2);
-    ct->Update();
+    cChi2->Update();
     rp1->GetLowerRefYaxis()->SetTitle("Ratio");
-    ct->Print("Chi2_recon_Ratio.png");
+    cChi2->Print("FoM_Chi2_recon.C");
+    cChi2->Print("FoM_Chi2_recon.png");
 
+    TCanvas *c1 = new TCanvas("c1","",200,10,700,500);
+    const Int_t n = Tracker::instance()->getLayerTotalN();
+    Float_t* z_distance  = &zDistance[0];
+    Float_t* Res_Recon_SD  = &sigma_recon_actual[0];
+    Float_t* Res_Recon_SD_error = &sigmaError_recon_actual[0];
+    auto gr = new TGraphErrors(n,z_distance,Res_Recon_SD,0,Res_Recon_SD_error);
+    gr->SetTitle("Residuals SD per layer");
+    gr->SetMarkerColor(kWhite);
+    gr->SetLineColor(kRed);
+    gr->SetMarkerStyle(1);
+    gr->Draw("A*");
+    Float_t* Res_Est_SD  = &sigma_recon_estimated[0];
+    //auto gr2 = new TGraphErrors(n,z_distance,Res_Est_SD,0,0);
+    for (int i=0; i < n; i++){
+        TMarker *m1 = new TMarker(z_distance[i],Res_Est_SD[i], 20);
+        m1->SetMarkerColor(kBlue);
+        m1->Draw();
+    }
+    gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
+    gr->GetYaxis()->SetTitle("Residual SD [um]");
+    c1->Print("FoM_Res.png");
 
     if (strongPlotting){
    
