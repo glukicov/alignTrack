@@ -259,7 +259,7 @@ int main(int argc, char* argv[]){
     TH1F* h_meanZRecon = new TH1F("h_meanZRecon", "Mean Z of recon track", 39, 20, 40);
     
     // "special" histos
-    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.08, 0.08);
+    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.16, 0.16);
     TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 60, 59, 120, 150);
     TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 60, 59, 120, 150);    
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
@@ -295,7 +295,7 @@ int main(int argc, char* argv[]){
 
 		    	h_name.str(""); h_name << "h_residual_recon_M_" << i_module << "_" <<UV;
 		        h_title.str(""); h_title << "Residuals to recon line for Module " << i_module << " " << UV ;
-		        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.08, 0.08);
+		        auto hl4 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -0.2, 0.2);
 		        hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
 
 		        h_name.str(""); h_name << "h_line_jitter_M_" << i_module << "_" << UV;
@@ -452,8 +452,8 @@ int main(int argc, char* argv[]){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
                 float simga_est = sigma_det * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) );
                 h_SD_z_res_Est->SetMarkerStyle(33);
-                h_SD_z_res_Est->SetMarkerColor(kRed);
-                sigma_recon_estimated.push_back(simga_est*10000);
+                h_SD_z_res_Est->SetMarkerColor(kBlue);
+                sigma_recon_estimated.push_back(simga_est);
                 h_SD_z_res_Est->Fill(Tracker::instance()->getZDistance(i_totalLayers) ,simga_est*10000);
                 i_totalLayers++;
 
@@ -462,12 +462,25 @@ int main(int argc, char* argv[]){
     } // modules
    
    // The Chi2 calculation requires sigma for each plane, and misalignment parameter per module
-   float Chi2_recon_estimated=N; 
+   float Chi2_recon_estimated=N;
    i_totalLayers=0;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-                Chi2_recon_estimated += ( pow(indivMisM[i_module],2) - 2*sigma_recon_estimated[i_totalLayers]*indivMisM[i_module] )/( pow(sigma_recon_estimated[i_totalLayers],2) ); 
+                cout << "Chi2= " << Chi2_recon_estimated << endl;
+                
+                float L = sqrt( pow(Tracker::instance()->getResolution(),2) - pow(sigma_recon_estimated[i_totalLayers],2) );
+                cout << "Line Jitter = " << L ;
+                float z = zDistance_centered[i_totalLayers];
+                float M = indivMisM[i_module];
+                float S = sigma_recon_estimated[i_totalLayers];
+
+                 Chi2_recon_estimated += ( M*M - 2.0*S*M ) / (S*S) ;
+                
+                //Chi2_recon_estimated += ( M*M - 2.0*S*M ) / (S*S) ;
+                //Chi2_recon_estimated += ( pow(indivMisM[i_module] ,2) - 2.0*sigma_recon_estimated[i_totalLayers]*indivMisM[i_module] )/( pow(sigma_recon_estimated[i_totalLayers],2) );
+                cout << "Chi2= " << Chi2_recon_estimated << " indivMisM= " << indivMisM[i_module] << " sigma= " << sigma_recon_estimated[i_totalLayers] << endl;
+                cout << "i_totalLayers= " << i_totalLayers << " i_module= " << i_module << endl;
                 i_totalLayers++;
             }// layer
         } // view 
@@ -563,7 +576,7 @@ int main(int argc, char* argv[]){
             residuals_true_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
             //residuals_recon_sum_2+=pow(rMeas_mp2/sigma_recon_estimated[i_module][i_view][i_layer],2); TODO to account for missed hits
-            residuals_recon_sum_2+=pow(rMeas_mp2/(sigma_recon_estimated[hitCount]/10000),2); //cm -> um
+            residuals_recon_sum_2+=pow(rMeas_mp2/(sigma_recon_estimated[hitCount]),2); //cm -> um
             
             //Fill for hits in modules/layers/straws
             string UV = Tracker::instance()->getUVmapping(generated_MC.View_i[hitCount], generated_MC.Layer_i[hitCount]); // converting view/layer ID into conventional labels
@@ -690,6 +703,8 @@ int main(int argc, char* argv[]){
                 TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
                 sigma_recon_actual.push_back(hRes_actual->GetStdDev()*10000);
                 h_SD_z_res_Recon->Fill(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev()*10000);
+                h_SD_z_res_Recon->SetMarkerStyle(33);
+                h_SD_z_res_Recon->SetMarkerColor(kRed);
                 sigmaError_recon_actual.push_back(hRes_actual->GetStdDevError()*10000);
                 h_SD_z_res_Recon->SetBinError(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev()*10000, hRes_actual->GetStdDevError()*10000);
                 //h_SD_z_res_Recon->SetMarkerStyle(33);
@@ -746,12 +761,16 @@ int main(int argc, char* argv[]){
     Float_t* Res_Est_SD  = &sigma_recon_estimated[0];
     //auto gr2 = new TGraphErrors(n,z_distance,Res_Est_SD,0,0);
     for (int i=0; i < n; i++){
-        TMarker *m1 = new TMarker(z_distance[i],Res_Est_SD[i], 20);
+        TMarker *m1 = new TMarker(z_distance[i],Res_Est_SD[i]*10000, 20);
         m1->SetMarkerColor(kBlue);
         m1->Draw();
     }
     gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
     gr->GetYaxis()->SetTitle("Residual SD [um]");
+    auto axis = gr->GetXaxis();
+    axis->SetLimits(0.,60.);                 // along X
+    gr->GetHistogram()->SetMaximum(150.);   // along          
+    gr->GetHistogram()->SetMinimum(110.);  //   Y     
     c1->Print("FoM_Res.png");
 
     if (strongPlotting){
