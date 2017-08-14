@@ -308,7 +308,7 @@ int main(int argc, char* argv[]){
 
                 h_name.str(""); h_name << "h_pull_M_" << i_module << "_" << UV;
                 h_title.str(""); h_title << "Measurement Pull for Module " << i_module << " " << UV ;
-                auto hl6 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -5.0, 5.0);
+                auto hl6 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -10.0, 10.0);
                 hl6->GetXaxis()->SetTitle("[cm]"); hl6->SetDirectory(cd_UV);
 
 		    } // layers
@@ -400,7 +400,9 @@ int main(int argc, char* argv[]){
 
     // Estimating fit and misalignment parameters from geometry and assumed constants:
     // Misalignment
-    vector<float> indivMisM;
+    vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane 
+    vector<float> relMis;  // Relative misalignment (w.r.t to overall mis.) 
+    vector<float> M_shear; // vector to hold the shear misalignment for each plane
     float SumMis =0.0;
     float SquaredSumMis=0.0;
     cout << "Manual Misalignment: " << endl;
@@ -409,17 +411,53 @@ int main(int argc, char* argv[]){
         SumMis += Tracker::instance()->getSdevX(i_module);
         SquaredSumMis += pow(Tracker::instance()->getSdevX(i_module),2);
         if (plotBool || debugBool){pede_mis << Tracker::instance()->getSdevX(i_module) << " "; }
-        float indivMis = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
-        indivMisM.push_back(indivMis);
-        cout << showpos << "Relative: " << indivMis << " cm." << endl;
+        float relMisTmp = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
+        // now push these misalignment parameters for all layers in the module 
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+        	relMis.push_back(relMisTmp);
+        	charMis.push_back(Tracker::instance()->getSdevX(i_module));
+        	} // view
+        } // layer
+        cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
     } // modules
     cout << noshowpos; 
     cout << "The overall misalignment was " << Tracker::instance()->getOverallMis() << " cm" <<  endl;
+
+    // Calculating Shear Misalignment per layer
+    float N = float(Tracker::instance()->getLayerTotalN()); // total N of layers
+   	//vector<float> xDetecor = relMis;
+   	vector<float> xDetecor = charMis;
+   	vector<float> zDetecor = Tracker::instance()->getMisZ(); // returns Z positions 
+   	ResidualData Line = Tracker::instance()->GetResiduals(xDetecor, zDetecor, N, debug_calc, false); 
+   	float slope_Line = Line.slope_recon;
+	float cLine = Line.intercept_recon;
+	float sign_Line = +1.0; // up = +, down = - for a point w.r.t to the line
+	int i_totalLayers=0;
+	for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
+        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
+            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+                float xLine = zDetecor[i_totalLayers] * slope_Line + cLine;
+                cout << "xDet= " << xDetecor[i_totalLayers] << " zDetecor= " << zDetecor[i_totalLayers] << endl;
+                cout << "xLine= " << xLine << " zDetecor= " << zDetecor[i_totalLayers] << endl;
+               	if (xDetecor[i_totalLayers]<xLine){
+               		sign_Line = -1.0;
+               	}
+               	else{
+               		sign_Line = +1.0;
+               	}
+               	float dca_M = sign_Line*Tracker::instance()->DCA(xDetecor[i_totalLayers], xLine);
+                M_shear.push_back(dca_M);
+                cout << "Shear Mis. L. " << i_totalLayers << " = " << dca_M << endl;
+                i_totalLayers++;
+            }// layer
+        } // view 
+    } // modules
     
     // Mean z point (pivot point)
     float pivotPoint_estimated=0.0;
     vector<float> zDistance;
-    int i_totalLayers=0;
+    i_totalLayers=0;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
@@ -432,31 +470,23 @@ int main(int argc, char* argv[]){
     pivotPoint_estimated = pivotPoint_estimated/Tracker::instance()->getLayerTotalN();
     
     vector<float> zDistance_centered; // SD calculations assumes mean z of 0
+    float squaredZSum = 0.0; // Squared sum of centred Z distances 
     i_totalLayers=0;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-            zDistance_centered.push_back(Tracker::instance()->getZDistance(i_totalLayers)-pivotPoint_estimated);
+            float tmpZDistance= Tracker::instance()->getZDistance(i_totalLayers)-pivotPoint_estimated;
+            zDistance_centered.push_back(tmpZDistance);
+            squaredZSum += pow(tmpZDistance,2);
             i_totalLayers++;
             }// layer
         } // view 
     } // modules
 
     // First calculate the z-dependent part of the SD equation
-    float squaredZSum = 0.0;
-    i_totalLayers=0;
-    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-                squaredZSum += pow(zDistance_centered[i_totalLayers],2);
-                i_totalLayers++;
-            }// layer
-        } // view 
-    } // modules
-
-    // SD on fitted residuals    
+    
+    // SD on fitted residuals 
     float sigma_det = Tracker::instance()->getResolution(); // Original detector resolution
-    float N = float(Tracker::instance()->getLayerTotalN());
     vector<float> sigma_recon_estimated;
     i_totalLayers=0;
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
@@ -479,24 +509,15 @@ int main(int argc, char* argv[]){
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-                cout << "Chi2= " << Chi2_recon_estimated << endl;
+                //cout << "Chi2= " << Chi2_recon_estimated << endl;
                 
-                float z = zDistance_centered[i_totalLayers];
-                //float M = indivMisM[i_module];
-                float M = Tracker::instance()->getSdevX(i_module);
+                float M = M_shear[i_totalLayers];
                 float S = sigma_recon_estimated[i_totalLayers];
-                float D = Tracker::instance()->getResolution();
 
+				Chi2_recon_estimated += (M*M - 2.0 * S * M)/(S*S);
 
-                //Chi2_recon_estimated += ( (D*D)/(S*S) ) * ( N * ( (N-1)/(N) - (z*z)/(squaredZSum) ) + 2.0*SumMis + (SquaredSumMis)/(D*D) );
-                //Chi2_recon_estimated +=   N * ( (N-1)/(N) - (z*z)/(squaredZSum) ) + 2.0*SumMis + (SquaredSumMis)/(S*S)  ;
+				cout << " I= " << i_totalLayers << " M= " << M << " S= " << S << endl;
 
-                Chi2_recon_estimated += 2.0 * (D*D)/(S*S)*SumMis + (SquaredSumMis)/(S*S) ;
-
-                cout << "Chi2= " << Chi2_recon_estimated << " indivMisM= " << indivMisM[i_module] << " sigma= " << sigma_recon_estimated[i_totalLayers] << endl;
-                cout << "SumMis= " << SumMis << " SquaredSumMis= " << SquaredSumMis << " z= " << z << endl;
-                cout << "S= " << S << " D= " << D << " squaredZSum= " << squaredZSum << endl;
-                cout << "i_totalLayers= " << i_totalLayers << " i_module= " << i_module << endl;
                 i_totalLayers++;
             }// layer
         } // view 

@@ -58,7 +58,7 @@ float Tracker::generate_uniform(){
 }
 
 /**
-   Simple function to calculate the Distance of Closest Approach
+   Simple function to calculate the **VERTICAL** Distance of Closest Approach
    between a point (x0, y0) and a line (defined by two points: (x1, y1), (x2, y2) ).
   
    @return dca
