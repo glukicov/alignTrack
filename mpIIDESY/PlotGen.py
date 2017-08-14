@@ -165,7 +165,7 @@ for i_module in range(0, moduleN):
 for i_hits in range(0, len(gen_hitX)):
 	plt.plot(gen_hitZ[i_hits], gen_hitX[i_hits], color="black", marker = "x")
 
-axes.set_ylim([beamX0-4,beamX1+1])
+axes.set_ylim([beamX0-6,beamX1+3])
 axes.set_xlim([beamZ0-1,beamZ1+1])
 plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
@@ -206,7 +206,7 @@ for i_module in range(0, moduleN):
 for i_hits in range(0, len(fit_hitX)):
 	plt.plot(fit_hitZ[i_hits], fit_hitX[i_hits], color="black", marker = "x")
 	
-axes2.set_ylim([beamX0-4,beamX1+1])
+axes2.set_ylim([beamX0-6,beamX1+3])
 axes2.set_xlim([beamZ0-1,beamZ1+1])
 plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")

@@ -229,7 +229,7 @@ int main(int argc, char* argv[]){
     // Key quantities 
     TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, 
     	Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  99, -0.1, 0.1);
+    TH1F* h_hits_MP2 = new TH1F("h_hits_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  199, -0.2, 0.2);
     TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
     TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     // Track-generation-based
@@ -247,7 +247,7 @@ int main(int argc, char* argv[]){
     TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
     TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.2, 0.2);
-    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 179, 0, 500);
+    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 379, 0, 1000);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]){
     h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
     TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 60, 59, 120, 150);    
     h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
-    TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 60, 59, -5, 5);    
+    TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 60, 59, -1, 1);    
     h_Pulls_z->SetDirectory(cd_All_Hits); h_Pulls_z->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_Pulls_z->GetYaxis()->SetTitle("Measurement Pulls [cm]");
     
 
@@ -402,7 +402,8 @@ int main(int argc, char* argv[]){
     // Misalignment
     vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane 
     vector<float> relMis;  // Relative misalignment (w.r.t to overall mis.) 
-    vector<float> M_shear; // vector to hold the shear misalignment for each plane
+    vector<float> shearMis; // vector to hold the shear misalignment for each plane
+    float overallMis;
     float SumMis =0.0;
     float SquaredSumMis=0.0;
     cout << "Manual Misalignment: " << endl;
@@ -422,12 +423,13 @@ int main(int argc, char* argv[]){
         cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
     } // modules
     cout << noshowpos; 
-    cout << "The overall misalignment was " << Tracker::instance()->getOverallMis() << " cm" <<  endl;
+    overallMis = Tracker::instance()->getOverallMis();
+    cout << "The overall misalignment was " << overallMis << " cm" <<  endl;
 
     // Calculating Shear Misalignment per layer
     float N = float(Tracker::instance()->getLayerTotalN()); // total N of layers
-   	//vector<float> xDetecor = relMis;
-   	vector<float> xDetecor = charMis;
+    //vector<float> xDetecor = charMis;
+   	vector<float> xDetecor = relMis;
    	vector<float> zDetecor = Tracker::instance()->getMisZ(); // returns Z positions 
    	ResidualData Line = Tracker::instance()->GetResiduals(xDetecor, zDetecor, N, debug_calc, false); 
    	float slope_Line = Line.slope_recon;
@@ -438,8 +440,6 @@ int main(int argc, char* argv[]){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
                 float xLine = zDetecor[i_totalLayers] * slope_Line + cLine;
-                cout << "xDet= " << xDetecor[i_totalLayers] << " zDetecor= " << zDetecor[i_totalLayers] << endl;
-                cout << "xLine= " << xLine << " zDetecor= " << zDetecor[i_totalLayers] << endl;
                	if (xDetecor[i_totalLayers]<xLine){
                		sign_Line = -1.0;
                	}
@@ -447,8 +447,7 @@ int main(int argc, char* argv[]){
                		sign_Line = +1.0;
                	}
                	float dca_M = sign_Line*Tracker::instance()->DCA(xDetecor[i_totalLayers], xLine);
-                M_shear.push_back(dca_M);
-                cout << "Shear Mis. L. " << i_totalLayers << " = " << dca_M << endl;
+                shearMis.push_back(dca_M);
                 i_totalLayers++;
             }// layer
         } // view 
@@ -509,15 +508,10 @@ int main(int argc, char* argv[]){
     for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
         for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
             for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-                //cout << "Chi2= " << Chi2_recon_estimated << endl;
-                
-                float M = M_shear[i_totalLayers];
+                float M = shearMis[i_totalLayers];
                 float S = sigma_recon_estimated[i_totalLayers];
-
-				Chi2_recon_estimated += (M*M - 2.0 * S * M)/(S*S);
-
-				cout << " I= " << i_totalLayers << " M= " << M << " S= " << S << endl;
-
+				//maChi2_recon_estimated += (M*M + 2.0 * S * M)/(S*S);
+				Chi2_recon_estimated += (M*M + 2.0 * S * M + S*overallMis/N)/(S*S);
                 i_totalLayers++;
             }// layer
         } // view 
@@ -662,7 +656,7 @@ int main(int argc, char* argv[]){
 
             h_name.str(""); h_name << "UV/h_pull_M_" << generated_MC.Module_i[hitCount] << "_" << UV;
             TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
-            h11->Fill( rMeas_mp2/sigma_recon_estimated[hitCount] ); // [i_module][i_view][i_layer],2); TODO to account for missed hits
+            h11->Fill( rMeas_mp2/sqrt(sigma_det-sigma_recon_estimated[hitCount])); // [i_module][i_view][i_layer],2); TODO to account for missed hits
  
         	if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " 
         	<< rMeas_mp2 << "  " << sigma_mp2 << endl;}
@@ -734,6 +728,10 @@ int main(int argc, char* argv[]){
     
     vector<float> sigma_recon_actual;
     vector<float> sigmaError_recon_actual;
+    vector<float> pull_actual;
+    vector<float> pull_actual_SD;
+	vector<float> Res_mean;
+	vector<float> Res_mean_SD;
     
     //Filling amalgamated res SD and pulls plots
     int z_counter = 0;
@@ -754,7 +752,13 @@ int main(int argc, char* argv[]){
                 h_name.str(""); h_name << "UV/h_pull_M_" << i_module << "_" << UV;
                 TH1F* h_pull = (TH1F*)file->Get( h_name.str().c_str() );
                 h_Pulls_z->Fill(Tracker::instance()->getZDistance(z_counter), h_pull->GetStdDev());
-                 h_SD_z_res_Recon->SetBinError(Tracker::instance()->getZDistance(z_counter), h_pull->GetStdDev(), h_pull->GetStdDevError());
+                h_Pulls_z->SetBinError(Tracker::instance()->getZDistance(z_counter), h_pull->GetStdDev(), h_pull->GetStdDevError());
+                h_SD_z_res_Recon->SetMarkerStyle(33);
+                h_Pulls_z->SetMarkerColor(kRed);
+                pull_actual.push_back(h_pull->GetMean());
+                pull_actual_SD.push_back(h_pull->GetStdDev());
+                Res_mean.push_back(hRes_actual->GetMean());
+                Res_mean_SD.push_back(hRes_actual->GetStdDev());
                 z_counter++;
             }// layer
         } // view 
@@ -773,51 +777,90 @@ int main(int argc, char* argv[]){
     Chi2_recon_actual = h_chi2_recon->GetMean();
 
    
-    //The function is used to calculate the residual between the fit and the histogram
-    // The class calculates the difference between the histogram and the fit function at each point and divides it by the uncertainty.
-    TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
-    gStyle->SetOptStat("ourRmMe");
-    gStyle->SetOptFit(1111); 
-    chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_recon->Integral("WIDTH"));
-    h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
-    h_chi2_recon->Fit("chi2pdf");
-    cChi2->Clear(); // Fit does not draw into correct pad
-    auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
-    rp1->SetGraphDrawOpt("P");
-    rp1->SetSeparationMargin(0.0);
-    //rp1->SetMarkerColor(kWhite);
-    //cChi2->SetTicks(0, 1);
-    rp1->Draw("noconfint");
-    cChi2->Update();
-    rp1->GetLowerRefYaxis()->SetTitle("Ratio");
-    cChi2->Print("FoM_Chi2_recon.C");
-    cChi2->Print("FoM_Chi2_recon.png");
+	//The function is used to calculate the residual between the fit and the histogram
+	//The class calculates the difference between the histogram and the fit function at each point and divides it by the uncertainty.
+	TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
+	gStyle->SetOptStat("ourRmMe");
+	gStyle->SetOptFit(1111); 
+	chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_recon->Integral("WIDTH"));
+	h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
+	h_chi2_recon->Fit("chi2pdf");
+	cChi2->Clear(); // Fit does not draw into correct pad
+	auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
+	rp1->SetGraphDrawOpt("P");
+	rp1->SetSeparationMargin(0.0);
+	//rp1->SetMarkerColor(kWhite);
+	//cChi2->SetTicks(0, 1);
+	rp1->Draw("noconfint");
+	cChi2->Update();
+	rp1->GetLowerRefYaxis()->SetTitle("Ratio");
+	//cChi2->Print("FoM_Chi2_recon.C");
+	cChi2->Print("FoM_Chi2_recon.png");
 
-    TCanvas *c1 = new TCanvas("c1","",200,10,700,500);
-    const Int_t n = Tracker::instance()->getLayerTotalN();
-    Float_t* z_distance  = &zDistance[0];
-    Float_t* Res_Recon_SD  = &sigma_recon_actual[0];
-    Float_t* Res_Recon_SD_error = &sigmaError_recon_actual[0];
-    auto gr = new TGraphErrors(n,z_distance,Res_Recon_SD,0,Res_Recon_SD_error);
-    gr->SetTitle("Residuals SD per layer");
-    gr->SetMarkerColor(kWhite);
-    gr->SetLineColor(kRed);
-    gr->SetMarkerStyle(1);
-    gr->Draw("A*");
-    Float_t* Res_Est_SD  = &sigma_recon_estimated[0];
-    //auto gr2 = new TGraphErrors(n,z_distance,Res_Est_SD,0,0);
-    for (int i=0; i < n; i++){
-        TMarker *m1 = new TMarker(z_distance[i],Res_Est_SD[i]*10000, 20);
-        m1->SetMarkerColor(kBlue);
-        m1->Draw();
-    }
-    gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
-    gr->GetYaxis()->SetTitle("Residual SD [um]");
-    auto axis = gr->GetXaxis();
-    axis->SetLimits(0.,60.);                 // along X
-    gr->GetHistogram()->SetMaximum(148.);   // along          
-    gr->GetHistogram()->SetMinimum(130.);  //   Y     
-    c1->Print("FoM_Res.png");
+	TCanvas *c1 = new TCanvas("c1","",200,10,700,500);
+	const Int_t n = Tracker::instance()->getLayerTotalN();
+	Float_t* z_distance  = &zDistance[0];
+	Float_t* Res_Recon_SD  = &sigma_recon_actual[0];
+	Float_t* Res_Recon_SD_error = &sigmaError_recon_actual[0];
+	auto gr = new TGraphErrors(n,z_distance,Res_Recon_SD,0,Res_Recon_SD_error);
+	gr->SetTitle("Residuals SD per layer");
+	gr->SetMarkerColor(kWhite);
+	gr->SetLineColor(kRed);
+	gr->SetMarkerStyle(1);
+	gr->Draw("A*");
+	Float_t* Res_Est_SD  = &sigma_recon_estimated[0];
+	//auto gr2 = new TGraphErrors(n,z_distance,Res_Est_SD,0,0);
+	for (int i=0; i < n; i++){
+	    TMarker *m1 = new TMarker(z_distance[i],Res_Est_SD[i]*10000, 20);
+	    m1->SetMarkerColor(kBlue);
+	    m1->Draw();
+	}
+	gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
+	gr->GetYaxis()->SetTitle("Residual SD [um]");
+	auto axis = gr->GetXaxis();
+	axis->SetLimits(0.,60.);                 // along X
+	gr->GetHistogram()->SetMaximum(148.);   // along          
+	gr->GetHistogram()->SetMinimum(130.);  //   Y     
+	c1->Print("FoM_Res.png");
+
+	TCanvas *c2 = new TCanvas("c2","",200,10,700,500);
+	Float_t* Pull_Recon  = &pull_actual[0];
+	Float_t* Pull_Recon_SD = &pull_actual_SD[0];
+	auto gr2 = new TGraphErrors(n,z_distance,Pull_Recon,0,Pull_Recon_SD);
+	gr2->SetTitle("Pulls per layer [Error = SD]");
+	gr2->SetMarkerColor(kWhite);
+	gr2->SetLineColor(kRed);
+	gr2->SetMarkerStyle(1);
+	gr2->Draw("A*");
+	gr2->GetXaxis()->SetTitle("Module/Layer separation [cm]");
+	gr2->GetYaxis()->SetTitle("Pulls per layer [Error = SD]");
+	auto axis2 = gr2->GetXaxis();
+	axis2->SetLimits(0.,60.);                 // along X
+	gr2->GetHistogram()->SetMaximum(5.0);   // along          
+	gr2->GetHistogram()->SetMinimum(-3.0);  //   Y     
+	c2->Print("FoM_Pulls.png");
+
+	TCanvas *c3 = new TCanvas("c3","",200,10,700,500);
+	Float_t* Res_meanR  = &Res_mean[0];
+	Float_t* Res_mean_SDR = &Res_mean_SD[0];
+	auto gr3 = new TGraphErrors(n,z_distance,Res_meanR,0,Res_mean_SDR);
+	gr3->SetTitle("Residual means per layer [Error = SD]");
+	gr3->SetMarkerColor(kWhite);
+	gr3->SetLineColor(kRed);
+	gr3->SetMarkerStyle(1);
+	gr3->Draw("A*");
+	gr3->GetXaxis()->SetTitle("Module/Layer separation [cm]");
+	gr3->GetYaxis()->SetTitle("Residual means per layer [Error = SD] [cm]");
+	for (int i=0; i < n; i++){
+	    TMarker *m2 = new TMarker(z_distance[i],shearMis[i], 20);
+	    m2->SetMarkerColor(kBlue);
+	    m2->Draw();
+	}
+	auto axis3 = gr3->GetXaxis();
+	axis3->SetLimits(0.,60.);                 // along X
+	gr3->GetHistogram()->SetMaximum(0.2);   // along          
+	gr3->GetHistogram()->SetMinimum(-0.2);  //   Y     
+	c3->Print("FoM_ResMean.png");
 
     if (strongPlotting){
    
