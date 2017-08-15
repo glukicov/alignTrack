@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
-*   Modified: 4 August 2017 
+*   Modified: 15 August 2017 
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
 PEDE routine, to align the tracking detector for the g-2 
@@ -19,27 +19,29 @@ Terminology: detector=module (==the alignment object)
 
 Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
 Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
-    tracks are lines between z=beamStart and z=beamStop, with x1 and x2 = Constant * rand[0,1]
+    tracks are lines between z=beamStart and z=beamStop, with uniformly generated x1 and slope. 
 Resolution (i.e. tracker systematic) is implemented. 
 Misalignment is implemented "manually" for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
 
-Hit rejection:  -not implemented 
+Hit rejection: (>0.5 straw radius)  -not used yet
 
-Constrains TODO 
-Steering options TODO 
-                       			--Tracker Geometry--:
+Constrains: TODO 
+Steering options: method inversion 1 0.01 [1 iteration, 0.01 dF convergence; inversion method provides uncertainties on all alignment parameters] 
+                       			
+                       			--Tracker Geometry [cm]--:
 Spacing (in x) between straws in layer is 0.606 [strawSpacing]
 Spacing between layers in same view is 0.515 [layerSpacing]
 Spacing between U and V views (last and first layers in views) is 2.020 [viewSpaing]
 Spacing between modules (last and first layers in modules) 13.735 [moduleSpacing]
-Layers in a view are (e.g. U0 vs. U1) have an extra relative x displacement of 0.303  [layerDisplacement]
+Layers in a view are (e.g. U0 vs. U1) have an extra relative x displacement of 0.303 [layerDisplacement]
+The staircaseXDisplacment of modules is not implemented yet 
 
 For more information see: 
 http://gm2-docdb.fnal.gov:8080/cgi-bin/RetrieveFile?docid=4375&filename=Orientation.pdf&version=1 
 
 =======================================================================================
 
-#TODO Model type is implemented via imodel = 0, 1 .....  
+#TODO Model type [physics] will be implemented via imodel = 0, 1 .....  
 
 #Verbosity level implemented via command line command: n = normal, d = debug, p=plotting (./PlotGen.py) [e.g. './AlignTracker d']
 
@@ -48,8 +50,8 @@ Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
 *
 *
 **/
-#include "AlignTracker.h" 
 
+#include "AlignTracker.h" 
 
 using namespace std; 
 // for compiler version determination:
@@ -59,8 +61,9 @@ string ver_string(int a, int b, int c) {
   return ss.str();
 }
 
-//***************MAIN****************//
+//**********************************************MAIN*************************************//
 int main(int argc, char* argv[]){
+    //Starting a clock
     clock_t t_cpu; // CPU ticks for programme execution
     t_cpu = clock(); 
     auto t_start = std::chrono::high_resolution_clock::now(); // Wall clock ticks
@@ -72,7 +75,6 @@ int main(int argc, char* argv[]){
     #else
         "g++";
      #endif
-
     std::string true_cxx_ver =
     #ifdef __clang__
         ver_string(__clang_major__, __clang_minor__, __clang_patchlevel__);
@@ -93,18 +95,18 @@ int main(int argc, char* argv[]){
     int hitsN = 0; // actually recorded (i.e. non-rejected hits)
     int recordN=0; //records = tracks
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
+    // Those variable are set inside the hits loop, and used outside - hence global scope
     float residuals_true_sum_2=0.0;
     float residuals_recon_sum_2=0.0;
     float pivotPoint_actual=0.0;
     float Chi2_recon_actual=0.0;
-    const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack};
+    const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
+    gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
        
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
     //Tell the logger to throw exceptions when ERROR messages are received
     Logger::Instance()->enableCriticalErrorThrow();
-
-    //TApplication theApp("App",&argc, argv); //for Canvas display 
 
     // Check if correct number of arguments specified, exiting if not
     if (argc > 3) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");} 
@@ -123,16 +125,16 @@ int main(int argc, char* argv[]){
     if (compareStr=="d"){
     debugBool = true; // print out to debug files [and verbose cout output]
     Tracker::instance()->setTrackNumber(tracksInput);
-    Logger::Instance()->write(Logger::WARNING,  "DEBUG MODE"); }
+    Logger::Instance()->write(Logger::WARNING,  "******DEBUG MODE*****"); }
     else if (compareStr=="p"){
     plotBool = true; 
-    debugBool = true; // print out to debug files [and verbose cout output]
+    debugBool = true; // print out to debug files and plotting files - use with low track #
     Tracker::instance()->setTrackNumber(tracksInput); 
-    Logger::Instance()->write(Logger::WARNING,  "PLOTTING MODE"); //setting small statistics for visual plotting of tracks
+    Logger::Instance()->write(Logger::WARNING,  "******PLOTTING MODE*****");
     } 
     else if (compareStr=="n" || compareStr=="a"){
     debugBool = false; // print out to debug files
-    plotBool = false;  
+    plotBool = false;  // print out to plotting files
     Tracker::instance()->setTrackNumber(tracksInput); 
     }
     else{
@@ -268,8 +270,6 @@ int main(int argc, char* argv[]){
     h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
     TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 60, 59, -1, 1);    
     h_Pulls_z->SetDirectory(cd_All_Hits); h_Pulls_z->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_Pulls_z->GetYaxis()->SetTitle("Measurement Pulls [cm]");
-    
-
 
     std::stringstream h_name;
     std::stringstream h_title;
@@ -394,7 +394,7 @@ int main(int argc, char* argv[]){
    
     // MISALIGNMENT
     Tracker::instance()->misalign(debug_mis, debugBool); 
-    cout<< "Misalignment is complete!" << endl << endl;
+    cout<< "Misalignment is complete!" << endl;
      
     //TODO: move into GEOM/MIS code methods
 
@@ -424,7 +424,7 @@ int main(int argc, char* argv[]){
     } // modules
     cout << noshowpos; 
     overallMis = Tracker::instance()->getOverallMis();
-    cout << "The overall misalignment was " << overallMis << " cm" <<  endl;
+    cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
 
     // Calculating Shear Misalignment per layer
     float N = float(Tracker::instance()->getLayerTotalN()); // total N of layers
@@ -784,7 +784,7 @@ int main(int argc, char* argv[]){
 	gStyle->SetOptFit(1111); 
 	chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_recon->Integral("WIDTH"));
 	h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
-	h_chi2_recon->Fit("chi2pdf");
+	h_chi2_recon->Fit("chi2pdf", "Q");
 	cChi2->Clear(); // Fit does not draw into correct pad
 	auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
 	rp1->SetGraphDrawOpt("P");
@@ -793,11 +793,10 @@ int main(int argc, char* argv[]){
 	//cChi2->SetTicks(0, 1);
 	rp1->Draw("noconfint");
 	cChi2->Update();
-	rp1->GetLowerRefYaxis()->SetTitle("Ratio");
-	//cChi2->Print("FoM_Chi2_recon.C");
-	cChi2->Print("FoM_Chi2_recon.png");
+	rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
+	cChi2->Write();
 
-	TCanvas *c1 = new TCanvas("c1","",200,10,700,500);
+	TCanvas *cRes = new TCanvas("cRes","cRes",200,10,700,500);
 	const Int_t n = Tracker::instance()->getLayerTotalN();
 	Float_t* z_distance  = &zDistance[0];
 	Float_t* Res_Recon_SD  = &sigma_recon_actual[0];
@@ -821,9 +820,9 @@ int main(int argc, char* argv[]){
 	axis->SetLimits(0.,60.);                 // along X
 	gr->GetHistogram()->SetMaximum(148.);   // along          
 	gr->GetHistogram()->SetMinimum(130.);  //   Y     
-	c1->Print("FoM_Res.png");
+	cRes->Write();
 
-	TCanvas *c2 = new TCanvas("c2","",200,10,700,500);
+	TCanvas *cPull = new TCanvas("cPull","cPull",200,10,700,500);
 	Float_t* Pull_Recon  = &pull_actual[0];
 	Float_t* Pull_Recon_SD = &pull_actual_SD[0];
 	auto gr2 = new TGraphErrors(n,z_distance,Pull_Recon,0,Pull_Recon_SD);
@@ -838,9 +837,9 @@ int main(int argc, char* argv[]){
 	axis2->SetLimits(0.,60.);                 // along X
 	gr2->GetHistogram()->SetMaximum(5.0);   // along          
 	gr2->GetHistogram()->SetMinimum(-3.0);  //   Y     
-	c2->Print("FoM_Pulls.png");
+	cPull->Write();
 
-	TCanvas *c3 = new TCanvas("c3","",200,10,700,500);
+	TCanvas *cResMean = new TCanvas("cResMean","cResMean",200,10,700,500);
 	Float_t* Res_meanR  = &Res_mean[0];
 	Float_t* Res_mean_SDR = &Res_mean_SD[0];
 	auto gr3 = new TGraphErrors(n,z_distance,Res_meanR,0,Res_mean_SDR);
@@ -860,7 +859,7 @@ int main(int argc, char* argv[]){
 	axis3->SetLimits(0.,60.);                 // along X
 	gr3->GetHistogram()->SetMaximum(0.2);   // along          
 	gr3->GetHistogram()->SetMinimum(-0.2);  //   Y     
-	c3->Print("FoM_ResMean.png");
+	cResMean->Write();
 
     if (strongPlotting){
    
@@ -876,7 +875,7 @@ int main(int argc, char* argv[]){
     	    hd1->SetTitle("");
         }
         T.DrawTextNDC(.5,.95,"Residuals in all Modules");
-        csg->Print("residuals_func.png");
+        csg->Write();
          
     	//Stacked DCA per straw in each module
     	THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
@@ -902,7 +901,7 @@ int main(int argc, char* argv[]){
         	h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
         	cs->cd(i_module+1); stackModule[i_module]->Draw(); T.DrawTextNDC(.5,.95,h_title.str().c_str());
         }
-        cs->Print("stack_dca.png");
+        cs->Write();
 
         //Stacked reconstructed hits
         TCanvas *csr = new TCanvas("csr","csr",700,900);
@@ -914,7 +913,7 @@ int main(int argc, char* argv[]){
         }    
         csr->Divide(1,1);
         csr->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5,.95,"Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
-        csr->Print("stack_recon_hits.png");
+        csr->Write();
 
     } // strong plotting 
 
@@ -922,22 +921,37 @@ int main(int argc, char* argv[]){
     cout << " " << endl;
     cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
     cout << recordN << " records written." << endl;
-    cout << "Geometrically Estimated Pivot Point (avg z) " << pivotPoint_estimated << " cm"  << endl;
-    cout << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm"  << endl; // cm -> um
-    cout << "Geometrically Estimated Mean Chi2 " << Chi2_recon_estimated <<  endl; // cm -> um
-    cout << "Calculated (from measurements) Mean Chi2 " <<Chi2_recon_actual << endl; // cm -> um
+
+
+    if (pivotPoint_estimated != pivotPoint_actual){
+    stringstream er1, er2; 
+    er1 << "Geometrically Estimated Pivot Point (avg z) " << pivotPoint_estimated << " cm";
+    er2 << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm";
+    Logger::Instance()->write(Logger::WARNING, er1.str());
+    Logger::Instance()->write(Logger::WARNING, er2.str());
+    }
+
+    stringstream out1, out2, out3, out4, out5;
+    out1 << "Estimated Mean Chi2 " << Chi2_recon_estimated;
+    out2 << "Measured Mean Chi2 " << Chi2_recon_actual;
+    Logger::Instance()->write(Logger::WARNING, out1.str());
+    Logger::Instance()->write(Logger::WARNING, out2.str());
     float rejectsFrac=Tracker::instance()->getRejectedHitsDCA();
     rejectsFrac = rejectsFrac/(Tracker::instance()->getLayerTotalN()*recordN);
     cout << fixed << setprecision(1);
-    cout << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << ". [" << rejectsFrac*100 << "%]" << endl;
-    cout << "Multiple hits (for all layers): " << Tracker::instance()->getMultipleHitsLayer() << "." << endl;
-    cout << "Ambiguity Hits: " << Tracker::instance()->getAmbiguityHit() << "." << endl;
+    out3 << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << ". [" << rejectsFrac*100 << "%]";
+    out4 << "Multiple hits (for all layers): " << Tracker::instance()->getMultipleHitsLayer() << ".";
+    out5 << "Ambiguity Hits: " << Tracker::instance()->getAmbiguityHit() << ".";
+    Logger::Instance()->write(Logger::WARNING, out3.str());
+    Logger::Instance()->write(Logger::WARNING, out4.str());
+    Logger::Instance()->write(Logger::WARNING, out5.str());
     cout << " " << endl;
-    cout << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << endl; 
-    cout << "Sanity Plots: root Tracker.root" << endl;
     Logger::Instance()->setUseColor(false); // will be re-enabled below
+    std::stringstream msg2, msg3, msg4, msgA, msgB;
+    msgA <<  Logger::blue() << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << Logger::def();
+    msgB << Logger::blue() << "Sanity Plots: root Tracker.root" << Logger::def();
+    Logger::Instance()->write(Logger::NOTE,msgA.str()); Logger::Instance()->write(Logger::NOTE,msgB.str());
     // Millepede courtesy of John 
-    std::stringstream msg2, msg3, msg4;
     msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg2.str());
     msg3 << Logger::yellow() << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << Logger::def();
@@ -945,10 +959,13 @@ int main(int argc, char* argv[]){
     msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg4.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
-    if (debugBool) {
     cout << "Normal random numbers were used " << RandomBuffer::instance()->getNormTotal() << " times" <<endl;
     cout << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" <<endl;
+    if (debugBool) {
     Logger::Instance()->write(Logger::WARNING, "Text debug files were produced: ls Tracker_d_*.txt");
+    }
+    if (plotBool) {
+    Logger::Instance()->write(Logger::WARNING, "./PlotMP2.py to draw geometry with hits");
     }
 
     // Close text files
@@ -963,7 +980,7 @@ int main(int argc, char* argv[]){
     debug_con.close();
 
     file->Write();
-    file->Close(); //good habit!
+    file->Close(); 
     cout << endl;
     
     cout << fixed << setprecision(4);
@@ -975,6 +992,5 @@ int main(int argc, char* argv[]){
     char* dt = ctime(&now);
     cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. The C++ compiler used: " << true_cxx << " " << true_cxx_ver
     	<<" Job finished on: " << dt << endl;
-    //if(plotBool){theApp.Run();} //ctrl+c to exit //for Canvas in ROOT
     return 0; 
 } //end of main

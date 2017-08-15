@@ -100,7 +100,7 @@ class Tracker {
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {-0.2, 0.05, 0.1, 0.08, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    float dispX[8] = {0.0, 0.05, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
     float overallMis; // the overall misalignment - calculated in the misalignment method  
 
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
@@ -118,8 +118,8 @@ class Tracker {
 	static constexpr float viewSpacing = 2.020; // z distance between views in a modules
 	static constexpr float moduleSpacing = 13.735; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
 	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
-	//std::vector<float> staircaseXDisplacment = [0, 7.230, 9.790, ];  // TODO staircase for MF in future
-	//[ 6880.52, 6873.29, 6863.50, 6851.12, 6836.09, 6818.54, 6798.46, 6775.87]; 
+	//std::vector<float> staircaseXDisplacment = [0.0, 0.723, 0.979, 1.238, 1.503, 1.755, 2.008, 2.259];  // TODO staircase for MF in future [cm]
+	//[ 6880.52, 6873.29, 6863.50, 6851.12, 6836.09, 6818.54, 6798.46, 6775.87]; // from gm2geom [mm]
 
 	//Beam parameters [all distances are in cm]
 	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX

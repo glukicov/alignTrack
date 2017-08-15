@@ -518,6 +518,9 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
  
    // Print out:
     if (debugBool){
+        stringstream gm1;
+        gm1 << endl << "Ideal Detector Position:";
+        Logger::Instance()->write(Logger::WARNING, gm1.str());
         int Zcounter=0;
         for (int i_module=0; i_module<moduleN; i_module++){
           for (int i_view=0; i_view<viewN; i_view++){
@@ -527,7 +530,7 @@ void Tracker::setGeometry(ofstream& debug_geom, bool debugBool){
                     cout << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw]<<" ";
                     debug_geom << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
                     } // straws 
-                    cout << " | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
+                    cout << "  | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
                     debug_geom << distance[Zcounter] << endl;
                     Zcounter++;
                 } // end of Layers
@@ -569,6 +572,9 @@ void Tracker::misalign(ofstream& debug_mis, bool debugBool){
 
     // Print out:
     if (debugBool){
+        stringstream gm2;
+        gm2 << "Misaligned Detector Position:";
+        Logger::Instance()->write(Logger::WARNING, gm2.str());
         int Zcounter=0;
         for (int i_module=0; i_module<moduleN; i_module++){
           for (int i_view=0; i_view<viewN; i_view++){
