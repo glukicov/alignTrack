@@ -22,43 +22,37 @@
 */
 struct MCData {
 	int hit_count; /** Number of hits in detector */
+	//Hits
 	std::vector<float> z_hits; /** Z-positions of generated hits in detector */ //distances 
 	std::vector<float> x_residuals; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
 	std::vector<int> hit_list;  // same of layers (absolute)
 	std::vector<int> hit_bool;  // same of layers (absolute) +1 = hit 0=no hit
- 	std::vector<string> absolute_straw_hit; // MVLS - 5 digit string (e.g. 111-3 = M1V1L1S3; 11113=M1V1L1S13)
-
-	std::vector<float> x_track_true; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
-	std::vector<float> x_track_recon; // reconstructed x position of the line 
-	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
-	std::vector<float> x_hit_recon; // ideal straw hit position + dca (from mis.)
-	std::vector<float> x_hit_true; // true xHit position
-	std::vector<float> strawID;
-	std::vector<float> LR;
+ 	std::vector<string> absolute_straw_hit; // for plotting
+ 	std::vector<float> LR;
 	std::vector<float> residuals_gen;
 	std::vector<int> residuals_fit;
-
+ 	std::vector<float> strawID;
+  	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
+	std::vector<float> x_hit_recon; // ideal straw hit position + dca (from mis.)
+	std::vector<float> x_hit_true; // true xHit position
+	//Detector coordinates 
 	std::vector<int> Module_i; 
 	std::vector<int> View_i; 
 	std::vector<int> Layer_i; 
 	std::vector<int> Straw_i;
-
-	//Generated track parameters
+	//track parameters
 	float x0;
 	float x1;
 	float slope_truth;
 	float intercept_truth;
 	float slope_recon;
 	float intercept_recon;
-
 	float meanXReconTrack;
 	float meanZReconTrack;
-	float corrMC;
-
-	//DEBUG
-	
+	std::vector<float> x_track_true; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
+	std::vector<float> x_track_recon; // reconstructed x position of the line 
 };
 
 // DCA structure - calculated for each hit
@@ -76,11 +70,10 @@ struct ResidualData{
 	float intercept_recon;
 	float meanXReconTrack;
 	float meanZReconTrack;
-	float corrMC;
 };
 
 /**
-   Singleton class to represent a detector made up of an array of planar drift chambers, simulating the passage of linear tracks through the detector.
+   Singleton class to represent the detector
  */
 class Tracker {
 
@@ -136,7 +129,6 @@ class Tracker {
 	
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
-    
     std::vector<float> distance;  // Z distance between planes [this is set in geometry]
     std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
     std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
@@ -146,7 +138,7 @@ class Tracker {
     std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPosition;   
 
     // Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
-    std::vector< std::vector< string > > UVmapping; 
+    std::vector< std::vector< string > > UVmapping; // set in the constructor
     	
 	// Class constructor and destructor
 	Tracker();
@@ -177,9 +169,11 @@ class Tracker {
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement 
 
-	void misalign(std::ofstream&, bool); // MC misalignment of detectors 
+	void misalign(std::ofstream&, std::ofstream&, bool); // MC misalignment of detectors 
 		
     void write_constraint_file(std::ofstream&, std::ofstream&, bool);  // Writes a constraint file for use with PEDE. 
+
+    void write_steering_file(std::ofstream&); // Steering file for PEDE.
 
 	void set_uniform_file(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
 
