@@ -93,7 +93,7 @@ class Tracker {
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {0.0, 0.05, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    float dispX[8] = {0.0, -0.05, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
     float overallMis; // the overall misalignment - calculated in the misalignment method  
 
  	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
@@ -125,7 +125,13 @@ class Tracker {
 	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
 
-	int hitLayerCounter; 
+	int hitLayerCounter;
+
+	float pivotPoint_estimated;
+	float Chi2_recon_estimated; 
+	vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane 
+    vector<float> relMis;  // Relative misalignment (w.r.t to overall mis.) 
+    vector<float> shearMis; // vector to hold the shear misalignment for each plane
 	
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
@@ -135,7 +141,8 @@ class Tracker {
 
     // Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
     std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPosition; 
-    std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPosition;   
+    std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPosition;  
+    std::vector< std::vector< std::vector< float > > > sigma_recon_estimated; 
 
     // Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
     std::vector< std::vector< string > > UVmapping; // set in the constructor
@@ -206,14 +213,43 @@ class Tracker {
 	// Getter methods
 	//
 
-	std::vector<float> getMisZ() {
-		return distance;
+	float get_Chi2_recon_estimated(){
+		return Chi2_recon_estimated;
+	}
+
+	float get_pivotPoint_estimated(){
+		return pivotPoint_estimated;
+	}
+
+	vector<float> get_sigma_recon_estimatedVector(){
+		vector<float> result;
+		for (int i_module=0; i_module<moduleN; i_module++){
+        	for (int i_view=0; i_view<viewN; i_view++){
+            	for (int i_layer=0; i_layer<layerN; i_layer++){		
+					result.push_back(sigma_recon_estimated[i_module][i_view][i_layer]);
+      			}
+  	 		}
+  	 	}	
+		return result;
+	}
+
+	float get_shearMis(int i){
+		return shearMis[i];
+	}
+
+
+	float get_sigma_recon_estimated(int i, int j, int k){
+		return sigma_recon_estimated[i][j][k];
 	}
 
 	string getUVmapping(int i, int j){
 		return UVmapping[i][j];
 	}
 
+	std::vector<float> getZDistanceVector() {
+		return distance;
+	}
+	
 	float getZDistance(int i) {
 		return distance[i];
 	}

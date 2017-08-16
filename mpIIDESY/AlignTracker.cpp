@@ -56,7 +56,7 @@ Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
 using namespace std; 
 // for compiler version determination:
 string ver_string(int a, int b, int c) {
-  std::ostringstream ss;
+  ostringstream ss;
   ss << a << '.' << b << '.' << c;
   return ss.str();
 }
@@ -66,16 +66,16 @@ int main(int argc, char* argv[]){
     //Starting a clock
     clock_t t_cpu; // CPU ticks for programme execution
     t_cpu = clock(); 
-    auto t_start = std::chrono::high_resolution_clock::now(); // Wall clock ticks
+    auto t_start = chrono::high_resolution_clock::now(); // Wall clock ticks
 
     //Determining compiler used:
-    std::string true_cxx = 
+    string true_cxx = 
     #ifdef __clang__
         "clang++";
     #else
         "g++";
      #endif
-    std::string true_cxx_ver =
+    string true_cxx_ver =
     #ifdef __clang__
         ver_string(__clang_major__, __clang_minor__, __clang_patchlevel__);
     #else
@@ -95,10 +95,10 @@ int main(int argc, char* argv[]){
     int recordN=0; //records = tracks
     float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
     // Those variable are set inside the hits loop, and used outside - hence global scope
-    float residuals_true_sum_2=0.0;
-    float residuals_recon_sum_2=0.0;
-    float pivotPoint_actual=0.0;
-    float Chi2_recon_actual=0.0;
+    float residuals_true_sum_2=0.0;  // squared sum of the true residuals (from measurements) 
+    float residuals_recon_sum_2=0.0; // squared sum of the recon. residuals (from measurements)
+    float pivotPoint_actual=0.0; // central z point from measurements 
+    float Chi2_recon_actual=0.0;   // Reconstructed Chi2 (from measurements) 
     const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
     gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
        
@@ -141,7 +141,7 @@ int main(int argc, char* argv[]){
     }
     
     Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
-    std::stringstream msg0, msg01, msg02, msg1;
+    stringstream msg0, msg01, msg02, msg1;
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
@@ -275,8 +275,8 @@ int main(int argc, char* argv[]){
         cdAllHits_I[i]->SetDirectory(cd_All_Hits);
     }
 
-    std::stringstream h_name; //to book hist. in a loop
-    std::stringstream h_title;
+    stringstream h_name; //to book hist. in a loop
+    stringstream h_title;
     // Modules, views, layers
 	for (int i_module=0; i_module< Tracker::instance()->getModuleN(); i_module++){
 	    for (int i_view=0; i_view< Tracker::instance()->getViewN(); i_view++){
@@ -457,7 +457,7 @@ int main(int argc, char* argv[]){
             h_residual_true->Fill(residual_gen);
             residuals_true_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
-            residuals_recon_sum_2+=pow(rMeas_mp2/Tracker::instance()->get_sigma_recon_estimated(moduleN)(viewN)(layerN),2);
+            residuals_recon_sum_2+=pow(rMeas_mp2/Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN),2);
             
             //Fill for hits in modules/layers/straws
             h_name.str(""); h_name << "UV/h_dca_M_" << moduleN << "_" << UV;
@@ -504,7 +504,7 @@ int main(int argc, char* argv[]){
 
             h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
             TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
-            h11->Fill( rMeas_mp2/sqrt(sigma_det-Tracker::instance()->get_sigma_recon_estimated(moduleN)(viewN)(layerN))); 
+            h11->Fill( rMeas_mp2/sqrt( residual_gen-Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN,layerN) ) ); 
         	hitsN++; //count hits
         } // end of hits loop
          
@@ -522,7 +522,7 @@ int main(int argc, char* argv[]){
         h_hitCount->Fill(generated_MC.hit_count);
         h_meanXRecon->Fill(generated_MC.meanXReconTrack);
         h_meanZRecon->Fill(generated_MC.meanZReconTrack);
-        pivotPoint_actual=h_meanZRecon->getMean();
+        pivotPoint_actual=h_meanZRecon->GetMean();
 
         //Filling Track-based plots 
         h_slope->Fill(generated_MC.slope_truth);
@@ -572,7 +572,7 @@ int main(int argc, char* argv[]){
                 h_SD_z_res_Recon->SetMarkerStyle(33); h_SD_z_res_Recon->SetMarkerColor(kRed);
                 Res_mean.push_back(hRes_actual->GetMean());
                 Res_mean_SD.push_back(hRes_actual->GetStdDev());
-                h_SD_z_res_Est->Fill(Tracker::instance()->getZDistance(i_totalLayers) ,sigma_recon_estimated[z_counter]*10000); // um ->cm
+                h_SD_z_res_Est->Fill(Tracker::instance()->getZDistance(z_counter) , Tracker::instance()->get_sigma_recon_estimated(i_module, i_view, i_layer)*10000); // um ->cm
                 h_SD_z_res_Est->SetMarkerStyle(33);
                 h_SD_z_res_Est->SetMarkerColor(kBlue);
                 // Pulls
@@ -592,12 +592,14 @@ int main(int argc, char* argv[]){
     //Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case). 
     //The expected error is instead estimated from the the square-root of the bin function value.
     TF1* chi2pdf = new TF1("chi2pdf","[2]*ROOT::Math::chisquared_pdf(x,[0],[1])",0,40);
-    chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_true->Integral("WIDTH")); 
+    chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_true->Integral("WIDTH")); 
     h_chi2_true->Fit("chi2pdf", "Q"); 
     h_residual_true->Fit("gaus", "Q");
     Chi2_recon_actual = h_chi2_recon->GetMean();
 
     //Residuals SD per layer
+    vector<float> zDistance = Tracker::instance()->getZDistanceVector();
+    vector<float> sigma_recon_estimated = Tracker::instance()->get_sigma_recon_estimatedVector();
     TCanvas *cRes = new TCanvas("cRes","cRes", 700,500);
     const Int_t n = Tracker::instance()->getLayerTotalN();
     Float_t* z_distance  = &zDistance[0];
@@ -653,7 +655,7 @@ int main(int argc, char* argv[]){
     gr3->GetXaxis()->SetTitle("Module/Layer separation [cm]");
     gr3->GetYaxis()->SetTitle("Residual means per layer [Error = SD] [cm]");
     for (int i=0; i < n; i++){
-        TMarker *m2 = new TMarker(z_distance[i],shearMis[i], 20);
+        TMarker *m2 = new TMarker(z_distance[i],Tracker::instance()->get_shearMis(i), 20);
         m2->SetMarkerColor(kBlue);
         m2->Draw();
     }
@@ -664,25 +666,44 @@ int main(int argc, char* argv[]){
     cResMean->Write();
 	
     // Reconstructed Chi2
-	TCanvas *cChi2 = new TCanvas("cChi2","cChi2",200,10,700,500);
-	cChi2->Divide(1,1);
-    cChi2->cd(1);
+	// TCanvas *cChi2 = new TCanvas("cChi2","cChi2",200,10,700,500);
+	// cChi2->Divide(1,1);
+ //    cChi2->cd(1);
+ //    gStyle->SetOptStat("ourRmMe");
+	// gStyle->SetOptFit(1111);
+ //    chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
+ //    h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
+ //    h_chi2_recon->Fit("chi2pdf", "Q");
+	// cChi2->Clear(); // Fit does not draw into correct pad
+ //    //The function is used to calculate the residual between the fit and the histogram
+ //    //The class calculates the difference between the histogram and the fit function at each point and divides it by the uncertainty.
+ //    auto r_plot = new TRatioPlot(h_chi2_recon, "errasym");
+ //    r_plot->Draw("noconfint");
+ //    r_plot->SetGraphDrawOpt("P");
+ //    r_plot->SetSeparationMargin(0.0);
+ 
+ //    cChi2->Update();
+ //    cChi2->Print("Chi2.png"); 
+
+
+    TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
     gStyle->SetOptStat("ourRmMe");
-	gStyle->SetOptFit(1111);
-    chi2pdf->SetParameters(Chi2_recon_estimated, 0., h_chi2_recon->Integral("WIDTH"));
+    gStyle->SetOptFit(1111); 
+    chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
     h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
     h_chi2_recon->Fit("chi2pdf", "Q");
-	cChi2->Clear(); // Fit does not draw into correct pad
-    //The function is used to calculate the residual between the fit and the histogram
-    //The class calculates the difference between the histogram and the fit function at each point and divides it by the uncertainty.
-    auto r_plot = new TRatioPlot(h_chi2_recon, "errasym");
-    r_plot->Draw("noconfint");
-    r_plot->SetGraphDrawOpt("AP");
-    r_plot->SetSeparationMargin(0.0);
-    r_plot->GetLowerRefYaxis()->SetTitle("Frac. Error");
-    r_plot->GetUpperRefYaxis()->SetTitle("Entries");
+    cChi2->Clear(); // Fit does not draw into correct pad
+    auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
+    rp1->SetGraphDrawOpt("P");
+    rp1->SetSeparationMargin(0.0);
+    cChi2->SetTicks(0, 1);
+    rp1->Draw("noconfint");
     cChi2->Update();
-    cChi2->Write();   
+    rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
+    rp1->GetUpperRefYaxis()->SetTitle("Entries");
+    cChi2->Print("FoM_Chi2_recon.C");
+    cChi2->Print("FoM_Chi2_recon.png");
+    cChi2->Write();
     // TODO fix malloc problem closing the canvas in ROOT Browser
 
     // Debug-style plots:
@@ -703,23 +724,13 @@ int main(int argc, char* argv[]){
          
 
     	//Stacked DCA per straw in each module
-
-    	// THStack* hs_DCA_Module_0 = new THStack("hs_DCA_Module_0", "");
-     //    THStack* hs_DCA_Module_1 = new THStack("hs_DCA_Module_1", "");
-     //    THStack* hs_DCA_Module_2 = new THStack("hs_DCA_Module_2", "");
-     //    THStack* hs_DCA_Module_3 = new THStack("hs_DCA_Module_3", "");
-     //    THStack* hs_DCA_Module_4 = new THStack("hs_DCA_Module_0", "");
-     //    THStack* hs_DCA_Module_5 = new THStack("hs_DCA_Module_1", "");
-     //    THStack* hs_DCA_Module_6 = new THStack("hs_DCA_Module_2", "");
-     //    THStack* hs_DCA_Module_7 = new THStack("hs_DCA_Module_3", "");
-
-        vector<THStack*> stackName;
+        vector<THStack*> stackModule;
         for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-            stringstream hName; hName << "hs_DCA_Module_" << i_module;
-            stackName.push_back(hName);
-            stackName = new THStack(hName.c_str(), "");
+            h_name.str(""); h_name << "DCA_Module_" << i_module;
+            THStack* stack = new THStack(h_name.str().c_str(), " ");
+            stackModule.push_back(stack);
         }
-        THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
+        //THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
         TCanvas *cDCA = new TCanvas("cDCA","cDCA",700,900);
         T.SetTextFont(42); T.SetTextAlign(21);
         cDCA->Divide((Tracker::instance()->getModuleN()+1)/2,(Tracker::instance()->getModuleN()+1)/2);
@@ -755,16 +766,16 @@ int main(int argc, char* argv[]){
     cout << recordN << " records written." << endl;
 
 
-    if (pivotPoint_estimated != pivotPoint_actual){
+    if (Tracker::instance()->get_pivotPoint_estimated() != pivotPoint_actual){
     stringstream er1, er2; 
-    er1 << "Geometrically Estimated Pivot Point (avg z) " << pivotPoint_estimated << " cm";
+    er1 << "Geometrically Estimated Pivot Point (avg z) " << Tracker::instance()->get_pivotPoint_estimated() << " cm";
     er2 << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm";
     Logger::Instance()->write(Logger::WARNING, er1.str());
     Logger::Instance()->write(Logger::WARNING, er2.str());
     }
 
     stringstream out1, out2, out3, out4, out5;
-    out1 << "Estimated Mean Chi2 " << Chi2_recon_estimated;
+    out1 << "Estimated Mean Chi2 " << Tracker::instance()->get_Chi2_recon_estimated();
     out2 << "Measured Mean Chi2 " << Chi2_recon_actual;
     Logger::Instance()->write(Logger::WARNING, out1.str());
     Logger::Instance()->write(Logger::WARNING, out2.str());
@@ -779,7 +790,7 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::WARNING, out5.str());
     cout << " " << endl;
     Logger::Instance()->setUseColor(false); // will be re-enabled below
-    std::stringstream msg2, msg3, msg4, msgA, msgB;
+    stringstream msg2, msg3, msg4, msgA, msgB;
     msgA <<  Logger::blue() << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << Logger::def();
     msgB << Logger::blue() << "Sanity Plots: root Tracker.root" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msgA.str()); Logger::Instance()->write(Logger::NOTE,msgB.str());
@@ -819,9 +830,9 @@ int main(int argc, char* argv[]){
     
     cout << fixed << setprecision(4);
     t_cpu = clock() - t_cpu;
-    auto t_end = std::chrono::high_resolution_clock::now();
+    auto t_end = chrono::high_resolution_clock::now();
     cout << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu)/CLOCKS_PER_SEC << " s)." << " Wall clock time passed: " 
-    	<< std::chrono::duration<double>(t_end-t_start).count() << " s." << endl;
+    	<< chrono::duration<double>(t_end-t_start).count() << " s." << endl;
     time_t now = time(0);
     char* dt = ctime(&now);
     cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. The C++ compiler used: " << true_cxx << " " << true_cxx_ver

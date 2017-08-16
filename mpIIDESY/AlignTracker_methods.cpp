@@ -377,7 +377,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
                 //The registered hit position on the misaligned detector is smeared by its resolution 
                 xTrack = xSlope*distance[z_counter]+xIntercept;  // true track position [from line x=ym+c]
                 MC.x_track_true.push_back(xTrack);  // True (gen.) track position
-                float xHit=xTrack+resolution*Tracker::generate_gaus();
+                float xHit=xTrack+Tracker::instance()->getResolution()*Tracker::generate_gaus();
                 float residualTrack= xHit - xTrack;
                 if (debugBool){plot_hits_gen << xHit << " " << distance[z_counter] << endl;}
 	            //the dca between xHit and the xStraw [misaligned]
@@ -476,7 +476,7 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool){
     		for (int i_layer=0; i_layer<layerN; i_layer++){
     			distance.push_back(dZ); // vector will contain all z coordinates of layers 
     			layer.push_back(layer_n);  // layer label array [starting from 0th layer]
-				//resolutionLayer.push_back(resolution); //resolution in each layer
+				//resolutionLayer.push_back(Tracker::instance()->getResolution()); //resolution in each layer
 				projectionX.push_back(float(1.0));  // x projection of hits in each layer
 				layer_n++; 
     			if (i_layer==0){ dZ+=layerSpacing; } // increment spacing between layers in a view once only 
@@ -586,9 +586,6 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
 
 // Estimating misalignment parameters from geometry and assumed constants:
    
-    vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane 
-    vector<float> relMis;  // Relative misalignment (w.r.t to overall mis.) 
-    vector<float> shearMis; // vector to hold the shear misalignment for each plane
     float sum_of_elems=0.0;
     for(vector<float>::iterator it = sdevX.begin(); it != sdevX.end(); ++it){
         sum_of_elems += *it;
@@ -597,17 +594,17 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     float SumMis =0.0;
     float SquaredSumMis=0.0;
     cout << "Manual Misalignment: " << endl;
-    for (int i_module=0; i_module<Tracker::getModuleN(); i_module++){
-        cout << showpos << "Module " << i_module <<" :: Characteristic:  " << Tracker::getSdevX(i_module) << " cm. ";
-        SumMis += Tracker::getSdevX(i_module);
-        SquaredSumMis += pow(Tracker::instance()->getSdevX(i_module),2);
-        if (debugBool){pede_mis << Tracker::instance()->getSdevX(i_module) << " "; }
-        float relMisTmp = Tracker::instance()->getSdevX(i_module)-Tracker::instance()->getOverallMis();
+    for (int i_module=0; i_module<moduleN; i_module++){
+        cout << showpos << "Module " << i_module <<" :: Characteristic:  " << sdevX[i_module] << " cm. ";
+        SumMis += sdevX[i_module];
+        SquaredSumMis += pow(sdevX[i_module],2);
+        if (debugBool){pede_mis <<sdevX[i_module] << " "; }
+        float relMisTmp = sdevX[i_module]-overallMis;
         // now push these misalignment parameters for all layers in the module 
-        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+        for (int i_view=0; i_view<viewN; i_view++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){
             relMis.push_back(relMisTmp);
-            charMis.push_back(Tracker::instance()->getSdevX(i_module));
+            charMis.push_back(sdevX[i_module]);
             } // view
         } // layer
         cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
@@ -616,18 +613,18 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
 
     // Calculating Shear Misalignment per layer
-    float N = float(Tracker::instance()->getLayerTotalN()); // total N of layers
+    float N = float(layerTotalN); // total N of layers
     //vector<float> xDetecor = charMis;
     vector<float> xDetecor = relMis;
-    vector<float> zDetecor = Tracker::instance()->getMisZ(); // returns Z positions 
+    vector<float> zDetecor = distance; // returns Z positions 
     ResidualData Line = Tracker::GetResiduals(xDetecor, zDetecor, N, debug_mis, false); 
     float slope_Line = Line.slope_recon;
     float cLine = Line.intercept_recon;
     float sign_Line = +1.0; // up = +, down = - for a point w.r.t to the line
     int i_totalLayers=0;
-    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+    for (int i_module=0; i_module<moduleN; i_module++){
+        for (int i_view=0; i_view<viewN; i_view++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){
                 float xLine = zDetecor[i_totalLayers] * slope_Line + cLine;
                 if (xDetecor[i_totalLayers]<xLine){
                     sign_Line = -1.0;
@@ -635,7 +632,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
                 else{
                     sign_Line = +1.0;
                 }
-                float dca_M = sign_Line*Tracker::instance()->DCA(xDetecor[i_totalLayers], xLine);
+                float dca_M = sign_Line*Tracker::DCA(xDetecor[i_totalLayers], xLine);
                 shearMis.push_back(dca_M);
                 i_totalLayers++;
             }// layer
@@ -643,27 +640,27 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     } // modules
     
     // Mean z point (pivot point)
-    float pivotPoint_estimated=0.0;
+    pivotPoint_estimated=0.0;
     vector<float> zDistance;
     i_totalLayers=0;
-    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-                pivotPoint_estimated+=Tracker::instance()->getZDistance(i_totalLayers);
-                zDistance.push_back(Tracker::instance()->getZDistance(i_totalLayers));
+    for (int i_module=0; i_module<moduleN; i_module++){
+        for (int i_view=0; i_view<viewN; i_view++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){
+                pivotPoint_estimated+=distance[i_totalLayers];
+                zDistance.push_back(distance[i_totalLayers]);
                 i_totalLayers++;
             }// layer
         } // view 
     } // modules
-    pivotPoint_estimated = pivotPoint_estimated/Tracker::instance()->getLayerTotalN();
+    pivotPoint_estimated = pivotPoint_estimated/N;
     
     vector<float> zDistance_centered; // SD calculations assumes mean z of 0
     float squaredZSum = 0.0; // Squared sum of centred Z distances 
     i_totalLayers=0;
-    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
-            float tmpZDistance= Tracker::instance()->getZDistance(i_totalLayers)-pivotPoint_estimated;
+    for (int i_module=0; i_module<moduleN; i_module++){
+        for (int i_view=0; i_view<viewN; i_view++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){
+            float tmpZDistance= distance[i_totalLayers]-pivotPoint_estimated;
             zDistance_centered.push_back(tmpZDistance);
             squaredZSum += pow(tmpZDistance,2);
             i_totalLayers++;
@@ -675,13 +672,14 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     
     // SD on fitted residuals 
     float sigma_det = Tracker::instance()->getResolution(); // Original detector resolution
-    vector<float> sigma_recon_estimated;
     i_totalLayers=0;
-    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+    for (int i_module=0; i_module<moduleN; i_module++){
+        sigma_recon_estimated.push_back(vector< vector< float > > ()); 
+        for (int i_view=0; i_view<viewN; i_view++){
+            sigma_recon_estimated[i_module].push_back( vector<float>  () ); 
+            for (int i_layer=0; i_layer<layerN; i_layer++){
                 float simga_est = sigma_det * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) );
-                sigma_recon_estimated.push_back(simga_est);
+                sigma_recon_estimated[i_module][i_view].push_back(simga_est);
                 i_totalLayers++;
 
             }// layer
@@ -689,13 +687,13 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     } // modules
    
    // The Chi2 calculation requires sigma for each plane, and misalignment parameter per module
-   float Chi2_recon_estimated=N;
+   Chi2_recon_estimated=N;
    i_totalLayers=0;
-    for (int i_module=0; i_module<Tracker::instance()->getModuleN(); i_module++){
-        for (int i_view=0; i_view<Tracker::instance()->getViewN(); i_view++){
-            for (int i_layer=0; i_layer<Tracker::instance()->getLayerN(); i_layer++){
+    for (int i_module=0; i_module<moduleN; i_module++){
+        for (int i_view=0; i_view<viewN; i_view++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){
                 float M = shearMis[i_totalLayers];
-                float S = sigma_recon_estimated[i_totalLayers];
+                float S = sigma_recon_estimated[i_module][i_view][i_layer];
                 //maChi2_recon_estimated += (M*M + 2.0 * S * M)/(S*S);
                 Chi2_recon_estimated += (M*M + 2.0 * S * M + S*overallMis/N)/(S*S);
                 i_totalLayers++;
