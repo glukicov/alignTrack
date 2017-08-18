@@ -12,7 +12,7 @@
 
 #import matplotlib.pyplot as plt #for plotting 
 import numpy as np  # smart arrays 
-import itertools # smart lines
+#import itertools # smart lines
 from ROOT import *
 
 
@@ -85,19 +85,23 @@ h_er3  = TH1F("h_er3", "error Module 3", 19, 0.1, 0.1)
 h_er4  = TH1F("h_er4", "error Module 4", 1000, -1, 1)
 h_er5  = TH1F("h_er5", "error Module 5", 1000, -1, 1)
 
-h_dm0.GetXaxis().SetTitle("[um]");
-h_dm1.GetXaxis().SetTitle("[um]");
-h_dm2.GetXaxis().SetTitle("[um]");
-h_dm3.GetXaxis().SetTitle("[um]");
-h_dm4.GetXaxis().SetTitle("[um]");
-h_dm5.GetXaxis().SetTitle("[um]");
+h_dm0.GetXaxis().SetTitle("[um]")
+h_dm1.GetXaxis().SetTitle("[um]")
+h_dm2.GetXaxis().SetTitle("[um]")
+h_dm3.GetXaxis().SetTitle("[um]")
+h_dm4.GetXaxis().SetTitle("[um]")
+h_dm5.GetXaxis().SetTitle("[um]")
 
-h_er0.GetXaxis().SetTitle("[um]");
-h_er1.GetXaxis().SetTitle("[um]");
-h_er2.GetXaxis().SetTitle("[um]");
-h_er3.GetXaxis().SetTitle("[um]");
-h_er4.GetXaxis().SetTitle("[um]");
-h_er5.GetXaxis().SetTitle("[um]");
+h_er0.GetXaxis().SetTitle("[um]")
+h_er1.GetXaxis().SetTitle("[um]")
+h_er2.GetXaxis().SetTitle("[um]")
+h_er3.GetXaxis().SetTitle("[um]")
+h_er4.GetXaxis().SetTitle("[um]")
+h_er5.GetXaxis().SetTitle("[um]")
+
+h_Chi2Recon  = TH1F("h_Chi2Recon", "Recon Chi 2", 39, 150, 152)
+h_Chi2Recon  = TH1F("h_Chi2Est", "Est Chi 2", 39, 150, 152)
+
 
 
 for i_module in range(0, moduleN):

@@ -200,6 +200,9 @@ int main(int argc, char* argv[]){
     ofstream plot_hits_gen("Tracker_p_hits_gen.txt");  plot_hits_gen << fixed << setprecision(setPrecision); // Truth Hits points
     ofstream plot_hits_fit("Tracker_p_hits_fit.txt");   plot_hits_fit << fixed << setprecision(setPrecision); // Recon Hits points
     ofstream pede_mis("Tracker_pede_mis.txt");  pede_mis << fixed << setprecision(setPrecision);  // Misalignments 
+
+
+    //ofstream debug_append("Tracker_d_append.txt", std::ios_base::app);  debug_append << fixed << setprecision(setPrecision);  // Misalignments 
   
    //------------------------------------------ROOT: Booking etc.---------------------------------------------------------//   
 
@@ -243,13 +246,13 @@ int main(int argc, char* argv[]){
     
     // "special" histos
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
-    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 60, 49, -0.16, 0.16);
+    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18*Tracker::instance()->getModuleN(), 49, -0.16, 0.16);
     h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
-    TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 60, 59, 120, 150);
+    TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, 120, 150);
     h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
-    TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 60, 59, 120, 150);    
+    TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, 120, 150);    
     h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
-    TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 60, 59, -1, 1);    
+    TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, -1, 1);    
     h_Pulls_z->SetDirectory(cd_All_Hits); h_Pulls_z->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_Pulls_z->GetYaxis()->SetTitle("Measurement Pulls [cm]");
 
     //Use array of pointer of type TH1x to set axis titles and directories 
@@ -457,7 +460,7 @@ int main(int argc, char* argv[]){
             h_residual_true->Fill(residual_gen);
             residuals_true_sum_2+=pow(residual_gen/sigma_mp2,2);
             h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
-            residuals_recon_sum_2+=pow(rMeas_mp2/Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN),2);
+            residuals_recon_sum_2+=pow(rMeas_mp2/sigma_mp2,2);
             
             //Fill for hits in modules/layers/straws
             h_name.str(""); h_name << "UV/h_dca_M_" << moduleN << "_" << UV;
@@ -619,7 +622,7 @@ int main(int argc, char* argv[]){
     gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
     gr->GetYaxis()->SetTitle("Residual SD [um]");
     auto axis = gr->GetXaxis();
-    axis->SetLimits(0.,60.);                 // along X
+    axis->SetLimits(0.,18*Tracker::instance()->getModuleN());                 // along X
     gr->GetHistogram()->SetMaximum(148.);   // along          
     gr->GetHistogram()->SetMinimum(130.);  //   Y     
     cRes->Write();
@@ -637,7 +640,7 @@ int main(int argc, char* argv[]){
     gr2->GetXaxis()->SetTitle("Module/Layer separation [cm]");
     gr2->GetYaxis()->SetTitle("Pulls per layer [Error = SD]");
     auto axis2 = gr2->GetXaxis();
-    axis2->SetLimits(0.,60.);                 // along X
+    axis2->SetLimits(0.,18*Tracker::instance()->getModuleN());                 // along X
     gr2->GetHistogram()->SetMaximum(5.0);   // along          
     gr2->GetHistogram()->SetMinimum(-3.0);  //   Y     
     cPull->Write();
@@ -660,7 +663,7 @@ int main(int argc, char* argv[]){
         m2->Draw();
     }
     auto axis3 = gr3->GetXaxis();
-    axis3->SetLimits(0.,60.);                 // along X
+    axis3->SetLimits(0.,18*Tracker::instance()->getModuleN());                 // along X
     gr3->GetHistogram()->SetMaximum(0.2);   // along          
     gr3->GetHistogram()->SetMinimum(-0.2);  //   Y
 
@@ -753,7 +756,6 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::WARNING, er1.str());
     Logger::Instance()->write(Logger::WARNING, er2.str());
     }
-
     stringstream out1, out2, out3, out4, out5;
     out1 << "Estimated Mean Chi2 " << Tracker::instance()->get_Chi2_recon_estimated();
     out2 << "Measured Mean Chi2 " << Chi2_recon_actual;

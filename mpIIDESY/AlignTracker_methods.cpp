@@ -687,15 +687,19 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     } // modules
    
    // The Chi2 calculation requires sigma for each plane, and misalignment parameter per module
-   Chi2_recon_estimated=N;
+   Chi2_recon_estimated=N-2;
    i_totalLayers=0;
     for (int i_module=0; i_module<moduleN; i_module++){
         for (int i_view=0; i_view<viewN; i_view++){
             for (int i_layer=0; i_layer<layerN; i_layer++){
+                //float M = relMis[i_totalLayers];
+                //float M = charMis[i_totalLayers];
                 float M = shearMis[i_totalLayers];
-                float S = sigma_recon_estimated[i_module][i_view][i_layer];
-                //maChi2_recon_estimated += (M*M + 2.0 * S * M)/(S*S);
-                Chi2_recon_estimated += (M*M + 2.0 * S * M + S*overallMis/N)/(S*S);
+                //float S = sigma_recon_estimated[i_module][i_view][i_layer];
+                float D = Tracker::instance()->getResolution();
+                float z = zDistance_centered[i_totalLayers];
+
+                Chi2_recon_estimated += (M*M)/(D*D) - (M)/(N*D*D) - (2.0*M*z )/(squaredZSum*D*D) ;
                 i_totalLayers++;
             }// layer
         } // view 
