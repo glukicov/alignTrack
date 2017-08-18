@@ -232,7 +232,7 @@ int main(int argc, char* argv[]){
     TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
     TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.2, 0.2);
-    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 379, 0, 1000);
+    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 379, 0, 400);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
@@ -662,29 +662,9 @@ int main(int argc, char* argv[]){
     auto axis3 = gr3->GetXaxis();
     axis3->SetLimits(0.,60.);                 // along X
     gr3->GetHistogram()->SetMaximum(0.2);   // along          
-    gr3->GetHistogram()->SetMinimum(-0.2);  //   Y     
-    cResMean->Write();
-	
-    // Reconstructed Chi2
-	// TCanvas *cChi2 = new TCanvas("cChi2","cChi2",200,10,700,500);
-	// cChi2->Divide(1,1);
- //    cChi2->cd(1);
- //    gStyle->SetOptStat("ourRmMe");
-	// gStyle->SetOptFit(1111);
- //    chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
- //    h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
- //    h_chi2_recon->Fit("chi2pdf", "Q");
-	// cChi2->Clear(); // Fit does not draw into correct pad
- //    //The function is used to calculate the residual between the fit and the histogram
- //    //The class calculates the difference between the histogram and the fit function at each point and divides it by the uncertainty.
- //    auto r_plot = new TRatioPlot(h_chi2_recon, "errasym");
- //    r_plot->Draw("noconfint");
- //    r_plot->SetGraphDrawOpt("P");
- //    r_plot->SetSeparationMargin(0.0);
- 
- //    cChi2->Update();
- //    cChi2->Print("Chi2.png"); 
+    gr3->GetHistogram()->SetMinimum(-0.2);  //   Y
 
+    cResMean->Write();
 
     TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
     gStyle->SetOptStat("ourRmMe");

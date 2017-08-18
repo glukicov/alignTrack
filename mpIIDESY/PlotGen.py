@@ -167,9 +167,9 @@ for i_hits in range(0, len(gen_hitX)):
 
 axes.set_ylim([beamX0-6,beamX1+3])
 axes.set_xlim([beamZ0-1,beamZ1+1])
-plt.xlabel("z [cm]")
+#plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
-plt.title("Misaligned Geometry with generated tracks")
+plt.title("Misaligned Geometry with True Tracks")
 
 #Ideal Geometry and Fitted tracks 
 plt.subplot(212)
@@ -210,6 +210,6 @@ axes2.set_ylim([beamX0-6,beamX1+3])
 axes2.set_xlim([beamZ0-1,beamZ1+1])
 plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
-plt.title("Ideal Geometry with fitted tracks")
+plt.title("Ideal Geometry with Reconstructed Tracks")
 
 plt.show()
