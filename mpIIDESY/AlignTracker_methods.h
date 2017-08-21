@@ -94,7 +94,7 @@ class Tracker {
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    float dispX[8] = {-0.03, 0.1, 0.0, 0.05, 0.0, 0.02, 0.0}; // manual misalignment [relative misalignment per module]
     
     static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
  	  

@@ -235,7 +235,7 @@ int main(int argc, char* argv[]){
     TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.4, 0.4);
     TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
     TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.2, 0.2);
-    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 379, 0, 400);
+    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 379, 0, 500);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
@@ -683,7 +683,6 @@ int main(int argc, char* argv[]){
     rp1->Draw("noconfint");
     cChi2->Update();
     rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
-    rp1->GetUpperRefYaxis()->SetTitle("Entries");
     cChi2->Print("FoM_Chi2_recon.C");
     cChi2->Print("FoM_Chi2_recon.png");
     cChi2->Write();

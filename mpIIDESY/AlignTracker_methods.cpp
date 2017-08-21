@@ -518,7 +518,7 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool){
                     cout << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw]<<" ";
                     debug_geom << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
                     } // straws 
-                    cout << "  | Z= " << distance[Zcounter] << " [cm]" << endl;  // XXX fix this 
+                    cout << "  | Z= " << distance[Zcounter] << " [cm]" << endl;  // TODO align the cout better 
                     debug_geom << distance[Zcounter] << endl;
                     Zcounter++;
                 } // end of Layers
@@ -672,7 +672,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     } // modules
    
    // The Chi2 estimation requires misalignment parameters per layer
-   Chi2_recon_estimated=N-2;  // 2 parameter fit
+   Chi2_recon_estimated=N-2.0;  // 2 parameter fit
    i_totalLayers=0;
     for (int i_module=0; i_module<moduleN; i_module++){
         for (int i_view=0; i_view<viewN; i_view++){
