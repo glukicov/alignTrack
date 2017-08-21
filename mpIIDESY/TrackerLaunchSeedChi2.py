@@ -22,9 +22,7 @@ f = open("chi2.txt")
 for line in f:  #Line is a string
     number_str = line.split()
     Chi2Recon.append(float(number_str[0]))
-    Chi2Est.append(float(number_str[1]))
-    print line
-        
+    Chi2Est.append(float(number_str[1]))        
 
 # with open("chi2.txt", "r") as ins:
 #     for line in ins:
@@ -39,7 +37,7 @@ for line in f:  #Line is a string
 f = TFile('Chi2Tracker.root','RECREATE')
 
 h_Chi2Recon  = TH1F("h_Chi2Recon", "Recon Chi 2", 119, 151, 154)
-h_Chi2Est  = TH1F("h_Chi2Est", "Est Chi 2", 39, 150.1, 150.2)
+h_Chi2Est  = TH1F("h_Chi2Est", "Est Chi 2", 139, 150.12, 150.14)
 
 for i in range(0, len(Chi2Recon)):
 	h_Chi2Recon.Fill(Chi2Recon[i])

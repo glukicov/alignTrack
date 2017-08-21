@@ -1,14 +1,14 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
-*   Modified: 15 August 2017 
+*   Modified: 20 August 2017 
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
 PEDE routine, to align the tracking detector for the g-2 
 experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 
-============================= Test Model v0.3 ======================================= 
+============================= Test Model v0.4 ======================================= 
 *Simple 2D case (1D alignment along x).
 * No B-field, straight tracks, no MS, 100% efficiency. 
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted] 

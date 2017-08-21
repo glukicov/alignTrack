@@ -486,7 +486,6 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool){
     	dZ+=moduleSpacing;
     } // modules
 
-
     // Geometry of detector arrangement in X 
     float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0)
     for (int i_module=0; i_module<moduleN; i_module++){
@@ -529,7 +528,6 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool){
         }//Modules 
     }
 
-
 } // end of geom
 
 // MC misalignment of detectors 
@@ -558,7 +556,6 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
         
     }//Modules  
 
-
     // Print out:
     if (debugBool){
         stringstream gm2;
@@ -586,25 +583,24 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
 
 // Estimating misalignment parameters from geometry and assumed constants:
    
+    //--- For Modules only [MC misalignment set per module -> transfer to each layer] -- //
+
+    //Overall Misalignment [w.r.t to other modules]
     float sum_of_elems=0.0;
     for(vector<float>::iterator it = sdevX.begin(); it != sdevX.end(); ++it){
         sum_of_elems += *it;
     }
     overallMis=sum_of_elems/moduleN;
-    float SumMis =0.0;
-    float SquaredSumMis=0.0;
     cout << "Manual Misalignment: " << endl;
     for (int i_module=0; i_module<moduleN; i_module++){
-        cout << showpos << "Module " << i_module <<" :: Characteristic:  " << sdevX[i_module] << " cm. ";
-        SumMis += sdevX[i_module];
-        SquaredSumMis += pow(sdevX[i_module],2);
+        cout << showpos << "Module " << i_module <<" :: Characteristic:  " << sdevX[i_module] << " cm. ";  // absolute misalignment [as set by MC]   
         if (debugBool){pede_mis <<sdevX[i_module] << " "; }
         float relMisTmp = sdevX[i_module]-overallMis;
-        // now push these misalignment parameters for all layers in the module 
+        // now push these misalignment parameters for all layers in the module [for use later]
         for (int i_view=0; i_view<viewN; i_view++){
             for (int i_layer=0; i_layer<layerN; i_layer++){
-            relMis.push_back(relMisTmp);
-            charMis.push_back(sdevX[i_module]);
+            relMis.push_back(relMisTmp);           //relative misalignment per layer [w.r.t to other modules]
+            charMis.push_back(sdevX[i_module]);  // absolute misalignment per layer
             } // view
         } // layer
         cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
@@ -612,50 +608,27 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
     cout << noshowpos; 
     cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
 
-    // Calculating Shear Misalignment per layer
-    float N = float(layerTotalN); // total N of layers
-    //vector<float> xDetecor = charMis;
-    vector<float> xDetecor = relMis;
-    vector<float> zDetecor = distance; // returns Z positions 
-    ResidualData Line = Tracker::GetResiduals(xDetecor, zDetecor, N, debug_mis, false); 
-    float slope_Line = Line.slope_recon;
-    float cLine = Line.intercept_recon;
-    float sign_Line = +1.0; // up = +, down = - for a point w.r.t to the line
-    int i_totalLayers=0;
-    for (int i_module=0; i_module<moduleN; i_module++){
-        for (int i_view=0; i_view<viewN; i_view++){
-            for (int i_layer=0; i_layer<layerN; i_layer++){
-                float xLine = zDetecor[i_totalLayers] * slope_Line + cLine;
-                if (xDetecor[i_totalLayers]<xLine){
-                    sign_Line = -1.0;
-                }
-                else{
-                    sign_Line = +1.0;
-                }
-                float dca_M = sign_Line*Tracker::DCA(xDetecor[i_totalLayers], xLine);
-                shearMis.push_back(dca_M);
-                i_totalLayers++;
-            }// layer
-        } // view 
-    } // modules
+    //--- Calculations for Each Layer -- //
+    // XXX Verbose calculation via separate loops on purpose - to demonstrate the alignment methods 
     
-    // Mean z point (pivot point)
-    pivotPoint_estimated=0.0;
-    vector<float> zDistance;
+    // constants
+    float N = float(layerTotalN); // total N of layers
+    float D = Tracker::instance()->getResolution(); // Original detector resolution
+    int i_totalLayers; // dummy layer counter 
+           
+    // Pivot Point
     i_totalLayers=0;
     for (int i_module=0; i_module<moduleN; i_module++){
         for (int i_view=0; i_view<viewN; i_view++){
             for (int i_layer=0; i_layer<layerN; i_layer++){
                 pivotPoint_estimated+=distance[i_totalLayers];
-                zDistance.push_back(distance[i_totalLayers]);
                 i_totalLayers++;
             }// layer
         } // view 
     } // modules
     pivotPoint_estimated = pivotPoint_estimated/N;
     
-    vector<float> zDistance_centered; // SD calculations assumes mean z of 0
-    float squaredZSum = 0.0; // Squared sum of centred Z distances 
+    // Centred Distances and squared distances 
     i_totalLayers=0;
     for (int i_module=0; i_module<moduleN; i_module++){
         for (int i_view=0; i_view<viewN; i_view++){
@@ -668,38 +641,45 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool){
         } // view 
     } // modules
 
-    // First calculate the z-dependent part of the SD equation
-    
-    // SD on fitted residuals 
-    float sigma_det = Tracker::instance()->getResolution(); // Original detector resolution
+    // Estimated SD of residuals, Sum of mis., and squared sum of mis.   
     i_totalLayers=0;
     for (int i_module=0; i_module<moduleN; i_module++){
         sigma_recon_estimated.push_back(vector< vector< float > > ()); 
         for (int i_view=0; i_view<viewN; i_view++){
             sigma_recon_estimated[i_module].push_back( vector<float>  () ); 
             for (int i_layer=0; i_layer<layerN; i_layer++){
-                float simga_est = sigma_det * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) );
+                float simga_est = D * sqrt( (N-1)/N - (pow(zDistance_centered[i_totalLayers],2)/squaredZSum) );
                 sigma_recon_estimated[i_module][i_view].push_back(simga_est);
+                MisZdistanceSum += charMis[i_totalLayers]*zDistance_centered[i_totalLayers];
+                MisSum += charMis[i_totalLayers];
                 i_totalLayers++;
+            }// layer
+        } // view 
+    } // modules
 
+    // Predicted means of residuals [a.k.a "shear misalignment"]
+    i_totalLayers=0;
+    for (int i_module=0; i_module<moduleN; i_module++){
+        for (int i_view=0; i_view<viewN; i_view++){
+            for (int i_layer=0; i_layer<layerN; i_layer++){
+                float charM = charMis[i_totalLayers];
+                float z = zDistance_centered[i_totalLayers];
+                float shearMistmp = charM - MisSum/N - (z*MisZdistanceSum)/squaredZSum;
+                shearMis.push_back(shearMistmp);
+                i_totalLayers++;
             }// layer
         } // view 
     } // modules
    
-   // The Chi2 calculation requires sigma for each plane, and misalignment parameter per module
-   Chi2_recon_estimated=N-2;
+   // The Chi2 estimation requires misalignment parameters per layer
+   Chi2_recon_estimated=N-2;  // 2 parameter fit
    i_totalLayers=0;
     for (int i_module=0; i_module<moduleN; i_module++){
         for (int i_view=0; i_view<viewN; i_view++){
             for (int i_layer=0; i_layer<layerN; i_layer++){
-                //float M = relMis[i_totalLayers];
-                //float M = charMis[i_totalLayers];
                 float M = shearMis[i_totalLayers];
-                //float S = sigma_recon_estimated[i_module][i_view][i_layer];
-                float D = Tracker::instance()->getResolution();
                 float z = zDistance_centered[i_totalLayers];
-
-                Chi2_recon_estimated += (M*M)/(D*D) - (M)/(N*D*D) - (2.0*M*z )/(squaredZSum*D*D) ;
+                Chi2_recon_estimated += ( (M*M) - (M)/(N) - (2.0*M*z)/(squaredZSum) ) / (D*D) ;
                 i_totalLayers++;
             }// layer
         } // view 

@@ -85,19 +85,20 @@ class Tracker {
 	
 	static constexpr float twoR=2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
- 	//Rejection counters //
-    int rejectedHitsDCA=0;
-    int multipleHitsLayer=0; // passed over from DCAData
+ 	// **** COUNTERS ****  //
+    int rejectedHitsDCA=0;  // rejected hits due to DCA > straw radius 
+    int multipleHitsLayer=0; // passed over from DCAData [if >1 hit per layer]
     int ambiguityHit=0; //Exactly in the middle of 2 straws
+    int hitLayerCounter; // absolute layer ID for the hit
 	
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {0.0, -0.08, -0.07, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-    float overallMis; // the overall misalignment - calculated in the misalignment method  
-
- 	static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
+    float dispX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    
+    static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
  	  
+	// **** GEOMETRIC CONSTANTS ****  //
 	// define detector geometry [all distances are in cm]
 	static const int moduleN = 4; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
@@ -113,26 +114,19 @@ class Tracker {
 	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
 	//std::vector<float> staircaseXDisplacment = [0.0, 0.723, 0.979, 1.238, 1.503, 1.755, 2.008, 2.259];  // TODO staircase for MF in future [cm]
 	//[ 6880.52, 6873.29, 6863.50, 6851.12, 6836.09, 6818.54, 6798.46, 6775.87]; // from gm2geom [mm]
+	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
+	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
+	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
 
-	//Beam parameters [all distances are in cm]
+	// **** BEAM PARAMETERS ****  // [all distances are in cm]
 	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
 	static constexpr float beamPositionLength = 2.0; 
 	static constexpr float beamOffset=1.0; // offset from 0 in x
 	static constexpr float beamStart = startingZDistanceStraw0-5.0; // z 
 	static constexpr float beamStop = (moduleSpacing+viewSpacing+layerSpacing*float(layerN))*float(moduleN);  // z  
-	
-	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
-	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
-	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
 
-	int hitLayerCounter;
-
-	float pivotPoint_estimated;
-	float Chi2_recon_estimated; 
-	vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane 
-    vector<float> relMis;  // Relative misalignment (w.r.t to overall mis.) 
-    vector<float> shearMis; // vector to hold the shear misalignment for each plane
-	
+	// **** MC CALCULATION CONTAINERS ****  // 
+	// Hits-based
 	std::vector<int> layer; // record of layers that were hit
     std::vector<float> projectionX; //projection of measurement direction in (X)
     std::vector<float> distance;  // Z distance between planes [this is set in geometry]
@@ -146,6 +140,18 @@ class Tracker {
 
     // Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
     std::vector< std::vector< string > > UVmapping; // set in the constructor
+
+    //Misalignment 
+    vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane 
+    vector<float> relMis;  // Relative misalignment (w.r.t to overall mis. - per layer) 
+    vector<float> shearMis; // vector to hold the shear misalignment for each plane [mean of the residuals per plane]
+    vector<float> zDistance_centered; // SD calculations assumes mean z of 0 [vector to hold z distances w.r.t to pivot point]
+    float overallMis; // the overall misalignment - calculated in the misalignment method  [same for all modules]
+    float Chi2_recon_estimated=0.0;  // Estimated (recon.) Chi2 of the fit 
+    float pivotPoint_estimated=0.0;  // Mean z point (pivot point)
+    float squaredZSum = 0.0; // Squared sum of centred Z distances 
+    float MisZdistanceSum=0.0; // Sum of Mis * z distance
+    float MisSum = 0.0; // Sum of all misalignments [per layer]
     	
 	// Class constructor and destructor
 	Tracker();
