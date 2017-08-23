@@ -171,6 +171,7 @@ int main(int argc, char* argv[]){
     catch (ios_base::failure& e) {
         cerr << "Filestream exception caught: " << e.what() << endl;
         cerr << "Please ensure valid filenames are specified!" << endl; 
+        cerr << "Have random numbers been generated with randomIntGenerator.py?" << endl; 
         return 1;
         } 
  //------------------------------------------Setting Output Files---------------------------------------------------------//     
