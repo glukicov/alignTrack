@@ -109,7 +109,7 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float xHit, boo
     float lower, upper, hitDistance;
     int lastID = strawN-1; // the ID of the very last straw in the vector
     float comparator; // to find the ID
-    float LR; //L or R hit
+    float LR; //L or R hit looking downstream
 
     //Iterator to find two straws between the hit:
     vector<float>::iterator it;
@@ -151,6 +151,7 @@ DCAData Tracker::DCAHit(std::vector<float> xLayer, float zStraw, float xHit, boo
                 incMultipleHitsLayer();
             }
 
+            // if DCA in higher straw ID is bigger, select straw ID with smaller DCA
             if (hit_distance_up>hit_distance_low){
                 hitDistance = hit_distance_low;
                 comparator = lower;
