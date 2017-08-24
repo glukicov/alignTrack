@@ -97,14 +97,15 @@ with open("Tracker_p_gen.txt") as f:
         number_str = line.split()    
         for i in range(0,4):
         	gen[i_track][i] = float(number_str[i])
-        for hit in range(0, toalLayerN):
-        	hitList[i_track][hit] = number_str[4+hit] #hit list starts at 4th position
+        #for hit in range(0, toalLayerN):
+        #	hitList[i_track][hit] = number_str[4+hit] #hit list starts at 4th position
         i_track+=1
 
 #print hitList
 
 i_track = 0
-with open("Tracker_p_fit.txt") as f:
+with open("Tracker_p_fit.txt") as f:  #XXX
+#with open("Tracker_p_gen.txt") as f:  #XXX
     for line in f:  #Line is a string
         number_str = line.split()    
         for i in range(0,4):
@@ -113,19 +114,23 @@ with open("Tracker_p_fit.txt") as f:
 
 gen_hitX=[]
 gen_hitZ=[]
+gen_hitRad=[]
 fit_hitX=[]
 fit_hitZ=[]
+fit_hitRad=[]
 with open("Tracker_p_hits_gen.txt") as f:
 	for line in f:  #Line is a string
 		number_str = line.split()
 		gen_hitX.append(float(number_str[0]))
 		gen_hitZ.append(float(number_str[1]))
+		gen_hitRad.append(float(number_str[2]))
 
-with open("Tracker_p_hits_fit.txt") as f:
+with open("Tracker_p_hits_fit.txt") as f: 
 	for line in f:  #Line is a string
 		number_str = line.split()
 		fit_hitX.append(float(number_str[0]))
 		fit_hitZ.append(float(number_str[1]))
+		fit_hitRad.append(float(number_str[2]))
 
 
 ##################PLOTING##############################
@@ -139,18 +144,8 @@ for i_track in range(0, trackN):
 	dataM = [[gen[i_track][2],gen[i_track][0]], [gen[i_track][3],gen[i_track][1]]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))),
-	    color = 'red', marker = 'x')
-	i_totalLayers=0
-	for i_module in range(0, moduleN):
-		for i_view in range(0, viewN):
-			for i_layer in range(0, layerN):
-				for i_straw in range(0, strawN):
-					if (hitList[i_track][i_totalLayers] == str(i_straw)):
-						circle = plt.Circle((Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw]), 0.25, color='green', fill=True)
-						plt.plot(Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
-						axes.add_artist(circle)						
-				i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
-
+	    color = 'blue', marker = 'x')
+	
 #Then draw all other straws 
 i_totalLayers=0
 for i_module in range(0, moduleN):
@@ -163,7 +158,8 @@ for i_module in range(0, moduleN):
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
 for i_hits in range(0, len(gen_hitX)):
-	plt.plot(gen_hitZ[i_hits], gen_hitX[i_hits], color="black", marker = "x")
+	circle3 = plt.Circle((gen_hitZ[i_hits], gen_hitX[i_hits]), gen_hitRad[i_hits], color='red', linestyle='--', fill=False)
+	axes.add_artist(circle3)		
 
 axes.set_ylim([beamX0-6,beamX1+3])
 axes.set_xlim([beamZ0-1,beamZ1+1])
@@ -181,17 +177,7 @@ for i_track in range(0, trackN):
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(dataI, 2))),
 	    color = 'red', marker = 'x')
-	i_totalLayers=0
-	for i_module in range(0, moduleN):
-		for i_view in range(0, viewN):
-			for i_layer in range(0, layerN):
-				for i_straw in range(0, strawN):
-					if (hitList[i_track][i_totalLayers] == str(i_straw)):
-						circle = plt.Circle((Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw]), 0.25, color='purple', fill=True)
-						plt.plot(Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
-						axes2.add_artist(circle)						
-				i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
-
+	
 #Then draw all other straws 
 i_totalLayers=0
 for i_module in range(0, moduleN):
@@ -204,7 +190,8 @@ for i_module in range(0, moduleN):
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
 for i_hits in range(0, len(fit_hitX)):
-	plt.plot(fit_hitZ[i_hits], fit_hitX[i_hits], color="black", marker = "x")
+	circle = plt.Circle((fit_hitZ[i_hits], fit_hitX[i_hits]), fit_hitRad[i_hits], color='purple', linestyle='--', fill=False)
+	axes2.add_artist(circle)	
 	
 axes2.set_ylim([beamX0-6,beamX1+3])
 axes2.set_xlim([beamZ0-1,beamZ1+1])

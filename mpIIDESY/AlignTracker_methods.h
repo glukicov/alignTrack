@@ -24,7 +24,7 @@ struct MCData {
 	int hit_count; /** Number of hits in detector */
 	//Hits
 	std::vector<float> z_hits; /** Z-positions of generated hits in detector */ //distances 
-	std::vector<float> x_residuals; /** X-positions of residuals between ideal and real geometry */
+	std::vector<float> residuals; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
 	std::vector<int> hit_list;  // same of layers (absolute)
@@ -34,9 +34,7 @@ struct MCData {
 	std::vector<float> residuals_gen;
 	std::vector<int> residuals_fit;
  	std::vector<float> strawID;
-  	std::vector<float> x_mis_dca; /** X-positions of recorded hits in a real detector */
-	std::vector<float> x_hit_recon; // ideal straw hit position + dca (from mis.)
-	std::vector<float> x_hit_true; // true xHit position
+  	std::vector<float> mis_dca; /** X-positions of recorded hits in a real detector */
 	//Detector coordinates 
 	std::vector<int> Module_i; 
 	std::vector<int> View_i; 
@@ -58,14 +56,22 @@ struct MCData {
 // DCA structure - calculated for each hit
 struct DCAData{
 	int strawID; 
-	float dca;
+	float dcaUnsmeared;
+	float dca; //smeared dca
+	float residualTruth;
 	float LRSign; // L=-ive, R=+ive 
 };
 
+struct ReconData{
+	float z;
+	float x;         
+	float dcaRecon;
+};
+
+
 // Returned - calculated once per track
 struct ResidualData{
-	std::vector<float> residuals; // residual between  
-	std::vector<float> x_fitted;   // the x-coordinate of the fitted line in a layer [z-coordinate corresponds to distance vector]
+	std::vector<float> residuals; // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle; 
 	float slope_recon;
 	float intercept_recon;
 	float meanXReconTrack;
@@ -94,7 +100,7 @@ class Tracker {
 	//initialising physics variables
  	// MF + inhomogeneity, E_loss, MS
 
-    float dispX[8] = {0.0, 0.0, 0.0, 0.00, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+    float dispX[8] = {-0.2, 0.1, 0.3, -0.1, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
     
     static constexpr float resolution=0.015;  // 150um = 0.015 cm for hit smearing
  	  
@@ -141,6 +147,11 @@ class Tracker {
     // Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
     std::vector< std::vector< string > > UVmapping; // set in the constructor
 
+    //vector to store x coordinates of the track as seen from the ideal detector 
+    vector<float> xRecon;  // ideal straw x
+    vector<float> zRecon;  // ideal straw z
+    vector<float> radRecon; // reconstructed fit circle radius (DCA)
+
     //Misalignment 
     vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane 
     vector<float> relMis;  // Relative misalignment (w.r.t to overall mis. - per layer) 
@@ -168,15 +179,15 @@ class Tracker {
 
 	float generate_uniform(); // using the RandomBuffer class
 
-	float DCA(float, float);
+	float pointToLineDCA(float z_straw, float x_straw, float x_slope, float x_intercept); //simple 2D DCA
 
-	DCAData DCAHit(std::vector<float>, float, float, bool);
+	DCAData DCAHit(std::vector<float> xLayer, float zStraw, float xTrack, float xSlpoe, float xIntercept, bool debugBool); // calls DCA to chose the right straw
 
-	float HitRecon(int, float, float, std::vector<float>);
+	ReconData HitRecon(int det_ID, float det_dca, std::vector<float> xLayer, float z_distance); //return the dca to ideal geometry, and centre of the circle
 
 	//ResidualData GetResiduals(std::vector<float>,  std::vector<float>, std::ofstream&, bool);
 
-	ResidualData GetResiduals(std::vector<float>,  std::vector<float>, int, std::ofstream&, bool);
+	ResidualData GetResiduals(std::vector<float> zRecon, std::vector<float> xRecon, std::vector<float> radRecon, int dataSize, std::ofstream& plot_fit, bool debugBool, bool useTruth);
 
 	MCData MC_launch(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 

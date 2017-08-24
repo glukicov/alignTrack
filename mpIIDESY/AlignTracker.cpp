@@ -426,7 +426,7 @@ int main(int argc, char* argv[]){
             //add break points multiple scattering later XXX (for imodel == 2)
             //! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
            
-            float rMeas_mp2 =  generated_MC.x_residuals[hitCount]; 
+            float rMeas_mp2 =  generated_MC.residuals[hitCount]; 
             float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; 
             m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
             if (debugBool){ debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " " 
@@ -443,18 +443,12 @@ int main(int argc, char* argv[]){
             //Fill for all hits
             h_res_MP2 -> Fill (rMeas_mp2); // residuals 
             h_sigma -> Fill(sigma_mp2); // errors 
-            h_dca->Fill(generated_MC.x_mis_dca[hitCount]); // DCA
-            h_hits_true->Fill(generated_MC.x_hit_true[hitCount]); // True (smeared) hit position
-            h_hits_recon->Fill(generated_MC.x_hit_recon[hitCount]); // Reconstructed hit position
+            h_dca->Fill(generated_MC.mis_dca[hitCount]); // DCA
             h_labels->Fill(l1);
-            h_reconMinusTrue_hits->Fill(generated_MC.x_hit_true[hitCount]-generated_MC.x_hit_recon[hitCount]);
  			h_id_dca ->Fill(strawID);
             
             //Track-based hit parameters
-            h_track_true->Fill(generated_MC.x_track_true[hitCount]); // True (generated) track position
-            h_track_recon->Fill(generated_MC.x_track_recon[hitCount]); // Reconstructed (fitted) track position
-            h_reconMinusTrue_track->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
-            h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.x_residuals[hitCount]);
+            h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
                                               
             //Calculating Chi2 stats:
             float residual_gen = generated_MC.residuals_gen[hitCount]; 
@@ -466,7 +460,7 @@ int main(int argc, char* argv[]){
             //Fill for hits in modules/layers/straws
             h_name.str(""); h_name << "UV/h_dca_M_" << moduleN << "_" << UV;
             TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
-            h1->Fill(generated_MC.x_mis_dca[hitCount]);
+            h1->Fill(generated_MC.mis_dca[hitCount]);
             
             h_name.str(""); h_name << "UV/h_strawID_M_" << moduleN << "_" << UV;
             TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
@@ -478,21 +472,12 @@ int main(int argc, char* argv[]){
 
             h_name.str(""); h_name << "Straws/h" << moduleN << "_straw" << strawID;
             TH1F* h4 = (TH1F*)file->Get( h_name.str().c_str() );
-            h4->Fill(generated_MC.x_mis_dca[hitCount]);
+            h4->Fill(generated_MC.mis_dca[hitCount]);
             h4-> SetFillColor(colourVector[strawID]);
-
-            h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << moduleN;
-            TH1F* h5 = (TH1F*)file->Get( h_name.str().c_str() );
-            h5->Fill(generated_MC.x_hit_recon[hitCount]);
-            h5 -> SetFillColor(colourVector[moduleN]);
-
-            h_name.str(""); h_name << "Modules/h_reconMinusTrue_line_Module_" << moduleN;
-            TH1F* h6 = (TH1F*)file->Get( h_name.str().c_str() );
-            h6->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
 
 	        h_name.str(""); h_name << "Modules/h_DCA_Module_" << moduleN;
 	        TH1F* h7 = (TH1F*)file->Get( h_name.str().c_str() );
-	        h7->Fill(generated_MC.x_mis_dca[hitCount]);
+	        h7->Fill(generated_MC.mis_dca[hitCount]);
 
 	        h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN;
 	        TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
@@ -501,10 +486,6 @@ int main(int argc, char* argv[]){
 	        h_name.str(""); h_name << "UV/h_residual_recon_M_" << moduleN << "_" << UV;
 	        TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
 	        h9->Fill(rMeas_mp2);
-
-	        h_name.str(""); h_name << "UV/h_line_jitter_M_" << moduleN << "_" << UV;
-	        TH1F* h10 = (TH1F*)file->Get( h_name.str().c_str() );
-	        h10->Fill(generated_MC.x_track_true[hitCount]-generated_MC.x_track_recon[hitCount]);
 
             h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
             TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
