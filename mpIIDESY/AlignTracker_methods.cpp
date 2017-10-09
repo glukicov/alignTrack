@@ -248,9 +248,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
     //Circle Fit goes here; TODO
 
-    //2D examples: http://people.cas.uab.edu/~mosya/cl/CPPcircle.html
-
-        
+           
     
     //resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle; 
     //resData.slope_recon=slope;

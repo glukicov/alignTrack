@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
-*   Modified: 20 August 2017 
+*   Modified: 9 October 2017 
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
 PEDE routine, to align the tracking detector for the g-2 
@@ -137,7 +137,7 @@ int main(int argc, char* argv[]){
     Tracker::instance()->setTrackNumber(tracksInput); 
     }
     else{
-        Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");
+        Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [a/n])");
     }
     
     Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]){
     Logger::Instance()->write(Logger::NOTE, "");
     msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.3) - Gleb Lukicov (UCL) - August 2017            " << Logger::def();
+    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.3) - Gleb Lukicov (UCL) - October 2017         " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
     msg1 << Logger::blue() <<  "*****************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
