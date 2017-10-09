@@ -7,6 +7,7 @@
 
 #include "random_buffer.h" // courtesy of John Smeaton (UCL)
 ///XXX some includes may become redundant
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -77,6 +78,37 @@ struct ResidualData{
 	float meanXReconTrack;
 	float meanZReconTrack;
 };
+
+// Container to hold recon track 
+struct UVLineFit {
+
+    double m;    // Slope
+    double c;    // Intercept
+    double chi2; // Chi2 for fit
+    int    ndf;  // Degrees of freedom (hits) for  this fit
+    std::bitset<layerTotalN> leftHit; // Hit on left of straw where position is layer number (0-15)
+    std::bitset<layerTotalN> rightHit; // Hit on right of straw
+  
+    UVLineFit()
+      : m(0)
+      , c(0)
+      , chi2(0)
+      , ndf(0)
+      , leftHit(0)
+      , rightHit(0)
+    {
+    }
+
+    UVLineFit(const double m, const double c, const double chi2, const int ndf, const std::bitset<layerTotalN> leftHit, const std::bitset<layerTotalN> rightHit)
+      : m(m)
+      , c(c)
+      , chi2(chi2)
+      , ndf(ndf)
+      , leftHit(leftHit)
+      , rightHit(rightHit)
+    {
+    }
+  }; // UVLineFit
 
 /**
    Singleton class to represent the detector
@@ -187,7 +219,7 @@ class Tracker {
 
 	//ResidualData GetResiduals(std::vector<float>,  std::vector<float>, std::ofstream&, bool);
 
-	ResidualData GetResiduals(std::vector<float> zRecon, std::vector<float> xRecon, std::vector<float> radRecon, int dataSize, std::ofstream& plot_fit, bool debugBool, bool useTruth);
+	ResidualData GetResiduals(std::vector<float> zRecon, std::vector<float> xRecon, std::vector<float> radRecon, int dataSize, std::ofstream& plot_fit, bool debugBool, bool useTruth, std::vector<float> LR_truth);
 
 	MCData MC_launch(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool); 
 
@@ -203,9 +235,9 @@ class Tracker {
 
 	void set_gaussian_file(std::string); // Set filename for Gaussian random numbers
 
-	size_t getPeakRSS( ); // Peak Dynamic Memory used 
+	//size_t getPeakRSS( ); // Peak Dynamic Memory used 
 
-	size_t getCurrentRSS( );
+	//size_t getCurrentRSS( );
 
 	//
 	// Setter methods
@@ -355,5 +387,47 @@ class Tracker {
 
 };
 
+/**
+ * Returns the peak (maximum so far) resident set size [RSS] (physical
+ * memory use) measured in bytes, or zero if the value cannot be
+ * determined on this OS. By Dr. David R. Nadeau:
+ * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
+ */
+// size_t Tracker::getPeakRSS( ){
+// #if defined(_WIN32)
+//     /* Windows -------------------------------------------------- */
+//     PROCESS_MEMORY_COUNTERS info;
+//     GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
+//     return (size_t)info.PeakWorkingSetSize;
+
+// #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+//     /* AIX and Solaris ------------------------------------------ */
+//     struct psinfo psinfo;
+//     int fd = -1;
+//     if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
+//         return (size_t)0L;      /* Can't open? */
+//     if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
+//     {
+//         close( fd );
+//         return (size_t)0L;      /* Can't read? */
+//     }
+//     close( fd );
+//     return (size_t)(psinfo.pr_rssize * 1024L);
+
+// #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+//     /* BSD, Linux, and OSX -------------------------------------- */
+//     struct rusage rusage;
+//     getrusage( RUSAGE_SELF, &rusage );
+// #if defined(__APPLE__) && defined(__MACH__)
+//     return (size_t)rusage.ru_maxrss;
+// #else
+//     return (size_t)(rusage.ru_maxrss * 1024L);
+// #endif
+
+// #else
+//     /* Unknown OS ----------------------------------------------- */
+//     return (size_t)0L;          /* Unsupported. */
+// #endif
+// }
 
 #endif

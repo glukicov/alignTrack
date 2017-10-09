@@ -14,7 +14,7 @@ CPP = g++
 CPPFLAGS = -std=c++11
 CPPFLAGS += $(ROOTCFLAGS)
 //CPPFLAGS +=-static-libtsan
-CPPFLAGS += -Wstatic-float-init
+//CPPFLAGS += -Wstatic-float-init
 CPPFLAGS += -fstack-protector-all
 CPPFLAGS += -pedantic-errors
 

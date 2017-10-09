@@ -9,7 +9,7 @@
 # Modified: 16 May 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
 #####################################################################
 
-import numpy as np 
+#import numpy as np 
 import matplotlib.pyplot as plt #for plotting 
 import itertools
 import csv

@@ -190,7 +190,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
    
     //Iterator to find straw ID [implemented separately, as now we look up once only]:
     int index;
-    it = find(xLayer.begin(), xLayer.end(), comparator);
+    it = std::find(xLayer.begin(), xLayer.end(), comparator); 
     if (it == xLayer.end()){   
         cout << "Error: straw x not found in vector!" << endl;
         exit(0);
@@ -239,22 +239,41 @@ ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, flo
 // @ Inputs: ideal points (x,z)
 
 //Truth can be used as an optional input 
+
+    // z,x position of straws, radius of drift circle, # circles, plotting file for input, verbosity flag, truth flag  
   
-ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, vector<float> radRecon, int dataSize, ofstream& plot_fit, bool debugBool, bool useTruth){
+ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, vector<float> radRecon, int dataSize, ofstream& plot_fit, bool debugBool, bool useTruthLR, vector<float> LR_truth){
 
     ResidualData resData;
-
-    bool StrongDebugBool = false; 
+    bool StrongDebugBool = false; // XXX extra verbosity
 
     //Circle Fit goes here; TODO
+    // from Jame's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
+    // line 392 onwards
+    // inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
+    float pValCut = 0.01; // XXX set by hand for now 
+    bool truthLRCombo = useTruthLR;
 
-           
+    // Holder for tangents that we're going to calculate
+    vector<UVLineFit> calcUVLineFits;
+
+    // Number of hits
+    int nHits = dataSize;
+
+    // Number of LR combinations (2^N or 1 if using truth)
+    int nLRCombos = pow(2,nHits);
+    if(truthLRCombo >= 0) nLRCombos = 1;
+
+
+
+
     
-    //resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle; 
-    //resData.slope_recon=slope;
-    //resData.intercept_recon=intercept;
-    // resData.meanXReconTrack=AVGy;
-    // resData.meanZReconTrack=AVGx;
+    // Final outputs of MC_launch 
+    resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle; 
+    resData.slope_recon=slope;       // slope of the best fit line
+    resData.intercept_recon=intercept; // intercept
+    resData.meanXReconTrack=AVGy; 
+    resData.meanZReconTrack=AVGx;
 
     //if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
@@ -358,8 +377,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	            // RECONSTRUCTED PARAMETERS
                 //Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
 
-	            //TODO: remove LRSign, reconstruction returns 
-
 	            ReconData ReconDetector = Tracker::HitRecon(mis_ID, mis_dca, mod_lyr_strawIdealPosition[i_module][i_view][i_layer], distance[z_counter]);
 	            float zCircle = ReconDetector.z;
 	            float xCircle = ReconDetector.x;
@@ -400,18 +417,18 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     
    
 
-    // XXX HACK for now
-    bool useTruth = false;
+    // XXX HACK for now --> make global 
+    bool useTruthLR = true;
 
 
-
-    ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruth);
+    ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
     MC.residuals = res_Data.residuals;
     MC.slope_recon = res_Data.slope_recon;
     MC.intercept_recon = res_Data.intercept_recon;
     MC.meanXReconTrack=res_Data.meanXReconTrack;
     MC.meanZReconTrack=res_Data.meanZReconTrack;
-    
+
+
     if(debugBool){
                         plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
                    
@@ -667,47 +684,4 @@ float Tracker::generate_gaus(){
 float Tracker::generate_uniform(){
     float uniform = (( RandomBuffer::instance()->get_uniform_number()+ RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
     return uniform; 
-}
-
-/**
- * Returns the peak (maximum so far) resident set size [RSS] (physical
- * memory use) measured in bytes, or zero if the value cannot be
- * determined on this OS. By Dr. David R. Nadeau:
- * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
- */
-size_t Tracker::getPeakRSS( ){
-#if defined(_WIN32)
-    /* Windows -------------------------------------------------- */
-    PROCESS_MEMORY_COUNTERS info;
-    GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
-    return (size_t)info.PeakWorkingSetSize;
-
-#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-    /* AIX and Solaris ------------------------------------------ */
-    struct psinfo psinfo;
-    int fd = -1;
-    if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
-        return (size_t)0L;      /* Can't open? */
-    if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
-    {
-        close( fd );
-        return (size_t)0L;      /* Can't read? */
-    }
-    close( fd );
-    return (size_t)(psinfo.pr_rssize * 1024L);
-
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-    /* BSD, Linux, and OSX -------------------------------------- */
-    struct rusage rusage;
-    getrusage( RUSAGE_SELF, &rusage );
-#if defined(__APPLE__) && defined(__MACH__)
-    return (size_t)rusage.ru_maxrss;
-#else
-    return (size_t)(rusage.ru_maxrss * 1024L);
-#endif
-
-#else
-    /* Unknown OS ----------------------------------------------- */
-    return (size_t)0L;          /* Unsupported. */
-#endif
 }

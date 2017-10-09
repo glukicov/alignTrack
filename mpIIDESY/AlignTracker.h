@@ -14,6 +14,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <random>
 #include <iomanip>
 #include <chrono>
@@ -42,7 +43,7 @@
 #include <TText.h>
 #include <TLegend.h>
 #include <TGaxis.h>
-#include <TRatioPlot.h>
+//#include <TRatioPlot.h>
 #include <TGraph.h>
 #include <TGraphErrors.h>
 #include <TMarker.h>

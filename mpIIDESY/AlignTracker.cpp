@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017  
-*   Modified: 9 October 2017 
+*   Modified: 9 October 2017  
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the 
 PEDE routine, to align the tracking detector for the g-2 
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]){
     float pivotPoint_actual=0.0; // central z point from measurements 
     float Chi2_recon_actual=0.0;   // Reconstructed Chi2 (from measurements) 
     const Color_t colourVector[]={kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
-    gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
+    //gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
        
     //Tell the logger to only show message at INFO level or above
     Logger::Instance()->setLogLevel(Logger::NOTE); 
@@ -651,23 +651,23 @@ int main(int argc, char* argv[]){
 
     cResMean->Write();
 
-    TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
-    gStyle->SetOptStat("ourRmMe");
-    gStyle->SetOptFit(1111); 
-    chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
-    h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
-    h_chi2_recon->Fit("chi2pdf", "Q");
-    cChi2->Clear(); // Fit does not draw into correct pad
-    auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
-    rp1->SetGraphDrawOpt("P");
-    rp1->SetSeparationMargin(0.0);
-    cChi2->SetTicks(0, 1);
-    rp1->Draw("noconfint");
-    cChi2->Update();
-    rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
-    cChi2->Print("FoM_Chi2_recon.C");
-    cChi2->Print("FoM_Chi2_recon.png");
-    cChi2->Write();
+    // TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
+    // gStyle->SetOptStat("ourRmMe");
+    // gStyle->SetOptFit(1111); 
+    // chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
+    // h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
+    // h_chi2_recon->Fit("chi2pdf", "Q");
+    // cChi2->Clear(); // Fit does not draw into correct pad
+    // auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
+    // rp1->SetGraphDrawOpt("P");
+    // rp1->SetSeparationMargin(0.0);
+    // cChi2->SetTicks(0, 1);
+    // rp1->Draw("noconfint");
+    // cChi2->Update();
+    // rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
+    // cChi2->Print("FoM_Chi2_recon.C");
+    // cChi2->Print("FoM_Chi2_recon.png");
+    // cChi2->Write();
     // TODO fix malloc problem closing the canvas in ROOT Browser
 
     // Debug-style plots:
@@ -798,7 +798,8 @@ int main(int argc, char* argv[]){
     	<< chrono::duration<double>(t_end-t_start).count() << " s." << endl;
     time_t now = time(0);
     char* dt = ctime(&now);
-    cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. The C++ compiler used: " << true_cxx << " " << true_cxx_ver
+    //cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB. 
+    cout << "The C++ compiler used: " << true_cxx << " " << true_cxx_ver
     	<<" Job finished on: " << dt << endl;
     return 0; 
 } //end of main
