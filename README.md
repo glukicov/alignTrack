@@ -9,7 +9,7 @@
 4. PEDEv04-03-04/ - clean pede (most recent) checkout from DESY
 5. python_toy_tracker/ - John's python code for toy tracker (with correct geometry)
 
-### INSTALLATION ###
+###  INSTALLATION ###
 Here are the instructions to get the code (requires c++0x compiler suport for Logger) on working on gm2ucl at Fermilab: 
 
 1.  `git clone https://github.com/glukicov/alignTrack.git`
