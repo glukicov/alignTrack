@@ -281,21 +281,21 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
     // Number of LR combinations (2^N or 1 if using truth)
     int nLRCombos = pow(2,nHits);
-    if(truthLRCombo >= 0) nLRCombos = 1;
+    if(truthLRCombo) nLRCombos = 1;
 
     // Loop over all LR combinations and produce line fit for each one
     for(int LRCombo = 0; LRCombo < nLRCombos; LRCombo++){ 
 
       // Vector of nHits bits that describe whether this is L/R for each hit (0 taken as left, 1 as right)
       bitset<16> comboBits;
-      if(truthLRCombo > 0) {
+      if(truthLRCombo) {
 	comboBits = static_cast< bitset<16> >(truthLRCombo);
       } else {
 	for(int hit = 0; hit < nHits; hit++){
 	  int layer = hit;  // a terrible terrible hack for now XXX
 	  if(LRCombo & (int)pow(2,hit)) comboBits[layer] = true;
 	}
-      } // truthLRCombo > 0
+      } // truthLRCombo == TRUE
       
       	// These sums are the other parameters for the analytic results
       	double Sr(0), Sru(0), Srz(0);
@@ -387,6 +387,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
      double pVal = TMath::Prob(chi2ValMin, nHits-2);  //Two fit parameters
 
      if(pVal > pValCut) {
+        if (debugBool) {cout << "pVal=" << pVal << endl;}
 
 	// We'll want to store left/right hits so set these
 	std::bitset<16> leftHit, rightHit;
@@ -503,7 +504,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
 	            //Find the truth ID, and LR hit for a straw    
 	            float dcaUnsmeared = MisDetector.dcaUnsmeared;
-				float residualTruth = MisDetector.residualTruth;
+				      float residualTruth = MisDetector.residualTruth;
 	            int mis_ID =  MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
 	            float mis_LRSign = MisDetector.LRSign;
 	            MC.strawID.push_back(mis_ID);

@@ -143,11 +143,11 @@ int main(int argc, char* argv[]){
     Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
     stringstream msg0, msg01, msg02, msg1;
     Logger::Instance()->write(Logger::NOTE, "");
-    msg0 << Logger::blue() <<  "*****************************************************************" << Logger::def();
+    msg0 << Logger::blue() <<  "*********************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg0.str());
-    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.3) - Gleb Lukicov (UCL) - October 2017         " << Logger::def();
+    msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.5) - Gleb Lukicov (UCL) - October 2017         " << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg01.str());
-    msg1 << Logger::blue() <<  "*****************************************************************" << Logger::def();
+    msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
     Logger::Instance()->write(Logger::NOTE,msg1.str());
     Logger::Instance()->setUseColor(true); // back to default colours 
 
@@ -218,8 +218,8 @@ int main(int argc, char* argv[]){
     // Book histograms [once only] - Key quantities 
     TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution()-0.001, 
     	Tracker::instance()->getResolution()+0.001); // F=float bins, name, title, nBins, Min, Max
-    TH1F* h_res_MP2 = new TH1F("h_res_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  199, -0.2, 0.2);
-    TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.05, Tracker::instance()->getStrawRadius()+0.25);
+    TH1F* h_res_MP2 = new TH1F("h_res_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  199, -0.6, 0.6);
+    TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.1, Tracker::instance()->getStrawRadius()+0.25);
     TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
     // Track-generation-based
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
@@ -233,27 +233,27 @@ int main(int argc, char* argv[]){
     TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  149,  -(Tracker::instance()->getBeamOffset()+3), 
     	Tracker::instance()->getBeamPositionLength()+1);
     TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
-    TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.4, 0.4);
+    TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.6, 0.6);
     TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
-    TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.2, 0.2);
-    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 150, 0, 250);
+    TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.4, 0.4);
+    TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 150, 0, 2250);
     TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
     TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
     TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
-    TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  99,  -0.002, 0.002);
-    TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  39,  -0.06, 0.07);
+    TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  199,  -0.01, 0.01);
+    TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  179,  -0.3, 0.3);
     TH1F* h_meanXRecon = new TH1F("h_meanXRecon", "Mean X of recon track", 39, -2.2, 2.2);
     TH1F* h_meanZRecon = new TH1F("h_meanZRecon", "Mean Z of recon track", 39, 20, 40);
     
     // "special" histos
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
-    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18*Tracker::instance()->getModuleN(), 49, -0.16, 0.16);
+    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18*Tracker::instance()->getModuleN(), 79, -0.4, 0.6);
     h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
-    TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, 120, 150);
+    TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, 120, 800);
     h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
     TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, 120, 150);    
     h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
-    TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, -1, 1);    
+    TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, -1, 3);    
     h_Pulls_z->SetDirectory(cd_All_Hits); h_Pulls_z->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_Pulls_z->GetYaxis()->SetTitle("Measurement Pulls [cm]");
 
     //Use array of pointer of type TH1x to set axis titles and directories 
@@ -315,7 +315,7 @@ int main(int argc, char* argv[]){
 
                 h_name.str(""); h_name << "h_pull_M_" << i_module << "_" << UV;
                 h_title.str(""); h_title << "Measurement Pull for Module " << i_module << " " << UV ;
-                auto hl6 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  149, -10.0, 10.0);
+                auto hl6 = new TH1F(h_name.str().c_str(),h_title.str().c_str(),  1498, -100.0, 100.0);
                 hl6->GetXaxis()->SetTitle("[cm]"); hl6->SetDirectory(cd_UV);
 		    } // layers
 		} // views
