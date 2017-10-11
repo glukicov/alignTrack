@@ -9,7 +9,7 @@
 4. PEDEv04-03-04/ - clean pede (most recent) checkout from DESY
 5. python_toy_tracker/ - John's python code for toy tracker (with correct geometry)
 
-### INSTALLATION ###
+###  INSTALLATION ###
 Here are the instructions to get the code (requires c++0x compiler suport for Logger) on working on gm2ucl at Fermilab: 
 
 1.  `git clone https://github.com/glukicov/alignTrack.git`
@@ -17,8 +17,9 @@ to get the latest code from our repository
 2. `cd alignTrack/mpIIDESY`
 3. `make`
 to build the pede executable 
-4. test that it works by `pede -t`
-(should give a terminal output [last 2 lines]):
+4. `./getRandoms.sh 5000000`  (see description below) 
+5. test that it works by `pede -t`
+(should give a terminal output like below [last 2 lines]):
  Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
  Peak dynamic memory allocation:    0.100512 GB
  
