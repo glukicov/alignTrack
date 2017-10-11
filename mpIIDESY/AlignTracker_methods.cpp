@@ -251,7 +251,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
     // from Jame's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
     // line 392 onwards
     // inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
-    float pValCut = 0.01; // XXX set by hand for now 
+    float pValCut = -0.01; // XXX set by hand for now 
     bool truthLRCombo = useTruthLR;
 
     // Holder for tangents that we're going to calculate
@@ -260,25 +260,167 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
     // Number of hits
     int nHits = dataSize;
 
+    // These sums are parameters for the analytic results that don't change between LR combos (use U here but equally applicable to V coordinate)
+    double S(0), Sz(0), Su(0), Szz(0), Suu(0), Suz(0);
+    for(int hit = 0; hit < nHits; hit++){
+      double z = zRecon[hit];
+      double u = xRecon[hit];
+      double err2 = pow(radRecon[hit]*0.01, 2); // XXX horrible hack set error to 1% by hand 
+      if(err2 == 0){
+      	stringstream exception1;
+	 	exception1 << "StraightLineTracker::calculateUVLineFits" << "Hit at (" << z << ", " << u << ") has error of zero. I don't know how to weight it.\n";
+		Logger::Instance()->write(Logger::WARNING, exception1.str()); 
+      }
+      S   += 1./err2;
+      Sz  += z / err2;
+      Su  += u / err2;
+      Szz += z*z / err2;
+      Suu += u*u / err2;
+      Suz += u*z / err2;
+    } // hits 
+
     // Number of LR combinations (2^N or 1 if using truth)
     int nLRCombos = pow(2,nHits);
     if(truthLRCombo >= 0) nLRCombos = 1;
 
+    // Loop over all LR combinations and produce line fit for each one
+    for(int LRCombo = 0; LRCombo < nLRCombos; LRCombo++){ 
 
+      // Vector of nHits bits that describe whether this is L/R for each hit (0 taken as left, 1 as right)
+      bitset<16> comboBits;
+      if(truthLRCombo > 0) {
+	comboBits = static_cast< bitset<16> >(truthLRCombo);
+      } else {
+	for(int hit = 0; hit < nHits; hit++){
+	  int layer = hit;  // a terrible terrible hack for now XXX
+	  if(LRCombo & (int)pow(2,hit)) comboBits[layer] = true;
+	}
+      } // truthLRCombo > 0
+      
+      	// These sums are the other parameters for the analytic results
+      	double Sr(0), Sru(0), Srz(0);
+      	for(int hit = 0; hit < nHits; hit++){
+	double z = zRecon[hit];
+	double u = xRecon[hit];
+	double err2 = pow(radRecon[hit]*0.01, 2); // XXX horrible hack set error to 1% by hand 
+	double r = radRecon[hit];
+	int layer = hit; // a terrible terrible hack for now XXX
 
+	// Set r based on whether it's left (+ve r) or right (-ve r)
+	if(comboBits[layer]) r = -r;
+		Sr  += r / err2;
+		Sru += r*u / err2;
+		Srz += r*z / err2;
+    	} // hits
 
-    
-    // Final outputs of MC_launch 
-    resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle; 
-    resData.slope_recon=slope;       // slope of the best fit line
+    	// Make function of derivate of Chi-Squared w.r.t. gradient - quite an algebraically intensive calculation
+      // Range assumes that we've hit more than one layer.
+      TF1* dX2_dm = new TF1("dX2_dm", "-x*x + [0]*x*sqrt(x*x+1) + [1]*x + [2]*sqrt(x*x+1) + 1", -40, 40);
+      dX2_dm->SetParameter(0, (Sr*Su/S - Sru) / (Su*Sz/S - Suz));
+      dX2_dm->SetParameter(1, ( (Su*Su/S - Suu) - (Sz*Sz/S-Szz) ) / (Su*Sz/S - Suz) );
+      dX2_dm->SetParameter(2, (Sr*Sz/S - Srz) / (Su*Sz/S - Suz));
+
+      // Roots of this function are minima or maxima of Chi2
+      // Finding one that has positive derivative doesn't work, so fill in all roots and take one with best Chi2
+      // TF1::GetX(0) isn't too clever at finding roots - so we'll loop over the function range and give tighter range for root finding
+     
+      // Holders for intercepts & gradients that satisfy Chi2 minimisation/maximisation
+      vector<double> gradients, intercepts;
+      
+      // Set some step size for loop - needs to be small enough that we don't miss roots where function crosses and re-crosses zero within this range
+      double stepSize = 0.1; 
+      
+      // Loop over range and push back all roots to vectors
+      double prevValue = dX2_dm->Eval(dX2_dm->GetXmin());
+      for(double mVal = dX2_dm->GetXmin() + stepSize; mVal <= dX2_dm->GetXmax(); mVal += stepSize) {
+      	double newValue = dX2_dm->Eval(mVal);
+      	if(signbit(prevValue) != signbit(newValue)) {
+      	  double m_tmp = dX2_dm->GetX(0, mVal-stepSize, mVal);
+      	  gradients.push_back(m_tmp);
+      	  intercepts.push_back( (Su - m_tmp*Sz + sqrt(m_tmp*m_tmp+1)*Sr) / S );
+      	}
+      	prevValue = newValue;
+      } // for mVal loop
+      delete dX2_dm;
+
+      // Throw if we didn't find a root - something went wrong
+      if(gradients.size() == 0){
+      	stringstream exception2; 
+	 	exception2 << "StraightLineTracker::calculateUVLineFits" << "No roots found from chi-squared minimisation function. Check step size and function range.\n";
+      	Logger::Instance()->write(Logger::WARNING, exception2.str()); 
+      }
+            
+      // Holders for final gradient/intercept result - initialised to 0 here to keep compiler happy, but should never make it through logic with these
+      double gradient = 0;
+      double intercept = 0;
+      
+      // Loop over possible gradient/intercepts and calculate chi2 value - then take lowest value as best gradient/intercept
+      double chi2ValMin = std::numeric_limits<double>::infinity();
+      for (unsigned int grad = 0; grad < gradients.size(); grad++){
+
+	double chi2Val = 0;
+	for(int hit = 0; hit < nHits; hit++){
+	  
+	  double z = zRecon[hit];
+	  double u = xRecon[hit];
+	  double r = radRecon[hit];
+	  double err2 = pow(radRecon[hit]*0.01, 2); // XXX horrible hack set error to 1% by hand 
+	  int layer = hit; // XXX 
+	
+	  // Set r based on whether it's left (+ve r) or right (-ve r)
+	  if(comboBits[layer]) r = -r; 
+	  
+	  // Calculate distance of track from wire and use it for Chi2 calculation
+	  double d = (gradients.at(grad)*z + intercepts.at(grad) - u) / sqrt(gradients.at(grad)*gradients.at(grad)+1);
+	  chi2Val += pow(d - r, 2) / err2;
+	} 
+
+	// Store gradient/intercept for lowest chi2 val;
+	if(chi2Val < chi2ValMin){
+	  gradient  = gradients.at(grad);
+	  intercept = intercepts.at(grad);
+	  chi2ValMin = chi2Val;
+	}
+      } // end of grad/inter.
+      
+      // Convert to p-value and add track to vector if it passes p-value cut
+     double pVal = TMath::Prob(chi2ValMin, nHits-2);  //Two fit parameters
+
+     if(pVal > pValCut) {
+
+	// We'll want to store left/right hits so set these
+	std::bitset<16> leftHit, rightHit;
+	for(int hit = 0; hit < nHits; hit++){
+	  int layer = hit; // XXX
+	  
+	  //XXX Now that we know the slope and the gradient of the best fit line through drift circles,
+	  // we can calculate the residual for each drift circle, which is 
+	  // "DCA from that line to the straw centre" - "Radius of the drift circle"
+	  float Res = Tracker::pointToLineDCA(zRecon[hit],  xRecon[hit], gradient, intercept) - radRecon[hit];
+	  resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
+
+	  // If dca is 0, then we say it's both left and right (we set to 0 for hits close to wire)
+	  if(radRecon[hit] == 0){
+	    rightHit[layer] = true;
+	    leftHit[layer] = true;
+	  } else {
+	    if(comboBits[layer]) rightHit[layer] = true;
+	    else                 leftHit[layer] = true;
+	  }
+	}
+
+	calcUVLineFits.push_back(UVLineFit(gradient, intercept, chi2ValMin, nHits, leftHit, rightHit));
+	// Final outputs of MC_launch 
+    resData.slope_recon=gradient;       // slope of the best fit line
     resData.intercept_recon=intercept; // intercept
-    resData.meanXReconTrack=AVGy; 
-    resData.meanZReconTrack=AVGx;
+    //resData.meanXReconTrack=AVGy; 
+    //resData.meanZReconTrack=AVGx;
+      } // p-value cut 
+    } // ? LRCombo 
 
     //if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     return resData;
 }
-
 
 /**
    Simulate the passage of a randomly generated linear track through the detector, calculating properties of hits by the track on detector planes.
@@ -421,12 +563,14 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     bool useTruthLR = true;
 
 
+
     ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
+
     MC.residuals = res_Data.residuals;
     MC.slope_recon = res_Data.slope_recon;
     MC.intercept_recon = res_Data.intercept_recon;
-    MC.meanXReconTrack=res_Data.meanXReconTrack;
-    MC.meanZReconTrack=res_Data.meanZReconTrack;
+    //MC.meanXReconTrack=res_Data.meanXReconTrack;
+    //MC.meanZReconTrack=res_Data.meanZReconTrack;
 
 
     if(debugBool){

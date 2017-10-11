@@ -505,8 +505,8 @@ int main(int argc, char* argv[]){
         residuals_true_sum_2=0;
         residuals_recon_sum_2=0;
         h_hitCount->Fill(generated_MC.hit_count);
-        h_meanXRecon->Fill(generated_MC.meanXReconTrack);
-        h_meanZRecon->Fill(generated_MC.meanZReconTrack);
+        //h_meanXRecon->Fill(generated_MC.meanXReconTrack);
+        //h_meanZRecon->Fill(generated_MC.meanZReconTrack);
         pivotPoint_actual=h_meanZRecon->GetMean();
 
         //Filling Track-based plots 
