@@ -16,6 +16,9 @@
 #include <stdexcept>
 #include <cmath>
 #include <numeric>
+#include <bitset>
+#include <TF1.h> 
+#include <TMath.h> 
 
 
 /**
@@ -78,37 +81,6 @@ struct ResidualData{
 	float meanXReconTrack;
 	float meanZReconTrack;
 };
-
-// Container to hold recon track 
-struct UVLineFit {
-
-    double m;    // Slope
-    double c;    // Intercept
-    double chi2; // Chi2 for fit
-    int    ndf;  // Degrees of freedom (hits) for  this fit
-    std::bitset<layerTotalN> leftHit; // Hit on left of straw where position is layer number (0-15)
-    std::bitset<layerTotalN> rightHit; // Hit on right of straw
-  
-    UVLineFit()
-      : m(0)
-      , c(0)
-      , chi2(0)
-      , ndf(0)
-      , leftHit(0)
-      , rightHit(0)
-    {
-    }
-
-    UVLineFit(const double m, const double c, const double chi2, const int ndf, const std::bitset<layerTotalN> leftHit, const std::bitset<layerTotalN> rightHit)
-      : m(m)
-      , c(c)
-      , chi2(chi2)
-      , ndf(ndf)
-      , leftHit(leftHit)
-      , rightHit(rightHit)
-    {
-    }
-  }; // UVLineFit
 
 /**
    Singleton class to represent the detector
@@ -386,6 +358,37 @@ class Tracker {
 	}
 
 };
+
+// Container to hold recon track 
+struct UVLineFit {
+
+    double m;    // Slope
+    double c;    // Intercept
+    double chi2; // Chi2 for fit
+    int    ndf;  // Degrees of freedom (hits) for  this fit
+    std::bitset<16> leftHit; // Hit on left of straw where position is layer number (0-15)
+    std::bitset<16> rightHit; // Hit on right of straw
+  
+    UVLineFit()
+      : m(0)
+      , c(0)
+      , chi2(0)
+      , ndf(0)
+      , leftHit(0)
+      , rightHit(0)
+    {
+    }
+
+    UVLineFit(const double m, const double c, const double chi2, const int ndf, const std::bitset<16> leftHit, const std::bitset<16> rightHit)
+      : m(m)
+      , c(c)
+      , chi2(chi2)
+      , ndf(ndf)
+      , leftHit(leftHit)
+      , rightHit(rightHit)
+    {
+    }
+  }; // UVLineFit
 
 /**
  * Returns the peak (maximum so far) resident set size [RSS] (physical
