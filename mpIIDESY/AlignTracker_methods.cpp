@@ -413,12 +413,13 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 	// Final outputs of MC_launch 
     resData.slope_recon=gradient;       // slope of the best fit line
     resData.intercept_recon=intercept; // intercept
+    if (debugBool){ plot_fit <<  gradient*beamStart+intercept << " "  << gradient*beamStop+intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
     //resData.meanXReconTrack=AVGy; 
     //resData.meanZReconTrack=AVGx;
       } // p-value cut 
     } // ? LRCombo 
 
-    //if (debugBool){ plot_fit <<  slope*beamStart+y_intercept << " "  << slope*beamStop+y_intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
+    
     return resData;
 }
 
