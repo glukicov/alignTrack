@@ -265,7 +265,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
     for(int hit = 0; hit < nHits; hit++){
       double z = zRecon[hit];
       double u = xRecon[hit];
-      double err2 = pow(radRecon[hit]*0.01, 2); // XXX horrible hack set error to 1% by hand 
+      double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution  
       if(err2 == 0){
       	stringstream exception1;
 	 	exception1 << "StraightLineTracker::calculateUVLineFits" << "Hit at (" << z << ", " << u << ") has error of zero. I don't know how to weight it.\n";
@@ -302,7 +302,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
       	for(int hit = 0; hit < nHits; hit++){
 	double z = zRecon[hit];
 	double u = xRecon[hit];
-	double err2 = pow(radRecon[hit]*0.01, 2); // XXX horrible hack set error to 1% by hand 
+	double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution  
 	double r = radRecon[hit];
 	int layer = hit; // a terrible terrible hack for now XXX
 
@@ -364,7 +364,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 	  double z = zRecon[hit];
 	  double u = xRecon[hit];
 	  double r = radRecon[hit];
-	  double err2 = pow(radRecon[hit]*0.01, 2); // XXX horrible hack set error to 1% by hand 
+	  double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution  
 	  int layer = hit; // XXX 
 	
 	  // Set r based on whether it's left (+ve r) or right (-ve r)
@@ -387,7 +387,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
      double pVal = TMath::Prob(chi2ValMin, nHits-2);  //Two fit parameters
 
      if(pVal > pValCut) {
-        if (debugBool) {cout << "pVal=" << pVal << endl;}
+        if (debugBool && pVal > 0.0) {cout << "pVal=" << pVal << endl;}
 
 	// We'll want to store left/right hits so set these
 	std::bitset<16> leftHit, rightHit;

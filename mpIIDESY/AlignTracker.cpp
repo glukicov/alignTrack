@@ -224,6 +224,8 @@ int main(int argc, char* argv[]){
     // Track-generation-based
     TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
     TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
+    TH1F* h_recon_slope = new TH1F("h_recon_slope", "Reconstructed Track Slope ",  199,  -0.1, 0.1);
+    TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Reconstructed Track Intercept ",  99,  -1.5, 1.5);
     TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
     TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
     //Track/Hits-based
@@ -247,7 +249,7 @@ int main(int argc, char* argv[]){
     
     // "special" histos
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
-    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18*Tracker::instance()->getModuleN(), 79, -0.4, 0.6);
+    TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18*Tracker::instance()->getModuleN(), 79, -0.4, 0.8);
     h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
     TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18*Tracker::instance()->getModuleN(), 59, 120, 800);
     h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
@@ -258,14 +260,14 @@ int main(int argc, char* argv[]){
 
     //Use array of pointer of type TH1x to set axis titles and directories 
     TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon,
-        h_intercept, h_x0, h_x1, h_residual_true, h_hits_true, h_hits_recon, h_residual_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track, 
+        h_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_hits_true, h_hits_recon, h_residual_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track, 
         h_meanXRecon, h_meanZRecon};
     for (int i=0; i<(int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++){
         TH1F* temp = cmTitle[i];
         cmTitle[i]->SetXTitle("[cm]");
     }
     TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_true, h_chi2_true, h_residual_recon, 
-        h_chi2_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
+        h_chi2_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track, h_recon_slope, h_recon_intercept}; 
     TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, 
         h_meanXRecon, h_meanZRecon}; 
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
@@ -516,6 +518,8 @@ int main(int argc, char* argv[]){
         h_x1->Fill(generated_MC.x1);
         h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth-generated_MC.intercept_recon);
         h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth-generated_MC.slope_recon);
+        h_recon_slope->Fill(generated_MC.slope_recon);
+        h_recon_intercept->Fill(generated_MC.intercept_recon);
         
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
