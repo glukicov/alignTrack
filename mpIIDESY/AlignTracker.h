@@ -7,9 +7,9 @@
 #include "AlignTracker_methods.h" // Methods and functions for the main programme (AlignTracker.cpp)
 #include "Logger.hh"  // Logger courtesy of Tom Stuttard (UCL) - from gm2trackdaq repository
 
-//XXX Some includes maybe redundant 
+//XXX Some includes maybe redundant
 #include <iostream>
-#include <fstream> 
+#include <fstream>
 #include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
 #include <chrono>
 #include <string>
@@ -21,9 +21,9 @@
 #include <typeinfo>
 #include <stdlib.h>
 #include <stdio.h>
-#include <cmath> 
+#include <cmath>
 #include <TH1D.h>
-#include <TF1.h> 
+#include <TF1.h>
 #include <TH2D.h> //2D Histo Root class
 #include <TH3D.h> //3D Histo Root class
 #include <TFile.h> // data records for ROOT 
@@ -34,7 +34,7 @@
 #include <TGraph.h>
 #include <TCanvas.h>
 #include <TBranch.h>
-#include <TStyle.h> 
+#include <TStyle.h>
 #include <TColor.h>
 #include <TLine.h>
 #include <TApplication.h> //for Displaying Canvas
@@ -50,6 +50,6 @@
 #include <TPaveStats.h>
 
 
-int main(int argc, char* argv[]);  
+int main(int argc, char* argv[]);
 
 #endif
