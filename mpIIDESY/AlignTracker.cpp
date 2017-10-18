@@ -221,59 +221,52 @@ int main(int argc, char* argv[]) {
 	                         Tracker::instance()->getResolution() + 0.001); // F=float bins, name, title, nBins, Min, Max
 	TH1F* h_res_MP2 = new TH1F("h_res_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  199, -0.6, 0.6);
 	TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
+	TH1F* h_driftRad = new TH1F("h_driftRad", "Reconstructed Drift Radius",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
 	TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
 	TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
-	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Reconstructed Track Slope ",  199,  -0.1, 0.1);
+	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Reconstructed Track Slope ",  199,  -0.04, 0.04);
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Reconstructed Track Intercept ",  99,  -1.5, 1.5);
 	TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
 	TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
 	//Track/Hits-based
 	TH1F* h_track_true = new TH1F("h_track_true", "True track position (the x of the generated track in-line with a layer)",  49,  -3, 3);
-	TH1F* h_hits_true = new TH1F("h_hits_true", "True hit position (the x of the generated and smeared hit)",  149,  -3, 3);
-	TH1F* h_hits_recon = new TH1F("h_hits_recon", "Reconstructed x position of the hits in ideal detector",  149,  -3, 3);
 	TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  149,  -(Tracker::instance()->getBeamOffset() + 3),
 	                               Tracker::instance()->getBeamPositionLength() + 1);
+	TH1F* h_track_TR_diff = new TH1F("h_track_TR_diff", "#Delta Recon-True track",  149, -0.6, 0.6);
 	TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
 	TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.6, 0.6);
 	TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 100);
-	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 500, -0.4, 0.4);
-	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 150, 0, 2250);
+	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 199, -0.4, 0.4);
+	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 150, 0, 1000);
 	TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
-	TH1F* h_reconMinusTrue_track = new TH1F("h_reconMinusTrue_line", "Reconstructed - True X position of the lines",  149,  -0.1, 0.1);
-	TH1F* h_reconMinusTrue_hits = new TH1F("h_reconMinusTrue_hits", "Reconstructed - True X position of the hits",  169,  -0.1, 0.2);
-	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  199,  -0.01, 0.01);
+	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  199,  -0.02, 0.02);
 	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  179,  -0.6, 0.6);
-	TH1F* h_meanXRecon = new TH1F("h_meanXRecon", "Mean X of recon track", 39, -2.2, 2.2);
-	TH1F* h_meanZRecon = new TH1F("h_meanZRecon", "Mean Z of recon track", 39, 20, 40);
-
+	
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
 	TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.4, 0.8);
 	h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
-	TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 120, 800);
+	TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 120, 2000);
 	h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
 	TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 120, 150);
 	h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
-	TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, -1, 3);
+	TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Measurement Pulls per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, -1, 10);
 	h_Pulls_z->SetDirectory(cd_All_Hits); h_Pulls_z->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_Pulls_z->GetYaxis()->SetTitle("Measurement Pulls [cm]");
 
 	//Use array of pointer of type TH1x to set axis titles and directories
 	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon,
-	                   h_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_hits_true, h_hits_recon, h_residual_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track,
-	                   h_meanXRecon, h_meanZRecon
+	                   h_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_residual_recon,
+	                   h_driftRad, h_track_TR_diff
 	                  };
 	for (int i = 0; i < (int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++) {
 		TH1F* temp = cmTitle[i];
 		cmTitle[i]->SetXTitle("[cm]");
 	}
-	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_true, h_chi2_true, h_residual_recon,
-	                       h_chi2_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track, h_recon_slope, h_recon_intercept
-	                      };
-	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
-	                      h_meanXRecon, h_meanZRecon
-	                     };
+	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_residual_true, h_chi2_true, h_residual_recon,
+	                       h_chi2_recon, h_driftRad, h_track_TR_diff};
+	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, h_recon_slope, h_recon_intercept};
 	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
 	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
 		cdAllHits_F[i]->SetDirectory(cd_All_Hits);
@@ -311,33 +304,19 @@ int main(int argc, char* argv[]) {
 
 				h_name.str(""); h_name << "h_residual_recon_M_" << i_module << "_" << UV;
 				h_title.str(""); h_title << "Residuals to recon line for Module " << i_module << " " << UV ;
-				auto hl4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -0.2, 0.2);
+				auto hl4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -0.4, 0.4);
 				hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
-
-				h_name.str(""); h_name << "h_line_jitter_M_" << i_module << "_" << UV;
-				h_title.str(""); h_title << "Line Jitter for Module " << i_module << " " << UV ;
-				auto hl5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -0.03, 0.03);
-				hl5->GetXaxis()->SetTitle("[cm]"); hl5->SetDirectory(cd_UV);
 
 				h_name.str(""); h_name << "h_pull_M_" << i_module << "_" << UV;
 				h_title.str(""); h_title << "Measurement Pull for Module " << i_module << " " << UV ;
-				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  1498, -100.0, 100.0);
-				hl6->GetXaxis()->SetTitle("[cm]"); hl6->SetDirectory(cd_UV);
+				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -30.0, 30.0);
+				hl6->SetDirectory(cd_UV);
 			} // layers
 		} // views
 	} // modules
 
 	//Modules
 	for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-		h_name.str(""); h_name << "hs_hits_recon_Module" << i_module;
-		h_title.str(""); h_title << " ";
-		auto hm1 = new TH1F(h_name.str().c_str(), h_title.str().c_str(), 49, -2.5, 2.5);
-		hm1->GetXaxis()->SetTitle("[cm]"); hm1->SetDirectory(cd_Modules);
-
-		h_name.str(""); h_name << "h_reconMinusTrue_line_Module_" << i_module;
-		h_title.str(""); h_title << "Recon vs True Track in Module " << i_module;
-		auto hm2 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  49, -0.01, 0.01);
-		hm2->GetXaxis()->SetTitle("[cm]"); hm2->SetDirectory(cd_Modules);
 
 		h_name.str(""); h_name << "h_DCA_Module_" << i_module;
 		h_title.str(""); h_title << "DCA in Module " << i_module;
@@ -346,7 +325,7 @@ int main(int argc, char* argv[]) {
 
 		h_name.str(""); h_name << "h_Residuals_Module_" << i_module;
 		h_title.str(""); h_title << "Residuals in Module " << i_module;
-		auto hm4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
+		auto hm4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.4, 0.4);
 		hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
 	}
 
@@ -454,9 +433,13 @@ int main(int argc, char* argv[]) {
 			h_dca->Fill(generated_MC.mis_dca[hitCount]); // DCA
 			h_labels->Fill(l1);
 			h_id_dca ->Fill(strawID);
+			h_driftRad->Fill(generated_MC.driftRad[hitCount]);
 
 			//Track-based hit parameters
 			h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
+			h_track_true->Fill(generated_MC.x_track_true[hitCount]);
+			h_track_recon->Fill(generated_MC.x_track_recon[hitCount]);
+			h_track_TR_diff->Fill(generated_MC.x_track_recon[hitCount] - generated_MC.x_track_true[hitCount]);
 
 			//Calculating Chi2 stats:
 			float residual_gen = generated_MC.residuals_gen[hitCount];
@@ -497,7 +480,8 @@ int main(int argc, char* argv[]) {
 
 			h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
 			TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
-			h11->Fill( rMeas_mp2 / sqrt( residual_gen - Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN) ) );
+			//h11->Fill( rMeas_mp2 / sqrt( residual_gen - Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN) ) );
+			h11->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
 			hitsN++; //count hits
 		} // end of hits loop
 
@@ -513,9 +497,6 @@ int main(int argc, char* argv[]) {
 		residuals_true_sum_2 = 0;
 		residuals_recon_sum_2 = 0;
 		h_hitCount->Fill(generated_MC.hit_count);
-		//h_meanXRecon->Fill(generated_MC.meanXReconTrack);
-		//h_meanZRecon->Fill(generated_MC.meanZReconTrack);
-		pivotPoint_actual = h_meanZRecon->GetMean();
 
 		//Filling Track-based plots
 		h_slope->Fill(generated_MC.slope_truth);
@@ -526,6 +507,7 @@ int main(int argc, char* argv[]) {
 		h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
 		h_recon_slope->Fill(generated_MC.slope_recon);
 		h_recon_intercept->Fill(generated_MC.intercept_recon);
+
 
 		// XXX additional measurements from MS IF (imodel == 2) THEN
 		//IF (imodel >= 3) THEN
@@ -679,6 +661,7 @@ int main(int argc, char* argv[]) {
 	// cChi2->Print("FoM_Chi2_recon.png");
 	// cChi2->Write();
 	// TODO fix malloc problem closing the canvas in ROOT Browser
+	delete chi2pdf;
 
 	// Debug-style plots:
 	if (debugBool) {
@@ -742,8 +725,8 @@ int main(int argc, char* argv[]) {
 
 	if (Tracker::instance()->get_pivotPoint_estimated() != pivotPoint_actual) {
 		stringstream er1, er2;
-		er1 << "Geometrically Estimated Pivot Point (avg z) " << Tracker::instance()->get_pivotPoint_estimated() << " cm";
-		er2 << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm";
+		//er1 << "Geometrically Estimated Pivot Point (avg z) " << Tracker::instance()->get_pivotPoint_estimated() << " cm";
+		//er2 << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm";
 		Logger::Instance()->write(Logger::WARNING, er1.str());
 		Logger::Instance()->write(Logger::WARNING, er2.str());
 	}

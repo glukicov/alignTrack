@@ -48,7 +48,7 @@
 #include <TGraphErrors.h>
 #include <TMarker.h>
 #include <TPaveStats.h>
-
+#include <TLatex.h>
 
 int main(int argc, char* argv[]);
 

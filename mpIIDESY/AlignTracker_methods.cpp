@@ -278,6 +278,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 			double u = xRecon[i_hit];
 			double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution
 			double r = radRecon[i_hit];
+			if (debugBool && r < 0) cout << "r= " << r;
 
 			// Set r based on whether it's left (+ve r) or right (-ve r)
 			//cout << "LR_truth[layer]" << LR_truth[layer] << endl;
@@ -368,6 +369,10 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 				// "DCA from that line to the straw centre" - "Radius of the drift circle"
 				float Res = Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
 				resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
+				
+				float xTrack_recon = gradient * zRecon[i_hit] + intercept; // Recon track position in-line with the layer [from line x=ym+c]
+				resData.x_track_recon.push_back(xTrack_recon);  // Recon in-line (gen.) track position
+
 			} // hits
 
 			// Passing recon track parameters to MC
@@ -377,7 +382,6 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 			if (debugBool) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
 		} // p-value cut
 	} // LRCombinations [once for useTruthLR]
-
 
 	return resData;
 }
@@ -436,7 +440,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				// zTrack is just the distance[z_counter] - in-line with the layer
 				xTrack = xSlope * distance[z_counter] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
 				MC.x_track_true.push_back(xTrack);  // True in-line (gen.) track position
-
 
 				//float xHit=xTrack+Tracker::instance()->getResolution()*Tracker::generate_gaus();
 				//float residualTrack= xHit - xTrack;
@@ -529,6 +532,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.residuals = res_Data.residuals;
 	MC.slope_recon = res_Data.slope_recon;
 	MC.intercept_recon = res_Data.intercept_recon;
+	MC.x_track_recon =res_Data.x_track_recon; 
 	//MC.meanXReconTrack=res_Data.meanXReconTrack;
 	//MC.meanZReconTrack=res_Data.meanZReconTrack;
 
@@ -537,7 +541,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 		plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
 
 	}
-
+	MC.driftRad=radRecon;
 	return MC; // Return data from simulated track
 
 } // end of MC

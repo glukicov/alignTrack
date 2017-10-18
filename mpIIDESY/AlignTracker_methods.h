@@ -53,6 +53,7 @@ struct MCData {
 	float intercept_recon;
 	float meanXReconTrack;
 	float meanZReconTrack;
+	std::vector<float> driftRad;
 	std::vector<float> x_track_true; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
 	std::vector<float> x_track_recon; // reconstructed x position of the line
 };
@@ -80,6 +81,7 @@ struct ResidualData {
 	float intercept_recon;
 	float meanXReconTrack;
 	float meanZReconTrack;
+	std::vector<float> x_track_recon;
 };
 
 /**
