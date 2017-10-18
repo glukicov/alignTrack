@@ -204,6 +204,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 		dca_data.strawID = index;
 	}
 
+	//Now smear the DCA data
 	dca_data.dcaUnsmeared = hitDistance;
 	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * Tracker::generate_gaus();
 	dca_data.dca = hitDistanceSmeared;
@@ -241,32 +242,21 @@ ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, flo
 //Truth can be used as an optional input
 
 // z,x position of straws, radius of drift circle, # circles, plotting file for input, verbosity flag, truth flag
-
 ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, vector<float> radRecon, int dataSize, ofstream& plot_fit, bool debugBool, bool useTruthLR, vector<int> LR_truth) {
 
 	ResidualData resData; // return slope, intercept of the fitted track
 
-	//Circle Fit goes here; TODO
-	// from Jame's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
-	// line 392 onwards
-	// inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
+	// from James's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
+	// line 392 onwards, inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
 	float pValCut = -0.01; // XXX set by hand for now
-	bool truthLRCombo = useTruthLR;
-
-	// Number of hits
-	int nHits = dataSize;
+	int nHits = dataSize; // same for no hit rejection
 
 	// These sums are parameters for the analytic results that don't change between LR combos (use U here but equally applicable to V coordinate)
-	double S(0), Sz(0), Su(0), Szz(0), Suu(0), Suz(0); // also good fur custom types
-	for (int hit = 0; hit < nHits; hit++) {
-		double z = zRecon[hit];
-		double u = xRecon[hit];
-		double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution
-		if (err2 == 0) {
-			stringstream exception1;
-			exception1 << "StraightLineTracker::calculateUVLineFits" << "Hit at (" << z << ", " << u << ") has error of zero. I don't know how to weight it.\n";
-			Logger::Instance()->write(Logger::WARNING, exception1.str());
-		}
+	double S(0), Sz(0), Su(0), Szz(0), Suu(0), Suz(0); // also good declaration style fur custom types
+	for (int i_hit = 0; i_hit < nHits; i_hit++) {
+		double z = zRecon[i_hit];
+		double u = xRecon[i_hit];
+		double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution [constant]
 		S   += 1. / err2;
 		Sz  += z / err2;
 		Su  += u / err2;
@@ -277,34 +267,21 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
 	// Number of LR combinations (2^N or 1 if using truth)
 	int nLRCombos = pow(2, nHits);
-	if (truthLRCombo) nLRCombos = 1;
+	if (useTruthLR) nLRCombos = 1;
 
 	// Loop over all LR combinations and produce line fit for each one
 	for (int LRCombo = 0; LRCombo < nLRCombos; LRCombo++) {
-
-		// Vector of nHits bits that describe whether this is L/R for each hit (0 taken as left, 1 as right)
-		//bitset<16> comboBits;  XXX
-		if (truthLRCombo) {
-			//comboBits = static_cast< bitset<16> >(truthLRCombo); XXX
-		} else {
-			for (int hit = 0; hit < nHits; hit++) {
-				int layer = hit;  // a terrible terrible hack for now XXX
-				//if(LRCombo & (int)pow(2,hit)) LR_truth[layer] = +1; // TODO purpose of that line
-			}
-		} // truthLRCombo == TRUE
-
 		// These sums are the other parameters for the analytic results
 		double Sr(0), Sru(0), Srz(0);
-		for (int hit = 0; hit < nHits; hit++) {
-			double z = zRecon[hit];
-			double u = xRecon[hit];
+		for (int i_hit = 0; i_hit < nHits; i_hit++) {
+			double z = zRecon[i_hit];
+			double u = xRecon[i_hit];
 			double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution
-			double r = radRecon[hit];
-			int layer = hit; // a terrible terrible hack for now XXX
+			double r = radRecon[i_hit];
 
 			// Set r based on whether it's left (+ve r) or right (-ve r)
 			//cout << "LR_truth[layer]" << LR_truth[layer] << endl;
-			if (LR_truth[layer]) r = -r;
+			if (LR_truth[i_hit] == -1) r = -r;
 			Sr  += r / err2;
 			Sru += r * u / err2;
 			Srz += r * z / err2;
@@ -356,16 +333,15 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		for (unsigned int grad = 0; grad < gradients.size(); grad++) {
 
 			double chi2Val = 0;
-			for (int hit = 0; hit < nHits; hit++) {
+			for (int i_hit = 0; i_hit < nHits; i_hit++) {
 
-				double z = zRecon[hit];
-				double u = xRecon[hit];
-				double r = radRecon[hit];
+				double z = zRecon[i_hit];
+				double u = xRecon[i_hit];
+				double r = radRecon[i_hit];
 				double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution
-				int layer = hit; // XXX
 
 				// Set r based on whether it's left (+ve r) or right (-ve r)
-				if (LR_truth[layer] == -1) r = -r;
+				if (LR_truth[i_hit] == -1) r = -r;
 
 				// Calculate distance of track from wire and use it for Chi2 calculation
 				double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
@@ -383,36 +359,24 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		// Convert to p-value and add track to vector if it passes p-value cut
 		double pVal = TMath::Prob(chi2ValMin, nHits - 2); //Two fit parameters
 
+		if (debugBool) cout << "pVal=" << pVal << endl;
 		if (pVal > pValCut) {
-			if (debugBool && pVal > 0.0) {cout << "pVal=" << pVal << endl;}
-
 			// We'll want to store left/right hits so set these
-			for (int hit = 0; hit < nHits; hit++) {
-				int layer = hit; // XXX
-
+			for (int i_hit = 0; i_hit < nHits; i_hit++) {
 				//XXX Now that we know the slope and the gradient of the best fit line through drift circles,
 				// we can calculate the residual for each drift circle, which is
 				// "DCA from that line to the straw centre" - "Radius of the drift circle"
-				float Res = Tracker::pointToLineDCA(zRecon[hit],  xRecon[hit], gradient, intercept) - radRecon[hit];
+				float Res = Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
 				resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
-
-				// If dca is 0, then we say it's both left and right (we set to 0 for hits close to wire)
-				// XXX switch this off for now
-				//if(radRecon[hit] == 0){
-				//   rightHit[layer] = true;
-				//   leftHit[layer] = true;
-				// } else {
-				//   if(comboBits[layer]) rightHit[layer] = true;
-				//   else                 leftHit[layer] = true;
-				// }
-
 			} // hits
 
+			// Passing recon track parameters to MC
 			resData.slope_recon = gradient;     // slope of the best fit line
 			resData.intercept_recon = intercept; // intercept
-			if (debugBool) { plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl; }
+			// Python plotting
+			if (debugBool) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
 		} // p-value cut
-	} // ? LRCombo
+	} // LRCombinations [once for useTruthLR]
 
 
 	return resData;
