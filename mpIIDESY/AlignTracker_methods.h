@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <numeric>
+#include <TMath.h>
 
 
 /**
@@ -53,6 +54,8 @@ struct MCData {
 	float meanZReconTrack;
 	std::vector<float> x_track_true; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
 	std::vector<float> x_track_recon; // reconstructed x position of the line 
+	float p_value; 
+	float chi2;
 };
 
 // DCA structure - calculated for each hit
@@ -70,6 +73,8 @@ struct ResidualData{
 	float intercept_recon;
 	float meanXReconTrack;
 	float meanZReconTrack;
+	float p_value; 
+	float chi2; 
 };
 
 /**

@@ -278,6 +278,10 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
     }
 
     //calculate squared residues, their sum etc.
+    float residuals_sum_2 = 0.0;
+    float err=Tracker::instance()->getResolution(); // resolution
+    //float err=0.010; // resolution
+    //float err=0.020; // resolution
     for (int i = 0; i < dataSize; i++) {
         //current (y_i - a0 - a1 * x_i)^2
         Yres = pow((ReconPoints[i] - y_intercept - (slope * z_distance[i])), 2);
@@ -292,6 +296,7 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
 
         //current residue squared (y_i - AVGy)^2
         res = pow(ReconPoints[i] - AVGy, 2);
+        residuals_sum_2+=pow(xRes/err,2);
 
         //sum of squared residues
         SUMres += res;
@@ -315,7 +320,13 @@ ResidualData Tracker::GetResiduals(vector<float> ReconPoints,  vector<float> z_d
         printf("Correlation coefficient(r) = %0.5E\t\n", sqrt(Rsqr));
     
     }
-    
+   	
+   	float chi2Val = residuals_sum_2;
+   	float pVal = TMath::Prob(chi2Val, dataSize - 2); //Two fit parameters
+	resData.p_value = pVal;
+	resData.chi2 = chi2Val; 
+
+
     resData.slope_recon=slope;
     resData.intercept_recon=y_intercept;
     resData.meanXReconTrack=AVGy;
@@ -453,6 +464,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
     MC.intercept_recon = res_Data.intercept_recon;
     MC.meanXReconTrack=res_Data.meanXReconTrack;
     MC.meanZReconTrack=res_Data.meanZReconTrack;
+    MC.p_value = res_Data.p_value; 
+	MC.chi2 = res_Data.chi2; 
     
     if(debugBool){
                         plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " ";

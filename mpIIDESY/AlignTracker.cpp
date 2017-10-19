@@ -244,6 +244,8 @@ int main(int argc, char* argv[]){
     TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  39,  -0.06, 0.07);
     TH1F* h_meanXRecon = new TH1F("h_meanXRecon", "Mean X of recon track", 39, -2.2, 2.2);
     TH1F* h_meanZRecon = new TH1F("h_meanZRecon", "Mean Z of recon track", 39, 20, 40);
+    TH1F* h_pval = new TH1F("p_value", "p-value", 39, -0.1, 1.1);
+	TH1F* h_chi2 = new TH1F("h_chi2", "Calculated Chi2 in straight line fit", 101, -0.1, 60.1);
     
     // "special" histos
     THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
@@ -266,8 +268,7 @@ int main(int argc, char* argv[]){
     }
     TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_hits_true, h_hits_recon, h_residual_true, h_chi2_true, h_residual_recon, 
         h_chi2_recon, h_reconMinusTrue_hits, h_reconMinusTrue_track}; 
-    TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, 
-        h_meanXRecon, h_meanZRecon}; 
+   TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, h_pval, h_chi2};
     TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
     for (int i=0; i<(int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++){
         cdAllHits_F[i]->SetDirectory(cd_All_Hits);
@@ -535,6 +536,8 @@ int main(int argc, char* argv[]){
         h_x1->Fill(generated_MC.x1);
         h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth-generated_MC.intercept_recon);
         h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth-generated_MC.slope_recon);
+        h_pval->Fill(generated_MC.p_value);
+		h_chi2->Fill(generated_MC.chi2);
         
         // XXX additional measurements from MS IF (imodel == 2) THEN
         //IF (imodel >= 3) THEN
