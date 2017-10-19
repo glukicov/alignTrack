@@ -278,10 +278,8 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 			double u = xRecon[i_hit];
 			double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution
 			double r = radRecon[i_hit];
-			if (debugBool && r < 0) cout << "r= " << r;
 
 			// Set r based on whether it's left (+ve r) or right (-ve r)
-			//cout << "LR_truth[layer]" << LR_truth[layer] << endl;
 			if (LR_truth[i_hit] == -1) r = -r;
 			Sr  += r / err2;
 			Sru += r * u / err2;
@@ -313,8 +311,10 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 				double m_tmp = dX2_dm->GetX(0, mVal - stepSize, mVal);
 				gradients.push_back(m_tmp);
 				intercepts.push_back( (Su - m_tmp * Sz + sqrt(m_tmp * m_tmp + 1)*Sr) / S );
+				if (debugBool){cout << "m_tmp= " << m_tmp << " mVal= " << mVal << " prevValue= " << prevValue << " newValue= " << newValue << endl;}
 			}
 			prevValue = newValue;
+			if (debugBool){cout << "newValue= " << newValue << endl;}
 		} // for mVal loop
 		delete dX2_dm;
 
@@ -345,12 +345,14 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 				if (LR_truth[i_hit] == -1) r = -r;
 
 				// Calculate distance of track from wire and use it for Chi2 calculation
-				double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
+				//double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
+				double d = Tracker::pointToLineDCA(z, u, gradient, intercept); 
 				chi2Val += pow(d - r, 2) / err2;
 
-				// if (debugBool) {cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
-				// 					 << " z= " << z << " u= "  << u <<  " r= " << r << " err2= " << err2 
-				// 					 << " d= " << d << " intercepts.at(grad)= " << intercepts.at(grad) << endl;}
+				if (debugBool) {cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
+									 << " z= " << z << " u= "  << u <<  " r= " << r << " LR_truth= " << LR_truth[i_hit] << " err2= " << err2 
+									 << " d= " << d << " intercepts.at(grad)= " << intercepts.at(grad) 
+									 << " gradients.at(grad)= " << gradients.at(grad) << endl;}
 
 			} // hits
 
@@ -367,7 +369,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		resData.p_value = pVal;
 		resData.chi2_circle = chi2ValMin; 
 		
-		if (debugBool) {cout << "pVal=" << pVal << " chi2ValMin= " << chi2ValMin << endl;}
+		if (debugBool) {cout << "pVal=" << pVal << " chi2ValMin= " << chi2ValMin << endl << endl;}
 		if (pVal > pValCut) {
 			// We'll want to store left/right hits so set these
 			for (int i_hit = 0; i_hit < nHits; i_hit++) {

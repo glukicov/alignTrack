@@ -648,6 +648,8 @@ int main(int argc, char* argv[]) {
 
 	cResMean->Write();
 
+	
+
 	// TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
 	// gStyle->SetOptStat("ourRmMe");
 	// gStyle->SetOptFit(1111);
@@ -666,10 +668,10 @@ int main(int argc, char* argv[]) {
 	// cChi2->Print("FoM_Chi2_recon.png");
 	// cChi2->Write();
 	// TODO fix malloc problem closing the canvas in ROOT Browser
-	delete chi2pdf;
+	//delete chi2pdf;
 
 	// Debug-style plots:
-	if (debugBool) {
+	if (1==-1) {
 		//Residuals per module
 		TCanvas *cResAllM = new TCanvas("cResAllM", "cResAllM", 700, 900);
 		TText T; T.SetTextFont(42); T.SetTextAlign(21);
