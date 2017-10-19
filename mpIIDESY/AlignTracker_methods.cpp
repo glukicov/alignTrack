@@ -248,7 +248,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
 	// from James's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
 	// line 392 onwards, inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
-	float pValCut = -0.01; // XXX set by hand for now
+	double pValCut = -0.01; // XXX set by hand for now
 	int nHits = dataSize; // same for no hit rejection
 
 	// These sums are parameters for the analytic results that don't change between LR combos (use U here but equally applicable to V coordinate)
@@ -309,7 +309,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		double prevValue = dX2_dm->Eval(dX2_dm->GetXmin());
 		for (double mVal = dX2_dm->GetXmin() + stepSize; mVal <= dX2_dm->GetXmax(); mVal += stepSize) {
 			double newValue = dX2_dm->Eval(mVal);
-			if (signbit(prevValue) != signbit(newValue)) {
+			if (signbit(prevValue) != signbit(newValue)) {  // if sign doesn't match 
 				double m_tmp = dX2_dm->GetX(0, mVal - stepSize, mVal);
 				gradients.push_back(m_tmp);
 				intercepts.push_back( (Su - m_tmp * Sz + sqrt(m_tmp * m_tmp + 1)*Sr) / S );
@@ -347,7 +347,12 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 				// Calculate distance of track from wire and use it for Chi2 calculation
 				double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
 				chi2Val += pow(d - r, 2) / err2;
-			}
+
+				// if (debugBool) {cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
+				// 					 << " z= " << z << " u= "  << u <<  " r= " << r << " err2= " << err2 
+				// 					 << " d= " << d << " intercepts.at(grad)= " << intercepts.at(grad) << endl;}
+
+			} // hits
 
 			// Store gradient/intercept for lowest chi2 val;
 			if (chi2Val < chi2ValMin) {
@@ -359,8 +364,10 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
 		// Convert to p-value and add track to vector if it passes p-value cut
 		double pVal = TMath::Prob(chi2ValMin, nHits - 2); //Two fit parameters
-
-		if (debugBool) cout << "pVal=" << pVal << endl;
+		resData.p_value = pVal;
+		resData.chi2_circle = chi2ValMin; 
+		
+		if (debugBool) {cout << "pVal=" << pVal << " chi2ValMin= " << chi2ValMin << endl;}
 		if (pVal > pValCut) {
 			// We'll want to store left/right hits so set these
 			for (int i_hit = 0; i_hit < nHits; i_hit++) {
@@ -532,7 +539,9 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.residuals = res_Data.residuals;
 	MC.slope_recon = res_Data.slope_recon;
 	MC.intercept_recon = res_Data.intercept_recon;
-	MC.x_track_recon =res_Data.x_track_recon; 
+	MC.x_track_recon =res_Data.x_track_recon;
+	MC.p_value = res_Data.p_value; 
+	MC.chi2_circle = res_Data.chi2_circle; 
 	//MC.meanXReconTrack=res_Data.meanXReconTrack;
 	//MC.meanZReconTrack=res_Data.meanZReconTrack;
 

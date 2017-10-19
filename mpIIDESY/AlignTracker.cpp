@@ -243,7 +243,9 @@ int main(int argc, char* argv[]) {
 	TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
 	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  199,  -0.02, 0.02);
 	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  179,  -0.6, 0.6);
-	
+	TH1F* h_pval = new TH1F("p_value", "p-value", 149, -0.1, 1.1);
+	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "Calculated Chi2 in circle-fit", 149, -0.1, 1000.0);
+
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
 	TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.4, 0.8);
@@ -266,7 +268,8 @@ int main(int argc, char* argv[]) {
 	}
 	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_residual_true, h_chi2_true, h_residual_recon,
 	                       h_chi2_recon, h_driftRad, h_track_TR_diff};
-	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, h_recon_slope, h_recon_intercept};
+	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, 
+		h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle};
 	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
 	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
 		cdAllHits_F[i]->SetDirectory(cd_All_Hits);
@@ -507,6 +510,8 @@ int main(int argc, char* argv[]) {
 		h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
 		h_recon_slope->Fill(generated_MC.slope_recon);
 		h_recon_intercept->Fill(generated_MC.intercept_recon);
+		h_pval->Fill(generated_MC.p_value);
+		h_chi2_circle->Fill(generated_MC.chi2_circle);
 
 
 		// XXX additional measurements from MS IF (imodel == 2) THEN

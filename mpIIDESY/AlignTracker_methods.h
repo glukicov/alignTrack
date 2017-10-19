@@ -56,6 +56,8 @@ struct MCData {
 	std::vector<float> driftRad;
 	std::vector<float> x_track_true; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
 	std::vector<float> x_track_recon; // reconstructed x position of the line
+	float p_value;
+	float chi2_circle;
 };
 
 // DCA structure - calculated for each hit
@@ -82,6 +84,8 @@ struct ResidualData {
 	float meanXReconTrack;
 	float meanZReconTrack;
 	std::vector<float> x_track_recon;
+	float p_value;
+	float chi2_circle;
 };
 
 /**
