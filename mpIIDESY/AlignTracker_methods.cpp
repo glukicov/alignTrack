@@ -210,7 +210,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 	dca_data.dca = hitDistanceSmeared;
 	float residualTruth = hitDistanceSmeared - hitDistance;
 	dca_data.residualTruth = residualTruth;
-	dca_data.LRSign = LR;
+	dca_data.LRSign = -LR;
 
 	if (debugBool && StrongDebugBool && 1 == 0) {
 		cout << "Selected DCA as the correct hit distance is " << hitDistance << ". Straw ID: " << dca_data.strawID;
@@ -345,8 +345,8 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 				if (LR_truth[i_hit] == -1) r = -r;
 
 				// Calculate distance of track from wire and use it for Chi2 calculation
-				//double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
-				double d = Tracker::pointToLineDCA(z, u, gradient, intercept); 
+				double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
+				//double d = Tracker::pointToLineDCA(z, u, gradient, intercept); 
 				chi2Val += pow(d - r, 2) / err2;
 
 				if (debugBool) {cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
