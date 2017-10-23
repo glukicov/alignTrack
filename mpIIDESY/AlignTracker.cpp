@@ -220,36 +220,36 @@ int main(int argc, char* argv[]) {
 	TH1F* h_sigma = new TH1F("h_sigma", "MP2 Input: Detector Resolution (sigma) [cm]",  49,  Tracker::instance()->getResolution() - 0.001,
 	                         Tracker::instance()->getResolution() + 0.001); // F=float bins, name, title, nBins, Min, Max
 	TH1F* h_res_MP2 = new TH1F("h_res_MP2", "MP2 Input: Residuals from fitted line to ideal geometry [cm]",  199, -0.06, 0.06);
-	TH1F* h_dca = new TH1F("h_dca", "DCA (to misaligned detector from generated track)",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
-	TH1F* h_driftRad = new TH1F("h_driftRad", "Reconstructed Drift Radius",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
-	TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hit straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+	TH1F* h_dca = new TH1F("h_dca", "DCA",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
+	TH1I* h_id_dca = new TH1I("h_id_dca", "ID for hits in straws", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
-	TH1F* h_slope = new TH1F("h_slope", "Slope ",  80,  -0.05, 0.05);
-	TH1F* h_intercept = new TH1F("h_intercept", "Intercept ",  99,  -3, 3);
-	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Reconstructed Track Slope ", 80,  -0.05, 0.05);
-	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Reconstructed Track Intercept ",  99,  -3, 3);
-	TH1F* h_x0 = new TH1F("h_x0", "Generated x0 of the track",  99,  -3, 3);
-	TH1F* h_x1 = new TH1F("h_x1", "Generated x1 of the track",  99,  -3, 3);
+	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  80,  -0.05, 0.05);
+	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  99,  -3, 3);
+	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Reconstructed", 80,  -0.05, 0.05);
+	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Reconstructed",  99,  -3, 3);
+	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0} of the track",  99,  -3, 3);
+	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1} of the track",  99,  -3, 3);
 	//Track/Hits-based
-	TH1F* h_track_true = new TH1F("h_track_true", "True track position (the x of the generated track in-line with a layer)",  49,  -3, 3);
-	TH1F* h_track_recon = new TH1F("h_track_recon", "Reconstructed x of the fitted track (to ideal geometry)",  49,  -3, 3);
-	TH1F* h_track_TR_diff = new TH1F("h_track_TR_diff", "#Delta Recon-True track",  149, -0.03, 0.03);
+	TH1F* h_track_true = new TH1F("h_track_true", "All track points in line with a layer: Truth",  49,  -3, 3);
+	TH1F* h_track_recon = new TH1F("h_track_recon", "All track points in line with a layer: Reconstructed",  49,  -3, 3);
+	TH1F* h_track_TR_diff = new TH1F("h_track_TR_diff", "#Delta (Recon-True) track points in line with a layer",  149, -0.03, 0.03);
 	TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
-	TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals for generated tracks", 500, -0.06, 0.06);
-	TH1F* h_chi2_true = new TH1F("h_chi2_true", "Chi2 for generated tracks", 40, -1, 50);
-	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals for reconstructed tracks", 199, -0.06, 0.06);
-	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Chi2 for Reconstructed Tracks", 150, 0, 50);
+	TH1F* h_residual_true = new TH1F("h_residual_true", "Truth Residuals", 500, -0.06, 0.06);
+	TH1F* h_chi2_true = new TH1F("h_chi2_true", "Truth #Chi^{2}", 40, -1, 50);
+	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Reconstructed residuals", 199, -0.2, 0.2);
+	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "Reconstructed #Chi^{2}", 150, 0, 200);
 	TH1I* h_hitCount = new TH1I("h_hitCount", "Total Hit count per track", 32 , 0, 32);
-	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "Reconstructed - True Track Slope",  199,  -0.001, 0.001);
-	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", "Reconstructed - True Track Intercept",  179,  -0.04, 0.04);
-	TH1F* h_pval = new TH1F("p_value", "p-value", 48, 0, 1);
-	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "Calculated Chi2 in circle-fit", 150, -0.1, 150);
+	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "#Delta (Recon - True) Slope",  199,  -0.002, 0.002);
+	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Intercept",  179,  -0.06, 0.06);
+	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
+	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "Calculated #Chi^{2} in the circle-fit", 150, -0.1, 200);
+	TH1F* h_driftRad = new TH1F("h_driftRad", "Reconstructed Drift Radius: as used in the circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
-	TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.1, 0.1);
+	TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z (beam path)", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.1, 0.1);
 	h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
-	TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 80, 200);
+	TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 80, 400);
 	h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
 	TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD per layer", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 120, 150);
 	h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
@@ -305,13 +305,13 @@ int main(int argc, char* argv[]) {
 				hl3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 "); hl3->SetDirectory(cd_UV);
 
 				h_name.str(""); h_name << "h_residual_recon_M_" << i_module << "_" << UV;
-				h_title.str(""); h_title << "Residuals to recon line for Module " << i_module << " " << UV ;
-				auto hl4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -0.06, 0.06);
+				h_title.str(""); h_title << "Residuals to Recon line for Module " << i_module << " " << UV ;
+				auto hl4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -0.2, 0.2);
 				hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
 
 				h_name.str(""); h_name << "h_pull_M_" << i_module << "_" << UV;
 				h_title.str(""); h_title << "Measurement Pull for Module " << i_module << " " << UV ;
-				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -5.0, 5.0);
+				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
 				hl6->SetDirectory(cd_UV);
 			} // layers
 		} // views
@@ -326,8 +326,8 @@ int main(int argc, char* argv[]) {
 		hm3->GetXaxis()->SetTitle("[cm]"); hm3->SetDirectory(cd_Modules);
 
 		h_name.str(""); h_name << "h_Residuals_Module_" << i_module;
-		h_title.str(""); h_title << "Residuals in Module " << i_module;
-		auto hm4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.06, 0.06);
+		h_title.str(""); h_title << "Residuals to Recon line in Module " << i_module;
+		auto hm4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
 		hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
 	}
 
