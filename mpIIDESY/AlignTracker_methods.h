@@ -110,7 +110,7 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.0, -0.01, -0.02, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] = {0.0, -0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 
@@ -122,7 +122,7 @@ private:
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
 	static const int layerTotalN = layerN * viewN * moduleN; // total number of layers
 	static constexpr float startingZDistanceStraw0 = 5.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
-	static constexpr float startingXDistanceStraw0 = -2.0; // distance of the very first layer [the first straw] in x // [cm]
+	static constexpr float startingXDistanceStraw0 = 2.0; // distance of the very first layer [the first straw] in x // [cm]
 	static constexpr float strawSpacing = 0.606;  // x distance between straws in a layer
 	static constexpr float layerSpacing = 0.515; // z distance between layers in a view
 	static constexpr float viewSpacing = 2.020; // z distance between views in a modules

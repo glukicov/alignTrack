@@ -108,47 +108,54 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 
 	DCAData dca_data;
 
-	bool StrongDebugBool = false; //quick hack XXX for even more debug output
+	bool StrongDebugBool = true; //quick hack XXX for even more debug output
 
 	//Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
+	// xTrack is the point of the line "in-line with the layers"
 
 	float lower, upper, hitDistance;
 	int lastID = strawN - 1; // the ID of the very last straw in the vector
-	float comparator; // to find the ID
-	int LR; //L or R hit looking downstream
-
-	//Iterator to find two straws between the hit:
+	int LR, index; //L= +1 or R=-1 hit looking downstream
 	vector<float>::iterator it;
-	it = lower_bound(xLayer.begin(), xLayer.end(), xTrack);
-	// no smaller value  than val in vector
-	if (it == xLayer.begin()) {
-		upper = *it;
-		if (debugBool && StrongDebugBool) { cout << " upper = " << upper << endl;}
-		// hit distance is the dca from the L of the straw 0
-		hitDistance = pointToLineDCA(zStraw, upper, xSlpoe, xIntercept);
-		comparator = upper;
-		LR = +1;
-		if (debugBool && StrongDebugBool && (hitDistance > strawSpacing / 2)) {
+
+	// If the very first straw [straw closest to the beam path], this straw has the highest x coordinate value in the distance-ordered descending straw-vector
+	// compares less than the hit, the hit must be from the L (+1)
+	if (xTrack > xLayer[0]) {
+		// hit distance is then the dca from the L of the straw with highest x coordinate
+		hitDistance = pointToLineDCA(zStraw, xLayer[0], xSlpoe, xIntercept);
+		LR = +1; // assign truth L
+		index = 0;
+		if (debugBool && StrongDebugBool) {
 			cout << "Track in line at " << xTrack << " The first straw is closest at " << upper <<  "; with DCA " << hitDistance << endl;
 		}
 	}
-	// no bigger value than val in vector
-	else if (it == xLayer.end()) {
-		lower = *(it - 1);
-		if (debugBool && StrongDebugBool) { cout << "lower = " << lower << endl;}
+	// Another scenario, is that the hit is smaller than the x coordinate of the last straw
+	else if (xTrack < xLayer[lastID]) {
 		// hit distance is the dca from the R of the last straw
-		hitDistance = pointToLineDCA(zStraw, lower, xSlpoe, xIntercept); // hit distance is the dca from the L of the straw 0
-		comparator = lower;
+		hitDistance = pointToLineDCA(zStraw, xLayer[lastID], xSlpoe, xIntercept);
 		LR = -1;
-		if (debugBool && StrongDebugBool && (hitDistance > strawSpacing / 2)) {
+		index = lastID;
+		if (debugBool && StrongDebugBool) {
 			cout << "Track in line at " << xTrack << " The last straw is closest at " << lower <<  "; with DCA " << hitDistance << endl;
 		}
 	}
+	// All other cases will have a hit between two straws
+	// to check which DCA is actually shorter we need the calculate and compare
+	// the two [the straw-position vector iterator only checks the vertical distance] and assign LRma
 	else {
-		lower = *(it - 1);
-		upper = *it;
-		if (debugBool && StrongDebugBool) { cout << "lower = " << lower << " upper = " << upper << endl;}
-
+		//we have already taken care of the end-straws, so now just need to look in between
+		for (int i_counter = 0; i_counter < xLayer.size(); i_counter++) {
+			if(xLayer[i_counter]<xTrack){
+		 		lower=xLayer[i_counter];
+		 		upper=xLayer[i_counter-1];
+		 		if (debugBool) cout << "lower= " << lower << " upper " << upper << endl;
+		 		//as soon as we find a single straw that is at lower x than the hit,
+		 		// our search is over
+		 		goto jmp;
+			}	
+		}
+		jmp:
+		
 		float hit_distance_low = pointToLineDCA(zStraw, lower, xSlpoe, xIntercept);
 		float hit_distance_up = pointToLineDCA(zStraw, upper, xSlpoe, xIntercept);
 
@@ -157,18 +164,21 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 			incMultipleHitsLayer();
 		}
 
-		// if DCA in higher straw ID is bigger, select straw ID with smaller DCA
+		// if DCA in higher straw (lower ID) is bigger, select straw ID with smaller DCA
 		if (hit_distance_up > hit_distance_low) {
 			hitDistance = hit_distance_low;
-			comparator = lower;
-			LR = -1;
+			LR = +1;
+			// unique and ordered straw positions in vector guarantee correct id
+			it = std::find(xLayer.begin(), xLayer.end(), lower);
+			index = std::distance(xLayer.begin(), it);
 		}
 		if (hit_distance_up < hit_distance_low) {
 			hitDistance = hit_distance_up;
-			comparator = upper;
-			LR = +1;
+			LR = -1;
+			it = std::find(xLayer.begin(), xLayer.end(), upper);
+			index = std::distance(xLayer.begin(), it);
 		}
-
+		//if DCAs are equal, drop the dice... XXX won't be relevant with hit rejection
 		if (hit_distance_up == hit_distance_low) {
 			cout << "BIAS" << endl;
 			float random = Tracker::generate_uniform();
@@ -183,26 +193,10 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 			incAmbiguityHit();
 			//exit(0);
 		}
-		if (debugBool && StrongDebugBool && 1 == 0) {
+		if (debugBool && StrongDebugBool) {
 			cout <<  "Track in Line " << xTrack << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs " << hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl;
 		}
 	} // end of iterator to find straws between hits
-
-	//Iterator to find straw ID [implemented separately, as now we look up once only]:
-	int index;
-	it = std::find(xLayer.begin(), xLayer.end(), comparator);
-	if (it == xLayer.end()) {
-		cout << "Error: straw x not found in vector!" << endl;
-		exit(0);
-	}
-	else {
-		index = std::distance(xLayer.begin(), it);
-		if (index > lastID || index < 0) {
-			cout << "Error: ID is out of range" << endl;
-			exit(0);
-		}
-		dca_data.strawID = index;
-	}
 
 	//Now smear the DCA data
 	dca_data.dcaUnsmeared = hitDistance;
@@ -210,9 +204,10 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 	dca_data.dca = hitDistanceSmeared;
 	float residualTruth = hitDistanceSmeared - hitDistance;
 	dca_data.residualTruth = residualTruth;
-	dca_data.LRSign = -LR;
+	dca_data.LRSign = LR;
+	dca_data.strawID = index;
 
-	if (debugBool && StrongDebugBool && 1 == 0) {
+	if (debugBool && StrongDebugBool) {
 		cout << "Selected DCA as the correct hit distance is " << hitDistance << ". Straw ID: " << dca_data.strawID;
 		if (LR  < 0) {cout << ". The straw was hit from the right" << endl;}
 		if (LR > 0) {cout << ". The straw was hit from the left" << endl;}
@@ -225,7 +220,6 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, float z_distance) {
 
 	ReconData recon_data;
-
 	bool StrongDebugBool = false; //quick hack XXX for even more debug output
 	float x_IdealStraw = xLayer[det_ID];
 	float recon_dca = det_dca; //adds dca to the assumed straw x coordinate
@@ -245,6 +239,8 @@ ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, flo
 ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, vector<float> radRecon, int dataSize, ofstream& plot_fit, bool debugBool, bool useTruthLR, vector<int> LR_truth) {
 
 	ResidualData resData; // return slope, intercept of the fitted track
+
+	bool StrongDebugBool = false; //quick hack XXX for even more debug output
 
 	// from James's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
 	// line 392 onwards, inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
@@ -307,14 +303,14 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		double prevValue = dX2_dm->Eval(dX2_dm->GetXmin());
 		for (double mVal = dX2_dm->GetXmin() + stepSize; mVal <= dX2_dm->GetXmax(); mVal += stepSize) {
 			double newValue = dX2_dm->Eval(mVal);
-			if (signbit(prevValue) != signbit(newValue)) {  // if sign doesn't match 
+			if (signbit(prevValue) != signbit(newValue)) {  // if sign doesn't match
 				double m_tmp = dX2_dm->GetX(0, mVal - stepSize, mVal);
 				gradients.push_back(m_tmp);
 				intercepts.push_back( (Su - m_tmp * Sz + sqrt(m_tmp * m_tmp + 1)*Sr) / S );
-				if (debugBool){cout << "m_tmp= " << m_tmp << " mVal= " << mVal << " prevValue= " << prevValue << " newValue= " << newValue << endl;}
+				if (debugBool && StrongDebugBool) {cout << "m_tmp= " << m_tmp << " mVal= " << mVal << " prevValue= " << prevValue << " newValue= " << newValue << endl;}
 			}
 			prevValue = newValue;
-			if (debugBool){cout << "newValue= " << newValue << endl;}
+			if (debugBool && StrongDebugBool) {cout << "newValue= " << newValue << endl;}
 		} // for mVal loop
 		delete dX2_dm;
 
@@ -346,13 +342,15 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
 				// Calculate distance of track from wire and use it for Chi2 calculation
 				double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
-				//double d = Tracker::pointToLineDCA(z, u, gradient, intercept); 
+				//double d = Tracker::pointToLineDCA(z, u, gradient, intercept);
 				chi2Val += pow(d - r, 2) / err2;
 
-				if (debugBool) {cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
-									 << " z= " << z << " u= "  << u <<  " r= " << r << " LR_truth= " << LR_truth[i_hit] << " err2= " << err2 
-									 << " d= " << d << " intercepts.at(grad)= " << intercepts.at(grad) 
-									 << " gradients.at(grad)= " << gradients.at(grad) << endl;}
+				if (debugBool && StrongDebugBool) {
+					cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
+					     << " z= " << z << " u= "  << u <<  " r= " << r << " LR_truth= " << LR_truth[i_hit] << " err2= " << err2
+					     << " d= " << d << " intercepts.at(grad)= " << intercepts.at(grad)
+					     << " gradients.at(grad)= " << gradients.at(grad) << endl;
+				}
 
 			} // hits
 
@@ -367,18 +365,18 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		// Convert to p-value and add track to vector if it passes p-value cut
 		double pVal = TMath::Prob(chi2ValMin, nHits - 2); //Two fit parameters
 		resData.p_value = pVal;
-		resData.chi2_circle = chi2ValMin; 
-		
-		if (debugBool) {cout << "pVal=" << pVal << " chi2ValMin= " << chi2ValMin << endl << endl;}
+		resData.chi2_circle = chi2ValMin;
+
+		if (debugBool && StrongDebugBool) {cout << "pVal=" << pVal << " chi2ValMin= " << chi2ValMin << endl << endl;}
 		if (pVal > pValCut) {
 			// We'll want to store left/right hits so set these
 			for (int i_hit = 0; i_hit < nHits; i_hit++) {
 				//XXX Now that we know the slope and the gradient of the best fit line through drift circles,
 				// we can calculate the residual for each drift circle, which is
 				// "DCA from that line to the straw centre" - "Radius of the drift circle"
-				float Res = Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
+				float Res = radRecon[i_hit] - Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept);
 				resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
-				
+
 				float xTrack_recon = gradient * zRecon[i_hit] + intercept; // Recon track position in-line with the layer [from line x=ym+c]
 				resData.x_track_recon.push_back(xTrack_recon);  // Recon in-line (gen.) track position
 
@@ -541,9 +539,9 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.residuals = res_Data.residuals;
 	MC.slope_recon = res_Data.slope_recon;
 	MC.intercept_recon = res_Data.intercept_recon;
-	MC.x_track_recon =res_Data.x_track_recon;
-	MC.p_value = res_Data.p_value; 
-	MC.chi2_circle = res_Data.chi2_circle; 
+	MC.x_track_recon = res_Data.x_track_recon;
+	MC.p_value = res_Data.p_value;
+	MC.chi2_circle = res_Data.chi2_circle;
 	//MC.meanXReconTrack=res_Data.meanXReconTrack;
 	//MC.meanZReconTrack=res_Data.meanZReconTrack;
 
@@ -552,7 +550,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 		plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
 
 	}
-	MC.driftRad=radRecon;
+	MC.driftRad = radRecon;
 	return MC; // Return data from simulated track
 
 } // end of MC
@@ -588,9 +586,9 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 				mod_lyr_strawIdealPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
 					mod_lyr_strawIdealPosition[i_module][i_view][i_layer].push_back(dX);
-					dX = strawSpacing + dX; //while we are in the same layer: increment straw spacing in x
+					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
-				if (i_view == 0) { dX = layerDisplacement + startingXDistanceStraw0; } //set displacement in x for the next layer in the view
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
 				if (i_view == 1) { dX = startingXDistanceStraw0; } //set displacement in x for the next layer in the view
 			}//end of Layers loop
 		}// end of View loop
@@ -639,9 +637,9 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 				mod_lyr_strawMisPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
 					mod_lyr_strawMisPosition[i_module][i_view][i_layer].push_back(dX);
-					dX = strawSpacing + dX; //while we are in the same layer: increment straw spacing in x
+					dX =  dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
-				if (i_view == 0) { dX = layerDisplacement + startingXDistanceStraw0 + (misDispX); } //set displacement in x for the next layer in the view
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement + (misDispX); } //set displacement in x for the next layer in the view
 				if (i_view == 1) { dX = startingXDistanceStraw0 + (misDispX); } //set displacement in x for the next layer in the view
 			}//end of Layers loop
 		}// end of View loop
@@ -702,6 +700,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 
 	//--- Calculations for Each Layer -- //
 	// XXX Verbose calculation via separate loops on purpose - to demonstrate the alignment methods
+	// For straight-line case only.
 
 	// constants
 	float N = float(layerTotalN); // total N of layers

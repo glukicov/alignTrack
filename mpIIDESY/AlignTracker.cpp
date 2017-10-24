@@ -99,6 +99,7 @@ int main(int argc, char* argv[]) {
 	float residuals_recon_sum_2 = 0.0; // squared sum of the recon. residuals (from measurements)
 	float pivotPoint_actual = 0.0; // central z point from measurements
 	float Chi2_recon_actual = 0.0; // Reconstructed Chi2 (from measurements)
+	int negDCA=0; // counting negatively smeared DCAs
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
 	//gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 
@@ -159,7 +160,7 @@ int main(int argc, char* argv[]) {
 	cout << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
 	cout << "No Hit rejection:" << endl;
 	// DCA > StrawSpacing [" << Tracker::instance()->getStrawSpacing() << " cm]." << endl;
-	cout << "Parallel Tracks: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
+	cout << "Straight Tracks with Circle Fit: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
 	cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
 
 
@@ -329,6 +330,11 @@ int main(int argc, char* argv[]) {
 		h_title.str(""); h_title << "Residuals to Recon line in Module " << i_module;
 		auto hm4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
 		hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
+
+		h_name.str(""); h_name << "h_pull_M_" << i_module;
+		h_title.str(""); h_title << "Measurement Pull for Module " << i_module;
+		auto hm5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
+		hm5->SetDirectory(cd_Modules);
 	}
 
 	// Modules and Straws ["combing 4 layers into 1"]
@@ -436,6 +442,7 @@ int main(int argc, char* argv[]) {
 			h_labels->Fill(l1);
 			h_id_dca ->Fill(strawID);
 			h_driftRad->Fill(generated_MC.driftRad[hitCount]);
+			if (generated_MC.driftRad[hitCount] < 0) negDCA++;
 
 			//Track-based hit parameters
 			h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
@@ -484,6 +491,11 @@ int main(int argc, char* argv[]) {
 			TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
 			//h11->Fill( rMeas_mp2 / sqrt( residual_gen - Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN) ) );
 			h11->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+
+			h_name.str(""); h_name << "Modules/h_pull_M_" << moduleN;
+			TH1F* h12 = (TH1F*)file->Get( h_name.str().c_str() );
+			h12->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+
 			hitsN++; //count hits
 		} // end of hits loop
 
@@ -729,16 +741,10 @@ int main(int argc, char* argv[]) {
 	cout << recordN << " records written." << endl;
 
 
-	if (Tracker::instance()->get_pivotPoint_estimated() != pivotPoint_actual) {
-		stringstream er1, er2;
-		//er1 << "Geometrically Estimated Pivot Point (avg z) " << Tracker::instance()->get_pivotPoint_estimated() << " cm";
-		//er2 << "Calculated (from measurements) Pivot Point (avg z) " << pivotPoint_actual << " cm";
-		Logger::Instance()->write(Logger::WARNING, er1.str());
-		Logger::Instance()->write(Logger::WARNING, er2.str());
-	}
+	cout << "Percentage of DCA (==drift radii) smeared below 0 is " << (negDCA)/(h_driftRad->GetEntries())*100<< " %" << endl;
 	stringstream out1, out2, out3, out4, out5;
-	out1 << "Estimated Mean Chi2 " << Tracker::instance()->get_Chi2_recon_estimated();
-	out2 << "Measured Mean Chi2 " << Chi2_recon_actual;
+	out1 << "Expected Mean Chi2 (for general straight line case) " << Tracker::instance()->get_Chi2_recon_estimated();
+	out2 << "Measured Mean Chi2 (circle fit)" << Chi2_recon_actual;
 	Logger::Instance()->write(Logger::WARNING, out1.str());
 	Logger::Instance()->write(Logger::WARNING, out2.str());
 	float rejectsFrac = Tracker::instance()->getRejectedHitsDCA();
