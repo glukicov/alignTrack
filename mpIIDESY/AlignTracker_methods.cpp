@@ -108,7 +108,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 
 	DCAData dca_data;
 
-	bool StrongDebugBool = true; //quick hack XXX for even more debug output
+	bool StrongDebugBool = false; //quick hack XXX for even more debug output
 
 	//Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
 	// xTrack is the point of the line "in-line with the layers"
@@ -455,14 +455,14 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
 
 				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
-				float mis_dca =  MisDetector.dca;  //dca (smeared) of the hit straw
+				float dca =  MisDetector.dca;  //dca (smeared) of the hit straw
 
 				//Rejection of hits due to geometry (i.e. missed hits)
 				//No signal in a straw = no signal in the layer
-				// if (mis_dca > 0.5*strawSpacing){ //[between (0,0.25]
+				// if (dca > 0.5*strawSpacing){ //[between (0,0.25]
 				//     MC.hit_bool.push_back(0);
 				//     incRejectedHitsDCA();
-				//     if (debugBool){cout << "Hit Rejected: outside of straw layer with dca =" << mis_dca << endl;}
+				//     if (debugBool){cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
 				//     stringstream absolute_hit;
 				//     absolute_hit <<"#";
 				//     MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
@@ -471,10 +471,10 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				// }
 
 				//Find the truth ID, and LR hit for a straw
-				float dcaUnsmeared = MisDetector.dcaUnsmeared;
 				float residualTruth = MisDetector.residualTruth;
 				int mis_ID =  MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
 				int mis_LRSign = MisDetector.LRSign;
+				MC.dca_unsmeared.push_back(MisDetector.dcaUnsmeared);
 				MC.strawID.push_back(mis_ID);
 				MC.LR.push_back(mis_LRSign);
 				//Recording hit information
@@ -484,12 +484,12 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				//Making absolute strawID for hit for plotting:
 				absolute_hit << mis_ID;
 				MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
-				if (debugBool && StrongDebugBool) {cout << "DCA is= " << mis_dca << " for straw ID= " << mis_ID << " was hit from " << mis_LRSign << endl;}
-				if (debugBool) {plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][mis_ID] << " " << distance[z_counter] << " "  << mis_dca << endl;}
+				if (debugBool && StrongDebugBool) {cout << "DCA is= " << dca << " for straw ID= " << mis_ID << " was hit from " << mis_LRSign << endl;}
+				if (debugBool) {plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][mis_ID] << " " << distance[z_counter] << " "  << dca << endl;}
 				// RECONSTRUCTED PARAMETERS
 				//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
 
-				ReconData ReconDetector = Tracker::HitRecon(mis_ID, mis_dca, mod_lyr_strawIdealPosition[i_module][i_view][i_layer], distance[z_counter]);
+				ReconData ReconDetector = Tracker::HitRecon(mis_ID, dca, mod_lyr_strawIdealPosition[i_module][i_view][i_layer], distance[z_counter]);
 				float zCircle = ReconDetector.z;
 				float xCircle = ReconDetector.x;
 				float radCircle = ReconDetector.dcaRecon;
@@ -509,7 +509,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
 
 				//Sanity Plots: Hits
-				MC.mis_dca.push_back(radCircle); // DCA
+				MC.dca.push_back(dca); // DCA [sanity]
 				MC.residuals_gen.push_back(residualTruth); // Truth residual
 				MC.Module_i.push_back(i_module);
 				MC.View_i.push_back(i_view);
@@ -542,6 +542,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.x_track_recon = res_Data.x_track_recon;
 	MC.p_value = res_Data.p_value;
 	MC.chi2_circle = res_Data.chi2_circle;
+	MC.driftRad = radRecon; // vector
 	//MC.meanXReconTrack=res_Data.meanXReconTrack;
 	//MC.meanZReconTrack=res_Data.meanZReconTrack;
 
@@ -550,7 +551,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 		plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
 
 	}
-	MC.driftRad = radRecon;
+	
 	return MC; // Return data from simulated track
 
 } // end of MC
@@ -802,4 +803,47 @@ float Tracker::generate_gaus() {
 float Tracker::generate_uniform() {
 	float uniform = (( RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
 	return uniform;
+}
+
+/**
+ * Returns the peak (maximum so far) resident set size [RSS] (physical
+ * memory use) measured in bytes, or zero if the value cannot be
+ * determined on this OS. By Dr. David R. Nadeau:
+ * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
+ */
+size_t Tracker::getPeakRSS( ){
+#if defined(_WIN32)
+    /* Windows -------------------------------------------------- */
+    PROCESS_MEMORY_COUNTERS info;
+    GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
+    return (size_t)info.PeakWorkingSetSize;
+
+#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+    /* AIX and Solaris ------------------------------------------ */
+    struct psinfo psinfo;
+    int fd = -1;
+    if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
+        return (size_t)0L;      /* Can't open? */
+    if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
+    {
+        close( fd );
+        return (size_t)0L;      /* Can't read? */
+    }
+    close( fd );
+    return (size_t)(psinfo.pr_rssize * 1024L);
+
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+    /* BSD, Linux, and OSX -------------------------------------- */
+    struct rusage rusage;
+    getrusage( RUSAGE_SELF, &rusage );
+#if defined(__APPLE__) && defined(__MACH__)
+    return (size_t)rusage.ru_maxrss;
+#else
+    return (size_t)(rusage.ru_maxrss * 1024L);
+#endif
+
+#else
+    /* Unknown OS ----------------------------------------------- */
+    return (size_t)0L;          /* Unsupported. */
+#endif
 }
