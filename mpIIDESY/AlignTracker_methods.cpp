@@ -145,17 +145,17 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 	else {
 		//we have already taken care of the end-straws, so now just need to look in between
 		for (int i_counter = 0; i_counter < xLayer.size(); i_counter++) {
-			if(xLayer[i_counter]<xTrack){
-		 		lower=xLayer[i_counter];
-		 		upper=xLayer[i_counter-1];
-		 		if (debugBool) cout << "lower= " << lower << " upper " << upper << endl;
-		 		//as soon as we find a single straw that is at lower x than the hit,
-		 		// our search is over
-		 		goto jmp;
-			}	
+			if (xLayer[i_counter] < xTrack) {
+				lower = xLayer[i_counter];
+				upper = xLayer[i_counter - 1];
+				if (debugBool && StrongDebugBool) cout << "lower= " << lower << " upper " << upper << endl;
+				//as soon as we find a single straw that is at lower x than the hit,
+				// our search is over
+				goto jmp;
+			}
 		}
-		jmp:
-		
+jmp:
+
 		float hit_distance_low = pointToLineDCA(zStraw, lower, xSlpoe, xIntercept);
 		float hit_distance_up = pointToLineDCA(zStraw, upper, xSlpoe, xIntercept);
 
@@ -180,7 +180,6 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 		}
 		//if DCAs are equal, drop the dice... XXX won't be relevant with hit rejection
 		if (hit_distance_up == hit_distance_low) {
-			cout << "BIAS" << endl;
 			float random = Tracker::generate_uniform();
 			if (random < 0.5) {
 				hitDistance = hit_distance_low;
@@ -191,7 +190,6 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 			if (1 == 1) {cout << "Ambiguity which straw registered hit" << endl;}
 			cout << "Ambiguity which straw registered hit" << endl;
 			incAmbiguityHit();
-			//exit(0);
 		}
 		if (debugBool && StrongDebugBool) {
 			cout <<  "Track in Line " << xTrack << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs " << hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl;
@@ -201,6 +199,12 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 	//Now smear the DCA data
 	dca_data.dcaUnsmeared = hitDistance;
 	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * Tracker::generate_gaus();
+	//Apply a 500 um cut on the WHOLE track
+
+	if (abs(hitDistanceSmeared) < 0.05) {
+		cutTriggered = true; // will be checked in the MC_Launch on DCA return
+	}
+
 	dca_data.dca = hitDistanceSmeared;
 	float residualTruth = hitDistanceSmeared - hitDistance;
 	dca_data.residualTruth = residualTruth;
@@ -404,6 +408,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MCData MC;
 	MC.hit_count = 0; //count only counts through detector
 	hitLayerCounter = -1; // start counting from 0, increment before hit-rejection
+	cutTriggered = false; //set trigger to OFF until DCA is less than 500 um, then kill this track
 
 	//clearing containers for next track
 	xRecon.clear();  // ideal straw x
@@ -455,6 +460,9 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
 
 				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
+				//Check for trigger on DCA < 500 um:
+				if (cutTriggered) {MC.cut = true;} // set cut to true for the main
+
 				float dca =  MisDetector.dca;  //dca (smeared) of the hit straw
 
 				//Rejection of hits due to geometry (i.e. missed hits)
@@ -527,12 +535,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	// and need to do a simultaneous fit once - to return #hits worth of residuals]
 	//ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, plot_fit, debugBool);
 
-
-
 	// XXX HACK for now --> make global
 	bool useTruthLR = true;
-
-
 
 	ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
 
@@ -543,14 +547,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.p_value = res_Data.p_value;
 	MC.chi2_circle = res_Data.chi2_circle;
 	MC.driftRad = radRecon; // vector
-	//MC.meanXReconTrack=res_Data.meanXReconTrack;
-	//MC.meanZReconTrack=res_Data.meanZReconTrack;
-
-
-	if (debugBool) {
-		plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
-
-	}
+	
+	if (debugBool) {plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;}
 	
 	return MC; // Return data from simulated track
 
@@ -811,39 +809,39 @@ float Tracker::generate_uniform() {
  * determined on this OS. By Dr. David R. Nadeau:
  * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
  */
-size_t Tracker::getPeakRSS( ){
+size_t Tracker::getPeakRSS( ) {
 #if defined(_WIN32)
-    /* Windows -------------------------------------------------- */
-    PROCESS_MEMORY_COUNTERS info;
-    GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
-    return (size_t)info.PeakWorkingSetSize;
+	/* Windows -------------------------------------------------- */
+	PROCESS_MEMORY_COUNTERS info;
+	GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
+	return (size_t)info.PeakWorkingSetSize;
 
 #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-    /* AIX and Solaris ------------------------------------------ */
-    struct psinfo psinfo;
-    int fd = -1;
-    if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
-        return (size_t)0L;      /* Can't open? */
-    if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
-    {
-        close( fd );
-        return (size_t)0L;      /* Can't read? */
-    }
-    close( fd );
-    return (size_t)(psinfo.pr_rssize * 1024L);
+	/* AIX and Solaris ------------------------------------------ */
+	struct psinfo psinfo;
+	int fd = -1;
+	if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
+		return (size_t)0L;      /* Can't open? */
+	if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
+	{
+		close( fd );
+		return (size_t)0L;      /* Can't read? */
+	}
+	close( fd );
+	return (size_t)(psinfo.pr_rssize * 1024L);
 
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-    /* BSD, Linux, and OSX -------------------------------------- */
-    struct rusage rusage;
-    getrusage( RUSAGE_SELF, &rusage );
+	/* BSD, Linux, and OSX -------------------------------------- */
+	struct rusage rusage;
+	getrusage( RUSAGE_SELF, &rusage );
 #if defined(__APPLE__) && defined(__MACH__)
-    return (size_t)rusage.ru_maxrss;
+	return (size_t)rusage.ru_maxrss;
 #else
-    return (size_t)(rusage.ru_maxrss * 1024L);
+	return (size_t)(rusage.ru_maxrss * 1024L);
 #endif
 
 #else
-    /* Unknown OS ----------------------------------------------- */
-    return (size_t)0L;          /* Unsupported. */
+	/* Unknown OS ----------------------------------------------- */
+	return (size_t)0L;          /* Unsupported. */
 #endif
 }

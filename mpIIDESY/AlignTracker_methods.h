@@ -59,6 +59,8 @@ struct MCData {
 	std::vector<float> x_track_recon; // reconstructed x position of the line
 	float p_value;
 	float chi2_circle;
+
+	bool cut = false; // cut trigger to kill the track
 };
 
 // DCA structure - calculated for each hit
@@ -107,6 +109,7 @@ private:
 	int multipleHitsLayer = 0; // passed over from DCAData [if >1 hit per layer]
 	int ambiguityHit = 0; //Exactly in the middle of 2 straws
 	int hitLayerCounter; // absolute layer ID for the hit
+	bool cutTriggered; // set as false at each track generation, triggered if smeared DCA < 500 um
 
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS

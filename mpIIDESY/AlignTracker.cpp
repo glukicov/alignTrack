@@ -99,9 +99,9 @@ int main(int argc, char* argv[]) {
 	float residuals_recon_sum_2 = 0.0; // squared sum of the recon. residuals (from measurements)
 	float pivotPoint_actual = 0.0; // central z point from measurements
 	float Chi2_recon_actual = 0.0; // Reconstructed Chi2 (from measurements)
-	int negDCA=0; // counting negatively smeared DCAs
+	int negDCA = 0; // counting negatively smeared DCAs
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
-	//gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
+	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 
 	//Tell the logger to only show message at INFO level or above
 	Logger::Instance()->setLogLevel(Logger::NOTE);
@@ -158,8 +158,7 @@ int main(int argc, char* argv[]) {
 	cout << "[" << Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
 	cout << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl;
 	cout << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
-	cout << "No Hit rejection:" << endl;
-	// DCA > StrawSpacing [" << Tracker::instance()->getStrawSpacing() << " cm]." << endl;
+	cout << "No Hit rejection:" << endl; // DCA > StrawSpacing [" << Tracker::instance()->getStrawSpacing() << " cm]." << endl;
 	cout << "Straight Tracks with Circle Fit: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
 	cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
 
@@ -268,9 +267,11 @@ int main(int argc, char* argv[]) {
 		cmTitle[i]->SetXTitle("[cm]");
 	}
 	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_residual_true, h_chi2_true, h_residual_recon,
-	                       h_chi2_recon, h_driftRad, h_track_TR_diff, h_dca_unsmeared};
-	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept, 
-		h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle};
+	                       h_chi2_recon, h_driftRad, h_track_TR_diff, h_dca_unsmeared
+	                      };
+	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
+	                      h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle
+	                     };
 	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
 	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
 		cdAllHits_F[i]->SetDirectory(cd_All_Hits);
@@ -396,142 +397,145 @@ int main(int argc, char* argv[]) {
 		MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen,
 		                      plot_hits_fit, debugBool);
 
-		for (int hitCount = 0; hitCount < generated_MC.hit_count; hitCount++) { //counting only hits going though detector
+		//First of all, check if track has not failed the cut
+		if (generated_MC.cut == false) {
 
-			//******************PEDE INPUTS******************************
-			//Number of local and global parameters
-			const int nalc = 2;
-			const int nagl = 1;
-			//label to associate hits within different layers with a correct module
-			// same as ModuleN+1 [already converted]
-			int label_mp2 = generated_MC.i_hits[hitCount];
-			//Local derivatives
-			float dlc1 = Tracker::instance()->getProjectionX(label_mp2);
-			float dlc2 = generated_MC.z_hits[hitCount] * Tracker::instance()->getProjectionX(label_mp2);
-			float derlc[nalc] = {dlc1, dlc2};
-			//Global derivatives
-			float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
-			float dergl[nagl] = {dgl1};
-			//Labels
-			int l1 = label_mp2;
-			int label[nagl] = {l1};
+			for (int hitCount = 0; hitCount < generated_MC.hit_count; hitCount++) { //counting only hits going though detector
 
-			//TODO multiple scattering errors (no correlations) (for imodel == 1)
-			//add break points multiple scattering later XXX (for imodel == 2)
-			//! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
+				//******************PEDE INPUTS******************************
+				//Number of local and global parameters
+				const int nalc = 2;
+				const int nagl = 1;
+				//label to associate hits within different layers with a correct module
+				// same as ModuleN+1 [already converted]
+				int label_mp2 = generated_MC.i_hits[hitCount];
+				//Local derivatives
+				float dlc1 = Tracker::instance()->getProjectionX(label_mp2);
+				float dlc2 = generated_MC.z_hits[hitCount] * Tracker::instance()->getProjectionX(label_mp2);
+				float derlc[nalc] = {dlc1, dlc2};
+				//Global derivatives
+				float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
+				float dergl[nagl] = {dgl1};
+				//Labels
+				int l1 = label_mp2;
+				int label[nagl] = {l1};
 
-			float rMeas_mp2 =  generated_MC.residuals[hitCount];
-			float sigma_mp2 = generated_MC.hit_sigmas[hitCount];
-			m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
-			if (debugBool) {
-				debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " "
-				           << rMeas_mp2 << "  " << sigma_mp2 << endl;
-			}
+				//TODO multiple scattering errors (no correlations) (for imodel == 1)
+				//add break points multiple scattering later XXX (for imodel == 2)
+				//! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
 
-			//***********************************Sanity Plots******************************************//
-			//Getting the "detector coordinates"
-			int moduleN = generated_MC.Module_i[hitCount];
-			int viewN = generated_MC.View_i[hitCount];
-			int layerN = generated_MC.Layer_i[hitCount];
-			int strawID = generated_MC.Straw_i[hitCount];
-			string UV = Tracker::instance()->getUVmapping(viewN, layerN); // converting view/layer ID into conventional labels
+				float rMeas_mp2 =  generated_MC.residuals[hitCount];
+				float sigma_mp2 = generated_MC.hit_sigmas[hitCount];
+				m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
+				if (debugBool) {
+					debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " "
+					           << rMeas_mp2 << "  " << sigma_mp2 << endl;
+				}
 
-			//Fill for all hits
-			h_res_MP2 -> Fill (rMeas_mp2); // residuals
-			h_sigma -> Fill(sigma_mp2); // errors
-			h_dca->Fill(generated_MC.dca[hitCount]); // DCA
-			h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]);
-			h_labels->Fill(l1);
-			h_id_dca ->Fill(strawID);
-			h_driftRad->Fill(generated_MC.driftRad[hitCount]);
-			if (generated_MC.driftRad[hitCount] < 0) negDCA++;
+				//***********************************Sanity Plots******************************************//
+				//Getting the "detector coordinates"
+				int moduleN = generated_MC.Module_i[hitCount];
+				int viewN = generated_MC.View_i[hitCount];
+				int layerN = generated_MC.Layer_i[hitCount];
+				int strawID = generated_MC.Straw_i[hitCount];
+				string UV = Tracker::instance()->getUVmapping(viewN, layerN); // converting view/layer ID into conventional labels
 
-			//Track-based hit parameters
-			h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
-			h_track_true->Fill(generated_MC.x_track_true[hitCount]);
-			h_track_recon->Fill(generated_MC.x_track_recon[hitCount]);
-			h_track_TR_diff->Fill(generated_MC.x_track_recon[hitCount] - generated_MC.x_track_true[hitCount]);
+				//Fill for all hits
+				h_res_MP2 -> Fill (rMeas_mp2); // residuals
+				h_sigma -> Fill(sigma_mp2); // errors
+				h_dca->Fill(generated_MC.dca[hitCount]); // DCA
+				h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]);
+				h_labels->Fill(l1);
+				h_id_dca ->Fill(strawID);
+				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
+				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
 
-			//Calculating Chi2 stats:
-			float residual_gen = generated_MC.residuals_gen[hitCount];
-			h_residual_true->Fill(residual_gen);
-			residuals_true_sum_2 += pow(residual_gen / sigma_mp2, 2);
-			h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
-			residuals_recon_sum_2 += pow(rMeas_mp2 / sigma_mp2, 2);
+				//Track-based hit parameters
+				h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
+				h_track_true->Fill(generated_MC.x_track_true[hitCount]);
+				h_track_recon->Fill(generated_MC.x_track_recon[hitCount]);
+				h_track_TR_diff->Fill(generated_MC.x_track_recon[hitCount] - generated_MC.x_track_true[hitCount]);
 
-			//Fill for hits in modules/layers/straws
-			h_name.str(""); h_name << "UV/h_dca_M_" << moduleN << "_" << UV;
-			TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
-			h1->Fill(generated_MC.dca[hitCount]);
+				//Calculating Chi2 stats:
+				float residual_gen = generated_MC.residuals_gen[hitCount];
+				h_residual_true->Fill(residual_gen);
+				residuals_true_sum_2 += pow(residual_gen / sigma_mp2, 2);
+				h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
+				residuals_recon_sum_2 += pow(rMeas_mp2 / sigma_mp2, 2);
 
-			h_name.str(""); h_name << "UV/h_strawID_M_" << moduleN << "_" << UV;
-			TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
-			h2 ->Fill(strawID);
+				//Fill for hits in modules/layers/straws
+				h_name.str(""); h_name << "UV/h_dca_M_" << moduleN << "_" << UV;
+				TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
+				h1->Fill(generated_MC.dca[hitCount]);
 
-			h_name.str(""); h_name << "UV/h_LR_M_" << moduleN << "_" << UV;
-			TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
-			h3 ->Fill(generated_MC.LR[hitCount]);
+				h_name.str(""); h_name << "UV/h_strawID_M_" << moduleN << "_" << UV;
+				TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
+				h2 ->Fill(strawID);
 
-			h_name.str(""); h_name << "Straws/h" << moduleN << "_straw" << strawID;
-			TH1F* h4 = (TH1F*)file->Get( h_name.str().c_str() );
-			h4->Fill(generated_MC.dca[hitCount]);
-			h4-> SetFillColor(colourVector[strawID]);
+				h_name.str(""); h_name << "UV/h_LR_M_" << moduleN << "_" << UV;
+				TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
+				h3 ->Fill(generated_MC.LR[hitCount]);
 
-			h_name.str(""); h_name << "Modules/h_DCA_Module_" << moduleN;
-			TH1F* h7 = (TH1F*)file->Get( h_name.str().c_str() );
-			h7->Fill(generated_MC.dca[hitCount]);
+				h_name.str(""); h_name << "Straws/h" << moduleN << "_straw" << strawID;
+				TH1F* h4 = (TH1F*)file->Get( h_name.str().c_str() );
+				h4->Fill(generated_MC.dca[hitCount]);
+				h4-> SetFillColor(colourVector[strawID]);
 
-			h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN;
-			TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
-			h8->Fill(rMeas_mp2);
+				h_name.str(""); h_name << "Modules/h_DCA_Module_" << moduleN;
+				TH1F* h7 = (TH1F*)file->Get( h_name.str().c_str() );
+				h7->Fill(generated_MC.dca[hitCount]);
 
-			h_name.str(""); h_name << "UV/h_residual_recon_M_" << moduleN << "_" << UV;
-			TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
-			h9->Fill(rMeas_mp2);
+				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN;
+				TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
+				h8->Fill(rMeas_mp2);
 
-			h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
-			TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
-			//h11->Fill( rMeas_mp2 / sqrt( residual_gen - Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN) ) );
-			h11->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+				h_name.str(""); h_name << "UV/h_residual_recon_M_" << moduleN << "_" << UV;
+				TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
+				h9->Fill(rMeas_mp2);
 
-			h_name.str(""); h_name << "Modules/h_pull_M_" << moduleN;
-			TH1F* h12 = (TH1F*)file->Get( h_name.str().c_str() );
-			h12->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+				h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
+				TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
+				//h11->Fill( rMeas_mp2 / sqrt( residual_gen - Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN) ) );
+				h11->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
 
-			hitsN++; //count hits
-		} // end of hits loop
+				h_name.str(""); h_name << "Modules/h_pull_M_" << moduleN;
+				TH1F* h12 = (TH1F*)file->Get( h_name.str().c_str() );
+				h12->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
 
-		//***********************************Sanity Plots: Once per Track******************************************//
+				hitsN++; //count hits
+			} // end of hits loop
 
-		//For true tracks
-		float chi2_true = residuals_true_sum_2;
-		h_chi2_true->Fill(chi2_true);
-		//For recon tracks
-		float chi2_recon = residuals_recon_sum_2;
-		h_chi2_recon->Fill(chi2_recon);
-		//Resetting counters for next track
-		residuals_true_sum_2 = 0;
-		residuals_recon_sum_2 = 0;
-		h_hitCount->Fill(generated_MC.hit_count);
+			//***********************************Sanity Plots: Once per Track******************************************/
+			//For true tracks
+			float chi2_true = residuals_true_sum_2;
+			h_chi2_true->Fill(chi2_true);
+			//For recon tracks
+			float chi2_recon = residuals_recon_sum_2;
+			h_chi2_recon->Fill(chi2_recon);
+			//Resetting counters for next track
+			residuals_true_sum_2 = 0;
+			residuals_recon_sum_2 = 0;
+			h_hitCount->Fill(generated_MC.hit_count);
 
-		//Filling Track-based plots
-		h_slope->Fill(generated_MC.slope_truth);
-		h_intercept->Fill(generated_MC.intercept_truth);
-		h_x0->Fill(generated_MC.x0);
-		h_x1->Fill(generated_MC.x1);
-		h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth - generated_MC.intercept_recon);
-		h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
-		h_recon_slope->Fill(generated_MC.slope_recon);
-		h_recon_intercept->Fill(generated_MC.intercept_recon);
-		h_pval->Fill(generated_MC.p_value);
-		h_chi2_circle->Fill(generated_MC.chi2_circle);
+			//Filling Track-based plots
+			h_slope->Fill(generated_MC.slope_truth);
+			h_intercept->Fill(generated_MC.intercept_truth);
+			h_x0->Fill(generated_MC.x0);
+			h_x1->Fill(generated_MC.x1);
+			h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth - generated_MC.intercept_recon);
+			h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
+			h_recon_slope->Fill(generated_MC.slope_recon);
+			h_recon_intercept->Fill(generated_MC.intercept_recon);
+			h_pval->Fill(generated_MC.p_value);
+			h_chi2_circle->Fill(generated_MC.chi2_circle);
 
+			// XXX additional measurements from MS IF (imodel == 2) THEN
+			//IF (imodel >= 3) THEN
 
-		// XXX additional measurements from MS IF (imodel == 2) THEN
-		//IF (imodel >= 3) THEN
+			m.end(); // Write buffer (set of derivatives with same local parameters) to file.
+			recordN++; // count records (i.e. written tracks);
 
-		m.end(); // Write buffer (set of derivatives with same local parameters) to file.
-		recordN++; // count records (i.e. tracks);
+		} // cut on DCA check
 
 	} // end of track count // End of Mille // End of collecting residual records
 	cout << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
@@ -663,7 +667,7 @@ int main(int argc, char* argv[]) {
 	cResMean->Print("Print/cResMean.png");
 	cResMean->Write();
 
-	TCanvas *cChi2 = new TCanvas("cChi2","cChi2",700,700);
+	TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
 	gStyle->SetOptStat("ourRmMe");
 	gStyle->SetOptFit(1111);
 	chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
@@ -684,7 +688,7 @@ int main(int argc, char* argv[]) {
 	delete chi2pdf;
 
 	// Debug-style plots:
-	if (1==-1) {
+	if (1 == -1) {
 		//Residuals per module
 		TCanvas *cResAllM = new TCanvas("cResAllM", "cResAllM", 700, 900);
 		TText T; T.SetTextFont(42); T.SetTextAlign(21);
@@ -739,11 +743,10 @@ int main(int argc, char* argv[]) {
 
 	cout << "-------------------------------------------------------------------------" << endl;
 	cout << " " << endl;
-	cout << Tracker::instance()->getTrackNumber() << " tracks generated with " << hitsN << " hits." << endl;
-	cout << recordN << " records written." << endl;
-
-
-	cout << "Percentage of DCA (==drift radii) smeared below 0 is " << (negDCA)/(h_driftRad->GetEntries())*100<< " %" << endl;
+	cout << Tracker::instance()->getTrackNumber() << " tracks requested; " << recordN << " generated with " << hitsN << " hits." << endl;
+	float rejectedTracks = (Tracker::instance()->getTrackNumber() - recordN) / float(Tracker::instance()->getTrackNumber()) * 100.0;
+	cout << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
+	cout << "Percentage of DCA (==drift radii) smeared below 0 is " << (negDCA) / (h_driftRad->GetEntries()) * 100 << " %" << endl;
 	stringstream out1, out2, out3, out4, out5;
 	out1 << "Expected Mean Chi2 (for a general straight line fit) " << Tracker::instance()->get_Chi2_recon_estimated();
 	out2 << "Measured Mean Chi2 (circle fit) " << Chi2_recon_actual;
@@ -754,7 +757,7 @@ int main(int argc, char* argv[]) {
 	cout << fixed << setprecision(1);
 	out3 << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << ". [" << rejectsFrac * 100 << "%]";
 	out4 << "Multiple hits (for all layers): " << Tracker::instance()->getMultipleHitsLayer() << ".";
-	out5 << "Ambiguity Hits: " << Tracker::instance()->getAmbiguityHit() << ".";
+	out5 << "Ambiguity Hits Resolved (rand.): " << Tracker::instance()->getAmbiguityHit() << ".";
 	Logger::Instance()->write(Logger::WARNING, out3.str());
 	Logger::Instance()->write(Logger::WARNING, out4.str());
 	Logger::Instance()->write(Logger::WARNING, out5.str());
@@ -805,7 +808,7 @@ int main(int argc, char* argv[]) {
 	     << chrono::duration<double>(t_end - t_start).count() << " s." << endl;
 	time_t now = time(0);
 	char* dt = ctime(&now);
-	cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( )/1e9 << " GB"<< endl;
+	cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( ) / 1e9 << " GB" << endl;
 	cout << "The C++ compiler used: " << true_cxx << " " << true_cxx_ver
 	     << " Job finished on: " << dt << endl;
 	return 0;
