@@ -238,12 +238,12 @@ int main(int argc, char* argv[]) {
 	TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals: Truth", 500, -0.06, 0.06);
 	TH1F* h_chi2_true = new TH1F("h_chi2_true", "#Chi^{2}: Truth", 40, -1, 50);
 	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals: Recon", 199, -0.2, 0.2);
-	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "#Chi^{2}: Recon", 150, 0, 65);
+	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "#Chi^{2}: Recon", 250, 0, 120);
 	TH1I* h_hitCount = new TH1I("h_hitCount", "Hit count", 32 , 0, 32);
 	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "#Delta (Recon - True) Slope",  119,  -0.002, 0.002);
 	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Intercept",  119,  -0.06, 0.06);
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
-	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 150, -0.1, 65);
+	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 250, -0.1, 120);
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 
 	// "special" histos
@@ -746,7 +746,7 @@ int main(int argc, char* argv[]) {
 	cout << Tracker::instance()->getTrackNumber() << " tracks requested; " << recordN << " generated with " << hitsN << " hits." << endl;
 	float rejectedTracks = (Tracker::instance()->getTrackNumber() - recordN) / float(Tracker::instance()->getTrackNumber()) * 100.0;
 	cout << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
-	cout << "Percentage of DCA (==drift radii) smeared below 0 is " << (negDCA) / (h_driftRad->GetEntries()) * 100 << " %" << endl;
+	cout << "Number of DCA (==drift radii) smeared below 0 is " << negDCA << endl;
 	stringstream out1, out2, out3, out4, out5;
 	out1 << "Expected Mean Chi2 (for a general straight line fit) " << Tracker::instance()->get_Chi2_recon_estimated();
 	out2 << "Measured Mean Chi2 (circle fit) " << Chi2_recon_actual;
