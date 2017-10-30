@@ -24,6 +24,7 @@ Tracker::Tracker() {
 			if (i_view == 1) {UVmapping[i_view].push_back(tempMapping[i_layer + 2]);}
 		} //layers
 	} // views
+
 } // constructor
 
 /**
@@ -390,7 +391,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 			resData.slope_recon = gradient;     // slope of the best fit line
 			resData.intercept_recon = intercept; // intercept
 			// Python plotting
-			if (debugBool && cutTriggered==false) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
+			if (debugBool && cutTriggered == false) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
 		} // p-value cut
 	} // LRCombinations [once for useTruthLR]
 
@@ -461,105 +462,111 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
 				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
 				//Check for trigger on DCA < 500 um:
-				if (cutTriggered) {MC.cut = true;} // set cut to true for the main
+				if (cutTriggered) {MC.cut = true;} // set cut to true for the main, and return MC.cut as true only.
 
-				float dca =  MisDetector.dca;  //dca (smeared) of the hit straw
+				if (cutTriggered == false) {
+					float dca =  MisDetector.dca;  //dca (smeared) of the hit straw
 
-				//Rejection of hits due to geometry (i.e. missed hits)
-				//No signal in a straw = no signal in the layer
-				// if (dca > 0.5*strawSpacing){ //[between (0,0.25]
-				//     MC.hit_bool.push_back(0);
-				//     incRejectedHitsDCA();
-				//     if (debugBool){cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
-				//     stringstream absolute_hit;
-				//     absolute_hit <<"#";
-				//     MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
-				//	   z_counter++;  // incrementing distance of planes
-				//     continue;
-				// }
+					//Rejection of hits due to geometry (i.e. missed hits)
+					//No signal in a straw = no signal in the layer
+					// if (dca > 0.5*strawSpacing){ //[between (0,0.25]
+					//     MC.hit_bool.push_back(0);
+					//     incRejectedHitsDCA();
+					//     if (debugBool){cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
+					//     stringstream absolute_hit;
+					//     absolute_hit <<"#";
+					//     MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
+					//	   z_counter++;  // incrementing distance of planes
+					//     continue;
+					// }
 
-				//Find the truth ID, and LR hit for a straw
-				float residualTruth = MisDetector.residualTruth;
-				int mis_ID =  MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
-				int mis_LRSign = MisDetector.LRSign;
-				MC.dca_unsmeared.push_back(MisDetector.dcaUnsmeared);
-				MC.strawID.push_back(mis_ID);
-				MC.LR.push_back(mis_LRSign);
-				//Recording hit information
-				MC.hit_list.push_back(hitLayerCounter); //push back the absolute layer # into the hit list
-				MC.hit_bool.push_back(1);  // 1 = hit
-				stringstream absolute_hit;
-				//Making absolute strawID for hit for plotting:
-				absolute_hit << mis_ID;
-				MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
-				if (debugBool && StrongDebugBool) {cout << "DCA is= " << dca << " for straw ID= " << mis_ID << " was hit from " << mis_LRSign << endl;}
-				// RECONSTRUCTED PARAMETERS
-				//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
+					//Find the truth ID, and LR hit for a straw
+					float residualTruth = MisDetector.residualTruth;
+					int mis_ID =  MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
+					int mis_LRSign = MisDetector.LRSign;
+					MC.dca_unsmeared.push_back(MisDetector.dcaUnsmeared);
+					MC.strawID.push_back(mis_ID);
+					MC.LR.push_back(mis_LRSign);
+					//Recording hit information
+					MC.hit_list.push_back(hitLayerCounter); //push back the absolute layer # into the hit list
+					MC.hit_bool.push_back(1);  // 1 = hit
+					stringstream absolute_hit;
+					//Making absolute strawID for hit for plotting:
+					absolute_hit << mis_ID;
+					MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
+					if (debugBool && StrongDebugBool) {cout << "DCA is= " << dca << " for straw ID= " << mis_ID << " was hit from " << mis_LRSign << endl;}
+					// RECONSTRUCTED PARAMETERS
+					//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
 
-				ReconData ReconDetector = Tracker::HitRecon(mis_ID, dca, mod_lyr_strawIdealPosition[i_module][i_view][i_layer], distance[z_counter]);
-				float zCircle = ReconDetector.z;
-				float xCircle = ReconDetector.x;
-				float radCircle = ReconDetector.dcaRecon;
-				xRecon.push_back(xCircle); // vector to store x coordinates of circles as seen from the ideal detector
-				zRecon.push_back(zCircle); // vector to store z coordinates of circles as seen from the ideal detector
-				radRecon.push_back(radCircle); // vector to store radius of circles as seen from the ideal detector
+					ReconData ReconDetector = Tracker::HitRecon(mis_ID, dca, mod_lyr_strawIdealPosition[i_module][i_view][i_layer], distance[z_counter]);
+					float zCircle = ReconDetector.z;
+					float xCircle = ReconDetector.x;
+					float radCircle = ReconDetector.dcaRecon;
+					xRecon.push_back(xCircle); // vector to store x coordinates of circles as seen from the ideal detector
+					zRecon.push_back(zCircle); // vector to store z coordinates of circles as seen from the ideal detector
+					radRecon.push_back(radCircle); // vector to store radius of circles as seen from the ideal detector
 
-				//Module number [for labelling] - after (if) passing the rejection.
-				// Millepede accepts only positive non-zero integers as labels
-				ostringstream oss; oss << i_module + 1;
-				istringstream iss(oss.str()); int label_int; iss >> label_int;
-				MC.i_hits.push_back(label_int); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
+					//Module number [for labelling] - after (if) passing the rejection.
+					// Millepede accepts only positive non-zero integers as labels
+					ostringstream oss; oss << i_module + 1;
+					istringstream iss(oss.str()); int label_int; iss >> label_int;
+					MC.i_hits.push_back(label_int); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
 
-				//Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
-				MC.z_hits.push_back(distance[z_counter]);
-				MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
+					//Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
+					MC.z_hits.push_back(distance[z_counter]);
+					MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
 
-				//Sanity Plots: Hits
-				MC.dca.push_back(dca); // DCA [sanity]
-				MC.residuals_gen.push_back(residualTruth); // Truth residual
-				MC.Module_i.push_back(i_module);
-				MC.View_i.push_back(i_view);
-				MC.Layer_i.push_back(i_layer);
-				MC.Straw_i.push_back(mis_ID);
+					//Sanity Plots: Hits
+					MC.dca.push_back(dca); // DCA [sanity]
+					MC.residuals_gen.push_back(residualTruth); // Truth residual
+					MC.Module_i.push_back(i_module);
+					MC.View_i.push_back(i_view);
+					MC.Layer_i.push_back(i_layer);
+					MC.Straw_i.push_back(mis_ID);
 
-				MC.hit_count++;
-				z_counter++;  // incrementing distance of planes
+					MC.hit_count++;
+					z_counter++;  // incrementing distance of planes
+
+				}// DCA cut if
 			}//end of Layers loop
 		}// end of View loop
 	}// end of looping over modules
 
-	if (debugBool && StrongDebugBool) {cout << "Calculating residuals..." << endl;}
-	//This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
-	// and need to do a simultaneous fit once - to return #hits worth of residuals]
-	//ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, plot_fit, debugBool);
+	if (cutTriggered == false) {
 
-	// XXX HACK for now --> make global
-	bool useTruthLR = true;
+		if (debugBool && StrongDebugBool) {cout << "Calculating residuals..." << endl;}
+		//This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
+		// and need to do a simultaneous fit once - to return #hits worth of residuals]
+		//ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, plot_fit, debugBool);
 
-	ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
+		// XXX HACK for now --> make global
+		bool useTruthLR = true;
 
-	MC.residuals = res_Data.residuals;
-	MC.slope_recon = res_Data.slope_recon;
-	MC.intercept_recon = res_Data.intercept_recon;
-	MC.x_track_recon = res_Data.x_track_recon;
-	MC.p_value = res_Data.p_value;
-	MC.chi2_circle = res_Data.chi2_circle;
-	MC.driftRad = radRecon; // vector
-	
-	if (debugBool && cutTriggered==false) {
-		plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
-		int i_counter=0;
-		for (int i_module = 0; i_module < moduleN; i_module++) {
-			for (int i_view = 0; i_view < viewN; i_view++) {
-				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer 
-					plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][MC.strawID[i_counter]] << " " << distance[i_counter] << " "  << MC.dca[i_counter] << endl;
-					plot_hits_fit << xRecon[i_counter] << " " << zRecon[i_counter] << " "  << radRecon[i_counter] << endl;
-					i_counter++;
+		ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
+
+		MC.residuals = res_Data.residuals;
+		MC.slope_recon = res_Data.slope_recon;
+		MC.intercept_recon = res_Data.intercept_recon;
+		MC.x_track_recon = res_Data.x_track_recon;
+		MC.p_value = res_Data.p_value;
+		MC.chi2_circle = res_Data.chi2_circle;
+		MC.driftRad = radRecon; // vector
+
+		if (debugBool) {
+			plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
+			int i_counter = 0;
+			for (int i_module = 0; i_module < moduleN; i_module++) {
+				for (int i_view = 0; i_view < viewN; i_view++) {
+					for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer
+						plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][MC.strawID[i_counter]] << " " << distance[i_counter] << " "  << MC.dca[i_counter] << endl;
+						plot_hits_fit << xRecon[i_counter] << " " << zRecon[i_counter] << " "  << radRecon[i_counter] << endl;
+						i_counter++;
+					}
 				}
 			}
 		}
-	}
-	
+
+	} // dca cut
 	return MC; // Return data from simulated track
 
 } // end of MC

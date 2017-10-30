@@ -102,6 +102,9 @@ int main(int argc, char* argv[]) {
 	int negDCA = 0; // counting negatively smeared DCAs
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
 	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
+	// Simple LR mapping for ROOT plots
+	char nameLR[]={'L', 'R'};
+	int valueLR[]={1, -1}; 
 
 	//Tell the logger to only show message at INFO level or above
 	Logger::Instance()->setLogLevel(Logger::NOTE);
@@ -337,6 +340,13 @@ int main(int argc, char* argv[]) {
 		h_title.str(""); h_title << "Pull M" << i_module;
 		auto hm5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
 		hm5->SetDirectory(cd_Modules);
+
+		for (int i_LR = 0; i_LR < 2; i_LR++) {
+			h_name.str(""); h_name << "h_Residuals_Module_" << i_module << "_" <<  valueLR[i_LR];
+			h_title.str(""); h_title << "Residuals Recon M" << i_module  << " " << nameLR[i_LR];
+			auto hm6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
+			hm6->GetXaxis()->SetTitle("[cm]"); hm6->SetDirectory(cd_Modules);
+		}
 	}
 
 	// Modules and Straws ["combing 4 layers into 1"]
@@ -501,6 +511,11 @@ int main(int argc, char* argv[]) {
 				h_name.str(""); h_name << "Modules/h_pull_M_" << moduleN;
 				TH1F* h12 = (TH1F*)file->Get( h_name.str().c_str() );
 				h12->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+
+				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN << "_" << generated_MC.LR[hitCount];
+				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
+				h13->Fill(rMeas_mp2);
+				
 
 				hitsN++; //count hits
 			} // end of hits loop
@@ -667,7 +682,7 @@ int main(int argc, char* argv[]) {
 	cResMean->Print("Print/cResMean.png");
 	cResMean->Write();
 
-	if (Tracker::instance()->getTrackNumber() >=100){
+	if (Tracker::instance()->getTrackNumber() >= 100) {
 		TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
 		gStyle->SetOptStat("ourRmMe");
 		gStyle->SetOptFit(1111);
