@@ -202,7 +202,7 @@ jmp:
 	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * Tracker::generate_gaus();
 	//Apply a 500 um cut on the WHOLE track
 
-	if (abs(hitDistanceSmeared) < 0.05) {
+	if (abs(hitDistanceSmeared) < trackCut) {
 		cutTriggered = true; // will be checked in the MC_Launch on DCA return
 	}
 
@@ -249,7 +249,6 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
 	// from James's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
 	// line 392 onwards, inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
-	double pValCut = -0.01; // XXX set by hand for now
 	int nHits = dataSize; // same for no hit rejection
 
 	// These sums are parameters for the analytic results that don't change between LR combos (use U here but equally applicable to V coordinate)
@@ -408,7 +407,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	// Set up new container for track data, with hit count set to zero
 	MCData MC;
 	MC.hit_count = 0; //count only counts through detector
-	hitLayerCounter = -1; // start counting from 0, increment before hit-rejection
 	cutTriggered = false; //set trigger to OFF until DCA is less than 500 um, then kill this track
 
 	//clearing containers for next track
@@ -446,7 +444,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		for (int i_view = 0; i_view < viewN; i_view++) {
 			for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer
-				hitLayerCounter++;
 
 				// TRUTH PARAMETERS
 				//The registered hit position on the misaligned detector is smeared by its resolution
@@ -454,31 +451,21 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				xTrack = xSlope * distance[z_counter] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
 				MC.x_track_true.push_back(xTrack);  // True in-line (gen.) track position
 
-				//float xHit=xTrack+Tracker::instance()->getResolution()*Tracker::generate_gaus();
-				//float residualTrack= xHit - xTrack;
-
-				//the DCA between the track and the (zStraw, xStraw) [misaligned]
 				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
-
 				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
-				//Check for trigger on DCA < 500 um:
+				//Check for trigger on DCA < 500 um, and only continue calculations not triggered
 				if (cutTriggered) {MC.cut = true;} // set cut to true for the main, and return MC.cut as true only.
-
 				if (cutTriggered == false) {
 					float dca =  MisDetector.dca;  //dca (smeared) of the hit straw
-
 					//Rejection of hits due to geometry (i.e. missed hits)
 					//No signal in a straw = no signal in the layer
-					// if (dca > 0.5*strawSpacing){ //[between (0,0.25]
-					//     MC.hit_bool.push_back(0);
-					//     incRejectedHitsDCA();
-					//     if (debugBool){cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
-					//     stringstream absolute_hit;
-					//     absolute_hit <<"#";
-					//     MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
-					//	   z_counter++;  // incrementing distance of planes
-					//     continue;
-					// }
+					if (dca > strawRadius && hitCut == true) { //[between (0,0.25]
+						MC.hit_bool.push_back(0);
+						incRejectedHitsDCA();
+						if (debugBool) {cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
+						z_counter++;  // incrementing distance of planes
+						continue;
+					}
 
 					//Find the truth ID, and LR hit for a straw
 					float residualTruth = MisDetector.residualTruth;
@@ -488,7 +475,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 					MC.strawID.push_back(mis_ID);
 					MC.LR.push_back(mis_LRSign);
 					//Recording hit information
-					MC.hit_list.push_back(hitLayerCounter); //push back the absolute layer # into the hit list
+					MC.hit_list.push_back(z_counter); //push back the absolute layer # into the hit list
 					MC.hit_bool.push_back(1);  // 1 = hit
 					stringstream absolute_hit;
 					//Making absolute strawID for hit for plotting:
@@ -537,11 +524,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 		if (debugBool && StrongDebugBool) {cout << "Calculating residuals..." << endl;}
 		//This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
 		// and need to do a simultaneous fit once - to return #hits worth of residuals]
-		//ResidualData res_Data = Tracker::GetResiduals(xReconPoints, distance, plot_fit, debugBool);
-
-		// XXX HACK for now --> make global
-		bool useTruthLR = true;
-
 		ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
 
 		MC.residuals = res_Data.residuals;
@@ -715,6 +697,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 	cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
 
 	//--- Calculations for Each Layer -- //
+	// XXX ONLY VALID FOR 2-parameter line fit (i.e. not circle fit)
 	// XXX Verbose calculation via separate loops on purpose - to demonstrate the alignment methods
 	// For straight-line case only.
 

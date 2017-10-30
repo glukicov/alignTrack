@@ -104,7 +104,10 @@ int main(int argc, char* argv[]) {
 	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 	// Simple LR mapping for ROOT plots
 	char nameLR[]={'L', 'R'};
-	int valueLR[]={1, -1}; 
+	int valueLR[]={1, -1};
+	// True/False -> Yes/No mapping
+	const char* boolYN[2] = {"No", "Yes"};
+
 
 	//Tell the logger to only show message at INFO level or above
 	Logger::Instance()->setLogLevel(Logger::NOTE);
@@ -155,16 +158,19 @@ int main(int argc, char* argv[]) {
 	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg1.str());
 	Logger::Instance()->setUseColor(true); // back to default colours
-
-	cout << "Simple Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN()
+	cout << endl;
+	cout << "Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN()
 	     << " straws per layer." << endl;
 	cout << "[" << Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
 	cout << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl;
 	cout << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
-	cout << "No Hit rejection:" << endl; // DCA > StrawSpacing [" << Tracker::instance()->getStrawSpacing() << " cm]." << endl;
+	cout << "Hit rejection for (DCA > StrawRadius) is used: "<< boolYN[Tracker::instance()->getHitCutStatus()] << endl;
+	cout << "Tracks are rejected if one of hits have a (DCA < "<< Tracker::instance()->getTrackCut() << ")"<< endl;
+	cout << "Truth LR information is used in the reconstruction: "<< boolYN[Tracker::instance()->getLRStatus()] << endl;
+	cout << "p-value cut for reconstructed tracks: " << Tracker::instance()->getPValCut() << endl;
 	cout << "Straight Tracks with Circle Fit: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
 	cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
-
+	cout << endl;
 
 	// See https://github.com/glukicov/alignTrack for instructions to generate random numbers
 	try {

@@ -109,14 +109,19 @@ private:
 	int multipleHitsLayer = 0; // passed over from DCAData [if >1 hit per layer]
 	int ambiguityHit = 0; //Exactly in the middle of 2 straws
 	int hitLayerCounter; // absolute layer ID for the hit
-	bool cutTriggered; // set as false at each track generation, triggered if smeared DCA < 500 um
+	bool cutTriggered; // FLAG: set as false at each track generation, triggered if smeared DCA < 500 um
 
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.0, -0.04, 0.03, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
+	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
+	float pValCut = 0.00;
+	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius 
+	bool useTruthLR = true;
+
 
 	// **** GEOMETRIC CONSTANTS ****  //
 	// define detector geometry [all distances are in cm]
@@ -363,6 +368,22 @@ public:
 
 	float getBeamPositionLength() {
 		return beamPositionLength;
+	}
+
+	bool getLRStatus() { 
+		return useTruthLR;
+	}
+
+	bool getHitCutStatus() { 
+		return hitCut;
+	}
+
+	float getPValCut() {
+		return pValCut;
+	}
+
+	float getTrackCut() {
+		return trackCut;
 	}
 
 };
