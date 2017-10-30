@@ -390,7 +390,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 			resData.slope_recon = gradient;     // slope of the best fit line
 			resData.intercept_recon = intercept; // intercept
 			// Python plotting
-			if (debugBool) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
+			if (debugBool && cutTriggered==false) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
 		} // p-value cut
 	} // LRCombinations [once for useTruthLR]
 
@@ -493,7 +493,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				absolute_hit << mis_ID;
 				MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
 				if (debugBool && StrongDebugBool) {cout << "DCA is= " << dca << " for straw ID= " << mis_ID << " was hit from " << mis_LRSign << endl;}
-				if (debugBool) {plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][mis_ID] << " " << distance[z_counter] << " "  << dca << endl;}
 				// RECONSTRUCTED PARAMETERS
 				//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
 
@@ -505,7 +504,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				zRecon.push_back(zCircle); // vector to store z coordinates of circles as seen from the ideal detector
 				radRecon.push_back(radCircle); // vector to store radius of circles as seen from the ideal detector
 
-				if (debugBool) {plot_hits_fit << xCircle << " " << zCircle << " "  << radCircle << endl;}
 				//Module number [for labelling] - after (if) passing the rejection.
 				// Millepede accepts only positive non-zero integers as labels
 				ostringstream oss; oss << i_module + 1;
@@ -548,7 +546,19 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.chi2_circle = res_Data.chi2_circle;
 	MC.driftRad = radRecon; // vector
 	
-	if (debugBool) {plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;}
+	if (debugBool && cutTriggered==false) {
+		plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
+		int i_counter=0;
+		for (int i_module = 0; i_module < moduleN; i_module++) {
+			for (int i_view = 0; i_view < viewN; i_view++) {
+				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer 
+					plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][MC.strawID[i_counter]] << " " << distance[i_counter] << " "  << MC.dca[i_counter] << endl;
+					plot_hits_fit << xRecon[i_counter] << " " << zRecon[i_counter] << " "  << radRecon[i_counter] << endl;
+					i_counter++;
+				}
+			}
+		}
+	}
 	
 	return MC; // Return data from simulated track
 
