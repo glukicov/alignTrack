@@ -378,7 +378,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 				//XXX Now that we know the slope and the gradient of the best fit line through drift circles,
 				// we can calculate the residual for each drift circle, which is
 				// "DCA from that line to the straw centre" - "Radius of the drift circle"
-				float Res = radRecon[i_hit] - Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept);
+				float Res = Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
 				resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
 
 				float xTrack_recon = gradient * zRecon[i_hit] + intercept; // Recon track position in-line with the layer [from line x=ym+c]
