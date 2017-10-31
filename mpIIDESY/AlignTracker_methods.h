@@ -118,7 +118,7 @@ private:
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
-	float pValCut = 0.00;
+	float pValCut = 0.00; // from 0->1 
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius 
 	bool useTruthLR = true;
 

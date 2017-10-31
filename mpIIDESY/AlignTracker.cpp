@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
 	cout << "Hit rejection for (DCA > StrawRadius) is used: "<< boolYN[Tracker::instance()->getHitCutStatus()] << endl;
 	cout << "Tracks are rejected if one of hits have a (DCA < "<< Tracker::instance()->getTrackCut() << ")"<< endl;
 	cout << "Truth LR information is used in the reconstruction: "<< boolYN[Tracker::instance()->getLRStatus()] << endl;
-	cout << "p-value cut for reconstructed tracks: " << Tracker::instance()->getPValCut() << endl;
+	cout << "p-value cut (<) for reconstructed tracks: " << Tracker::instance()->getPValCut() << endl;
 	cout << "Straight Tracks with Circle Fit: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
 	cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
 	cout << endl;
@@ -426,7 +426,7 @@ int main(int argc, char* argv[]) {
 				// same as ModuleN+1 [already converted]
 				int label_mp2 = generated_MC.i_hits[hitCount];
 				//Local derivatives
-				float dlc1 = Tracker::instance()->getProjectionX(label_mp2);
+				float dlc1 = ( c+m*z-x ) / ( np.sqrt(m*m+1) * np.absolute(c+m*z-x) );
 				float dlc2 = generated_MC.z_hits[hitCount] * Tracker::instance()->getProjectionX(label_mp2);   // z * 1.0
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
