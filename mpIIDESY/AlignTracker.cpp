@@ -427,10 +427,10 @@ int main(int argc, char* argv[]) {
 				int label_mp2 = generated_MC.i_hits[hitCount];
 				//Local derivatives
 				float dlc1 = Tracker::instance()->getProjectionX(label_mp2);
-				float dlc2 = generated_MC.z_hits[hitCount] * Tracker::instance()->getProjectionX(label_mp2);
+				float dlc2 = generated_MC.z_hits[hitCount] * Tracker::instance()->getProjectionX(label_mp2);   // z * 1.0
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1 = Tracker::instance()->getProjectionX(label_mp2);
+				float dgl1 = Tracker::instance()->getProjectionX(label_mp2); // 1.0 
 				float dergl[nagl] = {dgl1};
 				//Labels
 				int l1 = label_mp2;

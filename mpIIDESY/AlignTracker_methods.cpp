@@ -95,7 +95,9 @@ float Tracker::pointToLineDCA(float z_straw, float x_straw, float x_slope, float
 	float x0 = z_straw;
 	float y0 = x_straw;
 
-	float dca = abs( a * x0 + b * y0 + c ) / ( a * a + b * b  ) ;
+	float dca = abs( a * x0 + b * y0 + c ) / sqrt( a * a + b * b  ) ;
+
+	//cout << "m= " << a << " c= " << c << " z= " << x0 << " -x= " << y0 << " dca= " << dca <<  endl; 
 
 	return dca;
 }
