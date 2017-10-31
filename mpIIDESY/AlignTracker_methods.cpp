@@ -531,6 +531,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 		MC.residuals = res_Data.residuals;
 		MC.slope_recon = res_Data.slope_recon;
 		MC.intercept_recon = res_Data.intercept_recon;
+		MC.x_straw = xRecon;
+		MC.z_straw = zRecon;
 		MC.x_track_recon = res_Data.x_track_recon;
 		MC.p_value = res_Data.p_value;
 		MC.chi2_circle = res_Data.chi2_circle;

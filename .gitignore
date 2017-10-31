@@ -242,6 +242,12 @@ readPedeHists_C_ACLiC_dict_rdict.pcm
 .depend
 millepede.eve~
 *.png
+functions.aux
+functions.fdb_latexmk
+functions.fls
+functions.out
+functions.pdf
+functions.synctex.gz
 
 ### files NOT to ignore 
 

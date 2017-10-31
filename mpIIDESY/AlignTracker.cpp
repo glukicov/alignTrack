@@ -368,7 +368,7 @@ int main(int argc, char* argv[]) {
 //------------------------------------------Mille Routines---------------------------------------------------------//
 
 	// Creating .bin, steering, and constrain files
-	Mille m (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
+	Mille M (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
 	cout << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
 
 	//Passing constants to plotting script
@@ -419,18 +419,27 @@ int main(int argc, char* argv[]) {
 			for (int hitCount = 0; hitCount < generated_MC.hit_count; hitCount++) { //counting only hits going though detector
 
 				//******************PEDE INPUTS******************************
+				float rMeas_mp2 =  generated_MC.residuals[hitCount]; //Residual
+				float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; //Resolution
 				//Number of local and global parameters
 				const int nalc = 2;
 				const int nagl = 1;
 				//label to associate hits within different layers with a correct module
 				// same as ModuleN+1 [already converted]
 				int label_mp2 = generated_MC.i_hits[hitCount];
+
+				//Variables for derivative calculations:
+				float z = generated_MC.z_straw[hitCount]; 
+				float x = generated_MC.x_straw[hitCount];
+				float m = generated_MC.slope_recon; 
+				float c = generated_MC.intercept_recon;
+
 				//Local derivatives
-				float dlc1 = ( c+m*z-x ) / ( np.sqrt(m*m+1) * np.absolute(c+m*z-x) );
-				float dlc2 = generated_MC.z_hits[hitCount] * Tracker::instance()->getProjectionX(label_mp2);   // z * 1.0
+				float dlc1 = ( c+m*z-x ) / ( sqrt(m*m+1) * abs(c+m*z-x) ) ; // "DCA magnitude"
+				float dlc2 = ( (m*m+1)*z*(c+m*z-x) - m*pow(abs(c+m*z-x), 2) ) / ( pow(m*m+1, 1.5) * abs(c+m*z-x)  ) ;   
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1 = Tracker::instance()->getProjectionX(label_mp2); // 1.0 
+				float dgl1 = - ( c+m*z-x ) / ( sqrt(m*m+1) * abs(c+m*z-x) ); // -DLC1
 				float dergl[nagl] = {dgl1};
 				//Labels
 				int l1 = label_mp2;
@@ -440,9 +449,7 @@ int main(int argc, char* argv[]) {
 				//add break points multiple scattering later XXX (for imodel == 2)
 				//! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
 
-				float rMeas_mp2 =  generated_MC.residuals[hitCount];
-				float sigma_mp2 = generated_MC.hit_sigmas[hitCount];
-				m.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
+				M.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 				if (debugBool) {
 					debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " "
 					           << rMeas_mp2 << "  " << sigma_mp2 << endl;
@@ -553,7 +560,7 @@ int main(int argc, char* argv[]) {
 			// XXX additional measurements from MS IF (imodel == 2) THEN
 			//IF (imodel >= 3) THEN
 
-			m.end(); // Write buffer (set of derivatives with same local parameters) to file.
+			M.end(); // Write buffer (set of derivatives with same local parameters) to file.
 			recordN++; // count records (i.e. written tracks);
 
 		} // cut on DCA check

@@ -11,6 +11,8 @@
 import numpy as np
 import matplotlib.pyplot as plt #for plotting 
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 x_range= np.arange(-40, 40, 0.1)
 
@@ -74,20 +76,21 @@ def dgl1_3D(m ,c):
 
 def graph_3D(formula, m, c, name): 
 	fig = plt.figure()
-	c = formula(m ,c)  # <- note now we're calling the function 'formula' with x
-	ax = fig.add_subplot(111, projection='3d')
-	a = [i for i in range(n) for _ in range(n)]
-	b = range(n) * n
-	ax.surface(a, b, c)
+	ax = fig.gca(projection='3d')
+	z_res = formula(m ,c)  # <- note now we're calling the function 'formula' with x
+	#ax = Axes3D(fig)
+	ax.scatter(m, c, z_res)
+	print(m, c, z_res) 
 	ax.set_xlabel('m')
 	ax.set_ylabel('c')
 	ax.set_zlabel('name')
 	plt.ylabel(name)
 	plt.title(name)
 	plt.show()
+	fig.savefig("plot.png")
 
 z=31.5
-x=0
-graph_3D(dlc1_3D, x_range, x_range, "dlc1(x=0, z=31.5)")
+x=1.2
+#graph_3D(dlc1_3D, x_range, x_range, "dlc1(x=0, z=31.5)")
 graph_3D(dlc2_3D, x_range, x_range, "dlc2(x=0, z=31.5)")
-graph_3D(dgl1_3D, x_range, x_range, "dgl1(x=0, z=31.5)")
+#graph_3D(dgl1_3D, x_range, x_range, "dgl1(x=0, z=31.5)")
