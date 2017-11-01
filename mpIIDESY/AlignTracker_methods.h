@@ -4,7 +4,6 @@
 /* This header file contains definitions of constant variables used in
 * the method class, as well as function declarations, and definitions of functions.
 */
-
 #include "random_buffer.h" // courtesy of John Smeaton (UCL)
 ///XXX some includes may become redundant
 #include <algorithm>
@@ -19,7 +18,6 @@
 #include <bitset>
 #include <TF1.h>
 #include <TMath.h>
-
 
 /**
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
@@ -61,7 +59,6 @@ struct MCData {
 	std::vector<float> x_track_recon; // reconstructed x position of the line
 	float p_value;
 	float chi2_circle;
-
 	bool cut = false; // cut trigger to kill the track
 };
 
@@ -111,17 +108,19 @@ private:
 	int multipleHitsLayer = 0; // passed over from DCAData [if >1 hit per layer]
 	int ambiguityHit = 0; //Exactly in the middle of 2 straws
 	int hitLayerCounter; // absolute layer ID for the hit
-	bool cutTriggered; // FLAG: set as false at each track generation, triggered if smeared DCA < 500 um
+	bool cutTriggered; // FLAG: set as false at each track generation, triggered if smeared DCA < trackCut [below]
+	bool missedHit; // FLAG: set as false at each track generation, triggered if smeared DCA > strawRadius
 
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.0, 0.04, -0.03, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
 	float pValCut = 0.00; // from 0->1 
-	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius 
+	bool trackCutBool = false; // if true, tracks will be rejected if DCA > trackCut  
+	bool hitCut = true; // if true, hits will be rejected if DCA > strawRadius 
 	bool useTruthLR = true;
 
 
@@ -380,6 +379,10 @@ public:
 		return hitCut;
 	}
 
+	bool getTrackCutBool(){
+		return trackCutBool;
+	}
+
 	float getPValCut() {
 		return pValCut;
 	}
@@ -390,35 +393,5 @@ public:
 
 };
 
-// Container to hold recon track
-struct UVLineFit {
-
-	double m;    // Slope
-	double c;    // Intercept
-	double chi2; // Chi2 for fit
-	int    ndf;  // Degrees of freedom (hits) for  this fit
-	std::bitset<16> leftHit; // Hit on left of straw where position is layer number (0-15)
-	std::bitset<16> rightHit; // Hit on right of straw
-
-	UVLineFit()
-		: m(0)
-		, c(0)
-		, chi2(0)
-		, ndf(0)
-		, leftHit(0)
-		, rightHit(0)
-	{
-	}
-
-	UVLineFit(const double m, const double c, const double chi2, const int ndf, const std::bitset<16> leftHit, const std::bitset<16> rightHit)
-		: m(m)
-		, c(c)
-		, chi2(chi2)
-		, ndf(ndf)
-		, leftHit(leftHit)
-		, rightHit(rightHit)
-	{
-	}
-}; // UVLineFit
 
 #endif

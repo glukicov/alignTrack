@@ -2,6 +2,7 @@
 #define ALIGNTRACKER
 
 //This header file declares main function, and imports necessary dependencies for AlignTracker.cpp [description of purpose is there]
+#include "AlignTracker_helper.h" // helper functions
 #include "Mille.h"  // courtesy of Gero Flucke (DESY) 
 #include "Mille.cc" // courtesy of Gero Flucke (DESY) 
 #include "AlignTracker_methods.h" // Methods and functions for the main programme (AlignTracker.cpp)

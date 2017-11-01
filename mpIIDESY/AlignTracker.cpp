@@ -103,11 +103,15 @@ int main(int argc, char* argv[]) {
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
 	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 	// Simple LR mapping for ROOT plots
-	char nameLR[]={'L', 'R'};
-	int valueLR[]={1, -1};
+	char nameLR[] = {'L', 'R'};
+	int valueLR[] = {1, -1};
 	// True/False -> Yes/No mapping
 	const char* boolYN[2] = {"No", "Yes"};
 
+	// use overloading to duplicate cout into the log file
+	ofstream LOG; LOG.open("Tracker_log.txt"); MyStreamingHelper helper(LOG, cout);
+	cout << fixed << setprecision(setPrecision); // set precision of standard screen output
+	helper << fixed << setprecision(setPrecision); // set precision of log file output
 
 	//Tell the logger to only show message at INFO level or above
 	Logger::Instance()->setLogLevel(Logger::NOTE);
@@ -158,19 +162,19 @@ int main(int argc, char* argv[]) {
 	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg1.str());
 	Logger::Instance()->setUseColor(true); // back to default colours
-	cout << endl;
-	cout << "Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN()
-	     << " straws per layer." << endl;
-	cout << "[" << Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
-	cout << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl;
-	cout << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
-	cout << "Hit rejection for (DCA > StrawRadius) is used: "<< boolYN[Tracker::instance()->getHitCutStatus()] << endl;
-	cout << "Tracks are rejected if one of hits have a (DCA < "<< Tracker::instance()->getTrackCut() << ")"<< endl;
-	cout << "Truth LR information is used in the reconstruction: "<< boolYN[Tracker::instance()->getLRStatus()] << endl;
-	cout << "p-value cut (<) for reconstructed tracks: " << Tracker::instance()->getPValCut() << endl;
-	cout << "Straight Tracks with Circle Fit: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
-	cout << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
-	cout << endl;
+	helper << endl;
+	helper << "Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN()
+	       << " straws per layer." << endl;
+	helper << "[" << Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
+	helper << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl;
+	helper << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
+	helper << "Hit rejection for (DCA > StrawRadius) is used: " << boolYN[Tracker::instance()->getHitCutStatus()] << endl;
+	helper << "Tracks are rejected if one of hits have a (DCA < " << Tracker::instance()->getTrackCut() << ")" << " : " << boolYN[Tracker::instance()->getTrackCutBool()] << endl;
+	helper << "Truth LR information is used in the reconstruction: " << boolYN[Tracker::instance()->getLRStatus()] << endl;
+	helper << "p-value cut (<) for reconstructed tracks: " << Tracker::instance()->getPValCut() << endl;
+	helper << "Straight Tracks with Circle Fit: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
+	helper << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
+	helper << endl;
 
 	// See https://github.com/glukicov/alignTrack for instructions to generate random numbers
 	try {
@@ -194,7 +198,6 @@ int main(int argc, char* argv[]) {
 	//Constraints and Steering files are the inputs to Pede (together with binary file).
 	ofstream constraint_file("Tracker_con.txt");
 	ofstream steering_file("Tracker_str.txt");
-	cout << fixed << setprecision(setPrecision); // set precision of standard screen output
 
 	//Debug files [only filled with "d" option]: file streams for debug files
 	// Setting fixed precision for floating point values
@@ -254,6 +257,21 @@ int main(int argc, char* argv[]) {
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
 	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 250, -0.1, 120);
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
+
+	//XXX LC debug histos
+	TH1F* h_M0U1S2_LC2 = new TH1F("h_M0U1S2_LC2", "M0U1S2 All LC2 (dR/dm)", 589, -6.0, 6.0);
+	TH1F* h_M2U0S4_LC2 = new TH1F("h_M2U0S4_LC2", "M2U0S4 All LC2 (dR/dm)", 589, 50.0, 50.0);
+	TH1F* h_M0U1S2_LC1 = new TH1F("h_M0U1S2_LC1", "M0U1S2 All LC1 (dR/dm)", 589, -1.1, 1.1);
+	TH1F* h_M2U0S4_LC1 = new TH1F("h_M2U0S4_LC1", "M2U0S4 All LC1 (dR/dm)", 589, -1.1, 1.1);
+
+	TH1F* h_M0U1S2_pR_L_LC2 = new TH1F("h_M0U1S2_pR_L_LC2", "M0U1S2 +ive Res L LC2 (dR/dm)", 589, -6.0, 6.0);
+	TH1F* h_M0U1S2_nR_L_LC2 = new TH1F("h_M0U1S2_nR_L_LC2", "M0U1S2 -ive Res L LC2 (dR/dm)", 589, -6.0, 6.0);
+	TH1F* h_M0U1S2_pR_R_LC2 = new TH1F("h_M0U1S2_pR_R_LC2", "M0U1S2 +ive Res R LC2 (dR/dm)", 589, -6.0, 6.0);
+	TH1F* h_M0U1S2_nR_R_LC2 = new TH1F("h_M0U1S2_nR_R_LC2", "M0U1S2 -ive Res R LC2 (dR/dm)", 589, -6.0, 6.0);
+	TH1F* h_M0U1S2_pR_L_LC1 = new TH1F("h_M0U1S2_pR_L_LC1", "M0U1S2 +ive Res L LC1 (dR/dm)", 589, -1.1, 1.1);
+	TH1F* h_M0U1S2_nR_L_LC1 = new TH1F("h_M0U1S2_nR_L_LC1", "M0U1S2 -ive Res L LC1 (dR/dm)", 589, -1.1, 1.1);
+	TH1F* h_M0U1S2_pR_R_LC1 = new TH1F("h_M0U1S2_pR_R_LC1", "M0U1S2 +ive Res R LC1 (dR/dm)", 589, -1.1, 1.1);
+	TH1F* h_M0U1S2_nR_R_LC1 = new TH1F("h_M0U1S2_nR_R_LC1", "M0U1S2 -ive Res R LC1 (dR/dm)", 589, -1.1, 1.1);
 
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
@@ -347,6 +365,15 @@ int main(int argc, char* argv[]) {
 		auto hm5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
 		hm5->SetDirectory(cd_Modules);
 
+		h_name.str(""); h_name << "h_LC2_M" << i_module;
+		h_title.str(""); h_title << "LC2_M" << i_module;
+		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -65, 65);
+
+		h_name.str(""); h_name << "h_LC1_M" << i_module;
+		h_title.str(""); h_title << "LC1_M" << i_module;
+		auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -1.1, 1.1);
+
+
 		for (int i_LR = 0; i_LR < 2; i_LR++) {
 			h_name.str(""); h_name << "h_Residuals_Module_" << i_module << "_" <<  valueLR[i_LR];
 			h_title.str(""); h_title << "Residuals Recon M" << i_module  << " " << nameLR[i_LR];
@@ -369,7 +396,7 @@ int main(int argc, char* argv[]) {
 
 	// Creating .bin, steering, and constrain files
 	Mille M (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-	cout << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
+	helper << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
 
 	//Passing constants to plotting script
 	if (plotBool || debugBool) {
@@ -381,23 +408,23 @@ int main(int argc, char* argv[]) {
 
 	// SETTING GEOMETRY
 	Tracker::instance()->setGeometry(debug_geom, debugBool);
-	cout << "Geometry is set!" << endl << endl;
+	helper << "Geometry is set!" << endl << endl;
 
 	// XXX: definition of broken lines here in the future
 
 	// MISALIGNMENT
 	Tracker::instance()->misalign(debug_mis, pede_mis, debugBool);
-	cout << "Misalignment is complete!" << endl;
+	helper << "Misalignment is complete!" << endl;
 
 	// Write a constraint file, for use with pede
 	Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
-	cout << "Constraints are written! [see Tracker_con.txt]" << endl;
+	helper << "Constraints are written! [see Tracker_con.txt]" << endl;
 
 	//Now writing the steering file
 	Tracker::instance()->write_steering_file(steering_file);
-	cout << "Steering file was generated! [see Tracker_con.txt]" << endl;
+	helper << "Steering file was generated! [see Tracker_con.txt]" << endl;
 
-	cout << "Calculating residuals..." << endl;
+	helper << "Calculating residuals..." << endl;
 
 //------------------------------------------Main Mille Track Loop---------------------------------------------------------//
 	bool StrongDebugBool = false;
@@ -407,7 +434,7 @@ int main(int argc, char* argv[]) {
 		//scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
 		scatterError = 0; // set no scatterError for now
 
-		if (debugBool && StrongDebugBool) { cout << "Track: " << trackCount << endl; }
+		if (debugBool && StrongDebugBool) { helper << "Track: " << trackCount << endl; }
 
 		//Generating tracks
 		MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen,
@@ -429,17 +456,17 @@ int main(int argc, char* argv[]) {
 				int label_mp2 = generated_MC.i_hits[hitCount];
 
 				//Variables for derivative calculations:
-				float z = generated_MC.z_straw[hitCount]; 
+				float z = generated_MC.z_straw[hitCount];
 				float x = generated_MC.x_straw[hitCount];
-				float m = generated_MC.slope_recon; 
+				float m = generated_MC.slope_recon;
 				float c = generated_MC.intercept_recon;
 
 				//Local derivatives
-				float dlc1 = ( c+m*z-x ) / ( sqrt(m*m+1) * abs(c+m*z-x) ) ; // "DCA magnitude"
-				float dlc2 = ( (m*m+1)*z*(c+m*z-x) - m*pow(abs(c+m*z-x), 2) ) / ( pow(m*m+1, 1.5) * abs(c+m*z-x)  ) ;   
+				float dlc1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) ; // "DCA magnitude"
+				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ;
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1 = - ( c+m*z-x ) / ( sqrt(m*m+1) * abs(c+m*z-x) ); // -DLC1
+				float dgl1 = - ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); // -DLC1
 				float dergl[nagl] = {dgl1};
 				//Labels
 				int l1 = label_mp2;
@@ -528,7 +555,40 @@ int main(int argc, char* argv[]) {
 				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN << "_" << generated_MC.LR[hitCount];
 				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
 				h13->Fill(rMeas_mp2);
-				
+
+				h_name.str(""); h_name << "h_LC2_M" << moduleN;
+				TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
+				h14->Fill(dlc2);
+
+				h_name.str(""); h_name << "h_LC1_M" << moduleN;
+				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
+				h15->Fill(dlc1);
+
+				if (moduleN == 0 && UV == "U1" && strawID == 2) {
+					h_M0U1S2_LC1->Fill(dlc1);
+					h_M0U1S2_LC2->Fill(dlc2);
+					if (generated_MC.LR[hitCount] == -1 && rMeas_mp2 > 0) {
+						h_M0U1S2_pR_L_LC1->Fill(dlc1);
+						h_M0U1S2_pR_L_LC2->Fill(dlc2);
+					}
+					if (generated_MC.LR[hitCount] == -1 && rMeas_mp2 < 0) {
+						h_M0U1S2_nR_L_LC1->Fill(dlc1);
+						h_M0U1S2_nR_L_LC2->Fill(dlc2);
+					}
+					if (generated_MC.LR[hitCount] == 1 && rMeas_mp2 > 0) {
+						h_M0U1S2_pR_R_LC1->Fill(dlc1);
+						h_M0U1S2_pR_R_LC2->Fill(dlc2);
+					}
+					if (generated_MC.LR[hitCount] == 1 && rMeas_mp2 < 0) {
+						h_M0U1S2_nR_R_LC1->Fill(dlc1);
+						h_M0U1S2_nR_R_LC2->Fill(dlc2);
+					}
+				}
+
+				if (moduleN == 2 && UV == "U0" && strawID == 4) {
+					h_M2U0S4_LC1->Fill(dlc1);
+					h_M2U0S4_LC2->Fill(dlc2);
+				}
 
 				hitsN++; //count hits
 			} // end of hits loop
@@ -566,14 +626,14 @@ int main(int argc, char* argv[]) {
 		} // cut on DCA check
 
 	} // end of track count // End of Mille // End of collecting residual records
-	cout << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
+	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
 
 
 	//------------------------------------------ROOT: Fitting Functions---------------------------------------------------------//
 
-	cout << endl;
-	cout << "-------------------------------------------------------------------------" << endl;
-	cout << "ROOT fitting parameters and output:" << endl;
+	helper << endl;
+	helper << "-------------------------------------------------------------------------" << endl;
+	helper << "ROOT fitting parameters and output:" << endl;
 
 	// Store alignment parameters from measurements
 	vector<float> sigma_recon_actual;
@@ -771,27 +831,29 @@ int main(int argc, char* argv[]) {
 		cStack->Write();
 	} // strong plotting
 
-	cout << "-------------------------------------------------------------------------" << endl;
-	cout << " " << endl;
-	cout << Tracker::instance()->getTrackNumber() << " tracks requested; " << recordN << " generated with " << hitsN << " hits." << endl;
+	helper << "-------------------------------------------------------------------------" << endl;
+	helper << " " << endl;
+	helper << Tracker::instance()->getTrackNumber() << " tracks requested; " << recordN << " generated with " << hitsN << " hits." << endl;
 	float rejectedTracks = (Tracker::instance()->getTrackNumber() - recordN) / float(Tracker::instance()->getTrackNumber()) * 100.0;
-	cout << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
-	cout << "Number of DCA (==drift radii) smeared below 0 is " << negDCA << endl;
+	helper << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
+	helper << "Number of DCA (==drift radii) smeared below 0 is " << negDCA << endl;
 	stringstream out1, out2, out3, out4, out5;
 	out1 << "Expected Mean Chi2 (for a general straight line fit) " << Tracker::instance()->get_Chi2_recon_estimated();
 	out2 << "Measured Mean Chi2 (circle fit) " << Chi2_recon_actual;
 	Logger::Instance()->write(Logger::WARNING, out1.str());
 	Logger::Instance()->write(Logger::WARNING, out2.str());
+	LOG << out1.rdbuf() << endl; LOG << out2.rdbuf() << endl;
 	float rejectsFrac = Tracker::instance()->getRejectedHitsDCA();
 	rejectsFrac = rejectsFrac / (Tracker::instance()->getLayerTotalN() * recordN);
-	cout << fixed << setprecision(1);
-	out3 << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << ". [" << rejectsFrac * 100 << "%]";
+	helper << fixed << setprecision(1);
+	out3 << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << " (" << rejectsFrac * 100 << "%).";
 	out4 << "Multiple hits (for all layers): " << Tracker::instance()->getMultipleHitsLayer() << ".";
 	out5 << "Ambiguity Hits Resolved (rand.): " << Tracker::instance()->getAmbiguityHit() << ".";
+	LOG << out3.rdbuf() << endl; LOG << out4.rdbuf() << endl; LOG << out5.rdbuf() << endl;
 	Logger::Instance()->write(Logger::WARNING, out3.str());
 	Logger::Instance()->write(Logger::WARNING, out4.str());
 	Logger::Instance()->write(Logger::WARNING, out5.str());
-	cout << " " << endl;
+	helper << " " << endl;
 	Logger::Instance()->setUseColor(false); // will be re-enabled below
 	stringstream msg2, msg3, msg4, msgA, msgB;
 	msgA <<  Logger::blue() << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << Logger::def();
@@ -805,8 +867,8 @@ int main(int argc, char* argv[]) {
 	msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg4.str());
 	Logger::Instance()->setUseColor(true); // back to default colours
-	cout << "Normal random numbers were used " << RandomBuffer::instance()->getNormTotal() << " times" << endl;
-	cout << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" << endl;
+	helper << "Normal random numbers were used " << RandomBuffer::instance()->getNormTotal() << " times" << endl;
+	helper << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" << endl;
 	if (debugBool) {
 		Logger::Instance()->write(Logger::WARNING, "Text debug files were produced: ls Tracker_d_*.txt");
 	}
@@ -829,17 +891,17 @@ int main(int argc, char* argv[]) {
 	file->Close();
 	delete file;
 
-	cout << endl;
-
-	cout << fixed << setprecision(4);
+	helper << endl;
+	helper << "Programme log written to: Tracker_log.txt" << endl;
+	helper << fixed << setprecision(4);
 	t_cpu = clock() - t_cpu;
 	auto t_end = chrono::high_resolution_clock::now();
-	cout << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu) / CLOCKS_PER_SEC << " s)." << " Wall clock time passed: "
-	     << chrono::duration<double>(t_end - t_start).count() << " s." << endl;
+	helper << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu) / CLOCKS_PER_SEC << " s)." << " Wall clock time passed: "
+	       << chrono::duration<double>(t_end - t_start).count() << " s." << endl;
 	time_t now = time(0);
 	char* dt = ctime(&now);
-	cout << "Peak RAM use: " << Tracker::instance()->getPeakRSS( ) / 1e9 << " GB" << endl;
-	cout << "The C++ compiler used: " << true_cxx << " " << true_cxx_ver
-	     << " Job finished on: " << dt << endl;
+	helper << "Peak RAM use: " << Tracker::instance()->getPeakRSS( ) / 1e9 << " GB" << endl;
+	helper << "The C++ compiler used: " << true_cxx << " " << true_cxx_ver
+	       << " Job finished on: " << dt << endl;
 	return 0;
 } //end of main
