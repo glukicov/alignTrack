@@ -353,8 +353,8 @@ int main(int argc, char* argv[]) {
 							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << UV << "_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
 							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
 							if (i_LC == 0) {
-								if (nameResSign[i_RS]=='P') {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);}
-								if (nameResSign[i_RS]=='N') {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);}
+								if ( (nameResSign[i_RS]=='P' && nameLR[i_LR]=='L') ||  (nameResSign[i_RS]=='N' && nameLR[i_LR]=='R') ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);}
+								if ( (nameResSign[i_RS]=='N' && nameLR[i_LR]=='L') ||  (nameResSign[i_RS]=='P' && nameLR[i_LR]=='R') ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);}
 							}
 							if (i_LC == 1) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -65.0, 65.0); hl7->SetDirectory(cd_PEDE);}
 							
