@@ -104,6 +104,8 @@ int main(int argc, char* argv[]) {
 	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 	// Simple LR mapping for ROOT plots
 	char nameLR[] = {'L', 'R'};
+	char nameResSign[] = {'P', 'N'};
+	const char* nameLC[] = {"LC1", "LC2"};
 	int valueLR[] = {1, -1};
 	// True/False -> Yes/No mapping
 	const char* boolYN[2] = {"No", "Yes"};
@@ -157,7 +159,7 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->write(Logger::NOTE, "");
 	msg0 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg0.str());
-	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.5) - Gleb Lukicov (UCL) - October 2017         " << Logger::def();
+	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.5) - Gleb Lukicov (UCL) - November 2017         " << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg01.str());
 	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg1.str());
@@ -228,6 +230,8 @@ int main(int argc, char* argv[]) {
 	TDirectory* cd_Modules = file->mkdir("Modules");
 	TDirectory* cd_Tracks = file->mkdir("Tracks");
 	TDirectory* cd_Straws = file->mkdir("Straws");
+	TDirectory* cd_PEDE = file->mkdir("PEDE");
+
 	// Book histograms [once only] - Key quantities
 	TH1F* h_sigma = new TH1F("h_sigma", "Resolution (#sigma)",  49,  Tracker::instance()->getResolution() - 0.001,
 	                         Tracker::instance()->getResolution() + 0.001); // F=float bins, name, title, nBins, Min, Max
@@ -259,19 +263,19 @@ int main(int argc, char* argv[]) {
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 
 	//XXX LC debug histos
-	TH1F* h_M0U1S2_LC2 = new TH1F("h_M0U1S2_LC2", "M0U1S2 All LC2 (dR/dm)", 589, -6.0, 6.0);
-	TH1F* h_M2U0S4_LC2 = new TH1F("h_M2U0S4_LC2", "M2U0S4 All LC2 (dR/dm)", 589, 50.0, 50.0);
-	TH1F* h_M0U1S2_LC1 = new TH1F("h_M0U1S2_LC1", "M0U1S2 All LC1 (dR/dm)", 589, -1.1, 1.1);
-	TH1F* h_M2U0S4_LC1 = new TH1F("h_M2U0S4_LC1", "M2U0S4 All LC1 (dR/dm)", 589, -1.1, 1.1);
+	TH1F* h_M0U1S2_LC2 = new TH1F("h_M0U1S2_LC2", "M0U1S2 All LC2 (dR/dm)", 2589, 5.508, 5.518);
+	TH1F* h_M2U0S4_LC2 = new TH1F("h_M2U0S4_LC2", "M2U0S4 All LC2 (dR/dm)", 2589, 38.52, 38.6);
+	TH1F* h_M0U1S2_LC1 = new TH1F("h_M0U1S2_LC1", "M0U1S2 All LC1 (dR/dm)", 2589, 0.99995, 1.0);
+	TH1F* h_M2U0S4_LC1 = new TH1F("h_M2U0S4_LC1", "M2U0S4 All LC1 (dR/dm)", 2589, 0.99995, 1.0);
 
-	TH1F* h_M0U1S2_pR_L_LC2 = new TH1F("h_M0U1S2_pR_L_LC2", "M0U1S2 +ive Res L LC2 (dR/dm)", 589, -6.0, 6.0);
-	TH1F* h_M0U1S2_nR_L_LC2 = new TH1F("h_M0U1S2_nR_L_LC2", "M0U1S2 -ive Res L LC2 (dR/dm)", 589, -6.0, 6.0);
-	TH1F* h_M0U1S2_pR_R_LC2 = new TH1F("h_M0U1S2_pR_R_LC2", "M0U1S2 +ive Res R LC2 (dR/dm)", 589, -6.0, 6.0);
-	TH1F* h_M0U1S2_nR_R_LC2 = new TH1F("h_M0U1S2_nR_R_LC2", "M0U1S2 -ive Res R LC2 (dR/dm)", 589, -6.0, 6.0);
-	TH1F* h_M0U1S2_pR_L_LC1 = new TH1F("h_M0U1S2_pR_L_LC1", "M0U1S2 +ive Res L LC1 (dR/dm)", 589, -1.1, 1.1);
-	TH1F* h_M0U1S2_nR_L_LC1 = new TH1F("h_M0U1S2_nR_L_LC1", "M0U1S2 -ive Res L LC1 (dR/dm)", 589, -1.1, 1.1);
-	TH1F* h_M0U1S2_pR_R_LC1 = new TH1F("h_M0U1S2_pR_R_LC1", "M0U1S2 +ive Res R LC1 (dR/dm)", 589, -1.1, 1.1);
-	TH1F* h_M0U1S2_nR_R_LC1 = new TH1F("h_M0U1S2_nR_R_LC1", "M0U1S2 -ive Res R LC1 (dR/dm)", 589, -1.1, 1.1);
+	TH1F* h_M0U1S2_pR_L_LC2 = new TH1F("h_M0U1S2_pR_L_LC2", "M0U1S2 +ive Res L LC2 (dR/dm)", 2589, -6.0, 6.0);
+	TH1F* h_M0U1S2_nR_L_LC2 = new TH1F("h_M0U1S2_nR_L_LC2", "M0U1S2 -ive Res L LC2 (dR/dm)", 2589, -6.0, 6.0);
+	TH1F* h_M0U1S2_pR_R_LC2 = new TH1F("h_M0U1S2_pR_R_LC2", "M0U1S2 +ive Res R LC2 (dR/dm)", 2589, -6.0, 6.0);
+	TH1F* h_M0U1S2_nR_R_LC2 = new TH1F("h_M0U1S2_nR_R_LC2", "M0U1S2 -ive Res R LC2 (dR/dm)", 2589, -6.0, 6.0);
+	TH1F* h_M0U1S2_pR_L_LC1 = new TH1F("h_M0U1S2_pR_L_LC1", "M0U1S2 +ive Res L LC1 (dR/dm)", 2589, -1.1, 1.1);
+	TH1F* h_M0U1S2_nR_L_LC1 = new TH1F("h_M0U1S2_nR_L_LC1", "M0U1S2 -ive Res L LC1 (dR/dm)", 2589, -1.1, 1.1);
+	TH1F* h_M0U1S2_pR_R_LC1 = new TH1F("h_M0U1S2_pR_R_LC1", "M0U1S2 +ive Res R LC1 (dR/dm)", 2589, -1.1, 1.1);
+	TH1F* h_M0U1S2_nR_R_LC1 = new TH1F("h_M0U1S2_nR_R_LC1", "M0U1S2 -ive Res R LC1 (dR/dm)", 2589, -1.1, 1.1);
 
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
@@ -341,8 +345,23 @@ int main(int argc, char* argv[]) {
 
 				h_name.str(""); h_name << "h_pull_M_" << i_module << "_" << UV;
 				h_title.str(""); h_title << "Pull M" << i_module << " " << UV ;
-				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
-				hl6->SetDirectory(cd_UV);
+				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0); hl6->SetDirectory(cd_UV);
+
+				for (int i_LC = 0; i_LC < 2; i_LC++) {
+					for (int i_LR = 0; i_LR < 2; i_LR++) {
+						for (int i_RS = 0; i_RS < 2; i_RS++) {
+							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << UV << "_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
+							if (i_LC == 0) {
+								if (nameResSign[i_RS]=='P') {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);}
+								if (nameResSign[i_RS]=='N') {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);}
+							}
+							if (i_LC == 1) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -65.0, 65.0); hl7->SetDirectory(cd_PEDE);}
+							
+						}
+					}
+				}
+
 			} // layers
 		} // views
 	} // modules
@@ -365,13 +384,13 @@ int main(int argc, char* argv[]) {
 		auto hm5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
 		hm5->SetDirectory(cd_Modules);
 
-		h_name.str(""); h_name << "h_LC2_M" << i_module;
-		h_title.str(""); h_title << "LC2_M" << i_module;
-		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -65, 65);
+		// h_name.str(""); h_name << "h_LC2_M" << i_module;
+		// h_title.str(""); h_title << "LC2_M" << i_module;
+		// auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -65, 65);
 
 		h_name.str(""); h_name << "h_LC1_M" << i_module;
 		h_title.str(""); h_title << "LC1_M" << i_module;
-		auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -1.1, 1.1);
+		auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  847, 0.99995, 1.0);
 
 
 		for (int i_LR = 0; i_LR < 2; i_LR++) {
@@ -556,13 +575,29 @@ int main(int argc, char* argv[]) {
 				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
 				h13->Fill(rMeas_mp2);
 
-				h_name.str(""); h_name << "h_LC2_M" << moduleN;
-				TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
-				h14->Fill(dlc2);
+				// h_name.str(""); h_name << "h_LC2_M" << moduleN;
+				// TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
+				// h14->Fill(dlc2);
 
 				h_name.str(""); h_name << "h_LC1_M" << moduleN;
 				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
 				h15->Fill(dlc1);
+
+				char tmpNameResSign;
+				if (rMeas_mp2 > 0) {
+					tmpNameResSign = 'P';
+				}
+				else {
+					tmpNameResSign = 'N';
+				}
+
+				for (int i_LC = 0; i_LC < 2; i_LC++) {
+					h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << UV << "_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
+					TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
+					if (i_LC == 0) {h16->Fill(dlc1);}
+					if (i_LC == 1) {h16->Fill(dlc2);}
+
+				}
 
 				if (moduleN == 0 && UV == "U1" && strawID == 2) {
 					h_M0U1S2_LC1->Fill(dlc1);
@@ -571,7 +606,7 @@ int main(int argc, char* argv[]) {
 						h_M0U1S2_pR_L_LC1->Fill(dlc1);
 						h_M0U1S2_pR_L_LC2->Fill(dlc2);
 					}
-					if (generated_MC.LR[hitCount] == -1 && rMeas_mp2 < 0) {
+					if (generated_MC.LR[hitCount] == -1 && rMeas_mp2 <= 0) {
 						h_M0U1S2_nR_L_LC1->Fill(dlc1);
 						h_M0U1S2_nR_L_LC2->Fill(dlc2);
 					}
@@ -579,11 +614,11 @@ int main(int argc, char* argv[]) {
 						h_M0U1S2_pR_R_LC1->Fill(dlc1);
 						h_M0U1S2_pR_R_LC2->Fill(dlc2);
 					}
-					if (generated_MC.LR[hitCount] == 1 && rMeas_mp2 < 0) {
+					if (generated_MC.LR[hitCount] == 1 && rMeas_mp2 <= 0) {
 						h_M0U1S2_nR_R_LC1->Fill(dlc1);
 						h_M0U1S2_nR_R_LC2->Fill(dlc2);
 					}
-				}
+				} // M0U1S2
 
 				if (moduleN == 2 && UV == "U0" && strawID == 4) {
 					h_M2U0S4_LC1->Fill(dlc1);
