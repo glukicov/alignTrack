@@ -13,6 +13,7 @@ Tracker* Tracker::s_instance = NULL;
 Constructor for tracker class.
  */
 Tracker::Tracker() {
+	
 	// non-static variables definition here
 
 	// Set mapping for U0...V1
@@ -440,7 +441,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	// Then looping over layers and views
 	// within layers we will have loops over straws in that layer [to find out which straw was hit and dca]
 	int z_counter = 0; // distance in z is incremented from 0 to TotalLayerN
-	if (debugBool && StrongDebugBool) {helper << "Calculating hits/dca:" << endl;}
+	if (debugBool && StrongDebugBool) {cout << "Calculating hits/dca:" << endl;}
 	//loops over modules, views, layers
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		for (int i_view = 0; i_view < viewN; i_view++) {
@@ -463,7 +464,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 					if (dca > strawRadius && hitCut == true) { //[between (0,0.25]
 						MC.hit_bool.push_back(0);
 						incRejectedHitsDCA();
-						if (debugBool) {helper << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
+						if (debugBool) {cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
 						z_counter++;  // incrementing distance of planes
 						missedHit = true;
 					}
@@ -524,7 +525,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
 	if (cutTriggered == false) {
 
-		if (debugBool && StrongDebugBool) {helper << "Calculating residuals..." << endl;}
+		if (debugBool && StrongDebugBool) {cout << "Calculating residuals..." << endl;}
 		//This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
 		// and need to do a simultaneous fit once - to return #hits worth of residuals]
 		ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
@@ -606,18 +607,18 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			for (int i_view = 0; i_view < viewN; i_view++) {
 				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
-					helper << "IDEAL Mod " << i_module  << " " << UVmapping[i_view][i_layer] << " X : ";
+					cout << "IDEAL Mod " << i_module  << " " << UVmapping[i_view][i_layer] << " X : ";
 					for (int i_straw = 0; i_straw < strawN; i_straw++) {
-						helper << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
+						cout << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
 						debug_geom << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
 					} // straws
-					helper << "  | Z= " << distance[Zcounter] << " [cm]" << endl;  // TODO align the cout better
+					cout << "  | Z= " << distance[Zcounter] << " [cm]" << endl;  // TODO align the cout better
 					debug_geom << distance[Zcounter] << endl;
 					Zcounter++;
 				} // end of Layers
 
 			}// end of View loop
-			helper << endl;
+			cout << endl;
 		}//Modules
 	}
 
@@ -658,19 +659,19 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			for (int i_view = 0; i_view < viewN; i_view++) {
 				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
-					helper << "MIS Mod " << i_module  << " " << UVmapping[i_view][i_layer] << " X : ";
+					cout << "MIS Mod " << i_module  << " " << UVmapping[i_view][i_layer] << " X : ";
 					for (int i_straw = 0; i_straw < strawN; i_straw++) {
-						helper << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
+						cout << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
 						debug_mis << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
 
 					} //end of Straws loop
-					helper << " | Z= " << distance[Zcounter] << " [cm]" << endl;
+					cout << " | Z= " << distance[Zcounter] << " [cm]" << endl;
 					debug_mis << distance[Zcounter] << endl;
 					Zcounter++;
 				} // end of Layers
 
 			}// end of View loop
-			helper << endl;
+			cout << endl;
 		}//Modules
 	}
 
@@ -684,9 +685,9 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 		sum_of_elems += *it;
 	}
 	overallMis = sum_of_elems / moduleN;
-	helper << "Manual Misalignment: " << endl;
+	cout << "Manual Misalignment: " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		helper << showpos << "Module " << i_module << " :: Characteristic:  " << sdevX[i_module] << " cm. "; // absolute misalignment [as set by MC]
+		cout << showpos << "Module " << i_module << " :: Characteristic:  " << sdevX[i_module] << " cm. "; // absolute misalignment [as set by MC]
 		if (debugBool) {pede_mis << sdevX[i_module] << " "; }
 		float relMisTmp = sdevX[i_module] - overallMis;
 		// now push these misalignment parameters for all layers in the module [for use later]
@@ -696,10 +697,10 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 				charMis.push_back(sdevX[i_module]);  // absolute misalignment per layer
 			} // view
 		} // layer
-		helper << showpos << "Relative: " << relMisTmp << " cm." << endl;
+		cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
 	} // modules
-	helper << noshowpos;
-	helper << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
+	cout << noshowpos;
+	cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
 
 	//--- Calculations for Each Layer -- //
 	// XXX ONLY VALID FOR 2-parameter line fit (i.e. not circle fit)

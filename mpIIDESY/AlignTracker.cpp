@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 	char nameLR[] = {'L', 'R'};
 	char nameResSign[] = {'P', 'N'};
 	const char* nameLC[] = {"LC1", "LC2"};
-	int valueLR[] = {1, -1};
+	int valueLR[] = { -1, 1};
 	// True/False -> Yes/No mapping
 	const char* boolYN[2] = {"No", "Yes"};
 
@@ -350,14 +350,14 @@ int main(int argc, char* argv[]) {
 				for (int i_LC = 0; i_LC < 2; i_LC++) {
 					for (int i_LR = 0; i_LR < 2; i_LR++) {
 						for (int i_RS = 0; i_RS < 2; i_RS++) {
-							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << UV << "_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
-							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
+							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
 							if (i_LC == 0) {
-								if ( (nameResSign[i_RS]=='P' && nameLR[i_LR]=='L') ||  (nameResSign[i_RS]=='N' && nameLR[i_LR]=='R') ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);}
-								if ( (nameResSign[i_RS]=='N' && nameLR[i_LR]=='L') ||  (nameResSign[i_RS]=='P' && nameLR[i_LR]=='R') ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);}
+								if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);}
+								if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);}
 							}
-							if (i_LC == 1) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -65.0, 65.0); hl7->SetDirectory(cd_PEDE);}
-							
+							if (i_LC == 1) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  135, 4.6, 5.1); hl7->SetDirectory(cd_PEDE);}
+
 						}
 					}
 				}
@@ -590,14 +590,15 @@ int main(int argc, char* argv[]) {
 				else {
 					tmpNameResSign = 'N';
 				}
+				if (strawID == 3) {
+					for (int i_LC = 0; i_LC < 2; i_LC++) {
+						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
+						TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
+						if (i_LC == 0) {h16->Fill(dlc1);}
+						if (i_LC == 1) {h16->Fill(dlc2);}
 
-				for (int i_LC = 0; i_LC < 2; i_LC++) {
-					h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << UV << "_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
-					TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
-					if (i_LC == 0) {h16->Fill(dlc1);}
-					if (i_LC == 1) {h16->Fill(dlc2);}
-
-				}
+					}
+				} // strawID=3
 
 				if (moduleN == 0 && UV == "U1" && strawID == 2) {
 					h_M0U1S2_LC1->Fill(dlc1);
