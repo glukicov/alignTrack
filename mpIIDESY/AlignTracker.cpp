@@ -356,7 +356,7 @@ int main(int argc, char* argv[]) {
 								if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);}
 								if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);}
 							}
-							if (i_LC == 1) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  135, 4.6, 5.1); hl7->SetDirectory(cd_PEDE);}
+							if (i_LC == 1) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  79, 5.508, 5.519); hl7->SetDirectory(cd_PEDE);}
 
 						}
 					}
@@ -384,9 +384,9 @@ int main(int argc, char* argv[]) {
 		auto hm5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
 		hm5->SetDirectory(cd_Modules);
 
-		// h_name.str(""); h_name << "h_LC2_M" << i_module;
-		// h_title.str(""); h_title << "LC2_M" << i_module;
-		// auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -65, 65);
+		h_name.str(""); h_name << "h_LC2_M" << i_module;
+		h_title.str(""); h_title << "LC2_M" << i_module;
+		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -65, 65);
 
 		h_name.str(""); h_name << "h_LC1_M" << i_module;
 		h_title.str(""); h_title << "LC1_M" << i_module;
@@ -575,9 +575,9 @@ int main(int argc, char* argv[]) {
 				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
 				h13->Fill(rMeas_mp2);
 
-				// h_name.str(""); h_name << "h_LC2_M" << moduleN;
-				// TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
-				// h14->Fill(dlc2);
+				h_name.str(""); h_name << "h_LC2_M" << moduleN;
+				TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
+				h14->Fill(dlc2);
 
 				h_name.str(""); h_name << "h_LC1_M" << moduleN;
 				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
