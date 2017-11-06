@@ -262,21 +262,6 @@ int main(int argc, char* argv[]) {
 	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 250, -0.1, 120);
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 
-	//XXX LC debug histos
-	TH1F* h_M0U1S2_LC2 = new TH1F("h_M0U1S2_LC2", "M0U1S2 All LC2 (dR/dm)", 2589, 5.508, 5.518);
-	TH1F* h_M2U0S4_LC2 = new TH1F("h_M2U0S4_LC2", "M2U0S4 All LC2 (dR/dm)", 2589, 38.52, 38.6);
-	TH1F* h_M0U1S2_LC1 = new TH1F("h_M0U1S2_LC1", "M0U1S2 All LC1 (dR/dm)", 2589, 0.99995, 1.0);
-	TH1F* h_M2U0S4_LC1 = new TH1F("h_M2U0S4_LC1", "M2U0S4 All LC1 (dR/dm)", 2589, 0.99995, 1.0);
-
-	TH1F* h_M0U1S2_pR_L_LC2 = new TH1F("h_M0U1S2_pR_L_LC2", "M0U1S2 +ive Res L LC2 (dR/dm)", 2589, -6.0, 6.0);
-	TH1F* h_M0U1S2_nR_L_LC2 = new TH1F("h_M0U1S2_nR_L_LC2", "M0U1S2 -ive Res L LC2 (dR/dm)", 2589, -6.0, 6.0);
-	TH1F* h_M0U1S2_pR_R_LC2 = new TH1F("h_M0U1S2_pR_R_LC2", "M0U1S2 +ive Res R LC2 (dR/dm)", 2589, -6.0, 6.0);
-	TH1F* h_M0U1S2_nR_R_LC2 = new TH1F("h_M0U1S2_nR_R_LC2", "M0U1S2 -ive Res R LC2 (dR/dm)", 2589, -6.0, 6.0);
-	TH1F* h_M0U1S2_pR_L_LC1 = new TH1F("h_M0U1S2_pR_L_LC1", "M0U1S2 +ive Res L LC1 (dR/dm)", 2589, -1.1, 1.1);
-	TH1F* h_M0U1S2_nR_L_LC1 = new TH1F("h_M0U1S2_nR_L_LC1", "M0U1S2 -ive Res L LC1 (dR/dm)", 2589, -1.1, 1.1);
-	TH1F* h_M0U1S2_pR_R_LC1 = new TH1F("h_M0U1S2_pR_R_LC1", "M0U1S2 +ive Res R LC1 (dR/dm)", 2589, -1.1, 1.1);
-	TH1F* h_M0U1S2_nR_R_LC1 = new TH1F("h_M0U1S2_nR_R_LC1", "M0U1S2 -ive Res R LC1 (dR/dm)", 2589, -1.1, 1.1);
-
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
 	TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.1, 0.1);
@@ -317,6 +302,7 @@ int main(int argc, char* argv[]) {
 	stringstream h_name; //to book hist. in a loop
 	stringstream h_title;
 	// Modules, views, layers
+	float z_jump_bin = 5.0; // the increment in z for consecutive layers
 	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
 		for (int i_view = 0; i_view < Tracker::instance()->getViewN(); i_view++) {
 			for (int i_layer = 0; i_layer < Tracker::instance()->getLayerN(); i_layer++) {
@@ -347,23 +333,36 @@ int main(int argc, char* argv[]) {
 				h_title.str(""); h_title << "Pull M" << i_module << " " << UV ;
 				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0); hl6->SetDirectory(cd_UV);
 
-				for (int i_LC = 0; i_LC < 2; i_LC++) {
+				// Parasitic booking with specific binning
+				for (int i_LC = 0; i_LC < 2; i_LC++) { //loop over derivatives
 					for (int i_LR = 0; i_LR < 2; i_LR++) {
 						for (int i_RS = 0; i_RS < 2; i_RS++) {
 							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
 							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
 							if (i_LC == 0) {
-								if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);}
-								if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  549, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);}
-							}
-							if (i_LC == 1) {auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  79, 5.508, 5.519); hl7->SetDirectory(cd_PEDE);}
-
-						}
-					}
-				}
-
+								if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {
+									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);
+								}
+								if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {
+									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);
+								}
+							} // lc1
+							if (i_LC == 1) {
+								if (nameLR[i_LR] == 'L') {
+									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, -z_jump_bin - 0.006, -z_jump_bin + 0.006); hl7->SetDirectory(cd_PEDE);
+								}
+								if (nameLR[i_LR] == 'R') {
+									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, z_jump_bin - 0.006, z_jump_bin + 0.006); hl7->SetDirectory(cd_PEDE);
+								}
+							} // lc2
+						} // Res sign P/N
+					} // LR
+				} // lc1-2
+				if (i_layer == 0) { z_jump_bin += 0.515; }
 			} // layers
+			if (i_view == 0) { z_jump_bin += 2.020; }
 		} // views
+		z_jump_bin += 13.735;
 	} // modules
 
 	//Modules
@@ -386,18 +385,21 @@ int main(int argc, char* argv[]) {
 
 		h_name.str(""); h_name << "h_LC2_M" << i_module;
 		h_title.str(""); h_title << "LC2_M" << i_module;
-		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -65, 65);
-
-		h_name.str(""); h_name << "h_LC1_M" << i_module;
-		h_title.str(""); h_title << "LC1_M" << i_module;
-		auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  847, 0.99995, 1.0);
-
+		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  131, -65, 65);
+		hm7->SetDirectory(cd_PEDE);
 
 		for (int i_LR = 0; i_LR < 2; i_LR++) {
 			h_name.str(""); h_name << "h_Residuals_Module_" << i_module << "_" <<  valueLR[i_LR];
 			h_title.str(""); h_title << "Residuals Recon M" << i_module  << " " << nameLR[i_LR];
 			auto hm6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
 			hm6->GetXaxis()->SetTitle("[cm]"); hm6->SetDirectory(cd_Modules);
+
+			h_name.str(""); h_name << "h_LC1_M" << i_module << "_" << valueLR[i_LR];
+			h_title.str(""); h_title << "LC1_M" << i_module  << " " << nameLR[i_LR];
+			if (i_LR == 0) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, -1.00001, -0.99995); hm8->SetDirectory(cd_PEDE);}
+			if (i_LR == 1) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, 0.99995, 1.00001); hm8->SetDirectory(cd_PEDE);}
+			
+
 		}
 	}
 
@@ -452,6 +454,7 @@ int main(int argc, char* argv[]) {
 		//float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
 		//scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
 		scatterError = 0; // set no scatterError for now
+		char tmpNameResSign; //to assign sign label for the residual [+/-]
 
 		if (debugBool && StrongDebugBool) { helper << "Track: " << trackCount << endl; }
 
@@ -575,56 +578,27 @@ int main(int argc, char* argv[]) {
 				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
 				h13->Fill(rMeas_mp2);
 
-				h_name.str(""); h_name << "h_LC2_M" << moduleN;
+				h_name.str(""); h_name << "PEDE/h_LC2_M" << moduleN;
 				TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
 				h14->Fill(dlc2);
 
-				h_name.str(""); h_name << "h_LC1_M" << moduleN;
+				h_name.str(""); h_name << "PEDE/h_LC1_M" << moduleN << "_" << generated_MC.LR[hitCount];
 				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
 				h15->Fill(dlc1);
 
-				char tmpNameResSign;
-				if (rMeas_mp2 > 0) {
-					tmpNameResSign = 'P';
-				}
-				else {
-					tmpNameResSign = 'N';
-				}
+				// Now fill DLC1, DLC2 plots for U0-V1 for each module but only for straw 3 (4th straw from the "top")
 				if (strawID == 3) {
+					if (rMeas_mp2 > 0) {tmpNameResSign = 'P';}// DCA > driftRad
+					else {tmpNameResSign = 'N';} // DCA < driftRad
+
+					//loop over booked histos and fill
 					for (int i_LC = 0; i_LC < 2; i_LC++) {
 						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
 						TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
 						if (i_LC == 0) {h16->Fill(dlc1);}
 						if (i_LC == 1) {h16->Fill(dlc2);}
-
 					}
 				} // strawID=3
-
-				if (moduleN == 0 && UV == "U1" && strawID == 2) {
-					h_M0U1S2_LC1->Fill(dlc1);
-					h_M0U1S2_LC2->Fill(dlc2);
-					if (generated_MC.LR[hitCount] == -1 && rMeas_mp2 > 0) {
-						h_M0U1S2_pR_L_LC1->Fill(dlc1);
-						h_M0U1S2_pR_L_LC2->Fill(dlc2);
-					}
-					if (generated_MC.LR[hitCount] == -1 && rMeas_mp2 <= 0) {
-						h_M0U1S2_nR_L_LC1->Fill(dlc1);
-						h_M0U1S2_nR_L_LC2->Fill(dlc2);
-					}
-					if (generated_MC.LR[hitCount] == 1 && rMeas_mp2 > 0) {
-						h_M0U1S2_pR_R_LC1->Fill(dlc1);
-						h_M0U1S2_pR_R_LC2->Fill(dlc2);
-					}
-					if (generated_MC.LR[hitCount] == 1 && rMeas_mp2 <= 0) {
-						h_M0U1S2_nR_R_LC1->Fill(dlc1);
-						h_M0U1S2_nR_R_LC2->Fill(dlc2);
-					}
-				} // M0U1S2
-
-				if (moduleN == 2 && UV == "U0" && strawID == 4) {
-					h_M2U0S4_LC1->Fill(dlc1);
-					h_M2U0S4_LC2->Fill(dlc2);
-				}
 
 				hitsN++; //count hits
 			} // end of hits loop
