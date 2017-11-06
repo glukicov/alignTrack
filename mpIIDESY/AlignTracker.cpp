@@ -349,10 +349,10 @@ int main(int argc, char* argv[]) {
 							} // lc1
 							if (i_LC == 1) {
 								if (nameLR[i_LR] == 'L') {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, -z_jump_bin - 0.006, -z_jump_bin + 0.006); hl7->SetDirectory(cd_PEDE);
+									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, -z_jump_bin - 0.01, -z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
 								}
 								if (nameLR[i_LR] == 'R') {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, z_jump_bin - 0.006, z_jump_bin + 0.006); hl7->SetDirectory(cd_PEDE);
+									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, z_jump_bin - 0.01, z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
 								}
 							} // lc2
 						} // Res sign P/N
@@ -398,7 +398,7 @@ int main(int argc, char* argv[]) {
 			h_title.str(""); h_title << "LC1_M" << i_module  << " " << nameLR[i_LR];
 			if (i_LR == 0) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, -1.00001, -0.99995); hm8->SetDirectory(cd_PEDE);}
 			if (i_LR == 1) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, 0.99995, 1.00001); hm8->SetDirectory(cd_PEDE);}
-			
+
 
 		}
 	}
@@ -644,6 +644,27 @@ int main(int argc, char* argv[]) {
 	helper << endl;
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << "ROOT fitting parameters and output:" << endl;
+
+	helper << fixed << setprecision(2);
+	float LRSkewness = 0.0;
+	// PEDE Plots calculations for U0 only
+	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
+		for (int i_view = 0; i_view < 1; i_view++) {
+			for (int i_layer = 0; i_layer < 1; i_layer++) {
+				string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
+				for (int i_LR = 0; i_LR < 2; i_LR++) {
+					for (int i_RS = 0; i_RS < 2; i_RS++) {
+						h_name.str(""); h_name << "PEDE/h_LC2_M" << i_module << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
+						LRSkewness += hp1->GetSkewness();
+					}
+					cout << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness/2.0 << endl;
+					LRSkewness=0.0;
+				}
+			}
+		}
+	}
+	helper << fixed << setprecision(setPrecision);
 
 	// Store alignment parameters from measurements
 	vector<float> sigma_recon_actual;
