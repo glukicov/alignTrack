@@ -607,7 +607,7 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			for (int i_view = 0; i_view < viewN; i_view++) {
 				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
-					cout << "IDEAL Mod " << i_module  << " " << UVmapping[i_view][i_layer] << " X : ";
+					cout << "IDEAL M" << i_module << UVmapping[i_view][i_layer] << " X : ";
 					for (int i_straw = 0; i_straw < strawN; i_straw++) {
 						cout << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
 						debug_geom << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
@@ -659,7 +659,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			for (int i_view = 0; i_view < viewN; i_view++) {
 				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
-					cout << "MIS Mod " << i_module  << " " << UVmapping[i_view][i_layer] << " X : ";
+					cout << "MIS M" << i_module  << UVmapping[i_view][i_layer] << " X : ";
 					for (int i_straw = 0; i_straw < strawN; i_straw++) {
 						cout << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
 						debug_mis << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";

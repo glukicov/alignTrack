@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 	// Simple LR mapping for ROOT plots
 	char nameLR[] = {'L', 'R'};
 	char nameResSign[] = {'P', 'N'};
-	const char* nameLC[] = {"LC1", "LC2"};
+	const char* nameLC[] = {"DLC1", "DLC2"};
 	int valueLR[] = { -1, 1};
 	// True/False -> Yes/No mapping
 	const char* boolYN[2] = {"No", "Yes"};
@@ -240,9 +240,9 @@ int main(int argc, char* argv[]) {
 	TH1F* h_dca_unsmeared = new TH1F("h_dca_unsmeared", "Unsmeared DCA",  98,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
-	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  80,  -0.03, 0.03);
+	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  80,  -0.02, 0.02);
 	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  88,  -1.3, 1.3);
-	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 80,  -0.03, 0.03);
+	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 80,  -0.02, 0.02);
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  99,  -1.3, 1.3);
 	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
 	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
@@ -261,6 +261,9 @@ int main(int argc, char* argv[]) {
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
 	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 250, -0.1, 120);
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
+	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
+	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
+	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  149,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
 
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
@@ -383,9 +386,9 @@ int main(int argc, char* argv[]) {
 		auto hm5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
 		hm5->SetDirectory(cd_Modules);
 
-		h_name.str(""); h_name << "h_LC2_M" << i_module;
-		h_title.str(""); h_title << "LC2_M" << i_module;
-		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  131, -65, 65);
+		h_name.str(""); h_name << "h_DLC2_M" << i_module;
+		h_title.str(""); h_title << "DLC2_M" << i_module;
+		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  631, -65, 65);
 		hm7->SetDirectory(cd_PEDE);
 
 		for (int i_LR = 0; i_LR < 2; i_LR++) {
@@ -394,8 +397,8 @@ int main(int argc, char* argv[]) {
 			auto hm6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
 			hm6->GetXaxis()->SetTitle("[cm]"); hm6->SetDirectory(cd_Modules);
 
-			h_name.str(""); h_name << "h_LC1_M" << i_module << "_" << valueLR[i_LR];
-			h_title.str(""); h_title << "LC1_M" << i_module  << " " << nameLR[i_LR];
+			h_name.str(""); h_name << "h_DLC1_M" << i_module << "_" << valueLR[i_LR];
+			h_title.str(""); h_title << "DLC1_M" << i_module  << " " << nameLR[i_LR];
 			if (i_LR == 0) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, -1.00001, -0.99995); hm8->SetDirectory(cd_PEDE);}
 			if (i_LR == 1) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, 0.99995, 1.00001); hm8->SetDirectory(cd_PEDE);}
 
@@ -427,6 +430,7 @@ int main(int argc, char* argv[]) {
 		               << "  " << Tracker::instance()->getBeamStop() <<  endl;
 	}
 
+	helper << fixed << setprecision(4);
 	// SETTING GEOMETRY
 	Tracker::instance()->setGeometry(debug_geom, debugBool);
 	helper << "Geometry is set!" << endl << endl;
@@ -436,6 +440,7 @@ int main(int argc, char* argv[]) {
 	// MISALIGNMENT
 	Tracker::instance()->misalign(debug_mis, pede_mis, debugBool);
 	helper << "Misalignment is complete!" << endl;
+	helper << fixed << setprecision(setPrecision);
 
 	// Write a constraint file, for use with pede
 	Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
@@ -521,6 +526,7 @@ int main(int argc, char* argv[]) {
 				h_id_dca ->Fill(strawID);
 				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
 				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
+				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1);
 
 				//Track-based hit parameters
 				h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
@@ -578,11 +584,11 @@ int main(int argc, char* argv[]) {
 				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
 				h13->Fill(rMeas_mp2);
 
-				h_name.str(""); h_name << "PEDE/h_LC2_M" << moduleN;
+				h_name.str(""); h_name << "PEDE/h_DLC2_M" << moduleN;
 				TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
 				h14->Fill(dlc2);
 
-				h_name.str(""); h_name << "PEDE/h_LC1_M" << moduleN << "_" << generated_MC.LR[hitCount];
+				h_name.str(""); h_name << "PEDE/h_DLC1_M" << moduleN << "_" << generated_MC.LR[hitCount];
 				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
 				h15->Fill(dlc1);
 
@@ -654,7 +660,7 @@ int main(int argc, char* argv[]) {
 				string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
 				for (int i_LR = 0; i_LR < 2; i_LR++) {
 					for (int i_RS = 0; i_RS < 2; i_RS++) {
-						h_name.str(""); h_name << "PEDE/h_LC2_M" << i_module << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+						h_name.str(""); h_name << "PEDE/h_DLC2_M" << i_module << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
 						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
 						LRSkewness += hp1->GetSkewness();
 					}
