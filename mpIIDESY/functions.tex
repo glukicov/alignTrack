@@ -110,7 +110,29 @@ DGL_1 = \frac{\partial R}{\partial x} = - DLC_1 = - \frac{ c+mz-x }  { \sqrt{m^2
 
 
 
+\clearpage
+For parallel lines
+\begin{equation}
+R(x,M) = Track(x) - Hit(x,M) = \hat{m}z+\hat{c} - x(M)	
+\end{equation}
 
+\begin{equation}
+\frac{ \partial R}{\partial m} = z	= DLC_2
+\end{equation}
+
+\begin{equation}
+\frac{ \partial R}{\partial c} = 1	=DLC_1 = - DGL_1
+\end{equation}
+
+For general lines
+\begin{equation}	
+\mathrm{Residual}= R =\mathrm{Point \ To \ Line \ DCA} - \mathrm{Drift \ Circle \ Radius} = DCA(z,x,m,c) - r = \frac{ |c+mz-x| }  { \sqrt{m^2+1} } -r
+\end{equation}
+
+
+\begin{equation}
+DLC_2 = \frac{ \partial R}{\partial m} = \frac{ (m^2+1)\cdot z\cdot(c+mz-x) - m\cdot |c+mz-x|^2 }{ (m^2+1)^{3/2} \cdot |c+mz-x|  } = \frac{\pm z}{m^2+1} \pm \frac{m*|c+mz-x|}{(m^2+1)^{3/2}}
+\end{equation}
 
 \nocite{*}
 \thispagestyle{plain}

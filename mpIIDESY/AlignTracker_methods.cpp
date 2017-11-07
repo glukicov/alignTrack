@@ -13,7 +13,7 @@ Tracker* Tracker::s_instance = NULL;
 Constructor for tracker class.
  */
 Tracker::Tracker() {
-	
+
 	// non-static variables definition here
 
 	// Set mapping for U0...V1
@@ -419,16 +419,25 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	//Track parameters for rand-generated line MC [start and end positions outside of detectors]
 	// redefining the track as x=ym+c
 	float x0 = beamPositionLength * Tracker::generate_uniform() - 1.0; //uniform vertex
-	float signXSlope;
-	if (Tracker::generate_uniform() >= 0.5) {
-		signXSlope = 1.0;
-	}
-	else {
-		signXSlope = -1.0;
-	}
-	float xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
+
+	
+	float xSlope = 0.0;
 	float xIntercept = x0; // by definition
-	float x1 = xSlope * beamStop + xIntercept;
+	float x1 = x0; // for parallel lines only
+
+	bool generalLines = true;    // XXX quick hack
+	float slopeFactor=1.0; 		 // XXX another quick hack 
+	if (generalLines == true) {
+		float signXSlope;
+		if (Tracker::generate_uniform() >= 0.5) {
+			signXSlope = 1.0;
+		}
+		else {
+			signXSlope = -1.0;
+		}
+		xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5*slopeFactor * beamPositionLength / beamStop);
+		x1 = xSlope * beamStop + xIntercept; // "xExit"
+	}
 
 	float xTrack; //true track position x=zm+c
 

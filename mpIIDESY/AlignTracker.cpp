@@ -340,7 +340,7 @@ int main(int argc, char* argv[]) {
 				for (int i_LC = 0; i_LC < 2; i_LC++) { //loop over derivatives
 					for (int i_LR = 0; i_LR < 2; i_LR++) {
 						for (int i_RS = 0; i_RS < 2; i_RS++) {
-							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
 							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
 							if (i_LC == 0) {
 								if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {
@@ -599,7 +599,7 @@ int main(int argc, char* argv[]) {
 
 					//loop over booked histos and fill
 					for (int i_LC = 0; i_LC < 2; i_LC++) {
-						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
+						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN <<"_" << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
 						TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
 						if (i_LC == 0) {h16->Fill(dlc1);}
 						if (i_LC == 1) {h16->Fill(dlc2);}
@@ -660,7 +660,7 @@ int main(int argc, char* argv[]) {
 				string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
 				for (int i_LR = 0; i_LR < 2; i_LR++) {
 					for (int i_RS = 0; i_RS < 2; i_RS++) {
-						h_name.str(""); h_name << "PEDE/h_DLC2_M" << i_module << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+						h_name.str(""); h_name << "PEDE/h_DLC2_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
 						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
 						LRSkewness += hp1->GetSkewness();
 					}
