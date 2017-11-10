@@ -485,7 +485,7 @@ int main(int argc, char* argv[]) {
 				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ;
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1 = - ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); // -DLC1
+				float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); // =DLC1
 				float dergl[nagl] = {dgl1};
 				//Labels
 				int l1 = label_mp2;
