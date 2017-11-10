@@ -411,8 +411,8 @@ int main(int argc, char* argv[]) {
 		for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
 			h_name.str(""); h_name << "h" << i_module << "_straw" << i_straw;
 			h_title.str(""); h_title << "DCA S" << i_straw << " M" << i_module;
-			auto hms1 = new TH1F(h_name.str().c_str(), h_title.str().c_str(), 49, -0.1, 0.4);
-			hms1->GetXaxis()->SetTitle("[cm]"); hms1->SetDirectory(cd_Straws);
+			auto hmS3 = new TH1F(h_name.str().c_str(), h_title.str().c_str(), 49, -0.1, 0.4);
+			hmS3->GetXaxis()->SetTitle("[cm]"); hmS3->SetDirectory(cd_Straws);
 		}
 	}
 
@@ -421,14 +421,6 @@ int main(int argc, char* argv[]) {
 	// Creating .bin, steering, and constrain files
 	Mille M (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
 	helper << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
-
-	//Passing constants to plotting script
-	if (plotBool || debugBool) {
-		contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
-		               << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << Tracker::instance()->getTrackNumber() << " "
-		               << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
-		               << "  " << Tracker::instance()->getBeamStop() <<  endl;
-	}
 
 	helper << fixed << setprecision(4);
 	// SETTING GEOMETRY
@@ -644,6 +636,14 @@ int main(int argc, char* argv[]) {
 	} // end of track count // End of Mille // End of collecting residual records
 	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
 
+	//Passing constants to plotting script
+	if (plotBool || debugBool) {
+		contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
+		               << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
+		               << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
+		               << "  " << Tracker::instance()->getBeamStop() <<  endl;
+	}
+
 
 	//------------------------------------------ROOT: Fitting Functions---------------------------------------------------------//
 
@@ -664,7 +664,7 @@ int main(int argc, char* argv[]) {
 						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
 						LRSkewness += hp1->GetSkewness();
 					}
-					cout << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness/2.0 << endl;
+					helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness/2.0 << endl;
 					LRSkewness=0.0;
 				}
 			}
