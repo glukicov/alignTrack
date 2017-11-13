@@ -54,7 +54,7 @@ void Tracker::write_steering_file(ofstream& steering_file) {
 		              << "Tracker_con.txt   ! constraints text file " << endl
 		              << "Cfiles ! following bin files are Cfiles" << endl
 		              << "Tracker_data.bin   ! binary data file" << endl
-		              << "method inversion 2 0.01" << endl
+		              << "method inversion 1 0.01" << endl
 		              << "printrecord  -1 -1      ! debug printout for bad data records" << endl
 		              << "printrecord 1 -1 ! produces mpdebug.txt" << endl    //
 		              << " "  << endl

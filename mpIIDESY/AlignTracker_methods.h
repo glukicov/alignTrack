@@ -114,14 +114,14 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.0, 0.02, -0.03, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] = {0.0, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
-	
-	float pValCut = 0.00; // from 0->1 
-	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut  
-	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius 
+
+	float pValCut = 0.00; // from 0->1
+	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
+	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	bool useTruthLR = true;
 
 
@@ -372,15 +372,15 @@ public:
 		return beamPositionLength;
 	}
 
-	bool getLRStatus() { 
+	bool getLRStatus() {
 		return useTruthLR;
 	}
 
-	bool getHitCutStatus() { 
+	bool getHitCutStatus() {
 		return hitCut;
 	}
 
-	bool getTrackCutBool(){
+	bool getTrackCutBool() {
 		return trackCutBool;
 	}
 
