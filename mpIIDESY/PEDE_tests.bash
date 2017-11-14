@@ -24,9 +24,7 @@ sleep 0.8
 	
 for ((i=0;i<${#track[@]};++i)); do
 
-	echo "AlignTracker for ${track[i]}"
-	# echo "Sleeping for [s]: ${timeDelay[i]} "
-	"./AlignTracker" d $track[i]
+	"./AlignTracker" d ${track[i]}
 	sleep ${timeDelay[i]}  #n linear complexity 
 	"./pede" Tracker_str.txt
 	sleep 1.5

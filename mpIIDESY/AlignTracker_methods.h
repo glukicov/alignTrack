@@ -120,7 +120,7 @@ private:
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
 
 	float pValCut = 0.00; // from 0->1
-	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
+	bool trackCutBool = false; // if true, tracks will be rejected if DCA > trackCut
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	bool useTruthLR = true;
 
