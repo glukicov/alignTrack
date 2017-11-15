@@ -49,15 +49,21 @@ Tracker* Tracker::instance() {
 
 void Tracker::write_steering_file(ofstream& steering_file) {
 	if (steering_file.is_open()) {
+		
+		stringstream pede_method; pede_method.str(""); pede_method << "method inversion 5 0.001";
+		stringstream msg_method; 
+		msg_method << Logger::yellow() << pede_method.str().c_str();
+		Logger::Instance()->write(Logger::NOTE, msg_method.str());
+
 		steering_file <<  "* g-2 Tracker Alignment: PEDE Steering File" << endl
 		              << " "  << endl
 		              << "Tracker_con.txt   ! constraints text file " << endl
+		              << "Tracker_par.txt   ! parameters (presgima) text file " << endl
 		              << "Cfiles ! following bin files are Cfiles" << endl
 		              << "Tracker_data.bin   ! binary data file" << endl
-		              << "method inversion 3 0.001" << endl
+		              << pede_method.str().c_str() << endl 
 		              << "printrecord  -1 -1      ! debug printout for bad data records" << endl
-		              << "printrecord 1 -1 ! produces mpdebug.txt" << endl    //
-		              << "histprint" << endl
+		              << "printrecord 1 -1 ! produces mpdebug.txt" << endl    
 		              << " "  << endl
 		              << "end ! optional for end-of-data" << endl;
 	} // steering file open
@@ -66,6 +72,7 @@ void Tracker::write_steering_file(ofstream& steering_file) {
    Write a constraint file to the supplied file-stream.
     @param constraint_file Reference to ofstream to write constraint file to.
  */
+
 // XXX constraints are ignored with HIP method
 void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool) {
 	// Check constraints file is open, then write.
@@ -77,9 +84,28 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
 			if (i_module == 0 || i_module == moduleN - 1) {
 			//if (i_module == 1 || i_module == 2) {
 
-				constraint_file << "Constraint 0.0" << endl;
+				//constraint_file << "Constraint 0.0" << endl;
 				int labelt = i_module + 1; // Millepede accepts +ive labels only
-				constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
+				//constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
+
+			} // end of fixed modules
+		} // end of detectors loop
+	} // constrain file open
+} // end of writing cons file
+
+void Tracker::write_presigma_file(ofstream& presigma_file) {
+	// Check constraints file is open, then write.
+	if (presigma_file.is_open()) {
+		presigma_file << "PARAMETERS" << endl;
+		//Fixing module 0 and the last module
+		for (int i_module = 0; i_module < moduleN; i_module++) {
+			if (i_module == 0 || i_module == moduleN - 1) {
+			//if (i_module == 1 || i_module == 2) {
+
+				float initialValue = 0.0; //modules at x=0
+				float preSigma = -1.0; 
+				int labelt = i_module + 1; // Millepede accepts +ive labels only
+				presigma_file << labelt << " " << fixed << setprecision(5) << initialValue << fixed << setprecision(5) << " " << preSigma << endl;
 
 			} // end of fixed modules
 		} // end of detectors loop

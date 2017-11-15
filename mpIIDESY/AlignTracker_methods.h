@@ -215,6 +215,8 @@ public:
 	void misalign(std::ofstream&, std::ofstream&, bool); // MC misalignment of detectors
 
 	void write_constraint_file(std::ofstream&, std::ofstream&, bool);  // Writes a constraint file for use with PEDE.
+	
+	void write_presigma_file(std::ofstream&);  // Writes a pre-sigma parameter file for use with PEDE.
 
 	void write_steering_file(std::ofstream&); // Steering file for PEDE.
 

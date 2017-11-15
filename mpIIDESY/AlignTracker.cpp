@@ -197,9 +197,10 @@ int main(int argc, char* argv[]) {
 	bool asBinary = true; // set false for debugging
 	bool writeZero = false; // to write 0 LC/DLC labels - not accepted by pede
 
-	//Constraints and Steering files are the inputs to Pede (together with binary file).
+	//Constraints, Steering and Parameter files are the inputs to Pede (together with binary file).
 	ofstream constraint_file("Tracker_con.txt");
 	ofstream steering_file("Tracker_str.txt");
+	ofstream presigma_file("Tracker_par.txt");
 
 	//Debug files [only filled with "d" option]: file streams for debug files
 	// Setting fixed precision for floating point values
@@ -441,6 +442,10 @@ int main(int argc, char* argv[]) {
 	//Now writing the steering file
 	Tracker::instance()->write_steering_file(steering_file);
 	helper << "Steering file was generated! [see Tracker_con.txt]" << endl;
+
+	// Now set pre-sigma for know global parameters
+	Tracker::instance()->write_presigma_file(presigma_file);
+	helper << "Presigma Parameter file was generated! [see Tracker_par.txt]" << endl;
 
 	helper << "Calculating residuals..." << endl;
 
@@ -792,7 +797,7 @@ int main(int argc, char* argv[]) {
 	cResMean->Print("Print/cResMean.png");
 	cResMean->Write();
 
-	if (Tracker::instance()->getTrackNumber() >= 100) {
+	if (recordN >= 100) { // below 100 tracks these plots are useless 
 		TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
 		gStyle->SetOptStat("ourRmMe");
 		gStyle->SetOptFit(1111);
@@ -807,8 +812,8 @@ int main(int argc, char* argv[]) {
 		rp1->Draw("noconfint");
 		cChi2->Update();
 		rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
-		cChi2->Print("FoM_Chi2_recon.C");
-		cChi2->Print("Print/FoM_Chi2_recon.png");
+		//cChi2->Print("FoM_Chi2_recon.C");
+		//cChi2->Print("Print/FoM_Chi2_recon.png");
 		cChi2->Write();
 		//TODO fix malloc problem closing the canvas in ROOT Browser
 		delete chi2pdf;
