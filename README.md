@@ -60,11 +60,12 @@ AlignTracker.cpp (contains definition of purpose) - main programme calling on me
 3. Fit data by running `./pede C_Mp2str.txt`.
 
 ### Producing PEDE Histograms ### 
-1. ` root -l `
+` root readPedeHists.C+ ` will display all PEDE histograms in canvases, alternatively:
+1. ` root`
 2. root [0]  ` .L readPedeHists.C+`
-3. root [1] ` gStyle->SetOptStat(1111111)` [to see Under/Overflows and Integrals]
-4. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
+3. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
 
+The rootlogon.C file takes care of over/undeflows, sig.fig., etc. 
 
 ### To run PEDE algorithm for Fortran version of Mptest2 ###
 1. ` ./pede -t=track-model`
