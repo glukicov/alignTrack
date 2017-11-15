@@ -54,9 +54,10 @@ void Tracker::write_steering_file(ofstream& steering_file) {
 		              << "Tracker_con.txt   ! constraints text file " << endl
 		              << "Cfiles ! following bin files are Cfiles" << endl
 		              << "Tracker_data.bin   ! binary data file" << endl
-		              << "method inversion 1 0.01" << endl
+		              << "method inversion 3 0.001" << endl
 		              << "printrecord  -1 -1      ! debug printout for bad data records" << endl
 		              << "printrecord 1 -1 ! produces mpdebug.txt" << endl    //
+		              << "histprint" << endl
 		              << " "  << endl
 		              << "end ! optional for end-of-data" << endl;
 	} // steering file open
@@ -74,6 +75,7 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
 		//Fixing module 0 and the last module
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			if (i_module == 0 || i_module == moduleN - 1) {
+			//if (i_module == 1 || i_module == 2) {
 
 				constraint_file << "Constraint 0.0" << endl;
 				int labelt = i_module + 1; // Millepede accepts +ive labels only

@@ -113,7 +113,7 @@ for i_module in range(0, moduleN):
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'green')
 	for i_lines in range(0, lineN):
-		dM=(Misals[i_lines][i_module]+mis_C[i_module])*1e4
+		dM=(Misals[i_lines][i_module]-mis_C[i_module])*1e4
 		#print 'Misals[i_lines][i_module]=', Misals[i_lines][i_module], 'mis_C[i_module]=', mis_C[i_module], 'dM=', dM
 		errorM=Errors[i_lines][i_module]*1e4
 		plt.errorbar(trackN[i_lines], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
@@ -169,7 +169,7 @@ for i_module in range(1, moduleN-1):
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'green')
 	for i_lines in range(0, lineN):
-		dM=(Misals[i_lines][i_module]+mis_C[i_module])*1e4
+		dM=(Misals[i_lines][i_module]-mis_C[i_module])*1e4
 		errorM=Errors[i_lines][i_module]*1e4
 		#print "i_module=", i_module, "dM= ", dM, "error= ", errorM
 		comparatorM.append(abs(dM))
