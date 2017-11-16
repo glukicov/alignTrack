@@ -33,7 +33,10 @@ with open("millepede.res") as f:
         number_str = line.split()
         label.append(int(number_str[0]))
         mis.append(float(number_str[1]))
-        error.append(float(number_str[4]))
+        if ( float(number_str[2]) == - 1.0 ):
+            error.append(0.0) # there is no error associated with modules fixed by presigma
+        else:
+            error.append(float(number_str[4])) # otherwise, take the error estimate by PEDE
 
 f = open('PEDE_Mis.txt', 'a')
 for i in range (0, moduleN):

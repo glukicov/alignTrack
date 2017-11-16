@@ -99,8 +99,8 @@ void Tracker::write_presigma_file(ofstream& presigma_file) {
 		presigma_file << "PARAMETERS" << endl;
 		//Fixing module 0 and the last module
 		for (int i_module = 0; i_module < moduleN; i_module++) {
-			if (i_module == 0 || i_module == moduleN - 1) {
-			//if (i_module == 1 || i_module == 2) {
+			//if (i_module == 0 || i_module == moduleN - 1) {
+			if (i_module == 1 || i_module == 2) {
 
 				float initialValue = 0.0; //modules at x=0
 				float preSigma = -1.0; 
