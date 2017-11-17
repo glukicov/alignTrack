@@ -1,9 +1,10 @@
+
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2012-03-16  Time: 11:08:55
 
 !> \file
 !! MC for simple 10 layer silicon strip tracker.
-!! 
+!!
 !! \author Claus Kleinwort, DESY, 2009
 !!
 !! \copyright
@@ -57,7 +58,6 @@ MODULE mptest2
     USE mpdef
 
     IMPLICIT NONE
-
     SAVE
 
     INTEGER(mpi), PARAMETER :: nlyr=10            !< number of detector layers
@@ -74,10 +74,6 @@ MODULE mptest2
     REAL(mps), PARAMETER :: sizel= 20.0           !< size of layers
     REAL(mps), PARAMETER :: sigl =0.002           ! <resolution
 
-    ! For random number conversion
-    REAL(mps) :: Rone=1.0
-    REAL(mps) :: two=2.0
-
     INTEGER(mpi) :: nhits                         !< number of hits
     REAL(mps) :: the0                             !< multiple scattering error
     INTEGER(mpi), DIMENSION(nmlyr) :: islyr       !< (detector) layer
@@ -90,11 +86,6 @@ MODULE mptest2
     REAL(mps), DIMENSION(nmlyr) :: xhits          !< position perp. to plane (hit)
     REAL(mps), DIMENSION(nmlyr) :: yhits          !< measured position in plane (hit)
     REAL(mps), DIMENSION(nmlyr) :: sigma          !< measurement sigma (hit)
-
-    INTEGER(mpl) :: uniform_ran_max
-    INTEGER(mpl) :: uniform_ran_min
-    INTEGER(mpl) :: gaussian_ran_stdev
-    CHARACTER(LEN=10) foobar
 
 END MODULE mptest2
 
@@ -119,28 +110,26 @@ END MODULE mptest2
 SUBROUTINE mptst2(imodel)         ! generate test files
     USE mptest2
     IMPLICIT NONE
-    INTEGER(mpi) :: gran
-    INTEGER(mpi) :: uran
-    REAL(mps) :: rannum
-    REAL(mps) :: gausnum
     REAL(mps) :: cmbbrl
     REAL(mps) :: dispxm
     REAL(mps) :: dispym
     REAL(mps) :: dn
     REAL(mps) :: dp
+    REAL(mps) :: gran
     REAL(mps) :: one
     REAL(mps) :: p
     REAL(mps) :: s
     REAL(mps) :: sgn
     REAL(mps) :: sbrl
     REAL(mps) :: sold
+    REAL(mps) :: uran
     REAL(mps) :: wbrl
     INTEGER(mpi) :: i
     INTEGER(mpi) :: ibrl
     INTEGER(mpi) :: icount
     INTEGER(mpi) :: im
     INTEGER(mpi) :: ios
-    !INTEGER(mpi) :: ip
+    INTEGER(mpi) :: ip
     INTEGER(mpi) :: j
     INTEGER(mpi) :: k
     INTEGER(mpi) :: l
@@ -159,9 +148,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     INTEGER(mpi) :: nrecds
     INTEGER(mpi) :: nthits
 
-    INTEGER(mpi) :: misCounter = 0
-
-    INTEGER(mpi), PARAMETER :: debug=1           !< 1=debug mode, 0=normal
     INTEGER(mpi), INTENT(IN)                      :: imodel
 
     REAL(mps) :: derlc(nmlyr*2+3)
@@ -184,8 +170,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     WRITE(*,*) 'Generating test data for mp II...'
     WRITE(*,*) ' '
     !     file management
-    !IF(ex1) CALL system('rm mp2str.txt')
-    !IF(ex1) CALL system('rm mp2con.txt')
     IF(ex3) CALL system('rm mp2tst.bin')   ! remove old file
 
     IF(.NOT.ex1) OPEN(UNIT=7,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
@@ -193,43 +177,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     IF(.NOT.ex2) OPEN(UNIT=9,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
         FILE='mp2con.txt')
     OPEN(UNIT=51,ACCESS='SEQUENTIAL',FORM='UNFORMATTED', FILE='mp2tst.bin')
-
-    OPEN(UNIT=11,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_debug.txt')  
-
-    OPEN(UNIT=12,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_mp2_debug.txt')
-
-    OPEN(UNIT=13,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_tmp_debug.txt')
-
-    OPEN(UNIT=14,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_calc_debug.txt')
-
-    OPEN(UNIT=15,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_mis_debug.txt')
-
-    OPEN(UNIT=16,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_geom_debug.txt')
-
-    OPEN(UNIT=17,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_off_debug.txt')
-
-    OPEN(UNIT=18,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_MC_debug.txt')
-
-    OPEN(UNIT=19,ACCESS='SEQUENTIAL',FORM='FORMATTED',  &
-        FILE='F_mp2test2_con_debug.txt')
-
-    OPEN(UNIT=42,FILE="uniform_ran.txt")   !! this is not being used from randoms,f90 now....
-    OPEN(UNIT=43,FILE="gaussian_ran.txt")
-
-    READ(42,*) foobar, uniform_ran_min, uniform_ran_max
-    READ(43,*) foobar, gaussian_ran_stdev
-
-    WRITE(*,*) "min", uniform_ran_min
-    WRITE(*,*) "max", uniform_ran_max
-    WRITE(*,*) "std", gaussian_ran_stdev
 
     s=dets
     i=0
@@ -241,14 +188,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
         ssig(i)=sigl         ! resolution
         spro(1,i)=1.0        ! module measures 'X'
         spro(2,i)=0.0
-        
-       IF (debug .EQ. 1) THEN
-               !WRITE(16,*) 'layer_i= ',layer,' layer[i_counter]= ',islyr(i) 
-               !WRITE(16,*) 'i_counter= ',i,' distance[i_counter] ',sarc(i)
-               !WRITE(16,*) 'projectionX= ',spro(1,i),' projectionY= ',spro(2,i)
-               !WRITE(16,*) ' ' 
-       END IF
-
         IF (MOD(layer,3) == 1) THEN
             i=i+1
             islyr(i)=layer       ! layer
@@ -257,23 +196,9 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             spro(1,i)=SQRT(1.0-stereo**2)
             spro(2,i)=stereo*sgn ! module measures both 'X' and 'Y'
             sgn=-sgn             ! stereo orientation
-            IF (debug .EQ. 1) THEN
-               !WRITE(16,*) 'layer_i= ',layer,' layer[i_counter]= ',islyr(i) 
-               !WRITE(16,*) 'i_counter= ',i,' distance[i_counter] ',sarc(i)
-               !WRITE(16,*) 'projectionX= ',spro(1,i),' projectionY= ',spro(2,i)
-               !WRITE(16,*) ' '
-               WRITE(16, 161) SQRT(1.0-stereo**2)
-            161 FORMAT(' ',1F16.9)
-            END IF
         END IF
         s=s+diss
     END DO
-
-    IF (debug .EQ. 1) THEN
-        DO i=1,14
-            WRITE(16, 161) spro(1,i)
-        END DO
-    END IF
 
     ! define broken lines
     sold=-1000.
@@ -303,24 +228,11 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     DO i=0,nlyr-1
         DO k=0,nmy-1
             DO l=1,nmx
-                gausnum = Rone * gran() / gaussian_ran_stdev
-                sdevx(((i*nmy+k)*nmx+l))=dispxm*gausnum    ! shift in x
-                gausnum = Rone * gran() / gaussian_ran_stdev
-                sdevy(((i*nmy+k)*nmx+l))=dispym*gausnum     ! shift in y
-                misCounter = misCounter + 1
-                IF (debug .EQ. 1) THEN
-                WRITE(15,*) ' '
-                WRITE(15,*) 'sdevx= ', sdevx(((i*nmy+k)*nmx+l)), ' sdevy= ' , sdevy(((i*nmy+k)*nmx+l))
-                WRITE(15,*) 'i= ',i , ' k= ',k, ' l= ',l
-                
-                END IF
+                sdevx(((i*nmy+k)*nmx+l))=dispxm*gran()     ! shift in x
+                sdevy(((i*nmy+k)*nmx+l))=dispym*gran()     ! shift in y
             END DO
         END DO
     END DO
-    IF (debug .EQ. 1) THEN
-    WRITE(15,*) 'counter= ', misCounter 
-    END IF
-
     !     write text files -------------------------------------------------
 
     IF(.NOT.ex1) THEN
@@ -374,10 +286,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             labelt=(i*nmy+k)*nmx+ncx-1
             IF(.NOT.ex2) WRITE(lunt,103) labelt,one
             sdevx(((i-1)*nmy+k)*nmx+ncx)=0.0      ! fix center modules at 0.
-            IF (debug .EQ. 1) THEN
-                WRITE(19,191) sdevx(((i-1)*nmy+k)*nmx+ncx), i, k, ncx, ((i-1)*nmy+k)*nmx+ncx
-            191 FORMAT(' ', 1F16.9, 4I4)
-            END IF
         END DO
         IF(.NOT.ex2) WRITE(lunt,*) 'Constraint  0.0'
         DO k=0,nmy-1
@@ -389,46 +297,23 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     !     record loop ------------------------------------------------------
 
-    ncount=15000
-    !ncount=2000
+    ncount=10000
     nthits=0
     nrecds=0
 
     DO icount=1,ncount
         !      10..100 GeV
-        rannum = (uran() + uniform_ran_max) / (two * uniform_ran_max)
-        p=10.0**(1.+rannum)
+        p=10.0**(1.+uran())
         the0=SQRT(thck)*0.014/p
-        IF (debug .EQ. 1) THEN
-            WRITE(13,*) "Rand= ", rannum," p= ",p,"width= ",thck
-        END IF
-        !ip=1  ! change verbosity 
+        ip=0
         !       IF (ICOUNT.LE.3) IP=1
-        CALL genln2()      ! generate hits
+        CALL genln2(ip)      ! generate hits
   
-        IF (debug .EQ. 1) THEN
-            WRITE(11,*) ''
-            WRITE(11,*) '--------------------------------------------------------------------------'
-            WRITE(11,*) 'Track # (F)', icount
-            !WRITE(12,*) ''
-            !WRITE(12,*) '--------------------------------------------------------------------------'
-            !WRITE(12,*) 'Track # (F)', icount
-            WRITE(13,*) ''
-            WRITE(13,*) '--------------------------------------------------------------------------'
-            WRITE(13,*) 'Track # (F)', icount
-        END IF
-        
+  
         DO i=1,nhits
             ! simple straight line
-
             lyr=ihits(i)/nmxy+1
             im =MOD(ihits(i),nmxy)
-
-            IF (debug .EQ. 1) THEN
-                !WRITE(13,*) "lyr= " , lyr , "  im= " , im , "Plane with hit: "  , ihits(i)
-                !WRITE(13,*) ' '  
-            END IF
-
             nalc=4
             derlc(1)=spro(1,lyr)
             derlc(2)=spro(2,lyr)
@@ -439,13 +324,13 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             label(1)=im+nmxy*islyr(lyr)
             label(2)=im+nmxy*islyr(lyr)+1000
             ! add multiple scattering errors (no correlations)
-            IF (imodel .EQ. 1) THEN
+            IF (imodel == 1) THEN
                 DO j=i,nhits
                     sigma(j)=SQRT(sigma(j)**2+((xhits(j)-xhits(i))*the0)**2)
                 END DO
             END IF
             ! add 'break points' for multiple scattering
-            IF (imodel .EQ. 2.AND.i > 1) THEN
+            IF (imodel == 2.AND.i > 1) THEN
                 DO j=1,i-1
                     ! 2 scattering angles from each layer in front of current
                     nalc=nalc+1
@@ -467,22 +352,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
             END IF
 
             CALL mille(nalc,derlc,2,dergl,label,yhits(i),sigma(i))
-            IF (debug .EQ. 1) THEN
-                !WRITE(12,*) ' '
-                !WRITE(12,*) ' LC #: ', nalc ,' LC1 : ', derlc(1) , ' LC2 : ' , derlc(2) , ' LC3 : ' , &
-                !    derlc(3) , ' LC4 : ' , derlc(4)
-                !WRITE(12,*) ' GL #: ' , 2 , ' GL1 : ' , dergl(1) , ' GL2 : ' , dergl(2) 
-                !WRITE(12,*) ' LB1 : ' , label(1) , ' LB2 : ' , label(2)     ,     '     Y Hit: ' , yhits(i) ,   &   
-                !   '   Sigma : ' ,sigma(i)
-                !WRITE(12, 200) yhits(i)
-            !200 FORMAT(' ', 1F16.9) 
-                WRITE(12,200) nalc, 2, label(1),  label(2) ,  derlc(1), derlc(2), derlc(3), & 
-                    derlc(4), dergl(1), dergl(2), yhits(i), sigma(i), spro(1,lyr), xhits(i)
-               !WRITE (12, *) dergl(2) 
-            !201 FORMAT(' ', F12.8)
-            200 FORMAT(' ',4I8, 10F16.9)
-
-            END IF
             nthits=nthits+1  ! count hits
         END DO
         ! additional measurements from MS
@@ -530,19 +399,6 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     REWIND (51)
     CLOSE  (51)
 
-    CLOSE (42)
-    CLOSE (43)
-
-    CLOSE (11)
-    CLOSE (12)
-    CLOSE (13)
-    CLOSE (14)
-    CLOSE (15)
-    CLOSE (16)
-    CLOSE (17)
-    CLOSE (18)
-    CLOSE(19)
-
     !      WRITE(*,*) ' '
     !      WRITE(*,*) 'Shifts and drift velocity deviations:'
     !      DO I=1,NPLAN
@@ -554,12 +410,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
     WRITE(*,*) ' '
     WRITE(*,*) ncount,' tracks generated with ',nthits,' hits.'
     WRITE(*,*) nrecds,' records written.'
-
     WRITE(*,*) ' '
-
-    WRITE(*,*) 'Normal Randoms were used ',UNIF_COUNT , ' times' 
-    WRITE(*,*) 'Gaussian Randoms were used ',GAUS_COUNT, 'times'
-
 101 FORMAT(a)
     ! 102  FORMAT(I6,2F10.5)
 103 FORMAT(i8,f10.5)
@@ -569,27 +420,21 @@ END SUBROUTINE mptst2
 !!
 !! \param [in] ip print flag
 
-SUBROUTINE genln2()
+SUBROUTINE genln2(ip)
     USE mptest2
 
     IMPLICIT NONE
-    INTEGER(mpi) :: gran
-    INTEGER(mpi) :: uran
-    REAL(mps) :: rannum
-    REAL(mps) :: rannum1
-    REAL(mps) :: rannum2
-    REAL(mps) :: rannum3
-    REAL(mps) :: rannum4
-    REAL(mps) :: gausnum
     REAL(mps) :: ds
     REAL(mps) :: dx
     REAL(mps) :: dy
+    REAL(mps) :: gran
     INTEGER(mpi) :: i
     INTEGER(mpi) :: ihit
     INTEGER(mpi) :: imx
     INTEGER(mpi) :: imy
     INTEGER(mpi) :: ioff
     REAL(mps) :: sold
+    REAL(mps) :: uran
     REAL(mps) :: x
     REAL(mps) :: xexit
     REAL(mps) :: xl
@@ -603,66 +448,27 @@ SUBROUTINE genln2()
     REAL(mps) :: ys
     REAL(mps) :: yslop
 
-    INTEGER(mpi), PARAMETER :: debug=1            !< 1=debug mode, 0=normal
-    !INTEGER(mpi), INTENT(IN)                      :: ip
+
+    INTEGER(mpi), INTENT(IN)                      :: ip
 
     !     track parameters
-    
-    rannum1= ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
-    !rannum1 = AINT((rannum1*10000)/10000))
-    IF (debug .EQ. 1) THEN
-        !WRITE(18,*) "rannum= ",rannum,"uniform_ran_max=",uniform_ran_max,"two=",two
-    END IF
-    xnull=sizel*(rannum1)   ! uniform vertex
-    !xnull = REAL(AINT(xnull*10000)/10000)
-    IF (debug .EQ. 1) THEN
-        !WRITE(18,*) "Rand= " ,rannum, "x0= ", xnull
-    END IF
-    rannum2 = ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
-    !rannum2 = AINT((rannum2*10000)/10000))
-    ynull=sizel*(rannum2)   ! uniform vertex
-    !ynull = REAL(AINT(ynull*10000)/10000)
-    IF (debug .EQ. 1) THEN
-        !WRITE(18,*) "Rand= " ,rannum, "y0= ", ynull
-    END IF
-    rannum3 = ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
-    !rannum3 = AINT((rannum3*10000)/10000))
-    xexit=sizel*(rannum3)   ! uniform exit point
-    !xexit = REAL(AINT(xexit*10000)/10000)
-    IF (debug .EQ. 1) THEN
-        !WRITE(18,*) "Rand= " ,rannum, "x1= ", xexit
-    END IF
-    rannum4 = ((uran() + uniform_ran_max) / (two * uniform_ran_max)) - 0.5
-    !rannum4 = AINT((rannum4*10000)/10000))
-    yexit=sizel*(rannum4)   ! uniform exit point
-    !yexit = REAL(AINT(yexit*10000)/10000)
-    IF (debug .EQ. 1) THEN
-        !WRITE(18,*) "Rand= " ,rannum, "y1= ", yexit
-    END IF
+    xnull=sizel*(uran()-0.5)   ! uniform vertex
+    ynull=sizel*(uran()-0.5)   ! uniform vertex
+    xexit=sizel*(uran()-0.5)   ! uniform exit point
+    yexit=sizel*(uran()-0.5)   ! uniform exit point
     xslop=(xexit-xnull)/sarc(nmlyr)
     yslop=(yexit-ynull)/sarc(nmlyr)
-    IF (debug .EQ. 1) THEN
-        !WRITE(14,141) (rannum1), (rannum2), (rannum3), (rannum4)
-        WRITE(14,141) xnull, ynull , xexit, yexit , xslop, yslop, (rannum1), (rannum2), &
-                   (rannum3), (rannum4), sizel, sarc(nmlyr)
-    141 FORMAT(14F16.9)
-        !WRITE(14, 141) rannum4
-    !141 FORMAT(' ', 1F16.9)
-        !WRITE(18,*) "x_slope= " ,xslop, " y_slope= ", yslop, " distance[layerN-1]= ", sarc(nmlyr)
-
-        WRITE(11,*) ' '
-        WRITE(11,*) ' Track ', '    xnull      ', '       ynull      ' , '           xslop        ', '           yslop '
-        WRITE(11,*) ' Track ', xnull, ynull, xslop, yslop
+    IF(ip /= 0) THEN
+        WRITE(*,*) ' '
+        WRITE(*,*) ' Track ', xnull, ynull, xslop, yslop
     END IF
 
-!   ip = 1
     nhits=0
     x=xnull
     y=ynull
     dx=xslop
     dy=yslop
     sold=0.0
-
 
     DO  i=1,nmlyr
         ds=sarc(i)-sold
@@ -674,21 +480,13 @@ SUBROUTINE genln2()
         x=x+dx*ds
         y=y+dy*ds
         !      multiple scattering
-        gausnum = Rone * gran() / gaussian_ran_stdev
-        dx=dx+gausnum*the0
-        gausnum = Rone * gran() / gaussian_ran_stdev
-        dy=dy+gausnum*the0
+        dx=dx+gran()*the0
+        dy=dy+gran()*the0
   
         imx=INT((x+sizel*0.5)/sizel*REAL(nmx,mps),mpi)
-        
-        IF (imx < 0.OR.imx >= nmx) THEN
-            CYCLE
-        END IF
+        IF (imx < 0.OR.imx >= nmx) CYCLE
         imy=INT((y+sizel*0.5)/sizel*REAL(nmy,mps),mpi)
-        
-        IF (imy < 0.OR.imy >= nmy) THEN 
-            CYCLE
-        END IF
+        IF (imy < 0.OR.imy >= nmy) CYCLE
   
         ihit=((i-1)*nmy+imy)*nmx+imx
         ioff=((islyr(i)-1)*nmy+imy)*nmx+imx+1
@@ -697,34 +495,13 @@ SUBROUTINE genln2()
         xl=x-sdevx(ioff)
         yl=y-sdevy(ioff)
         xhits(nhits)=sarc(i)
-        gausnum = Rone * gran() / gaussian_ran_stdev
-        yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gausnum*ssig(i)
-        IF (debug .EQ. 1) THEN
-             WRITE(17, 171) spro(1,i), spro(2,i), gausnum, ssig(i), sdevx(ioff)
-        171 FORMAT(' ', 10F16.9)
-            !WRITE(18,*) "yhit = " , yhits(nhits) , "rand_num= " , gausnum , &
-        ! " projectionY[i]= " , spro(2,i) , " projectionX[i]= " , spro(1,i), " resolution= ", ssig(i)
-        END IF
+        yhits(nhits)=(xl-xs)*spro(1,i)+(yl-ys)*spro(2,i)+gran()*ssig(i)
         sigma(nhits)=ssig(i)
-        WRITE(18,181) xl, yl, xs, ys, dx, dy, x, y
-    181 FORMAT(' ', 8F14.9)
-        IF (debug .EQ. 1) THEN
-             !   WRITE(14,141) xnull, ynull , xexit, yexit , xslop, yslop, xs, ys, x, y, xl, yl, (rannum1-0.5), (rannum2-0.5), &
-             !       (rannum3-0.5), (rannum4-0.5), sizel, sarc(nmlyr)
-            !141 FORMAT(18F16.6)
-                !WRITE(14,*) 'imx= ',imx,'imy= ',imy,' ioff= ',ioff
-                !WRITE(14,*) 'ihit= ',ihit, ' xl= ' ,xl, ' yl= ' ,yl, ' xhits= ',xhits(nhits), 'yhits= ' ,yhits(nhits)
-                !WRITE(14,*) 'sdevx(ioff)= ',sdevx(ioff),' sdevy(ioff)= ',sdevy(ioff) 
-                !WRITE(14,*) 'spro(1,i)= ',spro(1,i), ' spro(2,i)= ',spro(2,i)  
-                !WRITE(14,*) ' '    
-        END IF
-            
-        IF(debug .EQ. 1) THEN
-            WRITE(11,*) nhits,    i      ,      ihit   ,   x   ,   y    ,   xhits(nhits)  ,   yhits(nhits)   , sigma(nhits) 
-            !WRITE(18,*) "--------------------------------------------------"
-            !WRITE(18,*) "" 
+  
+        IF(ip /= 0) THEN
+            WRITE(*,101) nhits,i,ihit,x,y,xhits(nhits), yhits(nhits),sigma(nhits)
         END IF
     END DO
-    
-!101 FORMAT(3I3,5F8.4)
+101 FORMAT(3I3,5F8.4)
 END SUBROUTINE genln2
+
