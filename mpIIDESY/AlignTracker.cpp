@@ -218,6 +218,7 @@ int main(int argc, char* argv[]) {
 	ofstream plot_hits_fit("Tracker_p_hits_fit.txt");   plot_hits_fit << fixed << setprecision(setPrecision); // Recon Hits points
 	ofstream pede_mis("Tracker_pede_mis.txt");  pede_mis << fixed << setprecision(setPrecision);  // Misalignments
 	ofstream timeFile("Tracker_time.txt", std::ios_base::app);  timeFile << fixed << setprecision(setPrecision);  // Misalignments
+	ofstream metric("Tracker_metric.txt"); stringstream metricStr; metricStr.str(""); //metric << fixed << setprecision(setPrecision);  // Misalignments
 
 	//ofstream debug_append("Tracker_d_append.txt", std::ios_base::app);  debug_append << fixed << setprecision(setPrecision);  // Misalignments
 
@@ -431,20 +432,20 @@ int main(int argc, char* argv[]) {
 	// XXX: definition of broken lines here in the future
 
 	// MISALIGNMENT
-	Tracker::instance()->misalign(debug_mis, pede_mis, debugBool);
+	Tracker::instance()->misalign(debug_mis, pede_mis, debugBool, metric);
 	helper << "Misalignment is complete!" << endl;
 	helper << fixed << setprecision(setPrecision);
 
 	// Write a constraint file, for use with pede
-	Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool);
+	Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool, metric);
 	helper << "Constraints are written! [see Tracker_con.txt]" << endl;
 
 	//Now writing the steering file
-	Tracker::instance()->write_steering_file(steering_file);
+	Tracker::instance()->write_steering_file(steering_file, metric);
 	helper << "Steering file was generated! [see Tracker_con.txt]" << endl;
 
 	// Now set pre-sigma for know global parameters
-	Tracker::instance()->write_presigma_file(presigma_file);
+	Tracker::instance()->write_presigma_file(presigma_file, metric);
 	helper << "Presigma Parameter file was generated! [see Tracker_par.txt]" << endl;
 
 	helper << "Calculating residuals..." << endl;
@@ -932,6 +933,12 @@ int main(int argc, char* argv[]) {
 	file->Write();
 	file->Close();
 	delete file;
+
+	metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um " 
+	       << "| DCA Cut of " << Tracker::instance()->getTrackCut() *1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
+	       << "| Hit rej.: " << boolYN[Tracker::instance()->getHitCutStatus()]
+	       << "| Truth LR : " << boolYN[Tracker::instance()->getLRStatus()]
+	       << "| p-value cut (<): " << Tracker::instance()->getPValCut() ;
 
 	helper << endl;
 	helper << "Programme log written to: Tracker_log.txt" << endl;

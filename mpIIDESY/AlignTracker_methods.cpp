@@ -47,10 +47,11 @@ Tracker* Tracker::instance() {
 	return s_instance;
 }
 
-void Tracker::write_steering_file(ofstream& steering_file) {
+void Tracker::write_steering_file(ofstream& steering_file, ofstream& metric) {
 	if (steering_file.is_open()) {
 		
 		stringstream pede_method; pede_method.str(""); pede_method << "method inversion 5 0.001";
+		metric << "| " << pede_method.str().c_str();
 		//stringstream pede_method; pede_method.str(""); pede_method << "method fullGMRES 5 0.001";
 		stringstream msg_method; 
 		msg_method << Logger::yellow() << pede_method.str().c_str();
@@ -74,41 +75,47 @@ void Tracker::write_steering_file(ofstream& steering_file) {
  */
 
 // XXX constraints are ignored with HIP method
-void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool) {
+void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool, ofstream& metric) {
 	// Check constraints file is open, then write.
 	if (constraint_file.is_open()) {
 		//Evaluation of constraints
 		float one = 1.0;
+		metric << " | C: ";
+		stringstream labelt;
 		//Fixing module 0 and the last module
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			if (i_module == 0 || i_module == moduleN - 1) {
 			//if (i_module == 1 || i_module == 2) {
 
 				//constraint_file << "Constraint 0.0" << endl;
-				int labelt = i_module + 1; // Millepede accepts +ive labels only
+				 
+				 labelt << "-; ";
+				//int labelt = i_module + 1; // Millepede accepts +ive labels only
 				//mat_nc++; // increment number of constraints 
 				//constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
 
 			} // end of fixed modules
 		} // end of detectors loop
+		metric << labelt.str().c_str();
 	} // constrain file open
 	cout << "Memory space requirement (inversion method, i.e. upper bound) = " << ( mat_n*mat_n + mat_n ) / 2 + mat_n * mat_nc + ( mat_nc*mat_nc + mat_nc )/2 << endl;
 } // end of writing cons file
 
-void Tracker::write_presigma_file(ofstream& presigma_file) {
+void Tracker::write_presigma_file(ofstream& presigma_file, ofstream& metric) {
 	// Check constraints file is open, then write.
 	if (presigma_file.is_open()) {
 		presigma_file << "PARAMETERS" << endl;
+		metric << " | P: ";
 		//Fixing module 0 and the last module
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			//if (i_module == 0 || i_module == moduleN - 1) {
 			if (i_module == 1 || i_module == 2) {
 
 				float initialValue = 0.0; //modules at x=0
-				float preSigma = -1.0; 
+				float preSigma = -1.0;
 				int labelt = i_module + 1; // Millepede accepts +ive labels only
 				presigma_file << labelt << " " << fixed << setprecision(5) << initialValue << fixed << setprecision(5) << " " << preSigma << endl;
-
+				metric << labelt << " " << initialValue << " " << preSigma << "; ";
 			} // end of fixed modules
 		} // end of detectors loop
 	} // constrain file open
@@ -667,12 +674,15 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 } // end of geom
 
 // MC misalignment of detectors
-void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) {
+void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, ofstream& metric) {
 
 	//Now misaligning detectors in x
 	float misDispX; // effective misalignment
+	metric << "M: ";
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		misDispX = dispX[i_module];
+
+		metric <<  fixed << setprecision(0) << misDispX*1e4 << "; ";
 
 		float dX = startingXDistanceStraw0 + (misDispX); // starting on the x-axis (z, 0+disp)
 		sdevX.push_back(misDispX);  // vector to store the actual of misalignment

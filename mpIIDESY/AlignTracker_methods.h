@@ -216,13 +216,13 @@ public:
 
 	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement
 
-	void misalign(std::ofstream&, std::ofstream&, bool); // MC misalignment of detectors
+	void misalign(std::ofstream&, std::ofstream&, bool, std::ofstream& metric); // MC misalignment of detectors
 
-	void write_constraint_file(std::ofstream&, std::ofstream&, bool);  // Writes a constraint file for use with PEDE.
+	void write_constraint_file(std::ofstream&, std::ofstream&, bool, std::ofstream& metric);  // Writes a constraint file for use with PEDE.
 	
-	void write_presigma_file(std::ofstream&);  // Writes a pre-sigma parameter file for use with PEDE.
+	void write_presigma_file(std::ofstream&, std::ofstream& metric);  // Writes a pre-sigma parameter file for use with PEDE.
 
-	void write_steering_file(std::ofstream&); // Steering file for PEDE.
+	void write_steering_file(std::ofstream&, std::ofstream& metric); // Steering file for PEDE.
 
 	void set_uniform_file(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
 

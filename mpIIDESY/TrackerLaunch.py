@@ -64,6 +64,12 @@ with open("PEDE_Mis.txt") as f:
 		line_i = line_i + 1
 		
 
+with open("Tracker_metric.txt") as f:
+	line_i = 0
+	for line in f:  #Line is a string
+		metric = line
+
+
 
 ##################PLOTING##############################
 
@@ -119,18 +125,18 @@ for i_module in range(0, moduleN):
 		plt.plot(trackN[i_lines], dM, marker="_", color="red")
 		
 		
-		plt.title('FoM Module %s' %(i_module))
+		plt.title('FoM Module %s' %(i_module+1), fontsize=10)
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
 		axes.set_ylim(-20, 20)
 
 
-		plt.xlabel("Number of Tracks")
+		plt.xlabel("Number of Tracks", fontsize=10)
 		if (i_module!=2 or i_module!=3):
 			plt.ylabel("$\Delta$ Misalignment [um]")
-plt.subplots_adjust(hspace=.9)
-plt.gcf().subplots_adjust(bottom=0.15)
-
+plt.subplots_adjust(hspace=.4)
+plt.gcf().subplots_adjust(top=0.90)
+plt.suptitle(str(metric), fontsize=7, style='oblique',  color="green")
 plt.savefig("FoM_All.png")
 print("File produced: FoM_All.png")
 
