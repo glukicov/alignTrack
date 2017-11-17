@@ -752,7 +752,7 @@ int main(int argc, char* argv[]) {
 	axis->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
 	gr->GetHistogram()->SetMaximum(148.);   // along
 	gr->GetHistogram()->SetMinimum(130.);  //   Y
-	cRes->Print("Print/cRes.png");
+	//cRes->Print("Print/cRes.png");
 	cRes->Write();
 
 	//Pulls per layer
@@ -771,7 +771,7 @@ int main(int argc, char* argv[]) {
 	axis2->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
 	gr2->GetHistogram()->SetMaximum(5.0);   // along
 	gr2->GetHistogram()->SetMinimum(-3.0);  //   Y
-	cPull->Print("Print/cPull.png");
+	//cPull->Print("Print/cPull.png");
 	cPull->Write();
 
 	//Residual means per layer: reveal the shear affect of misalignment
@@ -795,7 +795,7 @@ int main(int argc, char* argv[]) {
 	axis3->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
 	gr3->GetHistogram()->SetMaximum(0.2);   // along
 	gr3->GetHistogram()->SetMinimum(-0.2);  //   Y
-	cResMean->Print("Print/cResMean.png");
+	//cResMean->Print("Print/cResMean.png");
 	cResMean->Write();
 
 	if (recordN >= 100) { // below 100 tracks these plots are useless
