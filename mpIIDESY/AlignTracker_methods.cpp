@@ -51,19 +51,19 @@ void Tracker::write_steering_file(ofstream& steering_file) {
 	if (steering_file.is_open()) {
 		
 		stringstream pede_method; pede_method.str(""); pede_method << "method inversion 5 0.001";
+		//stringstream pede_method; pede_method.str(""); pede_method << "method fullGMRES 5 0.001";
 		stringstream msg_method; 
 		msg_method << Logger::yellow() << pede_method.str().c_str();
 		Logger::Instance()->write(Logger::NOTE, msg_method.str());
 
 		steering_file <<  "* g-2 Tracker Alignment: PEDE Steering File" << endl
 		              << " "  << endl
-		              << "Tracker_con.txt   ! constraints text file " << endl
-		              << "Tracker_par.txt   ! parameters (presgima) text file " << endl
+		              << "Tracker_con.txt   ! constraints text file (if applicable) " << endl
+		              << "Tracker_par.txt   ! parameters (presgima) text file (if applicable)" << endl
 		              << "Cfiles ! following bin files are Cfiles" << endl
 		              << "Tracker_data.bin   ! binary data file" << endl
 		              << pede_method.str().c_str() << endl 
-		              << "printrecord  -1 -1      ! debug printout for bad data records" << endl
-		              << "printrecord 1 -1 ! produces mpdebug.txt" << endl    
+		              << "printrecord 2 -1 ! produces mpdebug.txt for record 2 with the largest value of χ2/Ndf" << endl    
 		              << " "  << endl
 		              << "end ! optional for end-of-data" << endl;
 	} // steering file open
@@ -86,11 +86,13 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
 
 				//constraint_file << "Constraint 0.0" << endl;
 				int labelt = i_module + 1; // Millepede accepts +ive labels only
+				//mat_nc++; // increment number of constraints 
 				//constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
 
 			} // end of fixed modules
 		} // end of detectors loop
 	} // constrain file open
+	cout << "Memory space requirement (inversion method, i.e. upper bound) = " << ( mat_n*mat_n + mat_n ) / 2 + mat_n * mat_nc + ( mat_nc*mat_nc + mat_nc )/2 << endl;
 } // end of writing cons file
 
 void Tracker::write_presigma_file(ofstream& presigma_file) {
@@ -728,7 +730,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool) 
 	cout << "Manual Misalignment: " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << showpos << "Module " << i_module << " :: Characteristic:  " << sdevX[i_module] << " cm. "; // absolute misalignment [as set by MC]
-		if (debugBool) {pede_mis << sdevX[i_module] << " "; }
+		pede_mis << sdevX[i_module] << " ";
 		float relMisTmp = sdevX[i_module] - overallMis;
 		// now push these misalignment parameters for all layers in the module [for use later]
 		for (int i_view = 0; i_view < viewN; i_view++) {

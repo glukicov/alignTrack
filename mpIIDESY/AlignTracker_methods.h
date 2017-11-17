@@ -185,6 +185,10 @@ private:
 	float MisZdistanceSum = 0.0; // Sum of Mis * z distance
 	float MisSum = 0.0; // Sum of all misalignments [per layer]
 
+	//Matrix memory space
+	int mat_n = moduleN; // # number of global parameters
+	int mat_nc = 0; // # number of constraints 
+
 	// Class constructor and destructor
 	Tracker();
 	~Tracker();

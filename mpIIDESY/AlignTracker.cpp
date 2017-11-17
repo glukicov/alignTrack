@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
 	ofstream plot_hits_gen("Tracker_p_hits_gen.txt");  plot_hits_gen << fixed << setprecision(setPrecision); // Truth Hits points
 	ofstream plot_hits_fit("Tracker_p_hits_fit.txt");   plot_hits_fit << fixed << setprecision(setPrecision); // Recon Hits points
 	ofstream pede_mis("Tracker_pede_mis.txt");  pede_mis << fixed << setprecision(setPrecision);  // Misalignments
-
+	ofstream timeFile("Tracker_time.txt", std::ios_base::app);  timeFile << fixed << setprecision(setPrecision);  // Misalignments
 
 	//ofstream debug_append("Tracker_d_append.txt", std::ios_base::app);  debug_append << fixed << setprecision(setPrecision);  // Misalignments
 
@@ -596,7 +596,7 @@ int main(int argc, char* argv[]) {
 
 					//loop over booked histos and fill
 					for (int i_LC = 0; i_LC < 2; i_LC++) {
-						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN <<"_" << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
+						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << "_" << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
 						TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
 						if (i_LC == 0) {h16->Fill(dlc1);}
 						if (i_LC == 1) {h16->Fill(dlc2);}
@@ -642,12 +642,12 @@ int main(int argc, char* argv[]) {
 	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
 
 	//Passing constants to plotting script
-	if (plotBool || debugBool) {
-		contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
-		               << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
-		               << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
-		               << "  " << Tracker::instance()->getBeamStop() <<  endl;
-	}
+
+	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
+	               << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
+	               << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
+	               << "  " << Tracker::instance()->getBeamStop() <<  endl;
+
 
 
 	//------------------------------------------ROOT: Fitting Functions---------------------------------------------------------//
@@ -669,8 +669,8 @@ int main(int argc, char* argv[]) {
 						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
 						LRSkewness += hp1->GetSkewness();
 					}
-					helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness/2.0 << endl;
-					LRSkewness=0.0;
+					helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness / 2.0 << endl;
+					LRSkewness = 0.0;
 				}
 			}
 		}
@@ -797,7 +797,7 @@ int main(int argc, char* argv[]) {
 	cResMean->Print("Print/cResMean.png");
 	cResMean->Write();
 
-	if (recordN >= 100) { // below 100 tracks these plots are useless 
+	if (recordN >= 100) { // below 100 tracks these plots are useless
 		TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
 		gStyle->SetOptStat("ourRmMe");
 		gStyle->SetOptFit(1111);
@@ -940,6 +940,7 @@ int main(int argc, char* argv[]) {
 	auto t_end = chrono::high_resolution_clock::now();
 	helper << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu) / CLOCKS_PER_SEC << " s)." << " Wall clock time passed: "
 	       << chrono::duration<double>(t_end - t_start).count() << " s." << endl;
+	timeFile << chrono::duration<double>(t_end - t_start).count() << endl;
 	time_t now = time(0);
 	char* dt = ctime(&now);
 	helper << "Peak RAM use: " << Tracker::instance()->getPeakRSS( ) / 1e9 << " GB" << endl;

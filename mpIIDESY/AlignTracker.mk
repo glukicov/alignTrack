@@ -17,13 +17,14 @@ CPPFLAGS += $(ROOTCFLAGS)
 //CPPFLAGS += -Wstatic-float-init
 CPPFLAGS += -fstack-protector-all
 CPPFLAGS += -pedantic-errors
+CPPFLAGS += -O3
 
 LDD = g++
 LDFLAGS = 
 
 LIBS += $(ROOTLIBS)
 LIBS         += -lMinuit
-LDFLAGS       = -O
+# LDFLAGS       = -O
 
 //CFLAGS += $(shell root-config --cflags)
 //LDFLAGS += -g $(shell $(ROOTSYS)/bin/root-config --ldflags)
