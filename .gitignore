@@ -7,6 +7,7 @@
 *.txt
 *.bin
 *.root
+*.pyc
 *.txt.BK
 Mptest2
 Mptest2.root
