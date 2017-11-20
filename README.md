@@ -5,7 +5,7 @@
 ### DIR Structure ###
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
 2. C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
-3. C_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
+3. F_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
 4. python_toy_tracker/ - John's python code for toy tracker
 
 ###  INSTALLATION ###
