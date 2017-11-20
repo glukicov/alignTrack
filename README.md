@@ -6,8 +6,7 @@
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
 2. C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
 3. C_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
-4. PEDEv04-03-04/ - clean pede (most recent) checkout from DESY
-5. python_toy_tracker/ - John's python code for toy tracker (with correct geometry)
+4. python_toy_tracker/ - John's python code for toy tracker
 
 ###  INSTALLATION ###
 Here are the instructions to get the code (requires c++0x compiler suport for Logger) on working on gm2ucl at Fermilab:
