@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
 	helper << "Tracks are rejected if one of hits have a (DCA < " << Tracker::instance()->getTrackCut() << ")" << " : " << boolYN[Tracker::instance()->getTrackCutBool()] << endl;
 	helper << "Truth LR information is used in the reconstruction: " << boolYN[Tracker::instance()->getLRStatus()] << endl;
 	helper << "p-value cut (<) for reconstructed tracks: " << Tracker::instance()->getPValCut() << endl;
-	helper << "Straight Tracks with Circle Fit: single hit per layer allowed [shortest DCA is chosen as the hit]." << endl;
+	helper << "Straight Tracks with Circle Fit: single hit per layer allowed" << endl;
 	helper << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
 	helper << endl;
 
@@ -261,7 +261,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "#Delta (Recon - True) Slope",  119,  -0.002, 0.002);
 	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Intercept",  119,  -0.06, 0.06);
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
-	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 250, -0.1, 120);
+	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 89, -0.1, 90);
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
@@ -670,7 +670,7 @@ int main(int argc, char* argv[]) {
 						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
 						LRSkewness += hp1->GetSkewness();
 					}
-					helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness / 2.0 << endl;
+					//helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness / 2.0 << endl;
 					LRSkewness = 0.0;
 				}
 			}

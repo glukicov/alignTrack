@@ -161,7 +161,9 @@ for i_hits in range(0, len(gen_hitX)):
 	circle3 = plt.Circle((gen_hitZ[i_hits], gen_hitX[i_hits]), gen_hitRad[i_hits], color='red', linestyle='--', fill=False)
 	axes.add_artist(circle3)		
 
+#axes.set_ylim([0.4,1.6])
 axes.set_ylim([beamX0-6,beamX1+3])
+#axes.set_xlim([54,60])
 axes.set_xlim([beamZ0-1,beamZ1+1])
 #plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
@@ -193,7 +195,9 @@ for i_hits in range(0, len(fit_hitX)):
 	circle = plt.Circle((fit_hitZ[i_hits], fit_hitX[i_hits]), fit_hitRad[i_hits], color='purple', linestyle='--', fill=False)
 	axes2.add_artist(circle)	
 	
+#axes2.set_ylim([0.4,1.6])
 axes2.set_ylim([beamX0-6,beamX1+3])
+#axes2.set_xlim([54,60])
 axes2.set_xlim([beamZ0-1,beamZ1+1])
 plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
