@@ -135,8 +135,8 @@ LineData Detector::genlin2(float scatterError, ofstream& debug_calc, ofstream& d
         rand_gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
         float yhit = (xl-xs)*projectionX[i]+(yl-ys)*projectionY[i]+ rand_gaus *resolution; 
         line.y_hits.push_back(yhit);
-        line.hit_sigmas.push_back(resolution);
-        line.hit_count++;
+        line.hit_sigmas.push_back(resolution); 
+        line.hit_count++; 
 
         if (debugBool){ 
             debug_off << projectionX[i] << " " << projectionY[i] << " " << rand_gaus << " " << resolution << " " << sdevX[layer[i]-1][imy][imx] <<  endl;
