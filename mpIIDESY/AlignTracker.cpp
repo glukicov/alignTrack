@@ -262,6 +262,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Intercept",  119,  -0.06, 0.06);
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
 	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 89, -0.1, 90);
+	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 89, -0.1, 4);
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
@@ -291,7 +292,7 @@ int main(int argc, char* argv[]) {
 	                       h_chi2_recon, h_driftRad, h_track_TR_diff, h_dca_unsmeared
 	                      };
 	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
-	                      h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle
+	                      h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle, h_chi2_circle_ndf
 	                     };
 	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
 	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
@@ -630,6 +631,7 @@ int main(int argc, char* argv[]) {
 			h_recon_intercept->Fill(generated_MC.intercept_recon);
 			h_pval->Fill(generated_MC.p_value);
 			h_chi2_circle->Fill(generated_MC.chi2_circle);
+			h_chi2_circle_ndf->Fill(generated_MC.chi2_circle/(generated_MC.hit_count-2));
 
 			// XXX additional measurements from MS IF (imodel == 2) THEN
 			//IF (imodel >= 3) THEN
