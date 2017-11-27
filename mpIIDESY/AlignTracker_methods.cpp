@@ -474,7 +474,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	else {
 		signXSlope = -1.0;
 	}
-	xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
+	//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
+	xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015;
 	x1 = xSlope * beamStop + xIntercept; // "xExit"
 	
 	// } // end of generalLines == true HACK
@@ -676,12 +677,13 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, ofstream& metric) {
 
 	//Now misaligning detectors in x
-	float misDispX; // effective misalignment
+	float misDispX(0), Xoffset(0); // effective misalignment
 	metric << "M: ";
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		misDispX = dispX[i_module];
+		Xoffset = offsetX[i_module];
 
-		metric <<  fixed << setprecision(0) << misDispX*1e4 << "; ";
+		metric <<  fixed << setprecision(0) << misDispX*1e4 << " (" << Xoffset*1e4  << "); ";
 
 		float dX = startingXDistanceStraw0 + (misDispX); // starting on the x-axis (z, 0+disp)
 		sdevX.push_back(misDispX);  // vector to store the actual of misalignment

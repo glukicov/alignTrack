@@ -37,9 +37,9 @@
 
 	//Set function to fit
 	TF1* lineF = new TF1("lineF", "[0]*x+[1]", minF, maxF);
-	lineF->SetParameters(0.1, hMean);
+	lineF->SetParameters(0.0, hMean);
 	//Fit function
-	h_uniform->Draw("E0"); //Set errors on all bins
+	h_uniform->Draw("E1"); //Set errors on all bins
 	h_uniform->Fit("lineF");
 
 	//Save canvas as .png file

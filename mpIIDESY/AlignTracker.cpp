@@ -242,7 +242,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_dca_unsmeared = new TH1F("h_dca_unsmeared", "Unsmeared DCA",  98,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
-	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  59,  -0.02, 0.02);
+	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  40,  -0.02, 0.02);
 	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  88,  -1.3, 1.3);
 	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 80,  -0.02, 0.02);
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  99,  -1.3, 1.3);
