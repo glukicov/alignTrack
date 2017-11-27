@@ -136,7 +136,7 @@ for i_module in range(0, moduleN):
 			plt.ylabel("$\Delta$ Misalignment [um]")
 plt.subplots_adjust(hspace=.4)
 plt.gcf().subplots_adjust(top=0.90)
-plt.suptitle(str(metric), fontsize=7, style='oblique',  color="green")
+plt.suptitle(str(metric), fontsize=6, style='oblique',  color="green")
 plt.savefig("FoM_All.png")
 print("File produced: FoM_All.png")
 
