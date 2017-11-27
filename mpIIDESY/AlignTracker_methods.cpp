@@ -868,39 +868,39 @@ float Tracker::generate_uniform() {
  * determined on this OS. By Dr. David R. Nadeau:
  * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
  */
-size_t Tracker::getPeakRSS( ) {
-#if defined(_WIN32)
-	/* Windows -------------------------------------------------- */
-	PROCESS_MEMORY_COUNTERS info;
-	GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
-	return (size_t)info.PeakWorkingSetSize;
+// size_t Tracker::getPeakRSS( ) {
+// #if defined(_WIN32)
+// 	/* Windows -------------------------------------------------- */
+// 	PROCESS_MEMORY_COUNTERS info;
+// 	GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
+// 	return (size_t)info.PeakWorkingSetSize;
 
-#elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-	/* AIX and Solaris ------------------------------------------ */
-	struct psinfo psinfo;
-	int fd = -1;
-	if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
-		return (size_t)0L;      /* Can't open? */
-	if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
-	{
-		close( fd );
-		return (size_t)0L;      /* Can't read? */
-	}
-	close( fd );
-	return (size_t)(psinfo.pr_rssize * 1024L);
+// #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+// 	/* AIX and Solaris ------------------------------------------ */
+// 	struct psinfo psinfo;
+// 	int fd = -1;
+// 	if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
+// 		return (size_t)0L;      /* Can't open? */
+// 	if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
+// 	{
+// 		close( fd );
+// 		return (size_t)0L;      /* Can't read? */
+// 	}
+// 	close( fd );
+// 	return (size_t)(psinfo.pr_rssize * 1024L);
 
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-	/* BSD, Linux, and OSX -------------------------------------- */
-	struct rusage rusage;
-	getrusage( RUSAGE_SELF, &rusage );
-#if defined(__APPLE__) && defined(__MACH__)
-	return (size_t)rusage.ru_maxrss;
-#else
-	return (size_t)(rusage.ru_maxrss * 1024L);
-#endif
+// #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+// 	/* BSD, Linux, and OSX -------------------------------------- */
+// 	struct rusage rusage;
+// 	getrusage( RUSAGE_SELF, &rusage );
+// #if defined(__APPLE__) && defined(__MACH__)
+// 	return (size_t)rusage.ru_maxrss;
+// #else
+// 	return (size_t)(rusage.ru_maxrss * 1024L);
+// #endif
 
-#else
-	/* Unknown OS ----------------------------------------------- */
-	return (size_t)0L;          /* Unsupported. */
-#endif
-}
+// #else
+// 	/* Unknown OS ----------------------------------------------- */
+// 	return (size_t)0L;          /* Unsupported. */
+// #endif
+// }
