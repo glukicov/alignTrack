@@ -798,27 +798,27 @@ int main(int argc, char* argv[]) {
 	//cResMean->Print("Print/cResMean.png");
 	cResMean->Write();
 
-	if (recordN >= 100) { // below 100 tracks these plots are useless
-		TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
-		gStyle->SetOptStat("ourRmMe");
-		gStyle->SetOptFit(1111);
-		chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
-		h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
-		h_chi2_recon->Fit("chi2pdf", "Q");
-		cChi2->Clear(); // Fit does not draw into correct pad
-		auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
-		rp1->SetGraphDrawOpt("P");
-		rp1->SetSeparationMargin(0.0);
-		cChi2->SetTicks(0, 1);
-		rp1->Draw("noconfint");
-		cChi2->Update();
-		rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
-		//cChi2->Print("FoM_Chi2_recon.C");
-		//cChi2->Print("Print/FoM_Chi2_recon.png");
-		cChi2->Write();
-		//TODO fix malloc problem closing the canvas in ROOT Browser
-		delete chi2pdf;
-	}
+	// if (recordN >= 100) { // below 100 tracks these plots are useless
+	// 	TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
+	// 	gStyle->SetOptStat("ourRmMe");
+	// 	gStyle->SetOptFit(1111);
+	// 	chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
+	// 	h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
+	// 	h_chi2_recon->Fit("chi2pdf", "Q");
+	// 	cChi2->Clear(); // Fit does not draw into correct pad
+	// 	auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
+	// 	rp1->SetGraphDrawOpt("P");
+	// 	rp1->SetSeparationMargin(0.0);
+	// 	cChi2->SetTicks(0, 1);
+	// 	rp1->Draw("noconfint");
+	// 	cChi2->Update();
+	// 	rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
+	// 	//cChi2->Print("FoM_Chi2_recon.C");
+	// 	//cChi2->Print("Print/FoM_Chi2_recon.png");
+	// 	cChi2->Write();
+	// 	//TODO fix malloc problem closing the canvas in ROOT Browser
+	// 	delete chi2pdf;
+	// }
 
 	// Debug-style plots:
 	if (1 == -1) {
