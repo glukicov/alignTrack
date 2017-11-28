@@ -3,7 +3,6 @@
 
 #include <TF1.h>
 #include <TH1.h>
-#include <TCanvas.h>
 #include <fstream>
 #include "random_buffer.h" // courtesy of John Smeaton (UCL)
 

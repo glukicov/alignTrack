@@ -15,6 +15,7 @@ void set_uniform_file(string uniform_filename) {
 
 
 int main(int argc, char* argv[]) {
+	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 
 	float nEvents = stoi(argv[1]);
 
@@ -27,6 +28,7 @@ int main(int argc, char* argv[]) {
 	//Book histogram
 	int hBinNumber = 80; float binEdge = 0.02; 
 	TH1F *h_uniform = new TH1F("h_uniform", "h_uniform",  hBinNumber,  -binEdge, binEdge);
+	h_uniform->SetDirectory(0); // to decouple it from the open file directory
 
 	//Fill
 	float functionEdge=0.015;
@@ -48,8 +50,8 @@ int main(int argc, char* argv[]) {
 
 	//Set function to fit
 	TF1* lineF = new TF1("lineF", "pol 0", -functionEdge, functionEdge);
-	h_uniform->Draw("E1"); //Set errors on all bins
-	h_uniform->Fit("lineF");
+	//h_uniform->Draw("E1"); //Set errors on all bins
+	h_uniform->Fit("lineF", "Q");
 
 	float Chi2 = lineF->GetChisquare();
 	float ndf = lineF->GetNDF();

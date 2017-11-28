@@ -25,7 +25,7 @@ for i in range(0, 1000):
 	randSeed = random.randint(1,1E8)
 	subprocess.call( ["python", "randomIntGenerator.py", "-u", "True", "-o", "uniform_ran.txt", "-s", str(randSeed), "-n", str(UniGen) ] )
 	subprocess.call( ["./GenerateFitUniform", str(nEvents)] )
-	time.sleep(2)  # now we delay for the correct amount of time  
+	time.sleep(0.2)  # now we delay for the correct amount of time  
 
 chi2_ndf=[]
 
