@@ -11,6 +11,7 @@
 *.txt.BK
 Mptest2
 Mptest2.root
+GenerateFitUniform
 clean_pede/.svn/
 clean_pede/linesrch.mod
 clean_pede/millepede.end

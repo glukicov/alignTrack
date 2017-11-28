@@ -114,21 +114,17 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.025, 0.0, 0.0, -0.029, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	//float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
-	float off1 = 0.0022946;
-	float off2 = -0.0026802;
-	//float off2 = -0.000823;
-	//float off2 = -0.000823;
-	//float off1 = 0.000542 + 0.00021036 + 0.00008187 - 0.0004096;
-	//float off2 = -0.000670 - 0.00027288 + 0.00027582 + 0.000172;
-	float offsetX[8] = {off1, 0.0, 0.0, off2, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	float dispX[8] = {0.03, 0.0, 0.0, -0.03, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	//float off1 = +0.030706;
+	//float off2 = -0.030342;
+	//float offsetX[8] = {off1, 0.0, 0.0, off2, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
 
 	float pValCut = 0.00; // from 0->1
-	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
+	bool trackCutBool = false; // if true, tracks will be rejected if DCA > trackCut
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	bool useTruthLR = true;
 

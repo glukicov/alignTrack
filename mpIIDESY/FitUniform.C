@@ -36,8 +36,8 @@
 	cout << " minF= " << minF << " maxF= " << maxF << endl;
 
 	//Set function to fit
-	TF1* lineF = new TF1("lineF", "[0]*x+[1]", minF, maxF);
-	lineF->SetParameters(0.0, hMean);
+	TF1* lineF = new TF1("lineF", "pol 0", minF, maxF);
+	//lineF->SetParameters(0.0, hMean);
 	//Fit function
 	h_uniform->Draw("E1"); //Set errors on all bins
 	h_uniform->Fit("lineF");

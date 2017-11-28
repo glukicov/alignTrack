@@ -742,7 +742,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, 
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << "M" << noshowpos << i_module+1 << " :: " << showpos << sdevX[i_module] << " cm. "; // absolute misalignment [as set by MC]
 		cout << "O" << noshowpos << i_module+1 << " :: " << showpos << offsetX[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
-		pede_mis << -(offsetX[i_module]-sdevX[i_module]) << " ";
+		pede_mis << (offsetX[i_module]-sdevX[i_module]) << " ";
 		float relMisTmp = sdevX[i_module] - overallMis;
 		// now push these misalignment parameters for all layers in the module [for use later]
 		for (int i_view = 0; i_view < viewN; i_view++) {
