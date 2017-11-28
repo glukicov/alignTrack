@@ -50,6 +50,7 @@
 #include <TMarker.h>
 #include <TPaveStats.h>
 #include <TLatex.h>
+#include <TError.h>
 
 int main(int argc, char* argv[]);
 
