@@ -12,7 +12,7 @@ from ROOT import *
 
 nEvents = int (sys.argv[1])
 UniGen = 2 * nEvents
-NIterations = 1000
+NIterations = 100
 
 subprocess.call(["clear"])
 
@@ -21,7 +21,7 @@ print "Staring Uniform tests"
 if ( os.path.isfile("Chi2Uni.txt") ):
 	os.rename("Chi2Uni.txt", "Chi2Uni.txt.BK")
 
-for i in range(0, 1000):
+for i in range(0, 100):
 	randSeed = random.randint(1,1E8)
 	subprocess.call( ["python", "randomIntGenerator.py", "-u", "True", "-o", "uniform_ran.txt", "-s", str(randSeed), "-n", str(UniGen) ] )
 	subprocess.call( ["./GenerateFitUniform", str(nEvents)] )

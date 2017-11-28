@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 	float Chi2_recon_actual = 0.0; // Reconstructed Chi2 (from measurements)
 	int negDCA = 0; // counting negatively smeared DCAs
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
-	//gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
+	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 	// Simple LR mapping for ROOT plots
 	char nameLR[] = {'L', 'R'};
 	char nameResSign[] = {'P', 'N'};
