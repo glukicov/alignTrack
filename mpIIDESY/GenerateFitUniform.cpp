@@ -15,7 +15,7 @@ void set_uniform_file(string uniform_filename) {
 
 
 int main(int argc, char* argv[]) {
-	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
+	//gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 
 	float nEvents = stoi(argv[1]);
 

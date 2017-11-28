@@ -35,7 +35,7 @@ all : $(PROGNAME)
 $(PROGNAME) : $(OBJECTS) $(PROGNAME).o
 	$(CPP) -o $@ $(OBJECTS) $(PROGNAME).o $(LDFLAGS) $(LIBS)
 
-%.o : %.cpp %.h AlignTracker_methods.h
+%.o : %.cpp %.h 
 	$(CPP) $(CPPFLAGS) -c $<
 
 test:
