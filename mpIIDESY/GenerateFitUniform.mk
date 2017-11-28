@@ -11,7 +11,7 @@ ROOTLIBS     := $(shell root-config --nonew --libs)
 
 CPP = g++
 //CPP=/usr/local/bin/g++-7
-CPPFLAGS = -std=c++11
+//CPPFLAGS = -std=c++11
 CPPFLAGS += $(ROOTCFLAGS)
 //CPPFLAGS +=-static-libtsan
 //CPPFLAGS += -Wstatic-float-init
