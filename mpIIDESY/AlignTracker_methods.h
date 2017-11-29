@@ -100,7 +100,7 @@ private:
 	static Tracker* s_instance; // Pointer to instance of class
 
 	int trackNumber; // Number of tracks (i.e. records) to be simulated passing through detector - passed as command line argument
-
+	
 	static constexpr float twoR = 2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
 	// **** COUNTERS ****  //
@@ -115,10 +115,7 @@ private:
 	// MF + inhomogeneity, E_loss, MS
 
 	float dispX[8] = {0.03, 0.0, 0.0, -0.03, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	//float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
-	float off1 = +0.030634;
-	float off2 = -0.030635;
-	float offsetX[8] = {off1, 0.0, 0.0, off2, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
@@ -241,6 +238,14 @@ public:
 	//
 	void setTrackNumber(int tracks) {
 		trackNumber = tracks;
+	}
+
+	void setOffset1(float off1) {
+		offsetX[0] = off1;
+	}
+
+	void setOffset2(float off2) {
+		offsetX[3] = off2;
 	}
 
 	void incRejectedHitsDCA() {

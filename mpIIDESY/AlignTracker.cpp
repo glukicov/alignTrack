@@ -88,6 +88,8 @@ int main(int argc, char* argv[]) {
 	int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
 	string compareStr; //for debug vs. normal output as specified by the user
 	int tracksInput; // number of tracks to generate as specified by the user
+	float offset1; 
+	float offset2;
 	bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
 	bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py
 	//Set up counters for hits and records (tracks)
@@ -121,12 +123,14 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->enableCriticalErrorThrow();
 
 	// Check if correct number of arguments specified, exiting if not
-	if (argc > 3) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");}
-	else if (argc < 3) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");}
+	if (argc > 5) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");}
+	else if (argc < 5) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");}
 	else { // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
 		try {
 			compareStr = argv[1];
 			tracksInput = stoi(argv[2]);
+			offset1 = stof(argv[3]);
+			offset2 = stof(argv[4]);
 		}
 		catch (ios_base::failure& e) {
 			Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
@@ -138,17 +142,23 @@ int main(int argc, char* argv[]) {
 		debugBool = true; // print out to debug files [and verbose cout output]
 		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******DEBUG MODE*****");
+		Tracker::instance()->setOffset1(offset1);
+		Tracker::instance()->setOffset2(offset2);
 	}
 	else if (compareStr == "p") {
 		plotBool = true;
 		debugBool = true; // print out to debug files and plotting files - use with low track #
 		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******PLOTTING MODE*****");
+		Tracker::instance()->setOffset1(offset1);
+		Tracker::instance()->setOffset2(offset2);
 	}
 	else if (compareStr == "n" || compareStr == "a") {
 		debugBool = false; // print out to debug files
 		plotBool = false;  // print out to plotting files
 		Tracker::instance()->setTrackNumber(tracksInput);
+		Tracker::instance()->setOffset1(offset1);
+		Tracker::instance()->setOffset2(offset2);
 	}
 	else {
 		Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [a/n])");

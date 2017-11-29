@@ -7,7 +7,7 @@ echo "Staring PEDE tests..."
 x=0
 #mv g_seed.txt g_seed.txt.BK
 #mv u_seed.txt u_seed.txt.BK
-while [ $x -le 10 ]
+while [ $x -le 100 ]
 
 do
 	y=$(( ( RANDOM % 1000000 )  + 1 ))
