@@ -39,6 +39,23 @@ for i in range(0, NIterations):
     subprocess.call(["./getRandoms.sh", str(NTracks), str(randSeed)])
     subprocess.call(["./AlignTracker", "n", str(NTracks),
                     str(Offsets[0]), str(Offsets[3])])
+
+    # Rename binary and steering file
+    dataFileName = "Tracker_data" + str(int(time.time())) + ".bin"
+    strFileName = "Tracker_str" + str(int(time.time())) + ".txt"
+    os.rename("Tracker_data.bin", str(dataFileName))
+
+    # Write new steering file for Run 2 specifying new binary file
+    f = open(strFileName, 'w')
+    f.write("Tracker_con.txt   ! constraints text file (if applicable) \n")
+    f.write("Tracker_par.txt   ! parameters (presgima) text file (if applicable)\n")
+    f.write("Cfiles ! following bin files are Cfiles\n")
+    f.write(str(dataFileName))
+    f.write("\n")
+    f.write(" method inversion 5 0.001\n")
+    f.write("printrecord 2 -1\n")
+    f.close()
+    
     subprocess.call(["./pede", "Tracker_str.txt"])
 
     module_i = 0
@@ -62,8 +79,6 @@ for i in range(0, NIterations):
     Offsets[0] = misF[0]  # Offset Module 1
     Offsets[3] = misF[3]  # Offset Module 4
 
-    # Delete old steering file [just in case!]
-    os.remove("Tracker_data.bin")
 
     # Run 2
     print "Run 2"
@@ -72,12 +87,13 @@ for i in range(0, NIterations):
     subprocess.call(["./AlignTracker", "n", str(NTracks),
                     str(Offsets[0]), str(Offsets[3])])
 
-    # Rename new binary file
+    # Rename binary and steering file
     dataFileName = "Tracker_data" + str(int(time.time())) + ".bin"
+    strFileName = "Tracker_str" + str(int(time.time())) + ".txt"
     os.rename("Tracker_data.bin", str(dataFileName))
 
     # Write new steering file for Run 2 specifying new binary file
-    f = open('Tracker_str_run2.txt', 'w')
+    f = open(strFileName, 'w')
     f.write("Tracker_con.txt   ! constraints text file (if applicable) \n")
     f.write("Tracker_par.txt   ! parameters (presgima) text file (if applicable)\n")
     f.write("Cfiles ! following bin files are Cfiles\n")
@@ -88,7 +104,7 @@ for i in range(0, NIterations):
     f.close()
 
     # how safe it is? TODO name .bin file with timestap as file name
-    subprocess.call(["./pede", "Tracker_str_run2.txt"])
+    subprocess.call(["./pede", str(strFileName)])
 
     module_i = 0
     with open("millepede.res") as f:
