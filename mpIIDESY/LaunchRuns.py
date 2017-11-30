@@ -7,7 +7,6 @@ import datetime
 import time
 import subprocess
 import random
-from ROOT import *
 
 # Automate over: Runs, NModules: offsets, histos
 NIterations = int(sys.argv[1])
@@ -38,10 +37,10 @@ for i_iter in range(0, NIterations):
             misC = [0.0, 0.0, 0.0, 0.0]
             Offsets = [0.0, 0.0, 0.0, 0.0]
 
-            randSeed = random.randint(123, 1e6)
-            subprocess.call(["./getRandoms.sh", str(NTracks),
+        randSeed = random.randint(123, 1e6)
+        subprocess.call(["./getRandoms.sh", str(NTracks),
                             str(randSeed)], stdout=open(os.devnull, 'wb'))
-            subprocess.call(["./AlignTracker", "n", str(NTracks),
+        subprocess.call(["./AlignTracker", "n", str(NTracks),
                             str(Offsets[0]), str(Offsets[3])], stdout=open(os.devnull, 'wb'))
 
 	    # Rename binary and steering file
@@ -86,7 +85,7 @@ for i_iter in range(0, NIterations):
 	    Offsets[0] = misF[0]  # Offset Module 1
 	    Offsets[3] = misF[3]  # Offset Module 4
 
-	#end of runs/iterations 
+	# end of runs/iterations 
 
 Tf = TFile('PEDERuns.root', 'RECREATE')
 h_m1_run1 = TH1F("h_m1_run1", "$\detla$M1 in M Run 1", 49, -5, 18)
