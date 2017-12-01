@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 	int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
 	string compareStr; //for debug vs. normal output as specified by the user
 	int tracksInput; // number of tracks to generate as specified by the user
-	float offset1;
+	float offset1; 
 	float offset2;
 	bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
 	bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py
@@ -641,7 +641,7 @@ int main(int argc, char* argv[]) {
 			h_recon_intercept->Fill(generated_MC.intercept_recon);
 			h_pval->Fill(generated_MC.p_value);
 			h_chi2_circle->Fill(generated_MC.chi2_circle);
-			h_chi2_circle_ndf->Fill(generated_MC.chi2_circle / (generated_MC.hit_count - 2));
+			h_chi2_circle_ndf->Fill(generated_MC.chi2_circle/(generated_MC.hit_count-2));
 
 			// XXX additional measurements from MS IF (imodel == 2) THEN
 			//IF (imodel >= 3) THEN
@@ -946,8 +946,8 @@ int main(int argc, char* argv[]) {
 	file->Close();
 	delete file;
 
-	metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um "
-	       << "| DCA Cut of " << Tracker::instance()->getTrackCut() * 1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
+	metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um " 
+	       << "| DCA Cut of " << Tracker::instance()->getTrackCut() *1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
 	       << "| Hit rej.: " << boolYN[Tracker::instance()->getHitCutStatus()]
 	       << "| Truth LR : " << boolYN[Tracker::instance()->getLRStatus()]
 	       << "| p-value cut (<): " << Tracker::instance()->getPValCut() ;

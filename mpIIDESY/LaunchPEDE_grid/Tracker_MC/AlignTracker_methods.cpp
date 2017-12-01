@@ -1,969 +1,908 @@
 /*
-*   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
-*   Created: 17 April 2017
-*   Modified: 9 October 2017
-----------------------------------------------------------------
-This programme uses MC methods to produce a .bin data file for the
-PEDE routine, to align the tracking detector for the g-2
-experiment.
-Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
+This source file contains definitions of various functions in the method class.
+*/
 
-============================= Test Model v0.4 =======================================
-*Simple 2D case (1D alignment along x).
-* No B-field, straight tracks, no MS, 100% efficiency.
-*(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted]
-
-(!) Module, Straw, View, Layer labelling starts from 0 [+1 is put by hand as MP2 doesn't accept 0 as a label]
-
-Terminology: detector=module (==the alignment object)
-
-Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
-Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
-    tracks are lines between z=beamStart and z=beamStop, with uniformly generated x1 and slope.
-Resolution (i.e. tracker systematic) is implemented.
-Misalignment is implemented "manually" for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
-
-Hit rejection: (>0.5 straw radius)  -not used yet
-
-Constrains: TODO
-Steering options: method inversion 1 0.01 [1 iteration, 0.01 dF convergence; inversion method provides uncertainties on all alignment parameters]
-
-                       			--Tracker Geometry [cm]--:
-Spacing (in x) between straws in layer is 0.606 [strawSpacing]
-Spacing between layers in same view is 0.515 [layerSpacing]
-Spacing between U and V views (last and first layers in views) is 2.020 [viewSpaing]
-Spacing between modules (last and first layers in modules) 13.735 [moduleSpacing]
-Layers in a view are (e.g. U0 vs. U1) have an extra relative x displacement of 0.303 [layerDisplacement]
-The staircaseXDisplacment of modules is not implemented yet
-
-For more information see:
-http://gm2-docdb.fnal.gov:8080/cgi-bin/RetrieveFile?docid=4375&filename=Orientation.pdf&version=1
-
-=======================================================================================
-
-#TODO Model type [physics] will be implemented via imodel = 0, 1 .....
-
-#Verbosity level implemented via command line command: n = normal, d = debug, p=plotting (./PlotGen.py) [e.g. './AlignTracker d']
-
-Private (for now) Git repository: https://github.com/glukicov/alignTrack [further instructions are there]
-Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
-*
-*
-**/
-
-#include "AlignTracker.h"
+#include "AlignTracker_methods.h"
 
 using namespace std;
-// for compiler version determination:
-string ver_string(int a, int b, int c) {
-	ostringstream ss;
-	ss << a << '.' << b << '.' << c;
-	return ss.str();
+
+// Set up empty pointer for instance of the class.
+Tracker* Tracker::s_instance = NULL;
+
+/**
+Constructor for tracker class.
+ */
+Tracker::Tracker() {
+
+	// non-static variables definition here
+	
+	// Set mapping for U0...V1
+	string tempMapping[4] = {"U0", "U1", "V0", "V1"};
+	for (int i_view = 0; i_view < viewN; i_view++) {
+		UVmapping.push_back(vector<string> ()); //initialize the first index with a 2D vector
+		for (int i_layer = 0; i_layer < layerN; i_layer++) {
+			if (i_view == 0) {UVmapping[i_view].push_back(tempMapping[i_layer]);}
+			if (i_view == 1) {UVmapping[i_view].push_back(tempMapping[i_layer + 2]);}
+		} //layers
+	} // views
+
+} // constructor
+
+/**
+    Empty destructor for tracker class.
+*/
+Tracker::~Tracker() {
 }
 
-//**********************************************MAIN*************************************//
-int main(int argc, char* argv[]) {
-	//Starting a clock
-	clock_t t_cpu; // CPU ticks for programme execution
-	t_cpu = clock();
-	auto t_start = chrono::high_resolution_clock::now(); // Wall clock ticks
 
-	//Determining compiler used:
-	string true_cxx =
-#ifdef __clang__
-	    "clang++";
-#else
-	    "g++";
-#endif
-	string true_cxx_ver =
-#ifdef __clang__
-	    ver_string(__clang_major__, __clang_minor__, __clang_patchlevel__);
-#else
-	    ver_string(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-#endif
+/**
+   Get pointer to only instance of tracker class, creating this instance if it doesn't already exist.
+   instance is a static member function of Tracker (singleton)
+   @return Pointer to tracker instance.
+ */
+Tracker* Tracker::instance() {
 
-//------------------------------------------Variable Initialisation---------------------------------------------------------//
+	// Create pointer to class instance if one doesn't exist already, then return that pointer.
+	if (s_instance == NULL) s_instance = new Tracker();
+	return s_instance;
+}
 
-	int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.]
-	int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
-	string compareStr; //for debug vs. normal output as specified by the user
-	int tracksInput; // number of tracks to generate as specified by the user
-	float offset1;
-	float offset2;
-	bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
-	bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py
-	//Set up counters for hits and records (tracks)
-	int hitsN = 0; // actually recorded (i.e. non-rejected hits)
-	int recordN = 0; //records = tracks
-	float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
-	// Those variable are set inside the hits loop, and used outside - hence global scope
-	float residuals_true_sum_2 = 0.0; // squared sum of the true residuals (from measurements)
-	float residuals_recon_sum_2 = 0.0; // squared sum of the recon. residuals (from measurements)
-	float pivotPoint_actual = 0.0; // central z point from measurements
-	float Chi2_recon_actual = 0.0; // Reconstructed Chi2 (from measurements)
-	int negDCA = 0; // counting negatively smeared DCAs
-	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
-	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
-	// Simple LR mapping for ROOT plots
-	char nameLR[] = {'L', 'R'};
-	char nameResSign[] = {'P', 'N'};
-	const char* nameLC[] = {"DLC1", "DLC2"};
-	int valueLR[] = { -1, 1};
-	// True/False -> Yes/No mapping
-	const char* boolYN[2] = {"No", "Yes"};
+void Tracker::write_steering_file(ofstream& steering_file, ofstream& metric) {
+	if (steering_file.is_open()) {
+		
+		stringstream pede_method; pede_method.str(""); pede_method << "method inversion 5 0.001";
+		metric << "| " << pede_method.str().c_str();
+		//stringstream pede_method; pede_method.str(""); pede_method << "method fullGMRES 5 0.001";
+		stringstream msg_method; 
+		msg_method << Logger::yellow() << pede_method.str().c_str();
+		Logger::Instance()->write(Logger::NOTE, msg_method.str());
 
-	// use overloading to duplicate cout into the log file
-	ofstream LOG; LOG.open("Tracker_log.txt"); MyStreamingHelper helper(LOG, cout);
-	cout << fixed << setprecision(setPrecision); // set precision of standard screen output
-	helper << fixed << setprecision(setPrecision); // set precision of log file output
+		steering_file <<  "* g-2 Tracker Alignment: PEDE Steering File" << endl
+		              << " "  << endl
+		              << "Tracker_con.txt   ! constraints text file (if applicable) " << endl
+		              << "Tracker_par.txt   ! parameters (presgima) text file (if applicable)" << endl
+		              << "Cfiles ! following bin files are Cfiles" << endl
+		              << "Tracker_data.bin   ! binary data file" << endl
+		              << pede_method.str().c_str() << endl 
+		              << "printrecord 2 -1 ! produces mpdebug.txt for record 2 with the largest value of χ2/Ndf" << endl    
+		              << " "  << endl
+		              << "end ! optional for end-of-data" << endl;
+	} // steering file open
+} // steering function
+/**
+   Write a constraint file to the supplied file-stream.
+    @param constraint_file Reference to ofstream to write constraint file to.
+ */
 
-	//Tell the logger to only show message at INFO level or above
-	Logger::Instance()->setLogLevel(Logger::NOTE);
-	//Tell the logger to throw exceptions when ERROR messages are received
-	Logger::Instance()->enableCriticalErrorThrow();
+// XXX constraints are ignored with HIP method
+void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool, ofstream& metric) {
+	// Check constraints file is open, then write.
+	if (constraint_file.is_open()) {
+		//Evaluation of constraints
+		float one = 1.0;
+		metric << " | C: ";
+		stringstream labelt;
+		//Fixing module 0 and the last module
+		for (int i_module = 0; i_module < moduleN; i_module++) {
+			if (i_module == 0 || i_module == moduleN - 1) {
+			//if (i_module == 1 || i_module == 2) {
 
-	// Check if correct number of arguments specified, exiting if not
-	if (argc > 5) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");}
-	else if (argc < 5) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");}
-	else { // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
-		try {
-			compareStr = argv[1];
-			tracksInput = stoi(argv[2]);
-			offset1 = stof(argv[3]);
-			offset2 = stof(argv[4]);
+				//constraint_file << "Constraint 0.0" << endl;
+				 
+				 labelt << "-; ";
+				//int labelt = i_module + 1; // Millepede accepts +ive labels only
+				//mat_nc++; // increment number of constraints 
+				//constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
+
+			} // end of fixed modules
+		} // end of detectors loop
+		metric << labelt.str().c_str();
+	} // constrain file open
+	cout << "Memory space requirement (inversion method, i.e. upper bound) = " << ( mat_n*mat_n + mat_n ) / 2 + mat_n * mat_nc + ( mat_nc*mat_nc + mat_nc )/2 << endl;
+} // end of writing cons file
+
+void Tracker::write_presigma_file(ofstream& presigma_file, ofstream& metric) {
+	// Check constraints file is open, then write.
+	if (presigma_file.is_open()) {
+		presigma_file << "PARAMETERS" << endl;
+		metric << " | P: ";
+		//Fixing module 0 and the last module
+		for (int i_module = 0; i_module < moduleN; i_module++) {
+			//if (i_module == 0 || i_module == moduleN - 1) {
+			if (i_module == 1 || i_module == 2) {
+
+				float initialValue = 0.0; //modules at x=0
+				float preSigma = -1.0;
+				int labelt = i_module + 1; // Millepede accepts +ive labels only
+				presigma_file << labelt << " " << fixed << setprecision(5) << initialValue << fixed << setprecision(5) << " " << preSigma << endl;
+				metric << labelt << " " << initialValue << " " << preSigma << "; ";
+			} // end of fixed modules
+		} // end of detectors loop
+	} // constrain file open
+} // end of writing cons file
+
+/**
+   DCA for a point to a line in 2D space
+*/
+float Tracker::pointToLineDCA(float z_straw, float x_straw, float x_slope, float x_intercept) {
+
+	//http://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
+
+	//converting from x=mz+c -> mz+x+c=0
+	float a = -x_slope;
+	float b = 1.0;
+	float c = -x_intercept;
+	float x0 = z_straw;
+	float y0 = x_straw;
+
+	float dca = abs( a * x0 + b * y0 + c ) / sqrt( a * a + b * b  ) ;
+
+	//cout << "m= " << a << " c= " << c << " z= " << x0 << " -x= " << y0 << " dca= " << dca <<  endl;
+
+	return dca;
+}
+
+
+/** Uses DCA function to find the shortest dca between straws (i.e. which straw was hit in that layer)
+    @Inputs (see DCA method) + vector of straws' x coordinates in a layer, and a return type: "dca_hit"  or "x_line"
+    @return hit_distance - dca of the straw that was hit, or x coordinate of the line on the same z as a straw
+*/
+DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float xSlpoe, float xIntercept, bool debugBool) {
+
+	DCAData dca_data;
+
+	bool StrongDebugBool = false; //quick hack XXX for even more debug output
+
+	//Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
+	// xTrack is the point of the line "in-line with the layers"
+
+	float lower, upper, hitDistance;
+	int lastID = strawN - 1; // the ID of the very last straw in the vector
+	int LR, index; //L= +1 or R=-1 hit looking downstream
+	vector<float>::iterator it;
+
+	// If the very first straw [straw closest to the beam path], this straw has the highest x coordinate value in the distance-ordered descending straw-vector
+	// compares less than the hit, the hit must be from the L (+1)
+	if (xTrack > xLayer[0]) {
+		// hit distance is then the dca from the L of the straw with highest x coordinate
+		hitDistance = pointToLineDCA(zStraw, xLayer[0], xSlpoe, xIntercept);
+		LR = +1; // assign truth L
+		index = 0;
+		if (debugBool && StrongDebugBool) {
+			cout << "Track in line at " << xTrack << " The first straw is closest at " << upper <<  "; with DCA " << hitDistance << endl;
 		}
-		catch (ios_base::failure& e) {
-			Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
+	}
+	// Another scenario, is that the hit is smaller than the x coordinate of the last straw
+	else if (xTrack < xLayer[lastID]) {
+		// hit distance is the dca from the R of the last straw
+		hitDistance = pointToLineDCA(zStraw, xLayer[lastID], xSlpoe, xIntercept);
+		LR = -1;
+		index = lastID;
+		if (debugBool && StrongDebugBool) {
+			cout << "Track in line at " << xTrack << " The last straw is closest at " << lower <<  "; with DCA " << hitDistance << endl;
 		}
-	} // end of 2nd else [correct # arguments]
-
-	//this is also passed to Tracker functions, with debug file names
-	if (compareStr == "d") {
-		debugBool = true; // print out to debug files [and verbose cout output]
-		Tracker::instance()->setTrackNumber(tracksInput);
-		Logger::Instance()->write(Logger::WARNING,  "******DEBUG MODE*****");
-		Tracker::instance()->setOffset1(offset1);
-		Tracker::instance()->setOffset2(offset2);
 	}
-	else if (compareStr == "p") {
-		plotBool = true;
-		debugBool = true; // print out to debug files and plotting files - use with low track #
-		Tracker::instance()->setTrackNumber(tracksInput);
-		Logger::Instance()->write(Logger::WARNING,  "******PLOTTING MODE*****");
-		Tracker::instance()->setOffset1(offset1);
-		Tracker::instance()->setOffset2(offset2);
-	}
-	else if (compareStr == "n" || compareStr == "a") {
-		debugBool = false; // print out to debug files
-		plotBool = false;  // print out to plotting files
-		Tracker::instance()->setTrackNumber(tracksInput);
-		Tracker::instance()->setOffset1(offset1);
-		Tracker::instance()->setOffset2(offset2);
-	}
+	// All other cases will have a hit between two straws
+	// to check which DCA is actually shorter we need the calculate and compare
+	// the two [the straw-position vector iterator only checks the vertical distance] and assign LRma
 	else {
-		Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [a/n])");
-	}
-
-	Logger::Instance()->setUseColor(false); // will be re-enabled below [to use custom colour output to terminal]
-	stringstream msg0, msg01, msg02, msg1;
-	Logger::Instance()->write(Logger::NOTE, "");
-	msg0 << Logger::blue() <<  "*********************************************************************" << Logger::def();
-	Logger::Instance()->write(Logger::NOTE, msg0.str());
-	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.5) - Gleb Lukicov (UCL) - November 2017         " << Logger::def();
-	Logger::Instance()->write(Logger::NOTE, msg01.str());
-	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
-	Logger::Instance()->write(Logger::NOTE, msg1.str());
-	Logger::Instance()->setUseColor(true); // back to default colours
-	helper << endl;
-	helper << "Alignment Model with " << Tracker::instance()->getModuleN() << " tracker modules, having " << Tracker::instance()->getStrawN()
-	       << " straws per layer." << endl;
-	helper << "[" << Tracker::instance()->getLayerN() << " layers per module; " << Tracker::instance()->getViewN() << " views per module]." << endl;
-	helper << "Total of " << Tracker::instance()->getLayerTotalN() << " measurement layers." << endl;
-	helper << "No B-field, Straight Tracks (general lines), 100% efficiency." << endl;
-	helper << "Hit rejection for (DCA > StrawRadius) is used: " << boolYN[Tracker::instance()->getHitCutStatus()] << endl;
-	helper << "Tracks are rejected if one of hits have a (DCA < " << Tracker::instance()->getTrackCut() << ")" << " : " << boolYN[Tracker::instance()->getTrackCutBool()] << endl;
-	helper << "Truth LR information is used in the reconstruction: " << boolYN[Tracker::instance()->getLRStatus()] << endl;
-	helper << "p-value cut (<) for reconstructed tracks: " << Tracker::instance()->getPValCut() << endl;
-	helper << "Straight Tracks with Circle Fit: single hit per layer allowed" << endl;
-	helper << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
-	helper << endl;
-
-	// See https://github.com/glukicov/alignTrack for instructions to generate random numbers
-	try {
-		Tracker::instance()->set_uniform_file("uniform_ran.txt");
-		Tracker::instance()->set_gaussian_file("gaussian_ran.txt");
-	}
-
-	catch (ios_base::failure& e) {
-		cerr << "Filestream exception caught: " << e.what() << endl;
-		cerr << "Please ensure valid filenames are specified!" << endl;
-		cerr << "Have random numbers been generated with randomIntGenerator.py?" << endl;
-		return 1;
-	}
-//------------------------------------------Setting Output Files---------------------------------------------------------//
-
-	//arguments for Mille constructor:
-	const char* outFileName = "Tracker_data.bin";
-	bool asBinary = true; // set false for debugging
-	bool writeZero = false; // to write 0 LC/DLC labels - not accepted by pede
-
-	//Constraints, Steering and Parameter files are the inputs to Pede (together with binary file).
-	ofstream constraint_file("Tracker_con.txt");
-	ofstream steering_file("Tracker_str.txt");
-	ofstream presigma_file("Tracker_par.txt");
-
-	//Debug files [only filled with "d" option]: file streams for debug files
-	// Setting fixed precision for floating point values
-	ofstream debug_mp2("Tracker_d_mille.txt");  debug_mp2 << fixed << setprecision(setPrecision);  //Inputs into binary files
-	ofstream debug_calc("Tracker_d_calc.txt");  debug_calc << fixed << setprecision(setPrecision);     // intermediate calculation
-	ofstream debug_mis("Tracker_d_mis.txt");    debug_mis << fixed << setprecision(setPrecision);    // Misalignment
-	ofstream debug_geom("Tracker_d_geom.txt");  debug_geom << fixed << setprecision(setPrecision);    // Geometry
-	ofstream debug_off("Tracker_d_off.txt");    debug_off << fixed << setprecision(setPrecision); // Offsets/Missed hits
-	ofstream debug_mc("Tracker_d_MC.txt");      debug_mc << fixed << setprecision(setPrecision);  // Final results from MC
-	ofstream debug_con("Tracker_d_con.txt");    debug_con << fixed << setprecision(setPrecision);   //Constraints
-	ofstream plot_gen("Tracker_p_gen.txt");     plot_gen << fixed << setprecision(setPrecision);  //Truth Track points
-	ofstream plot_fit("Tracker_p_fit.txt");     plot_fit << fixed << setprecision(setPrecision);   //Reconstructed Track points
-	ofstream contsants_plot("Tracker_p_constants.txt");  contsants_plot << fixed << setprecision(setPrecision);   // passing constants (e.g. strawN to python script)
-	ofstream plot_hits_gen("Tracker_p_hits_gen.txt");  plot_hits_gen << fixed << setprecision(setPrecision); // Truth Hits points
-	ofstream plot_hits_fit("Tracker_p_hits_fit.txt");   plot_hits_fit << fixed << setprecision(setPrecision); // Recon Hits points
-	ofstream pede_mis("Tracker_pede_mis.txt");  pede_mis << fixed << setprecision(setPrecision);  // Misalignments
-	ofstream timeFile("Tracker_time.txt", ios_base::app);  timeFile << fixed << setprecision(setPrecision);  // Misalignments
-	ofstream metric("Tracker_metric.txt"); stringstream metricStr; metricStr.str(""); //metric << fixed << setprecision(setPrecision);  // Misalignments
-
-	//ofstream debug_append("Tracker_d_append.txt", std::ios_base::app);  debug_append << fixed << setprecision(setPrecision);  // Misalignments
-
-	//------------------------------------------ROOT: Booking etc.---------------------------------------------------------//
-
-	//output ROOT file
-	TFile* file = new TFile("Tracker.root", "recreate");
-	//create a subdirectories
-	TDirectory* cd_All_Hits = file->mkdir("All_Hits");
-	TDirectory* cd_UV = file->mkdir("UV");
-	TDirectory* cd_Modules = file->mkdir("Modules");
-	TDirectory* cd_Tracks = file->mkdir("Tracks");
-	TDirectory* cd_Straws = file->mkdir("Straws");
-	TDirectory* cd_PEDE = file->mkdir("PEDE");
-
-	// Book histograms [once only] - Key quantities
-	TH1F* h_sigma = new TH1F("h_sigma", "Resolution (#sigma)",  49,  Tracker::instance()->getResolution() - 0.001,
-	                         Tracker::instance()->getResolution() + 0.001); // F=float bins, name, title, nBins, Min, Max
-	TH1F* h_res_MP2 = new TH1F("h_res_MP2", "Residuals: Recon",  199, -0.06, 0.06);
-	TH1F* h_dca = new TH1F("h_dca", "DCA",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
-	TH1F* h_dca_unsmeared = new TH1F("h_dca_unsmeared", "Unsmeared DCA",  98,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
-	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
-	// Track-generation-based
-	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  80,  -0.02, 0.02);
-	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  88,  -1.3, 1.3);
-	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 80,  -0.02, 0.02);
-	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  99,  -1.3, 1.3);
-	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
-	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
-	//Track/Hits-based
-	TH1F* h_track_true = new TH1F("h_track_true", "All track points: Truth",  49,  -3, 3);
-	TH1F* h_track_recon = new TH1F("h_track_recon", "All track points: Recon",  49,  -3, 3);
-	TH1F* h_track_TR_diff = new TH1F("h_track_TR_diff", "#Delta (Recon-True) track points",  149, -0.03, 0.03);
-	TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
-	TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals: Truth", 500, -0.06, 0.06);
-	TH1F* h_chi2_true = new TH1F("h_chi2_true", "#Chi^{2}: Truth", 40, -1, 50);
-	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals: Recon", 199, -0.2, 0.2);
-	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "#Chi^{2}: Recon", 250, 0, 120);
-	TH1I* h_hitCount = new TH1I("h_hitCount", "Hit count", 32 , 0, 32);
-	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "#Delta (Recon - True) Slope",  119,  -0.002, 0.002);
-	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Intercept",  119,  -0.06, 0.06);
-	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
-	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 89, -0.1, 90);
-	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 89, -0.1, 4);
-	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
-	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
-	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
-	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  149,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
-
-	// "special" histos
-	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
-	TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.1, 0.1);
-	h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
-	TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD: Recon", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 80, 400);
-	h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
-	TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD: Expect", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 120, 150);
-	h_SD_z_res_Est->SetDirectory(cd_All_Hits); h_SD_z_res_Est->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Est->GetYaxis()->SetTitle("Residual SD [um]");
-	TH2F* h_Pulls_z = new TH2F("h_Pulls_z", "Pulls", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, -1, 10);
-	h_Pulls_z->SetDirectory(cd_All_Hits); h_Pulls_z->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_Pulls_z->GetYaxis()->SetTitle("Measurement Pulls [cm]");
-
-	//Use array of pointer of type TH1x to set axis titles and directories
-	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon,
-	                   h_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_residual_recon,
-	                   h_driftRad, h_track_TR_diff, h_dca_unsmeared
-	                  };
-	for (int i = 0; i < (int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++) {
-		TH1F* temp = cmTitle[i];
-		cmTitle[i]->SetXTitle("[cm]");
-	}
-	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_residual_true, h_chi2_true, h_residual_recon,
-	                       h_chi2_recon, h_driftRad, h_track_TR_diff, h_dca_unsmeared
-	                      };
-	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
-	                      h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle, h_chi2_circle_ndf
-	                     };
-	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
-	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
-		cdAllHits_F[i]->SetDirectory(cd_All_Hits);
-	}
-	for (int i = 0; i < (int) sizeof( cdTracks_F ) / sizeof( cdTracks_F[0] ); i++) {
-		cdTracks_F[i]->SetDirectory(cd_Tracks);
-	}
-	for (int i = 0; i < (int) sizeof( cdAllHits_I ) / sizeof( cdAllHits_I[0] ); i++) {
-		cdAllHits_I[i]->SetDirectory(cd_All_Hits);
-	}
-
-	stringstream h_name; //to book hist. in a loop
-	stringstream h_title;
-	// Modules, views, layers
-	float z_jump_bin = 5.0; // the increment in z for consecutive layers
-	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-		for (int i_view = 0; i_view < Tracker::instance()->getViewN(); i_view++) {
-			for (int i_layer = 0; i_layer < Tracker::instance()->getLayerN(); i_layer++) {
-
-				string UV = Tracker::instance()->getUVmapping(i_view, i_layer); // converting view/layer ID into conventional labels
-
-				h_name.str(""); h_name << "h_dca_M_" << i_module << "_" << UV;
-				h_title.str(""); h_title << "DCA M" << i_module << " " << UV ;
-				auto hl1 = new TH1F(h_name.str().c_str(), h_title.str().c_str(), 99,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
-				hl1->GetXaxis()->SetTitle("[cm]"); hl1->SetDirectory(cd_UV);
-
-				h_name.str(""); h_name << "h_strawID_M_" << i_module << "_" << UV;
-				h_title.str(""); h_title << "strawID M" << i_module << " " << UV ;
-				auto hl2 = new TH1I(h_name.str().c_str(), h_title.str().c_str(), Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
-				hl2->GetXaxis()->SetTitle("Straw ID [0-31]"); hl2->SetDirectory(cd_UV);
-
-				h_name.str(""); h_name << "h_LR_M_" << i_module << "_" << UV;
-				h_title.str(""); h_title << "LR in M" << i_module << " " << UV ;
-				auto hl3 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  4, -2, 2);
-				hl3->GetXaxis()->SetTitle("L= - 1.0; R = +1.0 "); hl3->SetDirectory(cd_UV);
-
-				h_name.str(""); h_name << "h_residual_recon_M_" << i_module << "_" << UV;
-				h_title.str(""); h_title << "Residuals Recon M" << i_module << " " << UV ;
-				auto hl4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -0.2, 0.2);
-				hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
-
-				h_name.str(""); h_name << "h_pull_M_" << i_module << "_" << UV;
-				h_title.str(""); h_title << "Pull M" << i_module << " " << UV ;
-				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0); hl6->SetDirectory(cd_UV);
-
-				// Parasitic booking with specific binning
-				for (int i_LC = 0; i_LC < 2; i_LC++) { //loop over derivatives
-					for (int i_LR = 0; i_LR < 2; i_LR++) {
-						for (int i_RS = 0; i_RS < 2; i_RS++) {
-							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
-							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
-							if (i_LC == 0) {
-								if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);
-								}
-								if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);
-								}
-							} // lc1
-							if (i_LC == 1) {
-								if (nameLR[i_LR] == 'L') {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, -z_jump_bin - 0.01, -z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
-								}
-								if (nameLR[i_LR] == 'R') {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, z_jump_bin - 0.01, z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
-								}
-							} // lc2
-						} // Res sign P/N
-					} // LR
-				} // lc1-2
-				if (i_layer == 0) { z_jump_bin += 0.515; }
-			} // layers
-			if (i_view == 0) { z_jump_bin += 2.020; }
-		} // views
-		z_jump_bin += 13.735;
-	} // modules
-
-	//Modules
-	for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-
-		h_name.str(""); h_name << "h_DCA_Module_" << i_module;
-		h_title.str(""); h_title << "DCA M" << i_module;
-		auto hm3 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  99, -0.1, 0.4);
-		hm3->GetXaxis()->SetTitle("[cm]"); hm3->SetDirectory(cd_Modules);
-
-		h_name.str(""); h_name << "h_Residuals_Module_" << i_module;
-		h_title.str(""); h_title << "Residuals Recon M" << i_module;
-		auto hm4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
-		hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
-
-		h_name.str(""); h_name << "h_pull_M_" << i_module;
-		h_title.str(""); h_title << "Pull M" << i_module;
-		auto hm5 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0);
-		hm5->SetDirectory(cd_Modules);
-
-		h_name.str(""); h_name << "h_DLC2_M" << i_module;
-		h_title.str(""); h_title << "DLC2_M" << i_module;
-		auto hm7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  631, -65, 65);
-		hm7->SetDirectory(cd_PEDE);
-
-		for (int i_LR = 0; i_LR < 2; i_LR++) {
-			h_name.str(""); h_name << "h_Residuals_Module_" << i_module << "_" <<  valueLR[i_LR];
-			h_title.str(""); h_title << "Residuals Recon M" << i_module  << " " << nameLR[i_LR];
-			auto hm6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
-			hm6->GetXaxis()->SetTitle("[cm]"); hm6->SetDirectory(cd_Modules);
-
-			h_name.str(""); h_name << "h_DLC1_M" << i_module << "_" << valueLR[i_LR];
-			h_title.str(""); h_title << "DLC1_M" << i_module  << " " << nameLR[i_LR];
-			if (i_LR == 0) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, -1.00001, -0.99995); hm8->SetDirectory(cd_PEDE);}
-			if (i_LR == 1) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, 0.99995, 1.00001); hm8->SetDirectory(cd_PEDE);}
-
-
+		//we have already taken care of the end-straws, so now just need to look in between
+		for (int i_counter = 0; i_counter < xLayer.size(); i_counter++) {
+			if (xLayer[i_counter] < xTrack) {
+				lower = xLayer[i_counter];
+				upper = xLayer[i_counter - 1];
+				if (debugBool && StrongDebugBool) cout << "lower= " << lower << " upper " << upper << endl;
+				//as soon as we find a single straw that is at lower x than the hit,
+				// our search is over
+				goto jmp;
+			}
 		}
-	}
+jmp:
 
-	// Modules and Straws ["combing 4 layers into 1"]
-	for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-		for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
-			h_name.str(""); h_name << "h" << i_module << "_straw" << i_straw;
-			h_title.str(""); h_title << "DCA S" << i_straw << " M" << i_module;
-			auto hmS3 = new TH1F(h_name.str().c_str(), h_title.str().c_str(), 49, -0.1, 0.4);
-			hmS3->GetXaxis()->SetTitle("[cm]"); hmS3->SetDirectory(cd_Straws);
+		float hit_distance_low = pointToLineDCA(zStraw, lower, xSlpoe, xIntercept);
+		float hit_distance_up = pointToLineDCA(zStraw, upper, xSlpoe, xIntercept);
+
+		if (hit_distance_low < strawRadius && hit_distance_up < strawRadius) {
+			if (debugBool) {cout << "Multiple straws in layer were hit!" << endl;}
+			incMultipleHitsLayer();
 		}
+
+		// if DCA in higher straw (lower ID) is bigger, select straw ID with smaller DCA
+		if (hit_distance_up > hit_distance_low) {
+			hitDistance = hit_distance_low;
+			LR = +1;
+			// unique and ordered straw positions in vector guarantee correct id
+			it = std::find(xLayer.begin(), xLayer.end(), lower);
+			index = std::distance(xLayer.begin(), it);
+		}
+		if (hit_distance_up < hit_distance_low) {
+			hitDistance = hit_distance_up;
+			LR = -1;
+			it = std::find(xLayer.begin(), xLayer.end(), upper);
+			index = std::distance(xLayer.begin(), it);
+		}
+		//if DCAs are equal, drop the dice... XXX won't be relevant with hit rejection
+		if (hit_distance_up == hit_distance_low) {
+			float random = Tracker::generate_uniform();
+			if (random < 0.5) {
+				hitDistance = hit_distance_low;
+			}
+			if (random > 0.5) {
+				hitDistance = hit_distance_up;
+			}
+			cout << "Ambiguity which straw registered hit" << endl;
+			incAmbiguityHit();
+		}
+		if (debugBool && StrongDebugBool) {
+			cout <<  "Track in Line " << xTrack << "Two straws closest to that point are " << lower << ", and " << upper <<  "; with DCAs " << hit_distance_low <<  " and " << hit_distance_up << ", respectively." << endl;
+		}
+	} // end of iterator to find straws between hits
+
+	//Now smear the DCA data
+	dca_data.dcaUnsmeared = hitDistance;
+	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * Tracker::generate_gaus();
+	//Apply a 500 um cut on the WHOLE track
+
+	if (abs(hitDistanceSmeared) < trackCut && trackCutBool) {
+		cutTriggered = true; // will be checked in the MC_Launch on DCA return
 	}
 
-//------------------------------------------Mille Routines---------------------------------------------------------//
+	dca_data.dca = hitDistanceSmeared;
+	float residualTruth = hitDistanceSmeared - hitDistance;
+	dca_data.residualTruth = residualTruth;
+	dca_data.LRSign = LR;
+	dca_data.strawID = index;
 
-	// Creating .bin, steering, and constrain files
-	Mille M (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
-	helper << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
+	if (debugBool && StrongDebugBool) {
+		cout << "Selected DCA as the correct hit distance is " << hitDistance << ". Straw ID: " << dca_data.strawID;
+		if (LR  < 0) {cout << ". The straw was hit from the right" << endl;}
+		if (LR > 0) {cout << ". The straw was hit from the left" << endl;}
+	}//debug
+	return dca_data; // as dca and id of the closest straw
+}
 
-	helper << fixed << setprecision(4);
-	// SETTING GEOMETRY
-	Tracker::instance()->setGeometry(debug_geom, debugBool);
-	helper << "Geometry is set!" << endl << endl;
 
-	// XXX: definition of broken lines here in the future
+// Adds dca to the ideal geometry
+ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, float z_distance) {
 
-	// MISALIGNMENT
-	Tracker::instance()->misalign(debug_mis, pede_mis, debugBool, metric);
-	helper << "Misalignment is complete!" << endl;
-	helper << fixed << setprecision(setPrecision);
+	ReconData recon_data;
+	bool StrongDebugBool = false; //quick hack XXX for even more debug output
+	float x_IdealStraw = xLayer[det_ID];
+	float recon_dca = det_dca; //adds dca to the assumed straw x coordinate
+	if (StrongDebugBool) { cout << "recon_dca= " << recon_dca << "; x_IdealStraw= " << x_IdealStraw <<  " det_dca= " << det_dca << endl;}
+	recon_data.z = z_distance;
+	recon_data.x = x_IdealStraw;
+	recon_data.dcaRecon = recon_dca;
+	return recon_data;
+}
 
-	// Write a constraint file, for use with pede
-	Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool, metric);
-	helper << "Constraints are written! [see Tracker_con.txt]" << endl;
+// Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
+// @ Inputs: ideal points (x,z)
 
-	//Now writing the steering file
-	Tracker::instance()->write_steering_file(steering_file, metric);
-	helper << "Steering file was generated! [see Tracker_con.txt]" << endl;
+//Truth can be used as an optional input
 
-	// Now set pre-sigma for know global parameters
-	Tracker::instance()->write_presigma_file(presigma_file, metric);
-	helper << "Presigma Parameter file was generated! [see Tracker_par.txt]" << endl;
+// z,x position of straws, radius of drift circle, # circles, plotting file for input, verbosity flag, truth flag
+ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, vector<float> radRecon, int dataSize, ofstream& plot_fit, bool debugBool, bool useTruthLR, vector<int> LR_truth) {
 
-	helper << "Calculating residuals..." << endl;
+	ResidualData resData; // return slope, intercept of the fitted track
 
-//------------------------------------------Main Mille Track Loop---------------------------------------------------------//
-	bool StrongDebugBool = false;
-	//Generating tracks
-	for (int trackCount = 0; trackCount < Tracker::instance()->getTrackNumber(); trackCount++) {
-		//float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
-		//scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
-		scatterError = 0; // set no scatterError for now
-		char tmpNameResSign; //to assign sign label for the residual [+/-]
+	bool StrongDebugBool = false; //quick hack XXX for even more debug output
 
-		if (debugBool && StrongDebugBool) { helper << "Track: " << trackCount << endl; }
+	// from James's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
+	// line 392 onwards, inputs to the original function: vector<DriftCircle>& circles, double pValCut, long long truthLRCombo
+	int nHits = dataSize; // same for no hit rejection
 
-		//Generating tracks
-		MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen,
-		                      plot_hits_fit, debugBool);
+	// These sums are parameters for the analytic results that don't change between LR combos (use U here but equally applicable to V coordinate)
+	double S(0), Sz(0), Su(0), Szz(0), Suu(0), Suz(0); // also good declaration style fur custom types
+	for (int i_hit = 0; i_hit < nHits; i_hit++) {
+		double z = zRecon[i_hit];
+		double u = xRecon[i_hit];
+		double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution [constant]
+		S   += 1. / err2;
+		Sz  += z / err2;
+		Su  += u / err2;
+		Szz += z * z / err2;
+		Suu += u * u / err2;
+		Suz += u * z / err2;
+	} // hits
 
-		//First of all, check if track has not failed the cut
-		if (generated_MC.cut == false) {
+	// Number of LR combinations (2^N or 1 if using truth)
+	int nLRCombos = pow(2, nHits);
+	if (useTruthLR) nLRCombos = 1;
 
-			for (int hitCount = 0; hitCount < generated_MC.hit_count; hitCount++) { //counting only hits going though detector
+	// Loop over all LR combinations and produce line fit for each one
+	for (int LRCombo = 0; LRCombo < nLRCombos; LRCombo++) {
+		// These sums are the other parameters for the analytic results
+		double Sr(0), Sru(0), Srz(0);
+		for (int i_hit = 0; i_hit < nHits; i_hit++) {
+			double z = zRecon[i_hit];
+			double u = xRecon[i_hit];
+			double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution
+			double r = radRecon[i_hit];
 
-				//******************PEDE INPUTS******************************
-				float rMeas_mp2 =  generated_MC.residuals[hitCount]; //Residual
-				float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; //Resolution
-				//Number of local and global parameters
-				const int nalc = 2;
-				const int nagl = 1;
-				//label to associate hits within different layers with a correct module
-				// same as ModuleN+1 [already converted]
-				int label_mp2 = generated_MC.i_hits[hitCount];
+			// Set r based on whether it's left (+ve r) or right (-ve r)
+			if (LR_truth[i_hit] == -1) r = -r;
+			Sr  += r / err2;
+			Sru += r * u / err2;
+			Srz += r * z / err2;
+		} // hits
 
-				//Variables for derivative calculations:
-				float z = generated_MC.z_straw[hitCount];
-				float x = generated_MC.x_straw[hitCount];
-				float m = generated_MC.slope_recon;
-				float c = generated_MC.intercept_recon;
+		// Make function of derivate of Chi-Squared w.r.t. gradient - quite an algebraically intensive calculation
+		// Range assumes that we've hit more than one layer.
+		TF1* dX2_dm = new TF1("dX2_dm", "-x*x + [0]*x*sqrt(x*x+1) + [1]*x + [2]*sqrt(x*x+1) + 1", -40, 40);
+		dX2_dm->SetParameter(0, (Sr * Su / S - Sru) / (Su * Sz / S - Suz));
+		dX2_dm->SetParameter(1, ( (Su * Su / S - Suu) - (Sz * Sz / S - Szz) ) / (Su * Sz / S - Suz) );
+		dX2_dm->SetParameter(2, (Sr * Sz / S - Srz) / (Su * Sz / S - Suz));
 
-				//Local derivatives
-				float dlc1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) ; // "DCA magnitude"
-				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ;
-				float derlc[nalc] = {dlc1, dlc2};
-				//Global derivatives
-				float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); // =DLC1
-				float dergl[nagl] = {dgl1};
-				//Labels
-				int l1 = label_mp2;
-				int label[nagl] = {l1};
+		// Roots of this function are minima or maxima of Chi2
+		// Finding one that has positive derivative doesn't work, so fill in all roots and take one with best Chi2
+		// TF1::GetX(0) isn't too clever at finding roots - so we'll loop over the function range and give tighter range for root finding
 
-				//TODO multiple scattering errors (no correlations) (for imodel == 1)
-				//add break points multiple scattering later XXX (for imodel == 2)
-				//! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
+		// Holders for intercepts & gradients that satisfy Chi2 minimisation/maximisation
+		vector<double> gradients, intercepts;
 
-				M.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
-				if (debugBool) {
-					debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " "
-					           << rMeas_mp2 << "  " << sigma_mp2 << endl;
+		// Set some step size for loop - needs to be small enough that we don't miss roots where function crosses and re-crosses zero within this range
+		double stepSize = 0.1; // XXX
+
+		// Loop over range and push back all roots to vectors
+		double prevValue = dX2_dm->Eval(dX2_dm->GetXmin());
+		for (double mVal = dX2_dm->GetXmin() + stepSize; mVal <= dX2_dm->GetXmax(); mVal += stepSize) {
+			double newValue = dX2_dm->Eval(mVal);
+			if (signbit(prevValue) != signbit(newValue)) {  // if sign doesn't match
+				double m_tmp = dX2_dm->GetX(0, mVal - stepSize, mVal);
+				gradients.push_back(m_tmp);
+				intercepts.push_back( (Su - m_tmp * Sz + sqrt(m_tmp * m_tmp + 1)*Sr) / S );
+				if (debugBool && StrongDebugBool) {cout << "m_tmp= " << m_tmp << " mVal= " << mVal << " prevValue= " << prevValue << " newValue= " << newValue << endl;}
+			}
+			prevValue = newValue;
+			if (debugBool && StrongDebugBool) {cout << "newValue= " << newValue << endl;}
+		} // for mVal loop
+		delete dX2_dm;
+
+		// Throw if we didn't find a root - something went wrong
+		if (gradients.size() == 0) {
+			stringstream exception2;
+			exception2 << "StraightLineTracker::calculateUVLineFits" << "No roots found from chi-squared minimisation function. Check step size and function range.\n";
+			Logger::Instance()->write(Logger::WARNING, exception2.str());
+		}
+
+		// Holders for final gradient/intercept result - initialised to 0 here to keep compiler happy, but should never make it through logic with these
+		double gradient = 0;
+		double intercept = 0;
+
+		// Loop over possible gradient/intercepts and calculate chi2 value - then take lowest value as best gradient/intercept
+		double chi2ValMin = std::numeric_limits<double>::infinity();
+		for (unsigned int grad = 0; grad < gradients.size(); grad++) {
+
+			double chi2Val = 0;
+			for (int i_hit = 0; i_hit < nHits; i_hit++) {
+
+				double z = zRecon[i_hit];
+				double u = xRecon[i_hit];
+				double r = radRecon[i_hit];
+				double err2 = pow(Tracker::instance()->getResolution(), 2); // the error is determined by the resolution
+
+				// Set r based on whether it's left (+ve r) or right (-ve r)
+				if (LR_truth[i_hit] == -1) r = -r;
+
+				// Calculate distance of track from wire and use it for Chi2 calculation
+				double d = (gradients.at(grad) * z + intercepts.at(grad) - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
+				//double d = Tracker::pointToLineDCA(z, u, gradient, intercept);
+				chi2Val += pow(d - r, 2) / err2;
+
+				if (debugBool && StrongDebugBool) {
+					cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
+					     << " z= " << z << " u= "  << u <<  " r= " << r << " LR_truth= " << LR_truth[i_hit] << " err2= " << err2
+					     << " d= " << d << " intercepts.at(grad)= " << intercepts.at(grad)
+					     << " gradients.at(grad)= " << gradients.at(grad) << endl;
 				}
 
-				//***********************************Sanity Plots******************************************//
-				//Getting the "detector coordinates"
-				int moduleN = generated_MC.Module_i[hitCount];
-				int viewN = generated_MC.View_i[hitCount];
-				int layerN = generated_MC.Layer_i[hitCount];
-				int strawID = generated_MC.Straw_i[hitCount];
-				string UV = Tracker::instance()->getUVmapping(viewN, layerN); // converting view/layer ID into conventional labels
+			} // hits
 
-				//Fill for all hits
-				h_res_MP2 -> Fill (rMeas_mp2); // residuals
-				h_sigma -> Fill(sigma_mp2); // errors
-				h_dca->Fill(generated_MC.dca[hitCount]); // DCA
-				h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]);
-				h_labels->Fill(l1);
-				h_id_dca ->Fill(strawID);
-				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
-				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
-				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1);
+			// Store gradient/intercept for lowest chi2 val;
+			if (chi2Val < chi2ValMin) {
+				gradient  = gradients.at(grad);
+				intercept = intercepts.at(grad);
+				chi2ValMin = chi2Val;
+			}
+		} // end of grad/inter.
 
-				//Track-based hit parameters
-				h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
-				h_track_true->Fill(generated_MC.x_track_true[hitCount]);
-				h_track_recon->Fill(generated_MC.x_track_recon[hitCount]);
-				h_track_TR_diff->Fill(generated_MC.x_track_recon[hitCount] - generated_MC.x_track_true[hitCount]);
+		// Convert to p-value and add track to vector if it passes p-value cut
+		double pVal = TMath::Prob(chi2ValMin, nHits - 2); //Two fit parameters
+		resData.p_value = pVal;
+		resData.chi2_circle = chi2ValMin;
 
-				//Calculating Chi2 stats:
-				float residual_gen = generated_MC.residuals_gen[hitCount];
-				h_residual_true->Fill(residual_gen);
-				residuals_true_sum_2 += pow(residual_gen / sigma_mp2, 2);
-				h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
-				residuals_recon_sum_2 += pow(rMeas_mp2 / sigma_mp2, 2);
+		if (debugBool && StrongDebugBool) {cout << "pVal=" << pVal << " chi2ValMin= " << chi2ValMin << endl << endl;}
+		if (pVal > pValCut) {
+			// We'll want to store left/right hits so set these
+			for (int i_hit = 0; i_hit < nHits; i_hit++) {
+				//XXX Now that we know the slope and the gradient of the best fit line through drift circles,
+				// we can calculate the residual for each drift circle, which is
+				// "DCA from that line to the straw centre" - "Radius of the drift circle"
+				float Res = Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
+				resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
 
-				//Fill for hits in modules/layers/straws
-				h_name.str(""); h_name << "UV/h_dca_M_" << moduleN << "_" << UV;
-				TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
-				h1->Fill(generated_MC.dca[hitCount]);
+				float xTrack_recon = gradient * zRecon[i_hit] + intercept; // Recon track position in-line with the layer [from line x=ym+c]
+				resData.x_track_recon.push_back(xTrack_recon);  // Recon in-line (gen.) track position
 
-				h_name.str(""); h_name << "UV/h_strawID_M_" << moduleN << "_" << UV;
-				TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
-				h2 ->Fill(strawID);
+			} // hits
 
-				h_name.str(""); h_name << "UV/h_LR_M_" << moduleN << "_" << UV;
-				TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
-				h3 ->Fill(generated_MC.LR[hitCount]);
+			// Passing recon track parameters to MC
+			resData.slope_recon = gradient;     // slope of the best fit line
+			resData.intercept_recon = intercept; // intercept
+			// Python plotting
+			if (debugBool && cutTriggered == false) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
+		} // p-value cut
+	} // LRCombinations [once for useTruthLR]
 
-				h_name.str(""); h_name << "Straws/h" << moduleN << "_straw" << strawID;
-				TH1F* h4 = (TH1F*)file->Get( h_name.str().c_str() );
-				h4->Fill(generated_MC.dca[hitCount]);
-				h4-> SetFillColor(colourVector[strawID]);
+	return resData;
+}
 
-				h_name.str(""); h_name << "Modules/h_DCA_Module_" << moduleN;
-				TH1F* h7 = (TH1F*)file->Get( h_name.str().c_str() );
-				h7->Fill(generated_MC.dca[hitCount]);
+/**
+   Simulate the passage of a randomly generated linear track through the detector, calculating properties of hits by the track on detector planes.
+   @return MCData struct containing data about detector hits.
+*/
+MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, ofstream& plot_gen, ofstream& plot_hits_gen, ofstream& plot_hits_fit, bool debugBool) {
 
-				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN;
-				TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
-				h8->Fill(rMeas_mp2);
+	bool StrongDebugBool = false; // HACK XXX set by hand for now
+	// Set up new container for track data, with hit count set to zero
+	MCData MC;
+	MC.hit_count = 0; //count only counts through detector
+	cutTriggered = false; //set trigger to OFF until DCA is less than 500 um, then kill this track
 
-				h_name.str(""); h_name << "UV/h_residual_recon_M_" << moduleN << "_" << UV;
-				TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
-				h9->Fill(rMeas_mp2);
+	//clearing containers for next track
+	xRecon.clear();  // ideal straw x
+	zRecon.clear();  // ideal straw z
+	radRecon.clear();
 
-				h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
-				TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
-				//h11->Fill( rMeas_mp2 / sqrt( residual_gen - Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN) ) );
-				h11->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+	//Track parameters for rand-generated line MC [start and end positions outside of detectors]
+	// redefining the track as x=ym+c
+	float x0 = beamPositionLength * Tracker::generate_uniform() - 1.0; //uniform vertex
+	float xIntercept = x0; // by definition
+	
+	float x1 = x0; // for parallel lines only
+	float xSlope = 0.0; // for parallel lines only
+	
+	// bool generalLines = true;    // XXX quick hack
+	// float slopeFactor=1.0; 		 // XXX another quick hack add in front of beamPositionLength 
+	// if (generalLines == true) {
 
-				h_name.str(""); h_name << "Modules/h_pull_M_" << moduleN;
-				TH1F* h12 = (TH1F*)file->Get( h_name.str().c_str() );
-				h12->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+	float signXSlope;
+	if (Tracker::generate_uniform() >= 0.5) {
+		signXSlope = 1.0;
+	}
+	else {
+		signXSlope = -1.0;
+	}
+	//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
+	xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015;
+	x1 = xSlope * beamStop + xIntercept; // "xExit"
+	
+	// } // end of generalLines == true HACK
 
-				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN << "_" << generated_MC.LR[hitCount];
-				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
-				h13->Fill(rMeas_mp2);
+	float xTrack; //true track position x=zm+c
 
-				h_name.str(""); h_name << "PEDE/h_DLC2_M" << moduleN;
-				TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
-				h14->Fill(dlc2);
+	MC.x0 = x0;
+	MC.x1 = x1;
+	MC.slope_truth = xSlope;
+	MC.intercept_truth = xIntercept;
 
-				h_name.str(""); h_name << "PEDE/h_DLC1_M" << moduleN << "_" << generated_MC.LR[hitCount];
-				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
-				h15->Fill(dlc1);
+	//The main loop is for modules [they produce label of Global Parameters]:
+	// Then looping over layers and views
+	// within layers we will have loops over straws in that layer [to find out which straw was hit and dca]
+	int z_counter = 0; // distance in z is incremented from 0 to TotalLayerN
+	if (debugBool && StrongDebugBool) {cout << "Calculating hits/dca:" << endl;}
+	//loops over modules, views, layers
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer
+				missedHit = false; // set flag to false until triggered
+				// TRUTH PARAMETERS
+				//The registered hit position on the misaligned detector is smeared by its resolution
+				// zTrack is just the distance[z_counter] - in-line with the layer
+				xTrack = xSlope * distance[z_counter] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
+				MC.x_track_true.push_back(xTrack);  // True in-line (gen.) track position
 
-				// Now fill DLC1, DLC2 plots for U0-V1 for each module but only for straw 3 (4th straw from the "top")
-				if (strawID == 3) {
-					if (rMeas_mp2 > 0) {tmpNameResSign = 'P';}// DCA > driftRad
-					else {tmpNameResSign = 'N';} // DCA < driftRad
-
-					//loop over booked histos and fill
-					for (int i_LC = 0; i_LC < 2; i_LC++) {
-						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << "_" << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
-						TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
-						if (i_LC == 0) {h16->Fill(dlc1);}
-						if (i_LC == 1) {h16->Fill(dlc2);}
+				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
+				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distance[z_counter], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
+				//Check for trigger on DCA < 500 um, and only continue calculations not triggered
+				if (cutTriggered) {MC.cut = true;} // set cut to true for the main, and return MC.cut as true only.
+				if (cutTriggered == false) {
+					float dca =  MisDetector.dca;  //dca (smeared) of the hit straw
+					//Rejection of hits due to geometry (i.e. missed hits)
+					//No signal in a straw = no signal in the layer
+					if (dca > strawRadius && hitCut == true) { //[between (0,0.25]
+						MC.hit_bool.push_back(0);
+						incRejectedHitsDCA();
+						if (debugBool) {cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
+						z_counter++;  // incrementing distance of planes
+						missedHit = true;
 					}
-				} // strawID=3
+					// proceed only if hit is valid
+					if (missedHit == false) {
+						//Find the truth ID, and LR hit for a straw
+						float residualTruth = MisDetector.residualTruth;
+						int mis_ID =  MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
+						int mis_LRSign = MisDetector.LRSign;
+						MC.dca_unsmeared.push_back(MisDetector.dcaUnsmeared);
+						MC.strawID.push_back(mis_ID);
+						MC.LR.push_back(mis_LRSign);
+						//Recording hit information
+						MC.hit_list.push_back(z_counter); //push back the absolute layer # into the hit list
+						MC.hit_bool.push_back(1);  // 1 = hit
+						stringstream absolute_hit;
+						//Making absolute strawID for hit for plotting:
+						absolute_hit << mis_ID;
+						MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
+						if (debugBool && StrongDebugBool) {cout << "DCA is= " << dca << " for straw ID= " << mis_ID << " was hit from " << mis_LRSign << endl;}
+						// RECONSTRUCTED PARAMETERS
+						//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
 
-				hitsN++; //count hits
-			} // end of hits loop
+						ReconData ReconDetector = Tracker::HitRecon(mis_ID, dca, mod_lyr_strawIdealPosition[i_module][i_view][i_layer], distance[z_counter]);
+						float zCircle = ReconDetector.z;
+						float xCircle = ReconDetector.x;
+						float radCircle = ReconDetector.dcaRecon;
+						xRecon.push_back(xCircle); // vector to store x coordinates of circles as seen from the ideal detector
+						zRecon.push_back(zCircle); // vector to store z coordinates of circles as seen from the ideal detector
+						radRecon.push_back(radCircle); // vector to store radius of circles as seen from the ideal detector
 
-			//***********************************Sanity Plots: Once per Track******************************************/
-			//For true tracks
-			float chi2_true = residuals_true_sum_2;
-			h_chi2_true->Fill(chi2_true);
-			//For recon tracks
-			float chi2_recon = residuals_recon_sum_2;
-			h_chi2_recon->Fill(chi2_recon);
-			//Resetting counters for next track
-			residuals_true_sum_2 = 0;
-			residuals_recon_sum_2 = 0;
-			h_hitCount->Fill(generated_MC.hit_count);
+						//Module number [for labelling] - after (if) passing the rejection.
+						// Millepede accepts only positive non-zero integers as labels
+						ostringstream oss; oss << i_module + 1;
+						istringstream iss(oss.str()); int label_int; iss >> label_int;
+						MC.i_hits.push_back(label_int); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
 
-			//Filling Track-based plots
-			h_slope->Fill(generated_MC.slope_truth);
-			h_intercept->Fill(generated_MC.intercept_truth);
-			h_x0->Fill(generated_MC.x0);
-			h_x1->Fill(generated_MC.x1);
-			h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth - generated_MC.intercept_recon);
-			h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
-			h_recon_slope->Fill(generated_MC.slope_recon);
-			h_recon_intercept->Fill(generated_MC.intercept_recon);
-			h_pval->Fill(generated_MC.p_value);
-			h_chi2_circle->Fill(generated_MC.chi2_circle);
-			h_chi2_circle_ndf->Fill(generated_MC.chi2_circle / (generated_MC.hit_count - 2));
+						//Z-coordinate of hits [it was always known from geometry - no z-misalignment for now...]
+						MC.z_hits.push_back(distance[z_counter]);
+						MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
 
-			// XXX additional measurements from MS IF (imodel == 2) THEN
-			//IF (imodel >= 3) THEN
+						//Sanity Plots: Hits
+						MC.dca.push_back(dca); // DCA [sanity]
+						MC.residuals_gen.push_back(residualTruth); // Truth residual
+						MC.Module_i.push_back(i_module);
+						MC.View_i.push_back(i_view);
+						MC.Layer_i.push_back(i_layer);
+						MC.Straw_i.push_back(mis_ID);
 
-			M.end(); // Write buffer (set of derivatives with same local parameters) to file.
-			recordN++; // count records (i.e. written tracks);
+						MC.hit_count++;
+						z_counter++;  // incrementing distance of planes
+					} // missed hit check
 
-		} // cut on DCA check
+				}// DCA cut if
+			}//end of Layers loop
+		}// end of View loop
+	}// end of looping over modules
 
-	} // end of track count // End of Mille // End of collecting residual records
-	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
+	if (cutTriggered == false) {
 
-	//Passing constants to plotting script
+		if (debugBool && StrongDebugBool) {cout << "Calculating residuals..." << endl;}
+		//This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
+		// and need to do a simultaneous fit once - to return #hits worth of residuals]
+		ResidualData res_Data = GetResiduals(zRecon, xRecon, radRecon, MC.hit_count, plot_fit, debugBool, useTruthLR, MC.LR);
 
-	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
-	               << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
-	               << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
-	               << "  " << Tracker::instance()->getBeamStop() <<  endl;
+		MC.residuals = res_Data.residuals;
+		MC.slope_recon = res_Data.slope_recon;
+		MC.intercept_recon = res_Data.intercept_recon;
+		MC.x_straw = xRecon;
+		MC.z_straw = zRecon;
+		MC.x_track_recon = res_Data.x_track_recon;
+		MC.p_value = res_Data.p_value;
+		MC.chi2_circle = res_Data.chi2_circle;
+		MC.driftRad = radRecon; // vector
 
-
-
-	//------------------------------------------ROOT: Fitting Functions---------------------------------------------------------//
-
-	helper << endl;
-	helper << "-------------------------------------------------------------------------" << endl;
-	helper << "ROOT fitting parameters and output:" << endl;
-
-	helper << fixed << setprecision(2);
-	float LRSkewness = 0.0;
-	// PEDE Plots calculations for U0 only
-	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-		for (int i_view = 0; i_view < 1; i_view++) {
-			for (int i_layer = 0; i_layer < 1; i_layer++) {
-				string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
-				for (int i_LR = 0; i_LR < 2; i_LR++) {
-					for (int i_RS = 0; i_RS < 2; i_RS++) {
-						h_name.str(""); h_name << "PEDE/h_DLC2_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
-						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
-						LRSkewness += hp1->GetSkewness();
+		if (debugBool) {
+			plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
+			int i_counter = 0;
+			for (int i_module = 0; i_module < moduleN; i_module++) {
+				for (int i_view = 0; i_view < viewN; i_view++) {
+					for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer
+						plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][MC.strawID[i_counter]] << " " << distance[i_counter] << " "  << MC.dca[i_counter] << endl;
+						plot_hits_fit << xRecon[i_counter] << " " << zRecon[i_counter] << " "  << radRecon[i_counter] << endl;
+						i_counter++;
 					}
-					//helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness / 2.0 << endl;
-					LRSkewness = 0.0;
 				}
 			}
 		}
+
+	} // dca cut
+	return MC; // Return data from simulated track
+
+} // end of MC
+
+//Geometry of detector arrangement (Ideal Geometry)
+void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
+	
+	float dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
+	int layer_n = 0;  // layer label
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				distance.push_back(dZ); // vector will contain all z coordinates of layers
+				layer.push_back(layer_n);  // layer label array [starting from 0th layer]
+				//resolutionLayer.push_back(Tracker::instance()->getResolution()); //resolution in each layer
+				projectionX.push_back(float(1.0));  // x projection of hits in each layer
+				layer_n++;
+				if (i_layer == 0) { dZ += layerSpacing; } // increment spacing between layers in a view once only
+			} // layers
+			if (i_view == 0) { dZ += viewSpacing; } // increment spacing between views in a module once only
+		} // views
+		dZ += moduleSpacing;
+	} // modules
+
+	// Geometry of detector arrangement in X
+	float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0)
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		mod_lyr_strawIdealPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			mod_lyr_strawIdealPosition[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				mod_lyr_strawIdealPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
+				for (int i_straw = 0; i_straw < strawN; i_straw++) {
+					mod_lyr_strawIdealPosition[i_module][i_view][i_layer].push_back(dX+offsetX[i_module]);
+					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
+				} //end of Straws loop
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
+				if (i_view == 1) { dX = startingXDistanceStraw0; } //set displacement in x for the next layer in the view
+			}//end of Layers loop
+		}// end of View loop
+	}//Modules
+
+	// Print out:
+	if (debugBool) {
+		stringstream gm1;
+		gm1 << endl << "Ideal Detector Position:";
+		Logger::Instance()->write(Logger::WARNING, gm1.str());
+		int Zcounter = 0;
+		for (int i_module = 0; i_module < moduleN; i_module++) {
+			for (int i_view = 0; i_view < viewN; i_view++) {
+				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
+					cout << "IDEAL M" << i_module+1 << noshowpos << UVmapping[i_view][i_layer] << " X : ";
+					for (int i_straw = 0; i_straw < strawN; i_straw++) {
+						cout << showpos << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
+						debug_geom << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
+					} // straws
+					cout << noshowpos << "  | Z= " << distance[Zcounter] << " [cm]" << endl;  // TODO align the cout better
+					debug_geom << distance[Zcounter] << endl;
+					Zcounter++;
+				} // end of Layers
+
+			}// end of View loop
+			cout << endl;
+		}//Modules
 	}
-	helper << fixed << setprecision(setPrecision);
 
-	// Store alignment parameters from measurements
-	vector<float> sigma_recon_actual;
-	vector<float> sigmaError_recon_actual;
-	vector<float> pull_actual;
-	vector<float> pull_actual_SD;
-	vector<float> Res_mean;
-	vector<float> Res_mean_SD;
+} // end of geom
 
-	//Filling TH2 for residual SD and pulls
-	int z_counter = 0;
-	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-		for (int i_view = 0; i_view < Tracker::instance()->getViewN(); i_view++) {
-			for (int i_layer = 0; i_layer < Tracker::instance()->getLayerN(); i_layer++) {
-				string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
-				// Residuals
-				h_name.str(""); h_name << "UV/h_residual_recon_M_" << i_module << "_" << UV;
-				TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
-				sigma_recon_actual.push_back(hRes_actual->GetStdDev() * 10000); // um ->cm
-				sigmaError_recon_actual.push_back(hRes_actual->GetStdDevError() * 10000); // um ->cm
-				h_SD_z_res_Recon->Fill(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev() * 10000); // um ->cm
-				h_SD_z_res_Recon->SetBinError(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev() * 10000, hRes_actual->GetStdDevError() * 10000); // um ->cm
-				h_SD_z_res_Recon->SetMarkerStyle(33); h_SD_z_res_Recon->SetMarkerColor(kRed);
-				Res_mean.push_back(hRes_actual->GetMean());
-				Res_mean_SD.push_back(hRes_actual->GetStdDev());
-				h_SD_z_res_Est->Fill(Tracker::instance()->getZDistance(z_counter) , Tracker::instance()->get_sigma_recon_estimated(i_module, i_view, i_layer) * 10000); // um ->cm
-				h_SD_z_res_Est->SetMarkerStyle(33);
-				h_SD_z_res_Est->SetMarkerColor(kBlue);
-				// Pulls
-				h_name.str(""); h_name << "UV/h_pull_M_" << i_module << "_" << UV;
-				TH1F* h_pull = (TH1F*)file->Get( h_name.str().c_str() );
-				pull_actual.push_back(h_pull->GetMean());
-				pull_actual_SD.push_back(h_pull->GetStdDev());
-				h_Pulls_z->Fill(Tracker::instance()->getZDistance(z_counter), h_pull->GetStdDev());
-				h_Pulls_z->SetBinError(Tracker::instance()->getZDistance(z_counter), h_pull->GetStdDev(), h_pull->GetStdDevError());
-				h_Pulls_z->SetMarkerStyle(33); h_Pulls_z->SetMarkerColor(kRed);
-				z_counter++;
+// MC misalignment of detectors
+void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, ofstream& metric) {
+
+	//Now misaligning detectors in x
+	float misDispX(0), Xoffset(0); // effective misalignment
+	metric << "M: ";
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		misDispX = dispX[i_module];
+		Xoffset = offsetX[i_module];
+
+		metric <<  fixed << setprecision(0) << misDispX*1e4 << " (" << Xoffset*1e4  << "); ";
+
+		float dX = startingXDistanceStraw0 + (misDispX); // starting on the x-axis (z, 0+disp)
+		sdevX.push_back(misDispX);  // vector to store the actual of misalignment
+		mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			mod_lyr_strawMisPosition[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				mod_lyr_strawMisPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
+				for (int i_straw = 0; i_straw < strawN; i_straw++) {
+					mod_lyr_strawMisPosition[i_module][i_view][i_layer].push_back(dX);
+					dX =  dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
+				} //end of Straws loop
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement + (misDispX); } //set displacement in x for the next layer in the view
+				if (i_view == 1) { dX = startingXDistanceStraw0 + (misDispX); } //set displacement in x for the next layer in the view
+			}//end of Layers loop
+		}// end of View loop
+
+	}//Modules
+
+	// Print out:
+	if (debugBool) {
+		stringstream gm2;
+		gm2 << "Misaligned Detector Position:";
+		Logger::Instance()->write(Logger::WARNING, gm2.str());
+		int Zcounter = 0;
+		for (int i_module = 0; i_module < moduleN; i_module++) {
+			for (int i_view = 0; i_view < viewN; i_view++) {
+				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
+					cout << "MIS M" << noshowpos << i_module+1 << UVmapping[i_view][i_layer] << " X : ";
+					for (int i_straw = 0; i_straw < strawN; i_straw++) {
+						cout << showpos  << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
+						debug_mis << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
+
+					} //end of Straws loop
+					cout << " | Z= " << noshowpos << distance[Zcounter] << " [cm]" << endl;
+					debug_mis << distance[Zcounter] << endl;
+					Zcounter++;
+				} // end of Layers
+
+			}// end of View loop
+			cout << endl;
+		}//Modules
+	}
+
+// Estimating misalignment parameters from geometry and assumed constants:
+
+	//--- For Modules only [MC misalignment set per module -> transfer to each layer] -- //
+
+	//Overall Misalignment [w.r.t to other modules]
+	float sum_of_elems = 0.0;
+	for (vector<float>::iterator it = sdevX.begin(); it != sdevX.end(); ++it) {
+		sum_of_elems += *it;
+	}
+	overallMis = sum_of_elems / moduleN;
+	cout << "Manual Misalignment: " << endl;
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		cout << "M" << noshowpos << i_module+1 << " :: " << showpos << sdevX[i_module] << " cm. "; // absolute misalignment [as set by MC]
+		cout << "O" << noshowpos << i_module+1 << " :: " << showpos << offsetX[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
+		//pede_mis << (offsetX[i_module]-sdevX[i_module]) << " ";
+		pede_mis << sdevX[i_module] << " ";
+		float relMisTmp = sdevX[i_module] - overallMis;
+		// now push these misalignment parameters for all layers in the module [for use later]
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				relMis.push_back(relMisTmp);           //relative misalignment per layer [w.r.t to other modules]
+				charMis.push_back(sdevX[i_module]);  // absolute misalignment per layer
+			} // view
+		} // layer
+		//cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
+	} // modules
+	cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
+	cout << noshowpos;
+
+	//--- Calculations for Each Layer -- //
+	// XXX ONLY VALID FOR 2-parameter line fit (i.e. not circle fit)
+	// XXX Verbose calculation via separate loops on purpose - to demonstrate the alignment methods
+	// For straight-line case only.
+
+	// constants
+	float N = float(layerTotalN); // total N of layers
+	float D = Tracker::instance()->getResolution(); // Original detector resolution
+	int i_totalLayers; // dummy layer counter
+
+	// Pivot Point
+	i_totalLayers = 0;
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				pivotPoint_estimated += distance[i_totalLayers];
+				i_totalLayers++;
+			}// layer
+		} // view
+	} // modules
+	pivotPoint_estimated = pivotPoint_estimated / N;
+
+	// Centred Distances and squared distances
+	i_totalLayers = 0;
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				float tmpZDistance = distance[i_totalLayers] - pivotPoint_estimated;
+				zDistance_centered.push_back(tmpZDistance);
+				squaredZSum += pow(tmpZDistance, 2);
+				i_totalLayers++;
 			}// layer
 		} // view
 	} // modules
 
-	//Dealing with Chi2 and residual [true] fits
-	//Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case).
-	//The expected error is instead estimated from the the square-root of the bin function value.
-	TF1* chi2pdf = new TF1("chi2pdf", "[2]*ROOT::Math::chisquared_pdf(x,[0],[1])", 0, 40);
-	chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_true->Integral("WIDTH"));
-	h_chi2_true->Fit("chi2pdf", "Q");
-	h_residual_true->Fit("gaus", "Q");
-	Chi2_recon_actual = h_chi2_recon->GetMean();
+	// Estimated SD of residuals, Sum of mis., and squared sum of mis.
+	i_totalLayers = 0;
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		sigma_recon_estimated.push_back(vector< vector< float > > ());
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			sigma_recon_estimated[i_module].push_back( vector<float>  () );
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				float simga_est = D * sqrt( (N - 1) / N - (pow(zDistance_centered[i_totalLayers], 2) / squaredZSum) );
+				sigma_recon_estimated[i_module][i_view].push_back(simga_est);
+				MisZdistanceSum += charMis[i_totalLayers] * zDistance_centered[i_totalLayers];
+				MisSum += charMis[i_totalLayers];
+				i_totalLayers++;
+			}// layer
+		} // view
+	} // modules
 
-	//Residuals SD per layer
-	vector<float> zDistance = Tracker::instance()->getZDistanceVector();
-	vector<float> sigma_recon_estimated = Tracker::instance()->get_sigma_recon_estimatedVector();
-	TCanvas *cRes = new TCanvas("cRes", "cRes", 700, 500);
-	const Int_t n = Tracker::instance()->getLayerTotalN();
-	Float_t* z_distance  = &zDistance[0];
-	Float_t* Res_Recon_SD  = &sigma_recon_actual[0];
-	Float_t* Res_Recon_SD_error = &sigmaError_recon_actual[0];
-	auto gr = new TGraphErrors(n, z_distance, Res_Recon_SD, 0, Res_Recon_SD_error);
-	gr->SetTitle("Residuals SD");
-	gr->SetMarkerColor(kWhite);
-	gr->SetLineColor(kRed);
-	gr->SetMarkerStyle(1);
-	gr->Draw("A*");
-	Float_t* Res_Est_SD  = &sigma_recon_estimated[0];
-	for (int i = 0; i < n; i++) {
-		TMarker *m1 = new TMarker(z_distance[i], Res_Est_SD[i] * 10000, 20);
-		m1->SetMarkerColor(kBlue); m1->Draw();
-	}
-	gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
-	gr->GetYaxis()->SetTitle("Residual SD [um]");
-	auto axis = gr->GetXaxis();
-	axis->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
-	gr->GetHistogram()->SetMaximum(148.);   // along
-	gr->GetHistogram()->SetMinimum(130.);  //   Y
-	//cRes->Print("Print/cRes.png");
-	cRes->Write();
+	// Predicted means of residuals [a.k.a "shear misalignment"]
+	i_totalLayers = 0;
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				float charM = charMis[i_totalLayers];
+				float z = zDistance_centered[i_totalLayers];
+				float shearMistmp = charM - MisSum / N - (z * MisZdistanceSum) / squaredZSum;
+				shearMis.push_back(shearMistmp);
+				i_totalLayers++;
+			}// layer
+		} // view
+	} // modules
 
-	//Pulls per layer
-	TCanvas *cPull = new TCanvas("cPull", "cPull", 200, 10, 700, 500);
-	Float_t* Pull_Recon  = &pull_actual[0];
-	Float_t* Pull_Recon_SD = &pull_actual_SD[0];
-	auto gr2 = new TGraphErrors(n, z_distance, Pull_Recon, 0, Pull_Recon_SD);
-	gr2->SetTitle("Pulls [Error = SD]");
-	gr2->SetMarkerColor(kWhite);
-	gr2->SetLineColor(kRed);
-	gr2->SetMarkerStyle(1);
-	gr2->Draw("A*");
-	gr2->GetXaxis()->SetTitle("Module/Layer separation [cm]");
-	gr2->GetYaxis()->SetTitle("Pulls per layer [Error = SD]");
-	auto axis2 = gr2->GetXaxis();
-	axis2->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
-	gr2->GetHistogram()->SetMaximum(5.0);   // along
-	gr2->GetHistogram()->SetMinimum(-3.0);  //   Y
-	//cPull->Print("Print/cPull.png");
-	cPull->Write();
+	// The Chi2 estimation requires misalignment parameters per layer
+	Chi2_recon_estimated = N - 2.0; // 2 parameter fit
+	i_totalLayers = 0;
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				float M = shearMis[i_totalLayers];
+				float z = zDistance_centered[i_totalLayers];
+				Chi2_recon_estimated += ( (M * M) - (M) / (N) - (2.0 * M * z) / (squaredZSum) ) / (D * D) ;
+				i_totalLayers++;
+			}// layer
+		} // view
+	} // modules
 
-	//Residual means per layer: reveal the shear affect of misalignment
-	TCanvas *cResMean = new TCanvas("cResMean", "cResMean", 200, 10, 700, 500);
-	Float_t* Res_meanR  = &Res_mean[0];
-	Float_t* Res_mean_SDR = &Res_mean_SD[0];
-	auto gr3 = new TGraphErrors(n, z_distance, Res_meanR, 0, Res_mean_SDR);
-	gr3->SetTitle("Residual means [Error = SD]");
-	gr3->SetMarkerColor(kWhite);
-	gr3->SetLineColor(kRed);
-	gr3->SetMarkerStyle(1);
-	gr3->Draw("A*");
-	gr3->GetXaxis()->SetTitle("Module/Layer separation [cm]");
-	gr3->GetYaxis()->SetTitle("Residual means per layer [Error = SD] [cm]");
-	for (int i = 0; i < n; i++) {
-		TMarker *m2 = new TMarker(z_distance[i], Tracker::instance()->get_shearMis(i), 20);
-		m2->SetMarkerColor(kBlue);
-		m2->Draw();
-	}
-	auto axis3 = gr3->GetXaxis();
-	axis3->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
-	gr3->GetHistogram()->SetMaximum(0.2);   // along
-	gr3->GetHistogram()->SetMinimum(-0.2);  //   Y
-	//cResMean->Print("Print/cResMean.png");
-	cResMean->Write();
+}//end of misalign
 
-	// if (recordN >= 100) { // below 100 tracks these plots are useless
-	// 	TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
-	// 	gStyle->SetOptStat("ourRmMe");
-	// 	gStyle->SetOptFit(1111);
-	// 	chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
-	// 	h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
-	// 	h_chi2_recon->Fit("chi2pdf", "Q");
-	// 	cChi2->Clear(); // Fit does not draw into correct pad
-	// 	auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
-	// 	rp1->SetGraphDrawOpt("P");
-	// 	rp1->SetSeparationMargin(0.0);
-	// 	cChi2->SetTicks(0, 1);
-	// 	rp1->Draw("noconfint");
-	// 	cChi2->Update();
-	// 	rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
-	// 	//cChi2->Print("FoM_Chi2_recon.C");
-	// 	//cChi2->Print("Print/FoM_Chi2_recon.png");
-	// 	cChi2->Write();
-	// 	//TODO fix malloc problem closing the canvas in ROOT Browser
-	// 	delete chi2pdf;
-	// }
+/**
+   Set filename to read uniform random numbers from.
+   @param uniform_filename String for filename of file of uniform random numbers.
+ */
+void Tracker::set_uniform_file(string uniform_filename) {
+	RandomBuffer::instance()->open_uniform_file(uniform_filename);
+}
 
-	// Debug-style plots:
-	if (1 == -1) {
-		//Residuals per module
-		TCanvas *cResAllM = new TCanvas("cResAllM", "cResAllM", 700, 900);
-		TText T; T.SetTextFont(42); T.SetTextAlign(21);
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_name.str(""); h_name << "Modules/h_Residuals_Module_" << i_module;
-			TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
-			hd1->SetFillColor(colourVector[i_module]);
-			hd1->Draw("same");
-			gStyle->SetOptStat("");
-			hd1->SetTitle("");
-		}
-		T.DrawTextNDC(.5, .95, "Residuals");
-		cResAllM->Write();
+/**
+   Set filename to read Gaussian random numbers from.
+   @param uniform_filename String for filename of file of Gaussian random numbers.
+ */
+void Tracker::set_gaussian_file(string gaussian_filename) {
+	RandomBuffer::instance()->open_gaussian_file(gaussian_filename);
+}
 
+float Tracker::generate_gaus() {
+	float gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
+	return gaus;
+}
 
-		//Stacked DCA per straw in each module
-		vector<THStack*> stackModule;
-		for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_name.str(""); h_name << "DCA_Module_" << i_module;
-			THStack* stack = new THStack(h_name.str().c_str(), " ");
-			stackModule.push_back(stack);
-		}
-		//THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
-		TCanvas *cDCA = new TCanvas("cDCA", "cDCA", 700, 900);
-		T.SetTextFont(42); T.SetTextAlign(21);
-		cDCA->Divide((Tracker::instance()->getModuleN() + 1) / 2, (Tracker::instance()->getModuleN() + 1) / 2);
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
-				h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
-				TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
-				stackModule[i_module]->Add(hs3);
-			}
-		}
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
-			cDCA->cd(i_module + 1); stackModule[i_module]->Draw(); T.DrawTextNDC(.5, .95, h_title.str().c_str());
-		}
-		cDCA->Write();
+float Tracker::generate_uniform() {
+	float uniform = (( RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
+	return uniform;
+}
 
-		//Stacked reconstructed hits
-		TCanvas *cStack = new TCanvas("cStack", "cStack", 700, 900);
-		T.SetTextFont(42); T.SetTextAlign(21);
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << i_module;
-			TH1F* hs4 = (TH1F*)file->Get( h_name.str().c_str() );
-			hs_hits_recon->Add(hs4);
-		}
-		cStack->Divide(1, 1);
-		cStack->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5, .95, "Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
-		cStack->Write();
-	} // strong plotting
+/**
+ * Returns the peak (maximum so far) resident set size [RSS] (physical
+ * memory use) measured in bytes, or zero if the value cannot be
+ * determined on this OS. By Dr. David R. Nadeau:
+ * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
+ */
+// size_t Tracker::getPeakRSS( ) {
+// #if defined(_WIN32)
+// 	/* Windows -------------------------------------------------- */
+// 	PROCESS_MEMORY_COUNTERS info;
+// 	GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
+// 	return (size_t)info.PeakWorkingSetSize;
 
-	helper << "-------------------------------------------------------------------------" << endl;
-	helper << " " << endl;
-	helper << Tracker::instance()->getTrackNumber() << " tracks requested; " << recordN << " generated with " << hitsN << " hits." << endl;
-	float rejectedTracks = (Tracker::instance()->getTrackNumber() - recordN) / float(Tracker::instance()->getTrackNumber()) * 100.0;
-	helper << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
-	helper << "Number of DCA (==drift radii) smeared below 0 is " << negDCA << endl;
-	stringstream out1, out2, out3, out4, out5;
-	out1 << "Expected Mean Chi2 (for a general straight line fit) " << Tracker::instance()->get_Chi2_recon_estimated();
-	out2 << "Measured Mean Chi2 (circle fit) " << Chi2_recon_actual;
-	Logger::Instance()->write(Logger::WARNING, out1.str());
-	Logger::Instance()->write(Logger::WARNING, out2.str());
-	LOG << out1.rdbuf() << endl; LOG << out2.rdbuf() << endl;
-	float rejectsFrac = Tracker::instance()->getRejectedHitsDCA();
-	rejectsFrac = rejectsFrac / (Tracker::instance()->getLayerTotalN() * recordN);
-	helper << fixed << setprecision(1);
-	out3 << "Hits that missed a straw (DCA rejection for all layers): " << Tracker::instance()->getRejectedHitsDCA() << " (" << rejectsFrac * 100 << "%).";
-	out4 << "Multiple hits (for all layers): " << Tracker::instance()->getMultipleHitsLayer() << ".";
-	out5 << "Ambiguity Hits Resolved (rand.): " << Tracker::instance()->getAmbiguityHit() << ".";
-	LOG << out3.rdbuf() << endl; LOG << out4.rdbuf() << endl; LOG << out5.rdbuf() << endl;
-	Logger::Instance()->write(Logger::WARNING, out3.str());
-	Logger::Instance()->write(Logger::WARNING, out4.str());
-	Logger::Instance()->write(Logger::WARNING, out5.str());
-	helper << " " << endl;
-	Logger::Instance()->setUseColor(false); // will be re-enabled below
-	stringstream msg2, msg3, msg4, msgA, msgB;
-	msgA <<  Logger::blue() << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << Logger::def();
-	msgB << Logger::blue() << "Sanity Plots: root Tracker.root" << Logger::def();
-	Logger::Instance()->write(Logger::NOTE, msgA.str()); Logger::Instance()->write(Logger::NOTE, msgB.str());
-	// Millepede courtesy of John
-	msg2 << Logger::green() << "    _____________________________  \\  /" << Logger::def();
-	Logger::Instance()->write(Logger::NOTE, msg2.str());
-	msg3 << Logger::yellow() << "   {_|_|_|_|_|_|_|_|_|_|_|_|_|_|_( ͡° ͜ʖ ͡°) " << Logger::def();
-	Logger::Instance()->write(Logger::NOTE, msg3.str());
-	msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
-	Logger::Instance()->write(Logger::NOTE, msg4.str());
-	Logger::Instance()->setUseColor(true); // back to default colours
-	helper << "Normal random numbers were used " << RandomBuffer::instance()->getNormTotal() << " times" << endl;
-	helper << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" << endl;
-	if (debugBool) {
-		Logger::Instance()->write(Logger::WARNING, "Text debug files were produced: ls Tracker_d_*.txt");
-	}
-	if (plotBool) {
-		Logger::Instance()->write(Logger::WARNING, "./PlotMP2.py to draw geometry with hits");
-	}
+// #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+// 	/* AIX and Solaris ------------------------------------------ */
+// 	struct psinfo psinfo;
+// 	int fd = -1;
+// 	if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
+// 		return (size_t)0L;      /* Can't open? */
+// 	if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
+// 	{
+// 		close( fd );
+// 		return (size_t)0L;      /* Can't read? */
+// 	}
+// 	close( fd );
+// 	return (size_t)(psinfo.pr_rssize * 1024L);
 
-	// Close text files
-	constraint_file.close();
-	steering_file.close();
-	debug_mp2.close();
-	debug_calc.close();
-	debug_mis.close();
-	debug_geom.close();
-	debug_off.close();
-	debug_mc.close();
-	debug_con.close();
+// #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+// 	/* BSD, Linux, and OSX -------------------------------------- */
+// 	struct rusage rusage;
+// 	getrusage( RUSAGE_SELF, &rusage );
+// #if defined(__APPLE__) && defined(__MACH__)
+// 	return (size_t)rusage.ru_maxrss;
+// #else
+// 	return (size_t)(rusage.ru_maxrss * 1024L);
+// #endif
 
-	file->Write();
-	file->Close();
-	delete file;
-
-	metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um "
-	       << "| DCA Cut of " << Tracker::instance()->getTrackCut() * 1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
-	       << "| Hit rej.: " << boolYN[Tracker::instance()->getHitCutStatus()]
-	       << "| Truth LR : " << boolYN[Tracker::instance()->getLRStatus()]
-	       << "| p-value cut (<): " << Tracker::instance()->getPValCut() ;
-
-	helper << endl;
-	helper << "Programme log written to: Tracker_log.txt" << endl;
-	helper << fixed << setprecision(4);
-	t_cpu = clock() - t_cpu;
-	auto t_end = chrono::high_resolution_clock::now();
-	helper << "Programme execution took " <<  t_cpu << " CPU clicks (" << ((float)t_cpu) / CLOCKS_PER_SEC << " s)." << " Wall clock time passed: "
-	       << chrono::duration<double>(t_end - t_start).count() << " s." << endl;
-	timeFile << chrono::duration<double>(t_end - t_start).count() << endl;
-	time_t now = time(0);
-	char* dt = ctime(&now);
-	//helper << "Peak RAM use: " << Tracker::instance()->getPeakRSS( ) / 1e9 << " GB" << endl;
-	helper << "The C++ compiler used: " << true_cxx << " " << true_cxx_ver
-	       << " Job finished on: " << dt << endl;
-	return 0;
-} //end of main
+// #else
+// 	/* Unknown OS ----------------------------------------------- */
+// 	return (size_t)0L;          /* Unsupported. */
+// #endif
+// }

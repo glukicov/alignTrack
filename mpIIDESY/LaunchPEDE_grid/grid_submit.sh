@@ -1,9 +1,12 @@
 #!/bin/bash
 
+#Tar pede and MC dir [tracker/pede and tracker/Tracker_MC]:
+# tar -zcf tracker.tar.gz pede/ Tracker_MC/ 
+
 #Data will be stored to /pnfs/GM2/scratch/users/glukicov/commission/mc/<date>/
 
 #Define constants
-NRuns = 3
+NRuns = 2
 NIterations = 10000
 NTracks = 100000 #will produce ~10,000 tracks after DCA rejection 
 
@@ -27,8 +30,10 @@ export PRODUCTS=$PRODUCTS:/grid/fermiapp/products/common/db
 setup fife_utils
 
 #Compile Fortran and C 
+#cd tracker/pede
 # make in pede/  - Makefile 
-
+#cd tracker/Tracker_MC
+# make -f AlignTracker.mk
 
 
 #Run Fortran and C (via a python script)
@@ -38,8 +43,7 @@ python LaunchRuns.py $NIterations $NRuns $NTracks
 
 
 #What I want to get back is a text file [line for 1 iterations with 2 runs: dm1 dm2 dm1 dm2]
-#Once I have the .txt file: plotdM.C macro will plot the results
+#Once I have the .txt file: plotdM.py macro will plot the results
 
-
-echo Stop `date`
+echo Job finished successfully on `date` `time` 
 exit 0;
