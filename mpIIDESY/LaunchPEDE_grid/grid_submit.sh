@@ -50,17 +50,21 @@ setup ifdhc -z /cvmfs/fermilab.opensciencegrid.org/products/common/db
 setup sam_web_client
 echo "done ... "
 
-#cd $_CONDOR_SCRATCH_DIR   ? # XXX do I need this?
-#echo "pwd is " `pwd`
+#Always cd to the scratch area!
+cd $_CONDOR_SCRATCH_DIR
+echo "pwd is " `pwd` 
 
-tar -xf tracker.tar     # untar 
+#$INPUT_TAR_FILE
+#star -xf tracker.tar     # untar 
+tar -xf $INPUT_TAR_FILE     # untar 
 #Compile Fortran and C 
 cd MC_pede   # C++, Fortran and Python code is here
 make  # make pede 
 make -f AlignTracker.mk  # make MC
 
 #Run Fortran and C (via a python script):: stdout=open(os.devnull, 'wb') is set for MC and PEDE
-python LaunchRuns.py 4 2 100000
+# Launch for #iterations #runs #tracks
+python LaunchRuns.py 10000 2 100000
 
 echo "Job finished successfully on: " `date`  
 
@@ -72,4 +76,5 @@ echo "Job finished successfully on: " `date`
 # ./plotdM.py [tested on my laptop and gm2gpvm01]
 # imgcat PEDERuns.png - DONE!    
 
-#exit 0;
+#
+exit 0
