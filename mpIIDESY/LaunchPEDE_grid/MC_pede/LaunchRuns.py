@@ -13,7 +13,6 @@ import random
 NIterations = int(sys.argv[1])
 NRuns = int(sys.argv[2])
 NTracks = int(sys.argv[3])
-NProcess = int(sys.argv[4])
 
 # which one are misal.
 NModules = 2
@@ -89,7 +88,7 @@ for i_iter in range(0, NIterations):
 	    #if it is the last run - write arrays into NTuples
 	    
 	f = open ("MC_pede_data.txt", "a") 
-	f.write(str(dm_m1_run[0]) + " " + str(dm_m4_run[0]) + " " + str(dm_m1_run[1]) + " " + str(dm_m4_run[1]) +  " "  str(randSeed)  + "\n")
+	f.write(str(dm_m1_run[0]) + " " + str(dm_m4_run[0]) + " " + str(dm_m1_run[1]) + " " + str(dm_m4_run[1]) +  " " +  str(randSeed)  + "\n")
 	    	
 
 		# end of runs/iterations 

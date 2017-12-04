@@ -4,16 +4,6 @@
 # 1) kinit -f glukicov@FNAL.GOV
 # 2) ssh gm2gpvm01 [GSSAPI authentication is in .ssh_config]
 
-#--------- No action needed (e.g. already in .bash_profile)---------
-# mkdir /pnfs/GM2/scratch/users/glukicov [already created]
-# source /grid/fermiapp/products/common/etc/setups.sh
-# setup jobsub_client
-# setup fife_utils
-# export SAM_EXPERIMENT=gm2
-# export EXPERIMENT=gm2
-# export ROLE=analysis
-#---------------
-
 #Tar pede and MC dir:
 # tar -zcf tracker.tar MC_pede
 #Data will be stored to  /pnfs/GM2/scratch/users/glukicov/ #TODO: return .txt file from the grid via ifdh cp
@@ -32,7 +22,8 @@ echo "setup cvmfs common products"
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups
 source /cvmfs/fermilab.opensciencegrid.org/products/larsoft/setup #TODO figure out if this is needed
 setup ifdhc -z /cvmfs/fermilab.opensciencegrid.org/products/common/db
-#setup sam_web_client
+setup sam_web_client
+
 echo "done setting up cvmfs common products "
 
 ####################################################
@@ -61,7 +52,7 @@ make -f AlignTracker.mk  # make MC
 # Launch for #iterations #runs #tracks #seed TODO 
 python LaunchRuns.py 1 2 100000
 
-ifdh cp MC_pede_data.txt /pnfs/GM2/scratch/users/glukicov/pede_results/MC_pede_data_${PROCESS}.txt
+ifdh cp MC_pede_data.txt /pnfs/GM2/scratch/users/glukicov/pede_results/MC_one_pede_data_${PROCESS}.txt
 
 echo "Job finished successfully on: " `date`  
 
