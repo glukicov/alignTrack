@@ -25,7 +25,8 @@
 struct MCData {
 	int hit_count; /** Number of hits in detector */
 	//Hits
-	std::vector<float> z_hits; /** Z-positions of generated hits in detector */ //distances
+	std::vector<float> z_true; /** Z-positions of generated hits in detector */ //distances
+	std::vector<float> z_recon; /** Z-positions of recon hits in detector */ //distances
 	std::vector<float> residuals; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
@@ -114,8 +115,10 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.03, 0.0, 0.0, -0.03, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	// float dispX[8] = {0.00, 0.0, 0.0, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	// float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
@@ -157,11 +160,13 @@ private:
 	// Hits-based
 	std::vector<int> layer; // record of layers that were hit
 	std::vector<float> projectionX; //projection of measurement direction in (X)
-	std::vector<float> distance;  // Z distance between planes [this is set in geometry]
+	std::vector<float> distanceIdealZ;  // Z distance between planes [this is set in geometry]
+	std::vector<float> distanceMisZ;  // Z distance between misaligned planes [this is set in misalignment]
 	std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
-	std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
+	// std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
+	std::vector<float> sdevZ;// shift in x due to the imposed misalignment (alignment parameter)
 
-	// Vectors to hold Ideal and Misaligned (true) positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
+	// Vectors to hold Ideal and Misaligned (true) X positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
 	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPosition;
 	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPosition;
 	std::vector< std::vector< std::vector< float > > > sigma_recon_estimated;
@@ -240,12 +245,20 @@ public:
 		trackNumber = tracks;
 	}
 
-	void setOffset1(float off1) {
-		offsetX[0] = off1;
+	// void setXOffset1(float off1) {
+	// 	offsetX[0] = off1;
+	// }
+
+	// void setXOffset2(float off2) {
+	// 	offsetX[3] = off2;
+	// }
+
+	void setZOffset1(float off1) {
+		offsetZ[0] = off1;
 	}
 
-	void setOffset2(float off2) {
-		offsetX[3] = off2;
+	void setZOffset2(float off2) {
+		offsetZ[3] = off2;
 	}
 
 	void incRejectedHitsDCA() {
@@ -297,12 +310,12 @@ public:
 		return UVmapping[i][j];
 	}
 
-	std::vector<float> getZDistanceVector() {
-		return distance;
+	std::vector<float> getIdealZDistanceVector() {
+		return distanceIdealZ;
 	}
 
-	float getZDistance(int i) {
-		return distance[i];
+	float getIdealZDistance(int i) {
+		return distanceIdealZ[i];
 	}
 
 	int getLayer(int i) {
@@ -313,8 +326,12 @@ public:
 		return projectionX[i];
 	}
 
-	float getSdevX(int i) {
-		return sdevX[i];
+	// float getSdevX(int i) {
+	// 	return sdevX[i];
+	// }
+
+	float getSdevZ(int i) {
+		return sdevZ[i];
 	}
 
 	float getOverallMis() {

@@ -3,10 +3,8 @@
 ####Script to submit PEDE/MC iterative jobs###
 # 1) kinit -f glukicov@FNAL.GOV
 # 2) ssh gm2gpvm01 [GSSAPI authentication is in .ssh_config]
-
-#Tar pede and MC dir:
-# tar -zcf tracker.tar MC_pede
-#Data will be stored to  /pnfs/GM2/scratch/users/glukicov/ #TODO: return .txt file from the grid via ifdh cp
+# 3) fife tools, etc are in ~/.bash_profile
+#Data will be stored to  /pnfs/GM2/scratch/users/glukicov/data 
 
 #Setup 
 echo "Start: "`date`
@@ -52,17 +50,15 @@ make -f AlignTracker.mk  # make MC
 # Launch for #iterations #runs #tracks #seed TODO 
 python LaunchRuns.py 1 2 100000
 
-ifdh cp MC_pede_data.txt /pnfs/GM2/scratch/users/glukicov/pede_results/MC_one_pede_data_${PROCESS}.txt
+ifdh cp MC_pede_data.txt /pnfs/GM2/scratch/users/glukicov/pede_results_z/MC_pede_data_${PROCESS}.txt
 
 echo "Job finished successfully on: " `date`  
 
-#What I want to get back is a text file [line for 1 iterations with 2 runs: dm1 dm2 dm1 dm2]
-# the file is (in) MC_pede/MC_pede_data.txt
-
-# Once I have the MC_pede_data.txt file: 
-# scp 'gm2gpvm01:/gm2/app/users/glukicov/pede_test/MC_pede/MC_pede_data.txt' .
+# Once I have the MC_pede_data_XXX.txt files: 
+# scp -r 'gm2gpvm01:/pnfs/GM2/scratch/users/glukicov/pede_results_z/' .
 # ./plotdM.py [tested on my laptop and gm2gpvm01]
 # imgcat PEDERuns.png - DONE!    
 
 #Get job log: jobsub_fetchlog -G gm2 --jobid=
+
 exit 0
