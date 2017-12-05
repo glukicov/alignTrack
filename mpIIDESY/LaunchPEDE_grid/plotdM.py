@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #Plotter
-
+import glob
 from ROOT import *
 
 #These can be inputs from MC 
@@ -13,30 +13,30 @@ dataSize = NModules*NRuns
 histArray = []
 runLabel = ("1", "1", "2", "2")
 
-NBins = 79
+NBins = 49
 lowBinEdge = 0.0
 highBinEdge = 20.0
 
 Tf = TFile('PEDERuns.root', 'RECREATE')
-c = TCanvas("c", "Results of PEDE runs", 200, 10, 700, 500)
+c = TCanvas("c", "Results of PEDE runs", 200, 10, 1100, 1100)
 c.Divide(2,2)
-h_dm1_run1= TH1F("h_dm1_run1", "$\detla$ M1 in Run 1", NBins, lowBinEdge, highBinEdge) 
-h_dm4_run1= TH1F("h_dm4_run1", "$\detla$ M4 in Run 1", NBins, -lowBinEdge, -highBinEdge) 
-h_dm1_run2= TH1F("h_dm1_run2", "$\detla$ M1 in Run 2", NBins, lowBinEdge, highBinEdge) 
-h_dm4_run2= TH1F("h_dm4_run2", "$\detla$ M4 in Run 2", NBins, -lowBinEdge, -highBinEdge) 
+h_dm1_run1= TH1F("h_dm1_run1", "M1 in Run 1", NBins, -2, 18) 
+h_dm4_run1= TH1F("h_dm4_run1", "M4 in Run 1", NBins, -18, 2) 
+h_dm1_run2= TH1F("h_dm1_run2", "M1 in Run 2", NBins, -2, 18) 
+h_dm4_run2= TH1F("h_dm4_run2", "M4 in Run 2", NBins, -18, 2) 
 
-t = TTree()
-
-#Read file and fill histos 
-with open("MC_pede_data.txt") as f:
-    #next(f)
-    for lineC in f:  #Line is a string
-        #split the string on whitespace, return a list of numbers (as strings)
-        number = lineC.split()
-       	h_dm1_run1.Fill(float(number[0])* 1e4) #cm to um 
-       	h_dm4_run1.Fill(float(number[1])* 1e4) #cm to um 
-       	h_dm1_run2.Fill(float(number[2])* 1e4) #cm to um 
-       	h_dm4_run2.Fill(float(number[3])* 1e4) #cm to um 
+files = glob.glob("data/*.txt")
+for fle in files:
+	#Read file and fill histos 
+	with open(fle) as f:
+	    #next(f)
+	    for lineC in f:  #Line is a string
+	        #split the string on whitespace, return a list of numbers (as strings)
+	        number = lineC.split()
+	       	h_dm1_run1.Fill(float(number[0])* 1e4) #cm to um 
+	       	h_dm4_run1.Fill(float(number[1])* 1e4) #cm to um 
+	       	h_dm1_run2.Fill(float(number[2])* 1e4) #cm to um 
+	       	h_dm4_run2.Fill(float(number[3])* 1e4) #cm to um 
 
 myStyle  = TStyle("MyStyle", "My Root Styles")
 

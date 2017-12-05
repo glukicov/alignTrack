@@ -68,6 +68,7 @@ mpIIDESY/millepede.res~
 mptest1_port
 MpTest1
 AlignTracker
+LaunchPEDE_grid/data
 .svn/
 WIKI
 mp2-logo.png
@@ -316,3 +317,4 @@ functions.synctex.gz
 #!.F
 #!.f90
 #!.cpp
+#!.py
