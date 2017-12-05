@@ -8,8 +8,8 @@ PEDE routine, to align the tracking detector for the g-2
 experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 
-============================= Test Model v0.5 =======================================
-*Simple 2D case (1D alignment along x) with Circle Fit.
+============================= Test Model v0.6 =======================================
+*Simple 2D case (1D alignment along z) with Circle Fit.
 * No B-field, straight tracks, no MS, 100% efficiency.
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted]
 
