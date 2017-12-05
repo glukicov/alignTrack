@@ -4,88 +4,54 @@
 
 ### DIR Structure ###
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
+2. PEDE/ - up-to-date clean version of pede from DESY svn: http://svnsrv.desy.de/public/MillepedeII/tags/V04-03-08
 2. C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
-3. F_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
-4. python_toy_tracker/ - John's python code for toy tracker
+4. F_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
+5. python_toy_tracker/ - John's python code for toy tracker
 
 ###  INSTALLATION ###
-Here are the instructions to get the code (requires c++0x compiler suport for Logger) on working on gm2ucl at Fermilab:
-The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 17 Nov 2017).
+To get the code (requires c++0x compiler suport for the Logger) working on gm2gpvm0x at Fermilab:
+The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 5 Dec 2017).
+Makefiles detect the OS (SL Linux or Mac Unix) and use the right compiler automatically.
 
 1.  `git clone https://github.com/glukicov/alignTrack.git`
 to get the latest code from our repository 
 2. `cd alignTrack/mpIIDESY`
 3. `make`
 to build the pede executable 
-4. `./getRandoms.sh 5000000`  (see description below) 
-5. test that it works by `pede -t`
-(should give a terminal output like below [last 2 lines]):
+4. test that it works by `pede -t`
+(should give a terminal output like below [i.e. last 2 lines]):
  Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
  Peak dynamic memory allocation:    0.100512 GB
- 
-To run PEDE algorithm in general case:
-` ./pede str.txt  ` [where e.g. str.txt is a steering file, which specifies both - a data.bin file and a constraint file (e.g. con.txt)]
+5. `./getRandoms.sh 100000`  (see description below!) 
 
 #### Random (Integer) Number Generation ####
-Script to generate a plaintext file of random floating-point numbers, either  uniformly distributed between 0 and 1, or normally distributed with a mean of 0, and a standard deviation of 1. Uses Marsenne Twister algorithm included in Python's random package. User can specify seed, number of random numbers to generate, precision, and output file.
-   * `python randomIntGenerator.py -u True -o uniform_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
-   * `python randomIntGenerator.py -g True -o gaussian_ran.txt -s <random_seed> -p <randoms_decimal_places> -n <number_of_randoms_to_generate>`
-Please note that the output filenames shown are the default random number files for the modified Fortran version of *Test 1/2*, and C++ MC. Random numbers are generated using Python's built-in *Marsenne Twister* generator. Generally, ~5,000,000 random numbers in each file seems to be more than enough for the default *Test 1/2*, and C++ MC. 
-
-To generate random numbers (e.g):
-
-* `./getRandoms.sh 5000000`
-
-This bash script calls:
-
- 1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s 123456789 -n 5000000`
- 
- 2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n 5000000`
+To generate random numbers:
+* `./getRandoms.sh x`
+where x is the number of tracks the MC will be run for. This bash script calls:
+ 1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s 123456789 -n x*4`
+ 2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n x*16`
+ to produce the correct number of random numbers for the requested number of tracks. 
  
 #### Running C++ MC AlignTracker: ####
-1. Compile code with `make -f AlignTracker.mk` [supports ROOT5, Logger from gm2trackedaq, and RandomNumberBuffer]
+1. Compile code with `make -f AlignTracker.mk` [supports ROOT5/6, Logger from gm2trackedaq, and RandomNumberBuffer]
 [`make -f AlignTracker.mk clean` - also removes previusly generated data, steering and constrain files - can be useful]
-2. Generate data by running `./AlignTracker n x` (where x is the number of tracks to generate) for normal or `./AlignTracker d x` for debug/verbose output, or `./AlignTracker p x` for plotting with reduced statistics (to see individual tracks) All options generate:
-   * `Tracker_data.bin`, `Tracker_con.txt`, `Tracker_str.txt` [data, constrains, and steering files]
+2. Generate data by running `./AlignTracker n x y z` (where x is the number of tracks to generate, y and z are the offsets [keep 0.0 0.0 for intial runs!]) for normal or `./AlignTracker d x y z` for debug/verbose output, or `./AlignTracker p x y z` for plotting with reduced statistics (to see individual tracks) All options generate:
+   * `Tracker_data.bin`, `Tracker_con.txt`, `Tracker_str.txt`, `Tracker_par.txt`  [data, constrains, steering, pre-sigma files]
     * `Tracker.root` [sanity plots]
-3. Fit data by running `./pede Tracker_str.txt`.
-
+3. Align the detector by running `./pede Tracker_str.txt`.
+The `d` and `p` options produce additional debug files: Tracker_d_*.txt or Tracker_p_*.txt, respecivelly. 
 AlignTracker.cpp (contains definition of purpose) - main programme calling on methods from AlignTracker_methods.cpp. 
- 
-#### Running C++ version of mptest2.f90: ####
-1. Compile code with `make -f MakeMp2test.mk`
-2. Generate data by running `./Mptest2 n [or d]`. This generates:
-   * `C_Mp2tst.bin`, `C_Mp2con.txt`, `C_Mp2str.txt`
-   [data, constrains, and steering files]
-3. Fit data by running `./pede C_Mp2str.txt`.
 
 ### Producing PEDE Histograms ### 
 ` root readPedeHists.C+ ` will display all PEDE histograms in canvases, alternatively:
 1. ` root`
 2. root [0]  ` .L readPedeHists.C+`
 3. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
-
-The rootlogon.C file takes care of over/undeflows, sig.fig., etc. 
-
-### To run PEDE algorithm for Fortran version of Mptest2 ###
-1. ` ./pede -t=track-model`
-where track-model = SL0, SLE, BP, BRLF, BRLC [see p. 154 of refman.pdf] 
-
-e.g. ./pede -t=SL0 [check the correct parameters, aslo option for flag -ip] 
+The rootlogon.C file takes care of over/undeflows, sig.fig., etc.
 
 
-#### Running C++ Port of Test 1 ####
-1. Compile code with `make -f MakeMpTest1.mk`
-2. Generate random plaintext files of uniform and gaussian distributed random numbers, according to instructions above.
-3. Generate data by running `./MpTest1 <uniform_randoms_file> <gaussian_randoms_file>`. This generates:
-   * `mp2test1_true_params_c.txt`: A plaintext file containing true values of parameters, with their labels, for comparison with fitted values.
-   * `mp2tst1_c.bin`: A binary file containing fitting data.
-   * `mp2test1con_c.txt`: A plaintext file containing parameter constraints.
-   * `mp2test1str_c.txt`: A plaintext file containing steering information for `pede`. (Note - it is important to use the steering file generated here, rather than that generated by `./pede -t`, as this steering file flags the data binary as being generated by C, rather than Fortran.)
-4. Fit data by running `./pede mp2test1str_c.txt`. 
-
-#### Python Analysis Scripts ####
-Various Python scripts are provided for analysis of *Test 1* fits using C++ and Fortran. 
+#### PYTHON ANALYIS SCRIPTS ####
 
 ##### Comparing True, Fitted Parameter Values #####
 1. Ensure Python use is enabled.
