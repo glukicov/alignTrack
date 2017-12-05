@@ -8,8 +8,8 @@ PEDE routine, to align the tracking detector for the g-2
 experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
 
-============================= Test Model v0.4 =======================================
-*Simple 2D case (1D alignment along x).
+============================= Test Model v0.5 =======================================
+*Simple 2D case (1D alignment along x) with Circle Fit.
 * No B-field, straight tracks, no MS, 100% efficiency.
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted]
 
@@ -23,10 +23,16 @@ Beam originates (in z direction) from z=0, straight tracks, no scattering, only 
 Resolution (i.e. tracker systematic) is implemented.
 Misalignment is implemented "manually" for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
 
-Hit rejection: (>0.5 straw radius)  -not used yet
+Features:
+Hit rejection (>0.5 straw radius) 
+DCA rejection (>500 um) on the whole track
+p-value cut
+Truth LR 
+Offsets [i.e. alignment "software" fix] as inputs
 
-Constrains: TODO
-Steering options: method inversion 1 0.01 [1 iteration, 0.01 dF convergence; inversion method provides uncertainties on all alignment parameters]
+Constrains:
+Pre-sigmas: -1 for "fixed" modules 
+Steering options: method inversion 5 0.001 [1 iteration, 0.01 dF convergence; inversion method provides uncertainties on all alignment parameters]
 
                        			--Tracker Geometry [cm]--:
 Spacing (in x) between straws in layer is 0.606 [strawSpacing]
