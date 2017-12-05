@@ -41,6 +41,4 @@ MODULE mpdef
         INTEGER(mpi) :: label
         REAL(mpd) :: value
     END TYPE listItem
-    INTEGER(mpi) :: UNIF_COUNT
-    INTEGER(mpi) :: GAUS_COUNT
 END MODULE mpdef

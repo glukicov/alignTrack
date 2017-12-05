@@ -389,7 +389,7 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     !     record loop ------------------------------------------------------
 
-    ncount=15000
+    ncount=100000
     !ncount=2000
     nthits=0
     nrecds=0
@@ -557,8 +557,8 @@ SUBROUTINE mptst2(imodel)         ! generate test files
 
     WRITE(*,*) ' '
 
-    WRITE(*,*) 'Normal Randoms were used ',UNIF_COUNT , ' times' 
-    WRITE(*,*) 'Gaussian Randoms were used ',GAUS_COUNT, 'times'
+    ! WRITE(*,*) 'Normal Randoms were used ',UNIF_COUNT , ' times' 
+    ! WRITE(*,*) 'Gaussian Randoms were used ',GAUS_COUNT, 'times'
 
 101 FORMAT(a)
     ! 102  FORMAT(I6,2F10.5)

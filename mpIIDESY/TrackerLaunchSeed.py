@@ -30,6 +30,10 @@ print "Parameters from Simulation and PEDE:"
 print "moduleN= ",moduleN
 print "PEDE Trials= ",lineN  
 
+with open("Tracker_metric.txt") as f:
+	line_i = 0
+	for line in f:  #Line is a string
+		metric = line
 
 mis_C = [0 for i_module in xrange(moduleN)]
 # Get 1 set of misalignment from simulation 
@@ -71,12 +75,12 @@ with open("PEDE_Mis.txt") as f:
 
 f = TFile('SeedTracker.root','RECREATE')
 
-h_dm0  = TH1F("h_dm0", "dM Module 0", 49, -6, 6)
-h_dm1  = TH1F("h_dm1", "dM Module 1", 49, -6, 6)
-h_dm2  = TH1F("h_dm2", "dM Module 2", 49, -6, 6)
-h_dm3  = TH1F("h_dm3", "dM Module 3", 49, -6, 6)
-h_dm4  = TH1F("h_dm4", "dM Module 4", 49, -6, 6)
-h_dm5  = TH1F("h_dm5", "dM Module 5", 49, -6, 6)
+h_dm0  = TH1F("h_dm0", "dM Module 0", 149, -15, 15)
+h_dm1  = TH1F("h_dm1", "dM Module 1", 149, -15, 15)
+h_dm2  = TH1F("h_dm2", "dM Module 2", 149, -15, 15)
+h_dm3  = TH1F("h_dm3", "dM Module 3", 149, -15, 15)
+h_dm4  = TH1F("h_dm4", "dM Module 4", 149, -15, 15)
+h_dm5  = TH1F("h_dm5", "dM Module 5", 149, -15, 15)
 
 h_er0  = TH1F("h_er0", "error Module 0", 19, -0.1, 0.1)
 h_er1  = TH1F("h_er1", "error Module 1", 19, 1.1, 1.7)
@@ -185,6 +189,8 @@ if (moduleN==6):
 	c2.cd(6) 
 	h_dm5.Draw()
 c2.Print("dMSeed.png")
+
+print metric
 
 f.Write()
 f.Close()

@@ -1,7 +1,7 @@
-#make file for AlignTracker.cpp 
+#make file for Mptest2
 
-PROGNAME = AlignTracker
-SOURCES =  Logger.cpp AlignTracker_methods.cpp random_buffer.cpp
+PROGNAME = Mptest2
+SOURCES =  Logger.cpp Mptest2_detector.cpp random_buffer.cpp
 OBJECTS = $(patsubst %.cpp, %.o, $(SOURCES))
 
 ROOTCFLAGS   := $(shell root-config --cflags)
@@ -50,4 +50,4 @@ depend: .depend
 include .depend
 
 clean :
-	-rm -f ${PROGNAME} ${OBJECTS} Tracker_con.txt Tracker_str.txt Tracker_data.bin
+	-rm -f ${PROGNAME} ${OBJECTS}

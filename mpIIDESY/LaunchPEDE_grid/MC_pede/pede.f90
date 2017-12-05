@@ -52,7 +52,7 @@
 !! 1. Download the software package from the DESY \c svn server to
 !!    \a target directory, e.g.:
 !!
-!!         svn checkout http://svnsrv.desy.de/public/MillepedeII/tags/V04-03-06 target
+!!         svn checkout http://svnsrv.desy.de/public/MillepedeII/tags/V04-03-08 target
 !!
 !! 2. Create **Pede** executable (in \a target directory):
 !!
@@ -98,6 +98,8 @@
 !!   of the constraints matrix (solution by elemination).
 !!   This problem is usually caused by *empty* constraints (see \ref
 !!   cmd-skipemptycons).
+!! * 170831: More debug information for problems with reading Cfiles. Don't stop
+!!   after read error for \ref cmd-checkinput mode.
 !!
 !! \section tools_sec Tools
 !! The subdirectory \c tools contains some useful scripts:
@@ -590,7 +592,7 @@ PROGRAM mptwo
     CALL mvopen(lunlog,'millepede.log')
     CALL getenv('HOSTNAME',chost)
     IF (chost(1:1) == ' ') CALL getenv('HOST',chost)
-    WRITE(*,*) '($Rev$)'
+    WRITE(*,*) '($Rev: 157 $)'
     !$    WRITE(*,*) 'using OpenMP (TM)'
 #ifdef __GFORTRAN__
     WRITE(*,111)  __GNUC__ , __GNUC_MINOR__ , __GNUC_PATCHLEVEL__
@@ -1537,6 +1539,7 @@ SUBROUTINE peread(more)
     REAL(mpd) :: ds2
     REAL(mpd) :: dw
     !$    INTEGER(mpi) :: OMP_GET_THREAD_NUM
+    CHARACTER (LEN=7) :: cfile
     SAVE
 
     inder(i)=readBufferDataI(i)
@@ -1581,7 +1584,7 @@ SUBROUTINE peread(more)
     !$OMP  DEFAULT(PRIVATE) &
     !$OMP  SHARED(readBufferInfo,readBufferPointer,readBufferDataI,readBufferDataD, &
     !$OMP  readBufferDataF,nPointer,nData,skippedRecords,ndimbuf,NTHR,NFILF,FLOOP, &
-    !$OMP        IFD,KFD,IFILE,NFILB,WFD,XFD) &
+    !$OMP        IFD,KFD,IFILE,NFILB,WFD,XFD,icheck) &
     !$OMP  NUM_THREADS(NTHR)
 
     ithr=1
@@ -1620,8 +1623,13 @@ SUBROUTINE peread(more)
 #endif
                 eof=(ierrc <= 0.AND.ierrc /= -4) ! allow buffer overruns -> skip record
                 IF(eof.AND.ierrc < 0) THEN
-                    CALL peend(18,'Aborted, read error(s) for binary files')
-                    STOP 'PEREAD: stopping due to read errors'
+                    WRITE(*,*) 'Read error for binary Cfile', kfile, 'record', jrec+1, ':', ierrc 
+                    WRITE(8,*) 'Read error for binary Cfile', kfile, 'record', jrec+1, ':', ierrc
+                    IF (icheck <= 0) THEN ! stop unless 'checkinput' mode
+                        WRITE(cfile,'(I7)') kfile
+                        CALL peend(18,'Aborted, read error(s) for binary file ' // cfile)
+                        STOP 'PEREAD: stopping due to read errors'
+                    ENDIF
                 END IF
             END IF
             IF(eof) EXIT records   ! end-of-files or error
@@ -2898,7 +2906,6 @@ SUBROUTINE loopbf(nrej,ndfs,sndf,dchi2s, numfil,naccf,chi2f,ndff)
     REAL(mps), INTENT(IN OUT)                        :: chi2f(numfil)
     INTEGER(mpi), INTENT(IN OUT)                     :: ndff(numfil)
 
-    REAL(mpd)::dch2sd
     REAL(mpd):: dchi2
     REAL(mpd)::dvar
     REAL(mpd):: dw1
@@ -3367,8 +3374,6 @@ SUBROUTINE loopbf(nrej,ndfs,sndf,dchi2s, numfil,naccf,chi2f,ndff)
                 summ=summ+dchi2        ! accumulate chi-square sum
             END DO
             ndf=neq-nrank
-            !      external seed ?
-            dch2sd=0.0_mpd
             resing=(REAL(nweig,mps)-REAL(suwt,mps))/REAL(nweig,mps)
             IF (lhist) THEN
                 IF(iter == 1) CALL hmpent( 5,REAL(ndf,mps))  ! histogram Ndf
@@ -3442,7 +3447,7 @@ SUBROUTINE loopbf(nrej,ndfs,sndf,dchi2s, numfil,naccf,chi2f,ndff)
                     GO TO 90
                 END IF
             END IF
-        END IF
+        END IF 
   
         IF(lhuber > 1.AND.dwcut /= 0.0.AND.resing > dwcut) THEN
             !         add to FVALUE
@@ -3470,9 +3475,7 @@ SUBROUTINE loopbf(nrej,ndfs,sndf,dchi2s, numfil,naccf,chi2f,ndff)
         !      ----- fourth loop ------------------------------------------------
         !      update of global matrix and vector according to the "Millepede"
         !      principle, from the global/local information
-  
-        dchi2s=dchi2s+dch2sd
-  
+    
         ist=isfrst(ibuf)
         nst=islast(ibuf)
         DO ! loop over measurements
@@ -6719,12 +6722,8 @@ SUBROUTINE xloopn                !
     dwmean=sumndf/REAL(ndfsum,mpd)
     dratio=fvalue/dwmean/REAL(ndfsum-nagb,mpd)
     catio=REAL(dratio,mps)
-    IF(lhuber /= 0) THEN
-        IF (lhuber <= 3) THEN
-            catio=catio/0.9326  ! correction Huber downweighting
-        ELSE
-            catio=catio/0.8228  ! correction Cauchy downweighting
-        END IF
+    IF(nloopn /= 1.AND.lhuber /= 0) THEN
+        catio=catio/0.9326  ! correction Huber downweighting (in global chi2)       
     END IF
     mrati=nint(100.0*catio,mpi)
 
@@ -6741,7 +6740,7 @@ SUBROUTINE xloopn                !
             WRITE(lunp,*) '                          =',dratio
         END IF
         WRITE(lunp,*) ' '
-        IF(lhuber /= 0) WRITE(lunp,*)  &
+        IF(nloopn /= 1.AND.lhuber /= 0) WRITE(lunp,*)  &
             '            with correction for down-weighting   ',catio
     END DO
     nrej=nrejec(0)+nrejec(1)+nrejec(2)+nrejec(3) ! total number of rejects

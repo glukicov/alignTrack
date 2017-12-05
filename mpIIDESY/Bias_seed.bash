@@ -4,7 +4,7 @@ echo "Bias Hunting for 500 tracks with different seeds"
 echo "Staring tests..."
 
 x=0
-while [ $x -le 800 ]
+while [ $x -le 8 ]
 
 do
 	y=$(( ( RANDOM % 1000000 )  + 1 ))
@@ -15,7 +15,7 @@ do
 	python randomIntGenerator.py -u True -o uniform_ran.txt -s $z -n 150000
 	echo $z >> u_seed.txt 
 	sleep 0.8
-	"./AlignTracker" d 50000
+	"./AlignTracker" n 100000
 	sleep 18
 	x=$(( $x + 1 ))
 done

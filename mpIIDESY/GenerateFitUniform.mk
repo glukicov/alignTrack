@@ -1,7 +1,7 @@
-#make file for AlignTracker.cpp 
+#make file for GenerateFitUniform.cpp 
 
-PROGNAME = AlignTracker
-SOURCES =  Logger.cpp AlignTracker_methods.cpp random_buffer.cpp
+PROGNAME = GenerateFitUniform
+SOURCES =  random_buffer.cpp
 OBJECTS = $(patsubst %.cpp, %.o, $(SOURCES))
 
 ROOTCFLAGS   := $(shell root-config --cflags)
@@ -11,7 +11,7 @@ ROOTLIBS     := $(shell root-config --nonew --libs)
 
 CPP = g++
 //CPP=/usr/local/bin/g++-7
-CPPFLAGS = -std=c++11
+CPPFLAGS = -std=c++0x
 CPPFLAGS += $(ROOTCFLAGS)
 //CPPFLAGS +=-static-libtsan
 //CPPFLAGS += -Wstatic-float-init
@@ -35,7 +35,7 @@ all : $(PROGNAME)
 $(PROGNAME) : $(OBJECTS) $(PROGNAME).o
 	$(CPP) -o $@ $(OBJECTS) $(PROGNAME).o $(LDFLAGS) $(LIBS)
 
-%.o : %.cpp %.h AlignTracker_methods.h
+%.o : %.cpp %.h 
 	$(CPP) $(CPPFLAGS) -c $<
 
 test:
@@ -50,4 +50,4 @@ depend: .depend
 include .depend
 
 clean :
-	-rm -f ${PROGNAME} ${OBJECTS} Tracker_con.txt Tracker_str.txt Tracker_data.bin
+	-rm -f ${PROGNAME} ${OBJECTS}
