@@ -25,7 +25,7 @@ to build the pede executable
  Peak dynamic memory allocation:    0.100512 GB
 5. `./getRandoms.sh 100000`  (see description below!) 
 
-#### Random (Integer) Number Generation ####
+### Random (Integer) Number Generation ###
 To generate random numbers:
 * `./getRandoms.sh x`
 where x is the number of tracks the MC will be run for. This bash script calls:
@@ -33,7 +33,7 @@ where x is the number of tracks the MC will be run for. This bash script calls:
  2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n x*16`
  to produce the correct number of random numbers for the requested number of tracks. 
  
-#### Running C++ MC AlignTracker: ####
+### Running C++ MC AlignTracker: ###
 1. Compile code with `make -f AlignTracker.mk` [supports ROOT5/6, Logger from gm2trackedaq, and RandomNumberBuffer]
 [`make -f AlignTracker.mk clean` - also removes previusly generated data, steering and constrain files - can be useful]
 2. Generate data by running `./AlignTracker n x y z` (where x is the number of tracks to generate, y and z are the offsets [keep 0.0 0.0 for intial runs!]) for normal or `./AlignTracker d x y z` for debug/verbose output, or `./AlignTracker p x y z` for plotting with reduced statistics (to see individual tracks) All options generate:
