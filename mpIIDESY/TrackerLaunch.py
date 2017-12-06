@@ -128,7 +128,7 @@ for i_module in range(0, moduleN):
 		plt.title('FoM Module %s' %(i_module+1), fontsize=10)
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
-		axes.set_ylim(-20, 20)
+		axes.set_ylim(-1000, 1000)
 
 
 		plt.xlabel("Number of Tracks", fontsize=10)

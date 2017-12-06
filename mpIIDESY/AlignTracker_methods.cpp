@@ -464,9 +464,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	float x1 = x0; // for parallel lines only
 	float xSlope = 0.0; // for parallel lines only
 
-	// bool generalLines = true;    // XXX quick hack
-	// float slopeFactor=1.0; 		 // XXX another quick hack add in front of beamPositionLength
-	// if (generalLines == true) {
+	bool generalLines = true;    // XXX quick hack
+	if (generalLines == true) {
 
 	float signXSlope;
 	if (Tracker::generate_uniform() >= 0.5) {
@@ -479,7 +478,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
 	x1 = xSlope * beamStop + xIntercept; // "xExit"
 
-	// } // end of generalLines == true HACK
+	} // end of generalLines == true HACK
 
 	float xTrack; //true track position x=zm+c
 
