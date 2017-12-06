@@ -29,7 +29,8 @@ struct MCData {
 	std::vector<float> z_recon; /** Z-positions of recon hits in detector */ //distances
 	std::vector<float> residuals; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
-	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
+	std::vector<int> label_1; /* vector of modules that were actually hit [after passing rejection test] */
+	std::vector<int> label_2; /* vector of modules that were actually hit [after passing rejection test] */
 	std::vector<int> hit_list;  // same of layers (absolute)
 	std::vector<int> hit_bool;  // same of layers (absolute) +1 = hit 0=no hit
 	std::vector<string> absolute_straw_hit; // for plotting
@@ -115,13 +116,16 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	// float dispX[8] = {0.00, 0.0, 0.0, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] = {0.0, 0.03, -0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	// float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	float dispX[8] = {0.00, 0.1, 0.0, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] = {0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
+
+	static const int nlc = 2; // dR/dc dR/dm
+	static const int ngl = 2; // dR/dx dR/dz 
 
 	float pValCut = 0.00; // from 0->1
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
@@ -163,7 +167,7 @@ private:
 	std::vector<float> distanceIdealZ;  // Z distance between planes [this is set in geometry]
 	std::vector<float> distanceMisZ;  // Z distance between misaligned planes [this is set in misalignment]
 	std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
-	// std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
+	std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
 	std::vector<float> sdevZ;// shift in x due to the imposed misalignment (alignment parameter)
 
 	// Vectors to hold Ideal and Misaligned (true) X positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
@@ -245,13 +249,13 @@ public:
 		trackNumber = tracks;
 	}
 
-	// void setXOffset1(float off1) {
-	// 	offsetX[0] = off1;
-	// }
+	void setXOffset1(float off1) {
+		offsetX[0] = off1;
+	}
 
-	// void setXOffset2(float off2) {
-	// 	offsetX[3] = off2;
-	// }
+	void setXOffset2(float off2) {
+		offsetX[3] = off2;
+	}
 
 	void setZOffset1(float off1) {
 		offsetZ[0] = off1;
@@ -326,9 +330,9 @@ public:
 		return projectionX[i];
 	}
 
-	// float getSdevX(int i) {
-	// 	return sdevX[i];
-	// }
+	float getSdevX(int i) {
+		return sdevX[i];
+	}
 
 	float getSdevZ(int i) {
 		return sdevZ[i];
@@ -423,6 +427,14 @@ public:
 	float getTrackCut() {
 		return trackCut;
 	}
+
+	// static const int getNLC(){
+	// 	return nlc;
+	// }
+
+	// static const int getNGL(){
+	// 	return ngl;
+	// }
 
 };
 

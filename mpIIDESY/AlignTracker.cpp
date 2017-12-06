@@ -8,33 +8,51 @@ PEDE routine, to align the tracking detector for the g-2
 experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker Singleton class)
 
-============================= Test Model v0.6 =======================================
-*Simple 2D case (1D alignment along z) with Circle Fit.
+TODO:
+Python Plotting Scripts:
+Tracker
+Functions
+
+Python Iterative Test Scripts:
+
+Grid Submission Scripts:
+
+Function Derivations in functions.tex
+
+Other?
+TODO Describe all code -> Add to Github
+
+============================= Test Model v0.7 =======================================
+*Simple 2D case (2D alignment along x and z) with Circle Fit.
 * No B-field, straight tracks, no MS, 100% efficiency.
-*(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted]
+*(!) NATURAL UNITS (PEDE): cm, rad, GeV [natural units will be omitted]
 
-(!) Module, Straw, View, Layer labelling starts from 0 [+1 is put by hand as MP2 doesn't accept 0 as a label]
+(!) Module, Straw, View, Layer labelling starts from 0
+[+1 is put by hand as MP2 doesn't accept 0 as a label]
 
-Terminology: detector=module (==the alignment object)
+Terminology:
+-detector=module (==the alignment object)
+-Local Parameters: track parameters (e.g slope and intercept)
+-Global Parameters: x and z position of a detector
 
-Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits, resolution, etc.)
-Beam originates (in z direction) from z=0, straight tracks, no scattering, only resolution (gaus) smearing,
+Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits via detector resolution)
+Beam originates (in z direction) from z=0, straight tracks, no scattering,
     tracks are lines between z=beamStart and z=beamStop, with uniformly generated x1 and slope.
 Resolution (i.e. tracker systematic) is implemented.
-Misalignment is implemented "manually" for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
+Misalignment is implemented "manually" for each module in +/- x/z direction
+[all layers in module are dependent (i.e. move together)]
 
 Features [can be on or off - see AlignTracker.h]:
 Hit rejection (>0.5 straw radius)
 DCA rejection (>500 um) on the whole track
 p-value cut
-Truth LR
+Truth LR information
 Offsets [i.e. alignment "software" fix] as inputs
 
 Constrains:
 Pre-sigmas: -1 for "fixed" modules
-Steering options: method inversion 5 0.001 [1 iteration, 0.01 dF convergence; inversion method provides uncertainties on all alignment parameters]
-
-Derivations and functions are in functions.tex.
+Steering options: e.g. method inversion 5 0.001 [5 iterations, 0.01 dF convergence;
+inversion method provides uncertainties on all alignment parameters]
 
                        			--Tracker Geometry [cm]--:
 Spacing (in x) between straws in layer is 0.606 [strawSpacing]
@@ -42,16 +60,16 @@ Spacing between layers in same view is 0.515 [layerSpacing]
 Spacing between U and V views (last and first layers in views) is 2.020 [viewSpaing]
 Spacing between modules (last and first layers in modules) 13.735 [moduleSpacing]
 Layers in a view are (e.g. U0 vs. U1) have an extra relative x displacement of 0.303 [layerDisplacement]
-The staircaseXDisplacment of modules is not implemented yet
+The staircaseXDisplacment of modules is not implemented yet XXX
 
-For more information see:
+For more information on the Tracker conventions see:
 http://gm2-docdb.fnal.gov:8080/cgi-bin/RetrieveFile?docid=4375&filename=Orientation.pdf&version=1
 
 =======================================================================================
 
 #TODO Model type [physics] will be implemented via imodel = 0, 1 .....
 
-#Verbosity level implemented via command line command: n = normal, d = debug, p=plotting (./PlotGen.py) [e.g. './AlignTracker d']
+#Verbosity level is implemented via command line command: n = normal, d = debug, p=plotting (./PlotGen.py) [e.g. './AlignTracker d']
 
 Private (for now) Git repository: https://github.com/glukicov/alignTrack [further instructions are there]
 Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
@@ -285,6 +303,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
 	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  149,  -0.017, 0.017); h_DGL1->SetDirectory(cd_PEDE);
+	TH1F* h_DGL2 = new TH1F("h_DGL2", "DGL2: All Modules",  149,  -0.017, 0.017); h_DGL2->SetDirectory(cd_PEDE);
 
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
@@ -358,40 +377,15 @@ int main(int argc, char* argv[]) {
 				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0); hl6->SetDirectory(cd_UV);
 
 				h_name.str(""); h_name << "h_DGL1_M" << i_module << UV;
+				h_title.str(""); h_title << "DGL1 () in M" << i_module << UV << " S3";
+				auto hl8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  14900,  -1.1, 1.1); hl8->SetDirectory(cd_PEDE);
+
+				h_name.str(""); h_name << "h_DGL2_M" << i_module << UV;
 				h_title.str(""); h_title << "DGL1 in M" << i_module << UV << " S3";
-				auto hl8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149,  -0.017, 0.017); hl8->SetDirectory(cd_PEDE);
+				auto hl9 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149,  -0.017, 0.017); hl8->SetDirectory(cd_PEDE);
 
-				// Parasitic booking with specific binning
-				// for (int i_LC = 0; i_LC < 2; i_LC++) { //loop over derivatives
-				// 	for (int i_LR = 0; i_LR < 2; i_LR++) {
-				// 		for (int i_RS = 0; i_RS < 2; i_RS++) {
-				// 			h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
-				// 			h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
-				// 			if (i_LC == 0) {
-				// 				if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {
-				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);
-				// 				}
-				// 				if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {
-				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);
-				// 				}
-				// 			} // lc1
-				// 			if (i_LC == 1) {
-				// 				if (nameLR[i_LR] == 'L') {
-				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, -z_jump_bin - 0.01, -z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
-				// 				}
-				// 				if (nameLR[i_LR] == 'R') {
-				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, z_jump_bin - 0.01, z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
-				// 				}
-				// 			} // lc2
-				// 		} // Res sign P/N
-				// 	} // LR
-				// } // lc1-2
-
-				//		if (i_layer == 0) { z_jump_bin += 0.515; }
 			} // layers
-			//	if (i_view == 0) { z_jump_bin += 2.020; }
 		} // views
-		//z_jump_bin += 13.735;
 	} // modules
 
 	//Modules
@@ -473,7 +467,7 @@ int main(int argc, char* argv[]) {
 	helper << "Calculating residuals..." << endl;
 
 //------------------------------------------Main Mille Track Loop---------------------------------------------------------//
-	bool StrongDebugBool = false;
+	bool StrongDebugBool = true;
 	//Generating tracks
 	for (int trackCount = 0; trackCount < Tracker::instance()->getTrackNumber(); trackCount++) {
 		//float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
@@ -496,12 +490,11 @@ int main(int argc, char* argv[]) {
 				float rMeas_mp2 =  generated_MC.residuals[hitCount]; //Residual
 				float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; //Resolution
 				//Number of local and global parameters
-				const int nalc = 2;
-				const int nagl = 1;
-				//label to associate hits within different layers with a correct module
-				// same as ModuleN+1 [already converted]
-				int label_mp2 = generated_MC.i_hits[hitCount];
-
+				const int nalc = 2; // dR/dc dR/dm  // TODO pass from Methods
+				//int* nalc = new int(Tracker::instance()->getNLC()); // dR/dc dR/dm
+				const int nagl = 2; // dR/dx dR/dz  // TODO pass from Methods
+				//int* nagl = new int(Tracker::instance()->getNGL()); // dR/dx dR/dz 
+				
 				//Variables for derivative calculations:
 				float z = generated_MC.z_straw[hitCount];
 				float x = generated_MC.x_straw[hitCount];
@@ -509,15 +502,17 @@ int main(int argc, char* argv[]) {
 				float c = generated_MC.intercept_recon;
 
 				//Local derivatives
-				float dlc1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) ; // "DCA magnitude"
-				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ;
+				float dlc1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) ; // "DCA magnitude" dR/dc
+				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );
-				float dergl[nagl] = {dgl1};
+				float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx 
+				float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/dm
+				float dergl[nagl] = {dgl1, dgl2};
 				//Labels
-				int l1 = label_mp2;
-				int label[nagl] = {l1};
+				int l1 = generated_MC.label_1[hitCount];
+				int l2 = generated_MC.label_2[hitCount];
+				int label[nagl] = {l1, l2};
 
 				//TODO multiple scattering errors (no correlations) (for imodel == 1)
 				//add break points multiple scattering later XXX (for imodel == 2)
@@ -525,8 +520,8 @@ int main(int argc, char* argv[]) {
 
 				M.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 				if (debugBool) {
-					debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " "
-					           << rMeas_mp2 << "  " << sigma_mp2 << endl;
+					debug_mp2  << nalc << "  " << derlc[0] << "  " << derlc[1] << "  " << nagl << "  " << dergl[0] 
+					<< " " << dergl[1] << "  "  << label[0]  << "  " << label[1] << "  " << rMeas_mp2 << "  " << sigma_mp2 << endl;
 				}
 
 				//***********************************Sanity Plots******************************************//
@@ -546,7 +541,7 @@ int main(int argc, char* argv[]) {
 				h_id_dca ->Fill(strawID);
 				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
 				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
-				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1);
+				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); h_DGL2->Fill(dgl2);
 
 				//Track-based hit parameters
 				h_res_x_z->Fill(generated_MC.z_recon[hitCount], generated_MC.residuals[hitCount]);
@@ -612,25 +607,16 @@ int main(int argc, char* argv[]) {
 				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
 				h15->Fill(dlc1);
 
+				//For straw 3 (id=2) plot DGL1-2 for U0-V1 in each module
 				if (strawID == 2) {
 					h_name.str(""); h_name << "PEDE/h_DGL1_M" << moduleN << UV;
 					TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
 					h16->Fill(dgl1);
+
+					h_name.str(""); h_name << "PEDE/h_DGL2_M" << moduleN << UV;
+					TH1F* h17 = (TH1F*)file->Get( h_name.str().c_str() );
+					h17->Fill(dgl2);
 				}
-
-				// // Now fill DLC1, DLC2 plots for U0-V1 for each module but only for straw 3 (4th straw from the "top")
-				// if (strawID == 3) {
-				// 	if (rMeas_mp2 > 0) {tmpNameResSign = 'P';}// DCA > driftRad
-				// 	else {tmpNameResSign = 'N';} // DCA < driftRad
-
-				// 	//loop over booked histos and fill
-				// 	for (int i_LC = 0; i_LC < 2; i_LC++) {
-				// 		h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << "_" << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
-				// 		TH1F* h101 = (TH1F*)file->Get( h_name.str().c_str() );
-				// 		if (i_LC == 0) {h101->Fill(dlc1);}
-				// 		if (i_LC == 1) {h101->Fill(dlc2);}
-				// 	}
-				// } // strawID=3
 
 				hitsN++; //count hits
 			} // end of hits loop
@@ -679,33 +665,11 @@ int main(int argc, char* argv[]) {
 	               << "  " << Tracker::instance()->getBeamStop() <<  endl;
 
 
-
 	//------------------------------------------ROOT: Fitting Functions---------------------------------------------------------//
 
 	helper << endl;
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << "ROOT fitting parameters and output:" << endl;
-
-	// helper << fixed << setprecision(2);
-	// float LRSkewness = 0.0;
-	// // PEDE Plots calculations for U0 only
-	// for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-	// 	for (int i_view = 0; i_view < 1; i_view++) {
-	// 		for (int i_layer = 0; i_layer < 1; i_layer++) {
-	// 			string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
-	// 			for (int i_LR = 0; i_LR < 2; i_LR++) {
-	// 				for (int i_RS = 0; i_RS < 2; i_RS++) {
-	// 					h_name.str(""); h_name << "PEDE/h_DLC2_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
-	// 					TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
-	// 					LRSkewness += hp1->GetSkewness();
-	// 				}
-	// 				//helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness / 2.0 << endl;
-	// 				LRSkewness = 0.0;
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// helper << fixed << setprecision(setPrecision);
 
 	// Store alignment parameters from measurements
 	vector<float> sigma_recon_actual;
@@ -824,33 +788,11 @@ int main(int argc, char* argv[]) {
 	axis3->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
 	gr3->GetHistogram()->SetMaximum(0.2);   // along
 	gr3->GetHistogram()->SetMinimum(-0.2);  //   Y
-	//cResMean->Print("Print/cResMean.png");
 	cResMean->Write();
 
-	// if (recordN >= 100) { // below 100 tracks these plots are useless
-	// 	TCanvas *cChi2 = new TCanvas("cChi2", "cChi2", 700, 700);
-	// 	gStyle->SetOptStat("ourRmMe");
-	// 	gStyle->SetOptFit(1111);
-	// 	chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_recon->Integral("WIDTH"));
-	// 	h_chi2_recon->SetBinErrorOption(TH1::kPoisson); // errors from Poisson interval at 68.3% (1 sigma)
-	// 	h_chi2_recon->Fit("chi2pdf", "Q");
-	// 	cChi2->Clear(); // Fit does not draw into correct pad
-	// 	auto rp1 = new TRatioPlot(h_chi2_recon, "errasym");
-	// 	rp1->SetGraphDrawOpt("P");
-	// 	rp1->SetSeparationMargin(0.0);
-	// 	cChi2->SetTicks(0, 1);
-	// 	rp1->Draw("noconfint");
-	// 	cChi2->Update();
-	// 	rp1->GetLowerRefYaxis()->SetTitle("Frac. Error");
-	// 	//cChi2->Print("FoM_Chi2_recon.C");
-	// 	//cChi2->Print("Print/FoM_Chi2_recon.png");
-	// 	cChi2->Write();
-	// 	//TODO fix malloc problem closing the canvas in ROOT Browser
-	// 	delete chi2pdf;
-	// }
-
 	// Debug-style plots:
-	if (1 == -1) {
+	if (debugBool) {
+
 		//Residuals per module
 		TCanvas *cResAllM = new TCanvas("cResAllM", "cResAllM", 700, 900);
 		TText T; T.SetTextFont(42); T.SetTextAlign(21);
@@ -901,7 +843,7 @@ int main(int argc, char* argv[]) {
 		cStack->Divide(1, 1);
 		cStack->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5, .95, "Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
 		cStack->Write();
-	} // strong plotting
+	} // strong debug plotting
 
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << " " << endl;

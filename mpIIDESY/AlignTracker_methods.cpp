@@ -15,7 +15,7 @@ Constructor for tracker class.
 Tracker::Tracker() {
 
 	// non-static variables definition here
-
+	
 	// Set mapping for U0...V1
 	string tempMapping[4] = {"U0", "U1", "V0", "V1"};
 	for (int i_view = 0; i_view < viewN; i_view++) {
@@ -89,7 +89,7 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
 
 				//constraint_file << "Constraint 0.0" << endl;
 
-				labelt << "-; ";
+				labelt << "-; ";  // = no constraintss
 				//int labelt = i_module + 1; // Millepede accepts +ive labels only
 				//mat_nc++; // increment number of constraints
 				//constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
@@ -108,16 +108,17 @@ void Tracker::write_presigma_file(ofstream& presigma_file, ofstream& metric) {
 		metric << " | P: ";
 		//Fixing module 0 and the last module
 		for (int i_module = 0; i_module < moduleN; i_module++) {
-			if (i_module == 0 || i_module == moduleN - 1) {
-			//if (i_module == 1 || i_module == 2) {
-
-				float initialValue = 0.0; //modules at x=0
-				//float preSigma = -1.0;
-				float preSigma = -1.0;
-				int labelt = i_module + 1; // Millepede accepts +ive labels only
-				presigma_file << labelt << " " << fixed << setprecision(5) << initialValue << fixed << setprecision(5) << " " << preSigma << endl;
-				metric << labelt << " " << initialValue << " " << preSigma << "; ";
-			} // end of fixed modules
+			for (int i_par = 0; i_par < ngl; i_par++) {
+				if (i_module == 0 || i_module == moduleN - 1) {
+					//if (i_module == 1 || i_module == 2) {
+					float initialValue = 0.0; //modules at x0
+					float preSigma = -1.0;
+					int labelM = i_module + 1; // Millepede accepts +ive labels only
+					int labelP = i_par + 1; // Millepede accepts +ive labels only
+					presigma_file << labelM << labelP << " " << fixed << setprecision(5) << initialValue << fixed << setprecision(5) << " " << preSigma << endl;
+					metric << labelM << labelP << " " << initialValue << " " << preSigma << "; ";
+				} // end of fixed modules
+			} //end of global parameter loop
 		} // end of detectors loop
 	} // constrain file open
 } // end of writing cons file
@@ -445,7 +446,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 */
 MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, ofstream& plot_gen, ofstream& plot_hits_gen, ofstream& plot_hits_fit, bool debugBool) {
 
-	bool StrongDebugBool = false; // HACK XXX set by hand for now
+	bool StrongDebugBool = true; // HACK XXX set by hand for now
 	// Set up new container for track data, with hit count set to zero
 	MCData MC;
 	MC.hit_count = 0; //count only counts through detector
@@ -467,16 +468,16 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	bool generalLines = true;    // XXX quick hack
 	if (generalLines == true) {
 
-	float signXSlope;
-	if (Tracker::generate_uniform() >= 0.5) {
-		signXSlope = 1.0;
-	}
-	else {
-		signXSlope = -1.0;
-	}
-	//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
-	xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
-	x1 = xSlope * beamStop + xIntercept; // "xExit"
+		float signXSlope;
+		if (Tracker::generate_uniform() >= 0.5) {
+			signXSlope = 1.0;
+		}
+		else {
+			signXSlope = -1.0;
+		}
+		//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
+		xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
+		x1 = xSlope * beamStop + xIntercept; // "xExit"
 
 	} // end of generalLines == true HACK
 
@@ -548,11 +549,13 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
 						//Module number [for labelling] - after (if) passing the rejection.
 						// Millepede accepts only positive non-zero integers as labels
-						ostringstream oss; oss << i_module + 1;
-						istringstream iss(oss.str()); int label_int; iss >> label_int;
-						MC.i_hits.push_back(label_int); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
+						 // M0=10, M1=20 // x=1, z=2
+						int label_1 = (i_module + 1)*10 + 1; // x 
+						int label_2 = (i_module + 1)*10 + 2;  // z 
+						MC.label_1.push_back(label_1); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
+						MC.label_2.push_back(label_2); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
 
-						//Z-coordinate of hits 
+						//Z-coordinate of hits
 						MC.z_true.push_back(distanceMisZ[z_counter]);
 						MC.z_recon.push_back(distanceIdealZ[z_counter]);
 						MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
@@ -677,9 +680,15 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 // MC misalignment of detectors
 void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, ofstream& metric) {
 
-	//Now misaligning detectors in X
-	float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0)
+	//Now misaligning detectors in x
+	float misDispX(0), Xoffset(0); // effective misalignment
+	metric << "Mx: ";
 	for (int i_module = 0; i_module < moduleN; i_module++) {
+		misDispX = dispX[i_module];
+		Xoffset = offsetX[i_module];
+		metric <<  fixed << setprecision(0) << misDispX*1e4 << " (" << Xoffset*1e4  << "); ";
+		float dX = startingXDistanceStraw0 + (misDispX); // starting on the x-axis (z, 0+disp)
+		sdevX.push_back(misDispX);  // vector to store the actual of misalignment
 		mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
 		for (int i_view = 0; i_view < viewN; i_view++) {
 			mod_lyr_strawMisPosition[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
@@ -687,19 +696,19 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, 
 				mod_lyr_strawMisPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
 					mod_lyr_strawMisPosition[i_module][i_view][i_layer].push_back(dX);
-					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
+					dX =  dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
-				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
-				if (i_view == 1) { dX = startingXDistanceStraw0; } //set displacement in x for the next layer in the view
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement + (misDispX); } //set displacement in x for the next layer in the view
+				if (i_view == 1) { dX = startingXDistanceStraw0 + (misDispX); } //set displacement in x for the next layer in the view
 			}//end of Layers loop
 		}// end of View loop
+
 	}//Modules
 
 	//Now misaligning detectors in z
 	float misDispZ(0), Zoffset(0); // effective misalignment
 	float dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
-	metric << "M: ";
-
+	metric << "Mz: ";
 	int layer_n = 0;  // layer label
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		misDispZ = dispZ[i_module];
@@ -758,7 +767,7 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, 
 	overallMis = sum_of_elems / moduleN;
 	cout << "Manual Misalignment: " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		cout << "M" << noshowpos << i_module + 1 << " :: " << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
+		cout << "Mx" << noshowpos << i_module + 1 << " :: " << showpos << sdevX[i_module] << " cm. " << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
 		cout << "O" << noshowpos << i_module + 1 << " :: " << showpos << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
 		//pede_mis << (offsetZ[i_module]-sdevZ[i_module]) << " ";
 		pede_mis << sdevZ[i_module] << " ";
