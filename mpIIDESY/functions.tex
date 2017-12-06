@@ -80,7 +80,7 @@
 \thispagestyle{plain}
 \section{Introduction} \label{sec:intro}
 
-PEDE Inputs: 
+PEDE Inputs (x mis.): 
 
 
 \begin{equation}	
@@ -123,6 +123,42 @@ R(x,M) = Track(x) - Hit(x,M) = \hat{m}z+\hat{c} - x(M)
 \begin{equation}
 \frac{ \partial R}{\partial c} = 1	=DLC_1 = - DGL_1
 \end{equation}
+
+\clearpage
+
+PEDE Inputs for Circle Fit and Misalignment ($M$) along the beam direction ($z=z(M)=z+M$):
+
+
+\begin{equation}	
+\mathrm{Residual}= R =\mathrm{Point \ To \ Line \ DCA} - \mathrm{Drift \ Circle \ Radius} = DCA(z,x,m,c) - r = \frac{ |c+mz-x| }  { \sqrt{m^2+1} } -r
+\end{equation}
+
+
+\begin{equation}	
+\mathrm{Resolution} = \sigma = 150 \ \mu m = 0.015 \ \mathrm{cm}
+\end{equation}
+
+\begin{equation}	
+\mathrm{Label}= \mathrm{Module \ Number}
+\end{equation}
+
+\begin{equation}
+DLC_1 = \frac{\partial R}{\partial c} = \frac{ c+mz-x }  { \sqrt{m^2+1} \cdot |c+mz-x| }
+\end{equation}
+
+\begin{equation}
+DLC_2 = \frac{ \partial R}{\partial m} = \frac{ (m^2+1)\cdot z\cdot(c+mz-x) - m\cdot |c+mz-x|^2 }{ (m^2+1)^{3/2} \cdot |c+mz-x|  }
+\end{equation}
+
+\begin{equation}	
+DGL_1 = \frac{\partial R}{\partial z} = \frac{ m(c+mz-x) }  { \sqrt{m^2+1} \cdot |c+mz-x| },
+\end{equation}
+
+ where $DGL_1 \rightarrow \pm \frac{m}{\sqrt{m^2+1}} \rightarrow \pm m$
+(using TS expansion: $\pm \frac{m}{\sqrt{m^2+1}} \approx \pm m (1-\frac{1}{2}m^2) = \pm m - \frac{1}{2}m^3 \approx \pm m  $)
+
+\clearpage
+
 
 For general lines
 \begin{equation}	

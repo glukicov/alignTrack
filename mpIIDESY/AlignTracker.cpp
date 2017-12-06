@@ -1,15 +1,15 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017
-*   Modified: 9 October 2017
+*   Modified: 6 December 2017
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the
-PEDE routine, to align the tracking detector for the g-2 
+PEDE routine, to align the tracking detector for the g-2
 experiment.
-Methods and functions are contained in AlignTracker_methods.cpp (Tracker class)
+Methods and functions are contained in AlignTracker_methods.cpp (Tracker Singleton class)
 
-============================= Test Model v0.5 =======================================
-*Simple 2D case (1D alignment along x) with Circle Fit.
+============================= Test Model v0.6 =======================================
+*Simple 2D case (1D alignment along z) with Circle Fit.
 * No B-field, straight tracks, no MS, 100% efficiency.
 *(!) NATURAL UNITS (same as PEDE): cm, rad, GeV [natural units will be omitted]
 
@@ -23,16 +23,18 @@ Beam originates (in z direction) from z=0, straight tracks, no scattering, only 
 Resolution (i.e. tracker systematic) is implemented.
 Misalignment is implemented "manually" for each module in +/- x-direction [all layers in module are dependent (i.e. move together)]
 
-Features:
-Hit rejection (>0.5 straw radius) 
+Features [can be on or off - see AlignTracker.h]:
+Hit rejection (>0.5 straw radius)
 DCA rejection (>500 um) on the whole track
 p-value cut
-Truth LR 
+Truth LR
 Offsets [i.e. alignment "software" fix] as inputs
 
 Constrains:
-Pre-sigmas: -1 for "fixed" modules 
+Pre-sigmas: -1 for "fixed" modules
 Steering options: method inversion 5 0.001 [1 iteration, 0.01 dF convergence; inversion method provides uncertainties on all alignment parameters]
+
+Derivations and functions are in functions.tex.
 
                        			--Tracker Geometry [cm]--:
 Spacing (in x) between straws in layer is 0.606 [strawSpacing]
@@ -94,8 +96,8 @@ int main(int argc, char* argv[]) {
 	int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
 	string compareStr; //for debug vs. normal output as specified by the user
 	int tracksInput; // number of tracks to generate as specified by the user
-	float offset1; 
-	float offset2;
+	float offset1; // TODO implement as an input .txt file of offsets?
+	float offset2; // TODO implement as an input .txt file of offsets?
 	bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
 	bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py
 	//Set up counters for hits and records (tracks)
@@ -129,8 +131,8 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->enableCriticalErrorThrow();
 
 	// Check if correct number of arguments specified, exiting if not
-	if (argc > 5) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [n])");}
-	else if (argc < 5) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag. (e.g. e.g. debug [d], plot[p] or align/normal [n])");}
+	if (argc > 5) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. #tracks, offset1, offset2.  e.g. ./AlignTracker n 100000 0.0 0.0");}
+	else if (argc < 5) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag, #tracks, offset1, offset2. e.g. ./AlignTracker n 100000 0.0 0.0");}
 	else { // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
 		try {
 			compareStr = argv[1];
@@ -148,23 +150,23 @@ int main(int argc, char* argv[]) {
 		debugBool = true; // print out to debug files [and verbose cout output]
 		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******DEBUG MODE*****");
-		Tracker::instance()->setOffset1(offset1);
-		Tracker::instance()->setOffset2(offset2);
+		Tracker::instance()->setZOffset1(offset1);
+		Tracker::instance()->setZOffset2(offset2);
 	}
 	else if (compareStr == "p") {
 		plotBool = true;
 		debugBool = true; // print out to debug files and plotting files - use with low track #
 		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******PLOTTING MODE*****");
-		Tracker::instance()->setOffset1(offset1);
-		Tracker::instance()->setOffset2(offset2);
+		Tracker::instance()->setZOffset1(offset1);
+		Tracker::instance()->setZOffset2(offset2);
 	}
 	else if (compareStr == "n" || compareStr == "a") {
 		debugBool = false; // print out to debug files
 		plotBool = false;  // print out to plotting files
 		Tracker::instance()->setTrackNumber(tracksInput);
-		Tracker::instance()->setOffset1(offset1);
-		Tracker::instance()->setOffset2(offset2);
+		Tracker::instance()->setZOffset1(offset1);
+		Tracker::instance()->setZOffset2(offset2);
 	}
 	else {
 		Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [a/n])");
@@ -175,7 +177,7 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->write(Logger::NOTE, "");
 	msg0 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg0.str());
-	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.5) - Gleb Lukicov (UCL) - November 2017         " << Logger::def();
+	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.6) - Gleb Lukicov (UCL) - November 2017         " << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg01.str());
 	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg1.str());
@@ -258,9 +260,9 @@ int main(int argc, char* argv[]) {
 	TH1F* h_dca_unsmeared = new TH1F("h_dca_unsmeared", "Unsmeared DCA",  98,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
-	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  80,  -0.02, 0.02);
+	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  149,  -0.017, 0.017);
 	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  88,  -1.3, 1.3);
-	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 80,  -0.02, 0.02);
+	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 149,  -0.017, 0.017);
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  99,  -1.3, 1.3);
 	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
 	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
@@ -282,7 +284,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
-	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  149,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
+	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  149,  -0.017, 0.017); h_DGL1->SetDirectory(cd_PEDE);
 
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
@@ -355,36 +357,41 @@ int main(int argc, char* argv[]) {
 				h_title.str(""); h_title << "Pull M" << i_module << " " << UV ;
 				auto hl6 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -15.0, 15.0); hl6->SetDirectory(cd_UV);
 
+				h_name.str(""); h_name << "h_DGL1_M" << i_module << UV;
+				h_title.str(""); h_title << "DGL1 in M" << i_module << UV << " S3";
+				auto hl8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149,  -0.017, 0.017); hl8->SetDirectory(cd_PEDE);
+
 				// Parasitic booking with specific binning
-				for (int i_LC = 0; i_LC < 2; i_LC++) { //loop over derivatives
-					for (int i_LR = 0; i_LR < 2; i_LR++) {
-						for (int i_RS = 0; i_RS < 2; i_RS++) {
-							h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
-							h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
-							if (i_LC == 0) {
-								if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);
-								}
-								if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);
-								}
-							} // lc1
-							if (i_LC == 1) {
-								if (nameLR[i_LR] == 'L') {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, -z_jump_bin - 0.01, -z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
-								}
-								if (nameLR[i_LR] == 'R') {
-									auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, z_jump_bin - 0.01, z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
-								}
-							} // lc2
-						} // Res sign P/N
-					} // LR
-				} // lc1-2
-				if (i_layer == 0) { z_jump_bin += 0.515; }
+				// for (int i_LC = 0; i_LC < 2; i_LC++) { //loop over derivatives
+				// 	for (int i_LR = 0; i_LR < 2; i_LR++) {
+				// 		for (int i_RS = 0; i_RS < 2; i_RS++) {
+				// 			h_name.str(""); h_name << "h_" << nameLC[i_LC] << "_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+				// 			h_title.str(""); h_title << nameLC[i_LC] << "_M" << i_module << UV << "_S3_" << nameLR[i_LR] << "_" << nameResSign[i_RS];
+				// 			if (i_LC == 0) {
+				// 				if ( (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'L') || (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'L')  ) {
+				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, -1.00001, -0.99995); hl7->SetDirectory(cd_PEDE);
+				// 				}
+				// 				if ( (nameResSign[i_RS] == 'N' && nameLR[i_LR] == 'R') ||  (nameResSign[i_RS] == 'P' && nameLR[i_LR] == 'R') ) {
+				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  249, 0.99995, 1.00001); hl7->SetDirectory(cd_PEDE);
+				// 				}
+				// 			} // lc1
+				// 			if (i_LC == 1) {
+				// 				if (nameLR[i_LR] == 'L') {
+				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, -z_jump_bin - 0.01, -z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
+				// 				}
+				// 				if (nameLR[i_LR] == 'R') {
+				// 					auto hl7 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  89, z_jump_bin - 0.01, z_jump_bin + 0.01); hl7->SetDirectory(cd_PEDE);
+				// 				}
+				// 			} // lc2
+				// 		} // Res sign P/N
+				// 	} // LR
+				// } // lc1-2
+
+				//		if (i_layer == 0) { z_jump_bin += 0.515; }
 			} // layers
-			if (i_view == 0) { z_jump_bin += 2.020; }
+			//	if (i_view == 0) { z_jump_bin += 2.020; }
 		} // views
-		z_jump_bin += 13.735;
+		//z_jump_bin += 13.735;
 	} // modules
 
 	//Modules
@@ -420,8 +427,6 @@ int main(int argc, char* argv[]) {
 			h_title.str(""); h_title << "DLC1_M" << i_module  << " " << nameLR[i_LR];
 			if (i_LR == 0) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, -1.00001, -0.99995); hm8->SetDirectory(cd_PEDE);}
 			if (i_LR == 1) {auto hm8 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, 0.99995, 1.00001); hm8->SetDirectory(cd_PEDE);}
-
-
 		}
 	}
 
@@ -508,7 +513,7 @@ int main(int argc, char* argv[]) {
 				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ;
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); // =DLC1
+				float dgl1 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );
 				float dergl[nagl] = {dgl1};
 				//Labels
 				int l1 = label_mp2;
@@ -544,7 +549,7 @@ int main(int argc, char* argv[]) {
 				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1);
 
 				//Track-based hit parameters
-				h_res_x_z->Fill(generated_MC.z_hits[hitCount], generated_MC.residuals[hitCount]);
+				h_res_x_z->Fill(generated_MC.z_recon[hitCount], generated_MC.residuals[hitCount]);
 				h_track_true->Fill(generated_MC.x_track_true[hitCount]);
 				h_track_recon->Fill(generated_MC.x_track_recon[hitCount]);
 				h_track_TR_diff->Fill(generated_MC.x_track_recon[hitCount] - generated_MC.x_track_true[hitCount]);
@@ -607,19 +612,25 @@ int main(int argc, char* argv[]) {
 				TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
 				h15->Fill(dlc1);
 
-				// Now fill DLC1, DLC2 plots for U0-V1 for each module but only for straw 3 (4th straw from the "top")
-				if (strawID == 3) {
-					if (rMeas_mp2 > 0) {tmpNameResSign = 'P';}// DCA > driftRad
-					else {tmpNameResSign = 'N';} // DCA < driftRad
+				if (strawID == 2) {
+					h_name.str(""); h_name << "PEDE/h_DGL1_M" << moduleN << UV;
+					TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
+					h16->Fill(dgl1);
+				}
 
-					//loop over booked histos and fill
-					for (int i_LC = 0; i_LC < 2; i_LC++) {
-						h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << "_" << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
-						TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
-						if (i_LC == 0) {h16->Fill(dlc1);}
-						if (i_LC == 1) {h16->Fill(dlc2);}
-					}
-				} // strawID=3
+				// // Now fill DLC1, DLC2 plots for U0-V1 for each module but only for straw 3 (4th straw from the "top")
+				// if (strawID == 3) {
+				// 	if (rMeas_mp2 > 0) {tmpNameResSign = 'P';}// DCA > driftRad
+				// 	else {tmpNameResSign = 'N';} // DCA < driftRad
+
+				// 	//loop over booked histos and fill
+				// 	for (int i_LC = 0; i_LC < 2; i_LC++) {
+				// 		h_name.str(""); h_name << "PEDE/h_" << nameLC[i_LC] << "_M" << moduleN << "_" << UV << "_S3_" << generated_MC.LR[hitCount] << "_" << tmpNameResSign;
+				// 		TH1F* h101 = (TH1F*)file->Get( h_name.str().c_str() );
+				// 		if (i_LC == 0) {h101->Fill(dlc1);}
+				// 		if (i_LC == 1) {h101->Fill(dlc2);}
+				// 	}
+				// } // strawID=3
 
 				hitsN++; //count hits
 			} // end of hits loop
@@ -647,7 +658,7 @@ int main(int argc, char* argv[]) {
 			h_recon_intercept->Fill(generated_MC.intercept_recon);
 			h_pval->Fill(generated_MC.p_value);
 			h_chi2_circle->Fill(generated_MC.chi2_circle);
-			h_chi2_circle_ndf->Fill(generated_MC.chi2_circle/(generated_MC.hit_count-2));
+			h_chi2_circle_ndf->Fill(generated_MC.chi2_circle / (generated_MC.hit_count - 2));
 
 			// XXX additional measurements from MS IF (imodel == 2) THEN
 			//IF (imodel >= 3) THEN
@@ -675,26 +686,26 @@ int main(int argc, char* argv[]) {
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << "ROOT fitting parameters and output:" << endl;
 
-	helper << fixed << setprecision(2);
-	float LRSkewness = 0.0;
-	// PEDE Plots calculations for U0 only
-	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-		for (int i_view = 0; i_view < 1; i_view++) {
-			for (int i_layer = 0; i_layer < 1; i_layer++) {
-				string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
-				for (int i_LR = 0; i_LR < 2; i_LR++) {
-					for (int i_RS = 0; i_RS < 2; i_RS++) {
-						h_name.str(""); h_name << "PEDE/h_DLC2_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
-						TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
-						LRSkewness += hp1->GetSkewness();
-					}
-					//helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness / 2.0 << endl;
-					LRSkewness = 0.0;
-				}
-			}
-		}
-	}
-	helper << fixed << setprecision(setPrecision);
+	// helper << fixed << setprecision(2);
+	// float LRSkewness = 0.0;
+	// // PEDE Plots calculations for U0 only
+	// for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
+	// 	for (int i_view = 0; i_view < 1; i_view++) {
+	// 		for (int i_layer = 0; i_layer < 1; i_layer++) {
+	// 			string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
+	// 			for (int i_LR = 0; i_LR < 2; i_LR++) {
+	// 				for (int i_RS = 0; i_RS < 2; i_RS++) {
+	// 					h_name.str(""); h_name << "PEDE/h_DLC2_M" << i_module << "_" << UV << "_S3_" << valueLR[i_LR] << "_" << nameResSign[i_RS];
+	// 					TH1F* hp1 = (TH1F*)file->Get( h_name.str().c_str() );
+	// 					LRSkewness += hp1->GetSkewness();
+	// 				}
+	// 				//helper << "M" << i_module << UV << "_S3_" << nameLR[i_LR] << " :: MeanSkewness= " << LRSkewness / 2.0 << endl;
+	// 				LRSkewness = 0.0;
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// helper << fixed << setprecision(setPrecision);
 
 	// Store alignment parameters from measurements
 	vector<float> sigma_recon_actual;
@@ -715,12 +726,12 @@ int main(int argc, char* argv[]) {
 				TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
 				sigma_recon_actual.push_back(hRes_actual->GetStdDev() * 10000); // um ->cm
 				sigmaError_recon_actual.push_back(hRes_actual->GetStdDevError() * 10000); // um ->cm
-				h_SD_z_res_Recon->Fill(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev() * 10000); // um ->cm
-				h_SD_z_res_Recon->SetBinError(Tracker::instance()->getZDistance(z_counter), hRes_actual->GetStdDev() * 10000, hRes_actual->GetStdDevError() * 10000); // um ->cm
+				h_SD_z_res_Recon->Fill(Tracker::instance()->getIdealZDistance(z_counter), hRes_actual->GetStdDev() * 10000); // um ->cm
+				h_SD_z_res_Recon->SetBinError(Tracker::instance()->getIdealZDistance(z_counter), hRes_actual->GetStdDev() * 10000, hRes_actual->GetStdDevError() * 10000); // um ->cm
 				h_SD_z_res_Recon->SetMarkerStyle(33); h_SD_z_res_Recon->SetMarkerColor(kRed);
 				Res_mean.push_back(hRes_actual->GetMean());
 				Res_mean_SD.push_back(hRes_actual->GetStdDev());
-				h_SD_z_res_Est->Fill(Tracker::instance()->getZDistance(z_counter) , Tracker::instance()->get_sigma_recon_estimated(i_module, i_view, i_layer) * 10000); // um ->cm
+				h_SD_z_res_Est->Fill(Tracker::instance()->getIdealZDistance(z_counter) , Tracker::instance()->get_sigma_recon_estimated(i_module, i_view, i_layer) * 10000); // um ->cm
 				h_SD_z_res_Est->SetMarkerStyle(33);
 				h_SD_z_res_Est->SetMarkerColor(kBlue);
 				// Pulls
@@ -728,8 +739,8 @@ int main(int argc, char* argv[]) {
 				TH1F* h_pull = (TH1F*)file->Get( h_name.str().c_str() );
 				pull_actual.push_back(h_pull->GetMean());
 				pull_actual_SD.push_back(h_pull->GetStdDev());
-				h_Pulls_z->Fill(Tracker::instance()->getZDistance(z_counter), h_pull->GetStdDev());
-				h_Pulls_z->SetBinError(Tracker::instance()->getZDistance(z_counter), h_pull->GetStdDev(), h_pull->GetStdDevError());
+				h_Pulls_z->Fill(Tracker::instance()->getIdealZDistance(z_counter), h_pull->GetStdDev());
+				h_Pulls_z->SetBinError(Tracker::instance()->getIdealZDistance(z_counter), h_pull->GetStdDev(), h_pull->GetStdDevError());
 				h_Pulls_z->SetMarkerStyle(33); h_Pulls_z->SetMarkerColor(kRed);
 				z_counter++;
 			}// layer
@@ -746,7 +757,7 @@ int main(int argc, char* argv[]) {
 	Chi2_recon_actual = h_chi2_recon->GetMean();
 
 	//Residuals SD per layer
-	vector<float> zDistance = Tracker::instance()->getZDistanceVector();
+	vector<float> zDistance = Tracker::instance()->getIdealZDistanceVector();
 	vector<float> sigma_recon_estimated = Tracker::instance()->get_sigma_recon_estimatedVector();
 	TCanvas *cRes = new TCanvas("cRes", "cRes", 700, 500);
 	const Int_t n = Tracker::instance()->getLayerTotalN();
@@ -952,8 +963,8 @@ int main(int argc, char* argv[]) {
 	file->Close();
 	delete file;
 
-	metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um " 
-	       << "| DCA Cut of " << Tracker::instance()->getTrackCut() *1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
+	metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um "
+	       << "| DCA Cut of " << Tracker::instance()->getTrackCut() * 1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
 	       << "| Hit rej.: " << boolYN[Tracker::instance()->getHitCutStatus()]
 	       << "| Truth LR : " << boolYN[Tracker::instance()->getLRStatus()]
 	       << "| p-value cut (<): " << Tracker::instance()->getPValCut() ;

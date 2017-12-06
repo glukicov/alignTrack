@@ -27,10 +27,11 @@ to build the pede executable
 
 ### Random (Integer) Number Generation ###
 To generate random numbers:
-* `./getRandoms.sh x`
-where x is the number of tracks the MC will be run for. This bash script calls:
- 1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s 123456789 -n x*4`
- 2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s 987654321 -n x*16`
+* `./getRandoms.sh x y`
+where x is the number of tracks the MC will be run for, and y is a seed. This bash script calls:
+ 1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s y -n x*4`
+ 2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s y -n x*16`
+
  to produce the correct number of random numbers for the requested number of tracks. 
  
 ### Running C++ MC AlignTracker: ###

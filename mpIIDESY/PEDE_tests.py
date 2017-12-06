@@ -8,7 +8,7 @@ import datetime
 import time
 import subprocess
 
-tracksCut=(1000, 3000, 8000, 12000, 19000, 29000, 40000, 50000, 65000, 70000, 80000, 90000, 100800)
+tracksCut=(1000, 3000, 8000, 12000, 19000, 29000, 40000, 50000, 65000, 70000, 80000, 90000, 100000)
 #tracksCut=(1000, 3000, 8000, 12000)
 
 subprocess.call(["clear"])
@@ -27,12 +27,12 @@ with open("TimeConstants.txt") as f:
 		intercept = float(number_str[1])
 
 for i in range(0, len(tracksCut)):
-	subprocess.call(["./AlignTracker", "n" , str(tracksCut[i]) ])
-	time.sleep(intercept+slope*tracksCut[i]+0.5)  # now we delay for the correct amount of time  
+	subprocess.call(["./AlignTracker", "n" , str(tracksCut[i]), "0.0", "0.0" ])
+	
 	subprocess.call(["./pede", "Tracker_str.txt" ])
-	time.sleep(2.0)
+	
 	subprocess.call(["./ConcatenatePEDE.py"])
-	time.sleep(0.1)
+	
 
 subprocess.call(["./TrackerLaunch.py"])
 print "PEDE Tests Complete. "
