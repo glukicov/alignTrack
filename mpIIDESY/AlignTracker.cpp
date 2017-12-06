@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017
-*   Modified: 5 December 2017
+*   Modified: 6 December 2017
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the
 PEDE routine, to align the tracking detector for the g-2
