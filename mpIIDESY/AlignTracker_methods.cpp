@@ -15,7 +15,7 @@ Constructor for tracker class.
 Tracker::Tracker() {
 
 	// non-static variables definition here
-	
+
 	// Set mapping for U0...V1
 	string tempMapping[4] = {"U0", "U1", "V0", "V1"};
 	for (int i_view = 0; i_view < viewN; i_view++) {
@@ -89,7 +89,7 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
 
 				//constraint_file << "Constraint 0.0" << endl;
 
-				labelt << "-; ";  // = no constraintss
+				labelt << "-; "; // = no constraintss
 				//int labelt = i_module + 1; // Millepede accepts +ive labels only
 				//mat_nc++; // increment number of constraints
 				//constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
@@ -446,7 +446,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 */
 MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& debug_off, ofstream& debug_mc, ofstream& plot_fit, ofstream& plot_gen, ofstream& plot_hits_gen, ofstream& plot_hits_fit, bool debugBool) {
 
-	bool StrongDebugBool = true; // HACK XXX set by hand for now
+	bool StrongDebugBool = false; // HACK XXX set by hand for now
 	// Set up new container for track data, with hit count set to zero
 	MCData MC;
 	MC.hit_count = 0; //count only counts through detector
@@ -468,16 +468,16 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	bool generalLines = true;    // XXX quick hack
 	if (generalLines == true) {
 
-		float signXSlope;
-		if (Tracker::generate_uniform() >= 0.5) {
-			signXSlope = 1.0;
-		}
-		else {
-			signXSlope = -1.0;
-		}
-		//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
-		xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
-		x1 = xSlope * beamStop + xIntercept; // "xExit"
+	float signXSlope;
+	if (Tracker::generate_uniform() >= 0.5) {
+		signXSlope = 1.0;
+	}
+	else {
+		signXSlope = -1.0;
+	}
+	//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
+	xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
+	x1 = xSlope * beamStop + xIntercept; // "xExit"
 
 	} // end of generalLines == true HACK
 
@@ -549,13 +549,14 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
 						//Module number [for labelling] - after (if) passing the rejection.
 						// Millepede accepts only positive non-zero integers as labels
+						MC.i_hits.push_back(i_module + 1); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
 						 // M0=10, M1=20 // x=1, z=2
 						int label_1 = (i_module + 1)*10 + 1; // x 
 						int label_2 = (i_module + 1)*10 + 2;  // z 
-						MC.label_1.push_back(label_1); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
-						MC.label_2.push_back(label_2); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
+						MC.label_1.push_back(label_1); 
+						MC.label_2.push_back(label_2); 
 
-						//Z-coordinate of hits
+						//Z-coordinate of hits 
 						MC.z_true.push_back(distanceMisZ[z_counter]);
 						MC.z_recon.push_back(distanceIdealZ[z_counter]);
 						MC.hit_sigmas.push_back(Tracker::instance()->getResolution());

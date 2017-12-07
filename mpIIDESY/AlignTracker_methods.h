@@ -29,8 +29,9 @@ struct MCData {
 	std::vector<float> z_recon; /** Z-positions of recon hits in detector */ //distances
 	std::vector<float> residuals; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
-	std::vector<int> label_1; /* vector of modules that were actually hit [after passing rejection test] */
-	std::vector<int> label_2; /* vector of modules that were actually hit [after passing rejection test] */
+	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
+	std::vector<int> label_1;
+	std::vector<int> label_2;
 	std::vector<int> hit_list;  // same of layers (absolute)
 	std::vector<int> hit_bool;  // same of layers (absolute) +1 = hit 0=no hit
 	std::vector<string> absolute_straw_hit; // for plotting
@@ -102,7 +103,7 @@ private:
 	static Tracker* s_instance; // Pointer to instance of class
 
 	int trackNumber; // Number of tracks (i.e. records) to be simulated passing through detector - passed as command line argument
-	
+
 	static constexpr float twoR = 2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
 	// **** COUNTERS ****  //
@@ -116,8 +117,8 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.2, 0.0, 0.0, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] = {0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] = {0.00, 0.03, -0.01, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] = {0.0, 0.02, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 	float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 
@@ -128,7 +129,7 @@ private:
 	static const int ngl = 2; // dR/dx dR/dz 
 
 	float pValCut = 0.00; // from 0->1
-	bool trackCutBool = false; // if true, tracks will be rejected if DCA > trackCut
+	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	bool useTruthLR = true;
 
@@ -197,7 +198,7 @@ private:
 
 	//Matrix memory space
 	int mat_n = moduleN; // # number of global parameters
-	int mat_nc = 0; // # number of constraints 
+	int mat_nc = 0; // # number of constraints
 
 	// Class constructor and destructor
 	Tracker();
@@ -229,7 +230,7 @@ public:
 	void misalign(std::ofstream&, std::ofstream&, bool, std::ofstream& metric); // MC misalignment of detectors
 
 	void write_constraint_file(std::ofstream&, std::ofstream&, bool, std::ofstream& metric);  // Writes a constraint file for use with PEDE.
-	
+
 	void write_presigma_file(std::ofstream&, std::ofstream& metric);  // Writes a pre-sigma parameter file for use with PEDE.
 
 	void write_steering_file(std::ofstream&, std::ofstream& metric); // Steering file for PEDE.
@@ -427,14 +428,6 @@ public:
 	float getTrackCut() {
 		return trackCut;
 	}
-
-	// static const int getNLC(){
-	// 	return nlc;
-	// }
-
-	// static const int getNGL(){
-	// 	return ngl;
-	// }
 
 };
 
