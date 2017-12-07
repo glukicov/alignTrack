@@ -5,7 +5,7 @@
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the
 PEDE routine, to align the tracking detector for the g-2
-experiment.
+experiment. 
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker Singleton class)
 
 TODO:
