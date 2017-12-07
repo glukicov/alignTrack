@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017
-*   Modified: 6 December 2017
+*   Modified: 7 December 2017
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the
 PEDE routine, to align the tracking detector for the g-2
@@ -24,7 +24,7 @@ ROOT Plotting macro rootlogon.C [loaded automatically e.g.: rootbrowse Tracker.r
 Other?
 TODO Describe all code -> Add to Github
 
-============================= Test Model v0.7 =======================================
+============================= Test Model v0.8 =======================================
 *Simple 2D case (2D alignment along x and z) with Circle Fit.
 * No B-field, straight tracks, no MS, 100% efficiency.
 *(!) NATURAL UNITS (PEDE): cm, rad, GeV [natural units will be omitted]
