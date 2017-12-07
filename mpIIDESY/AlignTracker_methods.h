@@ -116,8 +116,8 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.00, 0.1, 0.0, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] = {0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] = {0.2, 0.0, 0.0, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] = {0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 	float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 
@@ -128,7 +128,7 @@ private:
 	static const int ngl = 2; // dR/dx dR/dz 
 
 	float pValCut = 0.00; // from 0->1
-	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
+	bool trackCutBool = false; // if true, tracks will be rejected if DCA > trackCut
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	bool useTruthLR = true;
 
@@ -250,19 +250,19 @@ public:
 	}
 
 	void setXOffset1(float off1) {
-		offsetX[0] = off1;
+		offsetX[1] = off1;
 	}
 
 	void setXOffset2(float off2) {
-		offsetX[3] = off2;
+		offsetX[2] = off2;
 	}
 
 	void setZOffset1(float off1) {
-		offsetZ[0] = off1;
+		offsetZ[1] = off1;
 	}
 
 	void setZOffset2(float off2) {
-		offsetZ[3] = off2;
+		offsetZ[2] = off2;
 	}
 
 	void incRejectedHitsDCA() {

@@ -114,8 +114,7 @@ int main(int argc, char* argv[]) {
 	int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
 	string compareStr; //for debug vs. normal output as specified by the user
 	int tracksInput; // number of tracks to generate as specified by the user
-	float offset1; // TODO implement as an input .txt file of offsets?
-	float offset2; // TODO implement as an input .txt file of offsets?
+	float offset1X(0), offset2X(0), offset1Z(0), offset2Z(0); // TODO implement as an input .txt file of offsets?
 	bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
 	bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py
 	//Set up counters for hits and records (tracks)
@@ -149,14 +148,16 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->enableCriticalErrorThrow();
 
 	// Check if correct number of arguments specified, exiting if not
-	if (argc > 5) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. #tracks, offset1, offset2.  e.g. ./AlignTracker n 100000 0.0 0.0");}
-	else if (argc < 5) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag, #tracks, offset1, offset2. e.g. ./AlignTracker n 100000 0.0 0.0");}
+	if (argc > 7) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. #tracks, offset1, offset2.  e.g. ./AlignTracker n 100000 0.0 0.0");}
+	else if (argc < 7) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag, #tracks, offset1, offset2. e.g. ./AlignTracker n 100000 0.0 0.0");}
 	else { // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
 		try {
 			compareStr = argv[1];
 			tracksInput = stoi(argv[2]);
-			offset1 = stof(argv[3]);
-			offset2 = stof(argv[4]);
+			offset1X = stof(argv[3]);
+			offset2X = stof(argv[4]);
+			offset1Z = stof(argv[5]);
+			offset2Z = stof(argv[6]);
 		}
 		catch (ios_base::failure& e) {
 			Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
@@ -168,23 +169,29 @@ int main(int argc, char* argv[]) {
 		debugBool = true; // print out to debug files [and verbose cout output]
 		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******DEBUG MODE*****");
-		Tracker::instance()->setZOffset1(offset1);
-		Tracker::instance()->setZOffset2(offset2);
+		Tracker::instance()->setXOffset1(offset1X);
+		Tracker::instance()->setXOffset2(offset2X);
+		Tracker::instance()->setZOffset1(offset1Z);
+		Tracker::instance()->setZOffset2(offset2Z);
 	}
 	else if (compareStr == "p") {
 		plotBool = true;
 		debugBool = true; // print out to debug files and plotting files - use with low track #
 		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******PLOTTING MODE*****");
-		Tracker::instance()->setZOffset1(offset1);
-		Tracker::instance()->setZOffset2(offset2);
+		Tracker::instance()->setXOffset1(offset1X);
+		Tracker::instance()->setXOffset2(offset2X);
+		Tracker::instance()->setZOffset1(offset1Z);
+		Tracker::instance()->setZOffset2(offset2Z);
 	}
 	else if (compareStr == "n" || compareStr == "a") {
 		debugBool = false; // print out to debug files
 		plotBool = false;  // print out to plotting files
 		Tracker::instance()->setTrackNumber(tracksInput);
-		Tracker::instance()->setZOffset1(offset1);
-		Tracker::instance()->setZOffset2(offset2);
+		Tracker::instance()->setXOffset1(offset1X);
+		Tracker::instance()->setXOffset2(offset2X);
+		Tracker::instance()->setZOffset1(offset1Z);
+		Tracker::instance()->setZOffset2(offset2Z);
 	}
 	else {
 		Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [a/n])");
@@ -670,7 +677,7 @@ int main(int argc, char* argv[]) {
 	helper << endl;
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << "ROOT fitting parameters and output:" << endl;
-
+	#if 0
 	// Store alignment parameters from measurements
 	vector<float> sigma_recon_actual;
 	vector<float> sigmaError_recon_actual;
@@ -868,6 +875,7 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->write(Logger::WARNING, out4.str());
 	Logger::Instance()->write(Logger::WARNING, out5.str());
 	helper << " " << endl;
+	#endif
 	Logger::Instance()->setUseColor(false); // will be re-enabled below
 	stringstream msg2, msg3, msg4, msgA, msgB;
 	msgA <<  Logger::blue() << "Ready for PEDE algorithm: ./pede Tracker_str.txt" << Logger::def();

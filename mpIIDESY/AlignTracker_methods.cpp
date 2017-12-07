@@ -642,7 +642,7 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 			for (int i_layer = 0; i_layer < layerN; i_layer++) {
 				mod_lyr_strawIdealPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
-					mod_lyr_strawIdealPosition[i_module][i_view][i_layer].push_back(dX);
+					mod_lyr_strawIdealPosition[i_module][i_view][i_layer].push_back(dX+offsetX[i_module]);
 					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
 				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
@@ -767,8 +767,8 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, 
 	overallMis = sum_of_elems / moduleN;
 	cout << "Manual Misalignment: " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		cout << "Mx" << noshowpos << i_module + 1 << " :: " << showpos << sdevX[i_module] << " cm. " << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
-		cout << "O" << noshowpos << i_module + 1 << " :: " << showpos << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
+		cout << "M" << noshowpos << i_module + 1 << "x :: " << showpos << sdevX[i_module] << " cm. M" << noshowpos << i_module + 1 << "z :: "  << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
+		cout << "O" << noshowpos << i_module + 1 << "x :: " << showpos << offsetX[i_module] << "cm O" << noshowpos << i_module + 1 << "z :: " << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
 		//pede_mis << (offsetZ[i_module]-sdevZ[i_module]) << " ";
 		pede_mis << sdevZ[i_module] << " ";
 		float relMisTmp = sdevZ[i_module] - overallMis;
