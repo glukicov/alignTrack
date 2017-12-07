@@ -465,7 +465,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	float x1 = x0; // for parallel lines only
 	float xSlope = 0.0; // for parallel lines only
 
-	bool generalLines = true;    // XXX quick hack
+	bool generalLines = false;    // XXX quick hack
 	if (generalLines == true) {
 
 	float signXSlope;
@@ -766,12 +766,14 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, 
 		sum_of_elems += *it;
 	}
 	overallMis = sum_of_elems / moduleN;
-	cout << "Manual Misalignment: " << endl;
+	cout << "Misalignment(M) and Offsets(O): " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << "M" << noshowpos << i_module + 1 << "x :: " << showpos << sdevX[i_module] << " cm. M" << noshowpos << i_module + 1 << "z :: "  << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
 		cout << "O" << noshowpos << i_module + 1 << "x :: " << showpos << offsetX[i_module] << "cm O" << noshowpos << i_module + 1 << "z :: " << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
 		//pede_mis << (offsetZ[i_module]-sdevZ[i_module]) << " ";
-		pede_mis << sdevZ[i_module] << " ";
+		if (i_module==1 || i_module==2){ // TODO move to pre-sigma function 
+			pede_mis << sdevX[i_module] << " " << sdevZ[i_module] << " ";
+		}
 		float relMisTmp = sdevZ[i_module] - overallMis;
 		//now push these misalignment parameters for all layers in the module [for use later]
 		for (int i_view = 0; i_view < viewN; i_view++) {

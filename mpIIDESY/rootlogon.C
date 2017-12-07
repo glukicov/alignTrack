@@ -1,6 +1,6 @@
 //This is the file rootlogon.C
 {
-  printf("\n ~/rootlogon.C loaded with !!!4 sig.fig.!!! for custom Opt Fit and Stat!\n");
+  printf("\n ~/rootlogon.C loaded with !!4 sig.fig.!! for custom Opt Fit and Stat!\n");
 
   TStyle *myStyle  = new TStyle("MyStyle", "My Root Styles");
 
@@ -38,8 +38,8 @@
 
   
   // Histo Filling (visual)
-  myStyle->SetHistFillColor(kRed);
-  myStyle->SetHistFillStyle(3012);      
+  myStyle->SetHistFillColor(kGreen);
+  myStyle->SetHistFillStyle(3013);      
  
   // Stats display options 
   myStyle->SetOptStat("ourRmMe"); //over/under -flows, Rms and Means with errors, number of entries

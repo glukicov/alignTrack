@@ -15,11 +15,13 @@ with open("Tracker_p_constants.txt") as f:
         number_str = line.split()
         moduleN=int(number_str[0])
         trackN=int(number_str[4])
+        #parN=int(number_str[9])
         
-
+parN = 2
 print "Parameters from Simulation:"
 print "moduleN= ",moduleN
 print "trackN= ",trackN
+print "parN= ", parN
 
 label = []
 mis = []
@@ -39,7 +41,7 @@ with open("millepede.res") as f:
             error.append(float(number_str[4])) # otherwise, take the error estimate by PEDE
 
 f = open('PEDE_Mis.txt', 'a')
-for i in range (0, moduleN):
+for i in range (0, moduleN*parN):
     f.write(str(label[i]))
     f.write(" ")
     f.write(str(mis[i]))

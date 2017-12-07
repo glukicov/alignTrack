@@ -19,6 +19,8 @@ Grid Submission Scripts:
 
 Function Derivations in functions.tex
 
+ROOT Plotting macro rootlogon.C [loaded automatically e.g.: rootbrowse Tracker.root]
+
 Other?
 TODO Describe all code -> Add to Github
 
@@ -129,6 +131,7 @@ int main(int argc, char* argv[]) {
 	int negDCA = 0; // counting negatively smeared DCAs
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
 	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
+	gROOT->Macro("rootlogon.C");
 	// Simple LR mapping for ROOT plots
 	char nameLR[] = {'L', 'R'};
 	char nameResSign[] = {'P', 'N'};
@@ -287,7 +290,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_track_true = new TH1F("h_track_true", "All track points: Truth",  49,  -3, 3);
 	TH1F* h_track_recon = new TH1F("h_track_recon", "All track points: Recon",  49,  -3, 3);
 	TH1F* h_track_TR_diff = new TH1F("h_track_TR_diff", "#Delta (Recon-True) track points",  149, -0.03, 0.03);
-	TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE", 8 , 0, 8);
+	TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE",  72, 10, 46);
 	TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals: Truth", 500, -0.06, 0.06);
 	TH1F* h_chi2_true = new TH1F("h_chi2_true", "#Chi^{2}: Truth", 40, -1, 50);
 	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals: Recon", 199, -0.2, 0.2);
@@ -301,7 +304,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
-	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  14989,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
+	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  149,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
 	TH1F* h_DGL2 = new TH1F("h_DGL2", "DGL2: All Modules",  149,  -0.017, 0.017); h_DGL2->SetDirectory(cd_PEDE);
 
 	// "special" histos
@@ -541,7 +544,7 @@ int main(int argc, char* argv[]) {
 				h_sigma -> Fill(sigma_mp2); // errors
 				h_dca->Fill(generated_MC.dca[hitCount]); // DCA
 				h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]);
-				h_labels->Fill(l1);
+				h_labels->Fill(l1); h_labels->Fill(l2);
 				h_id_dca ->Fill(strawID);
 				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
 				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
@@ -908,11 +911,11 @@ int main(int argc, char* argv[]) {
 	file->Write();
 	file->Close();
 
-	metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um "
-	<< "| DCA Cut of " << Tracker::instance()->getTrackCut() * 1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
-	<< "| Hit rej.: " << boolYN[Tracker::instance()->getHitCutStatus()]
-	<< "| Truth LR : " << boolYN[Tracker::instance()->getLRStatus()]
-	<< "| p-value cut (<): " << Tracker::instance()->getPValCut() ;
+	// metric << "| R: " << Tracker::instance()->getResolution() * 1e4 << " um "
+	// << "| DCA Cut of " << Tracker::instance()->getTrackCut() * 1e4 << " um : " << boolYN[Tracker::instance()->getTrackCutBool()]
+	// << "| Hit rej.: " << boolYN[Tracker::instance()->getHitCutStatus()]
+	// << "| Truth LR : " << boolYN[Tracker::instance()->getLRStatus()]
+	// << "| p-value cut (<): " << Tracker::instance()->getPValCut() ;
 
 	helper << endl;
 	helper << "Programme log written to: Tracker_log.txt" << endl;
