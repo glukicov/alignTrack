@@ -117,16 +117,20 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] = {0.0, 0.03, -0.03, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] = {0.0, 0.005, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
-	float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	//float dispX[8] = {0.0, 0.03, -0.03, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	//float dispZ[8] = {0.0, 0.005, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	//float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	//float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	//float dispTheta[8] = {0.0, 0.611, -0.610, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float offsetTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //radians
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
 
 	static const int nlc = 2; // dR/dc dR/dm
-	static const int ngl = 2; // dR/dx dR/dz 
+	// static const int ngl = 2; // dR/dx dR/dz 
+	static const int ngl = 1; // dR/d𝛉 
 
 	float pValCut = 0.00; // from 0->1
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
@@ -250,20 +254,28 @@ public:
 		trackNumber = tracks;
 	}
 
-	void setXOffset1(float off1) {
-		offsetX[1] = off1;
+	// void setXOffset1(float off1) {
+	// 	offsetX[1] = off1;
+	// }
+
+	// void setXOffset2(float off2) {
+	// 	offsetX[2] = off2;
+	// }
+
+	// void setZOffset1(float off1) {
+	// 	offsetZ[1] = off1;
+	// }
+
+	// void setZOffset2(float off2) {
+	// 	offsetZ[2] = off2;
+	// }
+
+	void setThetaOffset1(float off1) {
+		offsetTheta[1] = off1;
 	}
 
-	void setXOffset2(float off2) {
-		offsetX[2] = off2;
-	}
-
-	void setZOffset1(float off1) {
-		offsetZ[1] = off1;
-	}
-
-	void setZOffset2(float off2) {
-		offsetZ[2] = off2;
+	void setThetaOffset2(float off2) {
+		offsetTheta[2] = off2;
 	}
 
 	void incRejectedHitsDCA() {
