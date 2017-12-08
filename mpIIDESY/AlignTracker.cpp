@@ -257,6 +257,7 @@ int main(int argc, char* argv[]) {
 	ofstream plot_gen("Tracker_p_gen.txt");     plot_gen << fixed << setprecision(setPrecision);  //Truth Track points
 	ofstream plot_fit("Tracker_p_fit.txt");     plot_fit << fixed << setprecision(setPrecision);   //Reconstructed Track points
 	ofstream contsants_plot("Tracker_p_constants.txt");  contsants_plot << fixed << setprecision(setPrecision);   // passing constants (e.g. strawN to python script)
+	ofstream plot_centres("Tracker_p_centre.txt");  plot_centres << fixed << setprecision(setPrecision);   // passing constants (e.g. strawN to python script)
 	ofstream plot_hits_gen("Tracker_p_hits_gen.txt");  plot_hits_gen << fixed << setprecision(setPrecision); // Truth Hits points
 	ofstream plot_hits_fit("Tracker_p_hits_fit.txt");   plot_hits_fit << fixed << setprecision(setPrecision); // Recon Hits points
 	ofstream pede_mis("Tracker_pede_mis.txt");  pede_mis << fixed << setprecision(setPrecision);  // Misalignments
@@ -454,13 +455,13 @@ int main(int argc, char* argv[]) {
 
 	helper << fixed << setprecision(4);
 	// SETTING GEOMETRY
-	Tracker::instance()->setGeometry(debug_geom, debugBool);
+	Tracker::instance()->setGeometry(debug_geom, plot_centres, debugBool);
 	helper << "Geometry is set!" << endl << endl;
 
 	// XXX: definition of broken lines here in the future
 
 	// MISALIGNMENT
-	Tracker::instance()->misalign(debug_mis, pede_mis, debugBool, metric);
+	Tracker::instance()->misalign(debug_mis, pede_mis, plot_centres, debugBool, metric);
 	helper << "Misalignment is complete!" << endl;
 	helper << fixed << setprecision(setPrecision);
 

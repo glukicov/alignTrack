@@ -93,6 +93,11 @@ struct ResidualData {
 	float chi2_circle;
 };
 
+struct RotationCentres {
+	std::vector<float> z_centres;
+	std::vector<float> x_centres;
+};
+
 /**
    Singleton class to represent the detector
  */
@@ -229,9 +234,12 @@ public:
 
 	MCData MC_launch(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool);
 
-	void setGeometry(std::ofstream&, bool); //Geometry of detector arrangement
+	void setGeometry(std::ofstream&, std::ofstream&, bool); //Geometry of detector arrangement
 
-	void misalign(std::ofstream&, std::ofstream&, bool, std::ofstream& metric); // MC misalignment of detectors
+	void misalign(std::ofstream&, std::ofstream&, std::ofstream&, bool, std::ofstream& metric); // MC misalignment of detectors
+
+	//This function will return a vector for the centre of rotation for all modules
+	RotationCentres getCentre(std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPosition, std::vector<float> distanceZ, std::ofstream& plot_centres);
 
 	void write_constraint_file(std::ofstream&, std::ofstream&, bool, std::ofstream& metric);  // Writes a constraint file for use with PEDE.
 

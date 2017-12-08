@@ -36,6 +36,39 @@ with open("Tracker_p_constants.txt") as f:
 		beamX1=float(number_str[7])
 		beamZ1=float(number_str[8])
 
+centresI = [ [0 for i_cord in xrange(2)  ] for i_module in xrange(moduleN)]
+centresM = [ [0 for i_cord in xrange(2)  ] for i_module in xrange(moduleN)]
+
+#TODO add to constants above
+# file = open("Tracker_p_centre.txt","r")
+# lines =  file.read().splitlines()
+# for i in range(len(lines)):
+#      line = lines[i]
+#      number_str=line.split()
+#      for i_module in range(0, moduleN):
+# 			centresI[i_module][0] =float(number_str[0]) 
+# 			centresI[i_module][1] =float(number_str[1])
+#      next_line = lines[i+1]
+#      number_str=next_line.split()
+#      for i_module in range(0, moduleN):
+# 			centresM[i_module][0] =float(number_str[0]) 
+# 			centresM[i_module][1] =float(number_str[1])
+
+with open("Tracker_p_centre.txt") as f:
+	for line in f:
+		number_str=line.split()
+		for i_module in range(0, moduleN):
+			centresI[i_module][0]=float(number_str[2*i_module]) 
+			centresI[i_module][1] =float(number_str[2*i_module+1])
+			print 'i_module=', i_module
+		nextLine = next(f)
+		number_str=nextLine.split()
+		for i_module in range(0, moduleN):
+			centresM[i_module][0] =float(number_str[2*i_module]) 
+			centresM[i_module][1] =float(number_str[2*i_module+1])
+
+print centresI
+print centresM
 
 toalLayerN=layerN*moduleN*viewN
 
@@ -149,6 +182,7 @@ for i_track in range(0, trackN):
 #Then draw all other straws 
 i_totalLayers=0
 for i_module in range(0, moduleN):
+	plt.plot(centresM[i_module][0], centresM[i_module][1], color="red", marker = "*")
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
@@ -183,6 +217,7 @@ for i_track in range(0, trackN):
 #Then draw all other straws 
 i_totalLayers=0
 for i_module in range(0, moduleN):
+	plt.plot(centresI[i_module][0], centresI[i_module][1], color="red", marker = "*")
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
