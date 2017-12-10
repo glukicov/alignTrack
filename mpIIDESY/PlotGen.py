@@ -75,21 +75,25 @@ hitList=[[0 for number in xrange(toalLayerN)] for i_track in xrange(trackN)]
 
 
 #Read files and store in lists
-layerI=[] #temp storage
+layerIx=[] #temp storage
+layerIz=[] #temp storage
 with open("Tracker_d_geom.txt") as f:
 	for line in f:  #Line is a string
-		layerI.append(line.split())  # x 
+		layerIx.append(line.split())  # x
+		#print "line=", line 
 		nextLine = next(f)
 		number_str=nextLine.split()
-		layerI.append(nextLine.split()) #z
+		#print "nextLine=", nextLine 
+		layerIz.append(nextLine.split()) #z
 
-layerM=[] #temp storage
+layerMx=[] #temp storage
+layerMz=[] #temp storage
 with open("Tracker_d_mis.txt") as f:
 	for line in f:  #Line is a string
-		layerM.append(line.split())
+		layerMx.append(line.split())
 		nextLine = next(f)
 		number_str=nextLine.split()
-		layerM.append(nextLine.split()) #z
+		layerMz.append(nextLine.split()) #z
 
 #Now for straws in X: 
 i_totalLayers=0
@@ -97,16 +101,21 @@ for i_module in range(0, moduleN):
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
-				dXI= float(layerI[i_totalLayers][i_straw])
-				dXM= float(layerM[i_totalLayers][i_straw])
-				dZI= float(layerI[i_totalLayers+1][i_straw])
-				dZM= float(layerM[i_totalLayers+1][i_straw])
+				dXI= float(layerIx[i_totalLayers][i_straw])
+				dXM= float(layerMx[i_totalLayers][i_straw])
+				dZI= float(layerIz[i_totalLayers][i_straw])
+				dZM= float(layerMz[i_totalLayers][i_straw])
+				print "dXI= ", dXI, " dXM= ", dXM, " dZI= ", " dZM= ", dZM
 				IdealX[i_module][i_view][i_layer][i_straw]=dXI
-				IdealZ[i_module][i_view][i_layer][i_straw]=dXI
+				IdealZ[i_module][i_view][i_layer][i_straw]=dZI
 				MisX[i_module][i_view][i_layer][i_straw]=dXM
-				MisZ[i_module][i_view][i_layer][i_straw]=dXM
+				MisZ[i_module][i_view][i_layer][i_straw]=dZM
 			i_totalLayers+=1 #once we added all straws in that layer -> go to the next absolute layer
 
+# print "IdealX:: ", IdealX
+# print "IdealZ:: ", IdealZ
+# print "MisZ:: ", MisZ
+# print "MisX:: ", MisX
 
 #Read file and store in lists for tracks Generated and Fitted:
 i_track = 0
