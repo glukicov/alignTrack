@@ -16,12 +16,6 @@ import csv
 import pprint
 
 
-#Ideal geometry Z 
-Izs=[]
-
-# Misaligned geometry Z
-Mzs=[]
-
 # Getting constants from MC
 with open("Tracker_p_constants.txt") as f:
 	for line in f:  #Line is a string
@@ -39,21 +33,6 @@ with open("Tracker_p_constants.txt") as f:
 centresI = [ [0 for i_cord in xrange(2)  ] for i_module in xrange(moduleN)]
 centresM = [ [0 for i_cord in xrange(2)  ] for i_module in xrange(moduleN)]
 
-#TODO add to constants above
-# file = open("Tracker_p_centre.txt","r")
-# lines =  file.read().splitlines()
-# for i in range(len(lines)):
-#      line = lines[i]
-#      number_str=line.split()
-#      for i_module in range(0, moduleN):
-# 			centresI[i_module][0] =float(number_str[0]) 
-# 			centresI[i_module][1] =float(number_str[1])
-#      next_line = lines[i+1]
-#      number_str=next_line.split()
-#      for i_module in range(0, moduleN):
-# 			centresM[i_module][0] =float(number_str[0]) 
-# 			centresM[i_module][1] =float(number_str[1])
-
 with open("Tracker_p_centre.txt") as f:
 	for line in f:
 		number_str=line.split()
@@ -67,8 +46,8 @@ with open("Tracker_p_centre.txt") as f:
 			centresM[i_module][0] =float(number_str[2*i_module]) 
 			centresM[i_module][1] =float(number_str[2*i_module+1])
 
-print centresI
-print centresM
+#print centresI
+#print centresM
 
 toalLayerN=layerN*moduleN*viewN
 
@@ -85,8 +64,10 @@ print "beamX1= ",beamX1
 print "beamZ1= ",beamZ1
 
 # X 4D arrays for Mis and Ideal Geom. 
-Mis = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
-Ideal = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
+MisX = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
+MisZ = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
+IdealX = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
+IdealZ = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
 # Generated tracks and fitted tracks [x0, x1, z0, z1]
 gen=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
 fit=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
@@ -97,18 +78,18 @@ hitList=[[0 for number in xrange(toalLayerN)] for i_track in xrange(trackN)]
 layerI=[] #temp storage
 with open("Tracker_d_geom.txt") as f:
 	for line in f:  #Line is a string
-		layerI.append(line.split())
-
-for i_layer in range(0, toalLayerN):
-	Izs.append(float(layerI[i_layer][strawN])) #Z is the last element in the temp array 
+		layerI.append(line.split())  # x 
+		nextLine = next(f)
+		number_str=nextLine.split()
+		layerI.append(nextLine.split()) #z
 
 layerM=[] #temp storage
 with open("Tracker_d_mis.txt") as f:
 	for line in f:  #Line is a string
 		layerM.append(line.split())
-
-for i_layer in range(0, toalLayerN):
-	Mzs.append(float(layerM[i_layer][strawN]))
+		nextLine = next(f)
+		number_str=nextLine.split()
+		layerM.append(nextLine.split()) #z
 
 #Now for straws in X: 
 i_totalLayers=0
@@ -118,8 +99,12 @@ for i_module in range(0, moduleN):
 			for i_straw in range(0, strawN):
 				dXI= float(layerI[i_totalLayers][i_straw])
 				dXM= float(layerM[i_totalLayers][i_straw])
-				Ideal[i_module][i_view][i_layer][i_straw]=dXI
-				Mis[i_module][i_view][i_layer][i_straw]=dXM
+				dZI= float(layerI[i_totalLayers+1][i_straw])
+				dZM= float(layerM[i_totalLayers+1][i_straw])
+				IdealX[i_module][i_view][i_layer][i_straw]=dXI
+				IdealZ[i_module][i_view][i_layer][i_straw]=dXI
+				MisX[i_module][i_view][i_layer][i_straw]=dXM
+				MisZ[i_module][i_view][i_layer][i_straw]=dXM
 			i_totalLayers+=1 #once we added all straws in that layer -> go to the next absolute layer
 
 
@@ -186,8 +171,8 @@ for i_module in range(0, moduleN):
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
-				circle = plt.Circle((Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw]), 0.25, color='black', fill=False)
-				plt.plot(Mzs[i_totalLayers], Mis[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
+				circle = plt.Circle((MisZ[i_module][i_view][i_layer][i_straw], MisX[i_module][i_view][i_layer][i_straw]), 0.25, color='black', fill=False)
+				plt.plot(MisX[i_module][i_view][i_layer][i_straw], MisX[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes.add_artist(circle)
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
@@ -221,8 +206,8 @@ for i_module in range(0, moduleN):
 	for i_view in range(0, viewN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
-				circle = plt.Circle((Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw]), 0.25, color='black', fill=False)
-				plt.plot(Izs[i_totalLayers], Ideal[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
+				circle = plt.Circle((IdealZ[i_module][i_view][i_layer][i_straw], IdealX[i_module][i_view][i_layer][i_straw]), 0.25, color='black', fill=False)
+				plt.plot(IdealZ[i_module][i_view][i_layer][i_straw], IdealX[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes2.add_artist(circle)	
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 

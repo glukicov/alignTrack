@@ -173,17 +173,17 @@ private:
 	// **** MC CALCULATION CONTAINERS ****  //
 	// Hits-based
 	std::vector<int> layer; // record of layers that were hit
-	std::vector<float> projectionX; //projection of measurement direction in (X)
-	std::vector<float> distanceIdealZ;  // Z distance between planes [this is set in geometry]
-	std::vector<float> distanceMisZ;  // Z distance between misaligned planes [this is set in misalignment]
-	std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
-	std::vector<float> sdevX;// shift in x due to the imposed misalignment (alignment parameter)
-	std::vector<float> sdevZ;// shift in x due to the imposed misalignment (alignment parameter)
+	//std::vector<float> projectionX; //projection of measurement direction in (X)
+	//std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
+	//std::vector<float> sdevX;// the actual shift in x due to the imposed misalignment (alignment parameter)
+	//std::vector<float> sdevZ;// the actual shift in z due to the imposed misalignment (alignment parameter)
 
 	// Vectors to hold Ideal and Misaligned (true) X positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
-	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPosition;
-	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPosition;
-	std::vector< std::vector< std::vector< float > > > sigma_recon_estimated;
+	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPositionX;
+	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPositionX;
+	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPositionZ;  // Z distance between planes [this is set in geometry]
+	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPositionZ;  // Z distance between misaligned planes [this is set in misalignment]
+	//std::vector< std::vector< std::vector< float > > > sigma_recon_estimated;
 
 	// Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
 	std::vector< std::vector< string > > UVmapping; // set in the constructor
@@ -194,16 +194,16 @@ private:
 	vector<float> radRecon; // reconstructed fit circle radius (DCA)
 
 	//Misalignment
-	vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane
-	vector<float> relMis;  // Relative misalignment (w.r.t to overall mis. - per layer)
-	vector<float> shearMis; // vector to hold the shear misalignment for each plane [mean of the residuals per plane]
-	vector<float> zDistance_centered; // SD calculations assumes mean z of 0 [vector to hold z distances w.r.t to pivot point]
-	float overallMis; // the overall misalignment - calculated in the misalignment method  [same for all modules]
-	float Chi2_recon_estimated = 0.0; // Estimated (recon.) Chi2 of the fit
-	float pivotPoint_estimated = 0.0; // Mean z point (pivot point)
-	float squaredZSum = 0.0; // Squared sum of centred Z distances
-	float MisZdistanceSum = 0.0; // Sum of Mis * z distance
-	float MisSum = 0.0; // Sum of all misalignments [per layer]
+	// vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane
+	// vector<float> relMis;  // Relative misalignment (w.r.t to overall mis. - per layer)
+	// vector<float> shearMis; // vector to hold the shear misalignment for each plane [mean of the residuals per plane]
+	// vector<float> zDistance_centered; // SD calculations assumes mean z of 0 [vector to hold z distances w.r.t to pivot point]
+	// float overallMis; // the overall misalignment - calculated in the misalignment method  [same for all modules]
+	//float Chi2_recon_estimated = 0.0; // Estimated (recon.) Chi2 of the fit
+	// float pivotPoint_estimated = 0.0; // Mean z point (pivot point)
+	// float squaredZSum = 0.0; // Squared sum of centred Z distances
+	// float MisZdistanceSum = 0.0; // Sum of Mis * z distance
+	// float MisSum = 0.0; // Sum of all misalignments [per layer]
 
 	//Matrix memory space
 	int mat_n = moduleN; // # number of global parameters
@@ -226,20 +226,18 @@ public:
 
 	float pointToLineDCA(float z_straw, float x_straw, float x_slope, float x_intercept); //simple 2D DCA
 
-	DCAData DCAHit(std::vector<float> xLayer, float zStraw, float xTrack, float xSlpoe, float xIntercept, bool debugBool); // calls DCA to chose the right straw
+	DCAData DCAHit(std::vector<float> xLayer, std::vector<float> zLayer, float xTrack, float xSlpoe, float xIntercept, bool debugBool); // calls DCA to chose the right straw
 
-	ReconData HitRecon(int det_ID, float det_dca, std::vector<float> xLayer, float z_distance); //return the dca to ideal geometry, and centre of the circle
+	ReconData HitRecon(int det_ID, float det_dca, std::vector<float> xLayer, std::vector<float> zLayer); //return the dca to ideal geometry, and centre of the circle
 
 	ResidualData GetResiduals(std::vector<float> zRecon, std::vector<float> xRecon, std::vector<float> radRecon, int dataSize, std::ofstream& plot_fit, bool debugBool, bool useTruth, std::vector<int> LR_truth);
 
 	MCData MC_launch(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool);
 
-	void setGeometry(std::ofstream&, std::ofstream&, bool); //Geometry of detector arrangement
-
-	void misalign(std::ofstream&, std::ofstream&, std::ofstream&, bool, std::ofstream& metric); // MC misalignment of detectors
+	void setGeometry(std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool, std::ofstream&); // MC misalignment of detectors
 
 	//This function will return a vector for the centre of rotation for all modules
-	RotationCentres getCentre(std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPosition, std::vector<float> distanceZ, std::ofstream& plot_centres);
+	RotationCentres getCentre(std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionX, std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionZ, std::ofstream& plot_centres);
 
 	void write_constraint_file(std::ofstream&, std::ofstream&, bool, std::ofstream& metric);  // Writes a constraint file for use with PEDE.
 
@@ -302,66 +300,66 @@ public:
 	// Getter methods
 	//
 
-	float get_Chi2_recon_estimated() {
-		return Chi2_recon_estimated;
-	}
+	// float get_Chi2_recon_estimated() {
+	// 	return Chi2_recon_estimated;
+	// }
 
-	float get_pivotPoint_estimated() {
-		return pivotPoint_estimated;
-	}
+	// float get_pivotPoint_estimated() {
+	// 	return pivotPoint_estimated;
+	// }
 
-	vector<float> get_sigma_recon_estimatedVector() {
-		vector<float> result;
-		for (int i_module = 0; i_module < moduleN; i_module++) {
-			for (int i_view = 0; i_view < viewN; i_view++) {
-				for (int i_layer = 0; i_layer < layerN; i_layer++) {
-					result.push_back(sigma_recon_estimated[i_module][i_view][i_layer]);
-				}
-			}
-		}
-		return result;
-	}
+	// vector<float> get_sigma_recon_estimatedVector() {
+	// 	vector<float> result;
+	// 	for (int i_module = 0; i_module < moduleN; i_module++) {
+	// 		for (int i_view = 0; i_view < viewN; i_view++) {
+	// 			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+	// 				result.push_back(sigma_recon_estimated[i_module][i_view][i_layer]);
+	// 			}
+	// 		}
+	// 	}
+	// 	return result;
+	// }
 
-	float get_shearMis(int i) {
-		return shearMis[i];
-	}
+	// float get_shearMis(int i) {
+	// 	return shearMis[i];
+	// }
 
 
-	float get_sigma_recon_estimated(int i, int j, int k) {
-		return sigma_recon_estimated[i][j][k];
-	}
+	// float get_sigma_recon_estimated(int i, int j, int k) {
+	// 	return sigma_recon_estimated[i][j][k];
+	// }
 
 	string getUVmapping(int i, int j) {
 		return UVmapping[i][j];
 	}
 
-	std::vector<float> getIdealZDistanceVector() {
-		return distanceIdealZ;
-	}
+	// std::vector<float> getIdealZDistanceVector() {
+	// 	return distanceIdealZ;
+	// }
 
-	float getIdealZDistance(int i) {
-		return distanceIdealZ[i];
-	}
+	// float getIdealZDistance(int i) {
+	// 	return distanceIdealZ[i];
+	// }
 
-	int getLayer(int i) {
-		return layer[i];
-	}
+	// int getLayer(int i) {
+	// 	return layer[i];
+	// }
 
-	float getProjectionX(int i) {
-		return projectionX[i];
-	}
+	// float getProjectionX(int i) {
+	// 	return projectionX[i];
+	// }
 
-	float getSdevX(int i) {
-		return sdevX[i];
-	}
+	// float getSdevX(int i) {
+	// 	return sdevX[i];
+	// }
 
-	float getSdevZ(int i) {
-		return sdevZ[i];
-	}
+	// float getSdevZ(int i) {
+	// 	return sdevZ[i];
+	// }
 
-	float getOverallMis() {
-		return overallMis;
-	}
+	// float getOverallMis() {
+	// 	return overallMis;
+	// }
 
 	int getRejectedHitsDCA() {
 		return rejectedHitsDCA;

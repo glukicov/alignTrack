@@ -315,8 +315,8 @@ int main(int argc, char* argv[]) {
 
 	// "special" histos
 	THStack* hs_hits_recon = new THStack("hs_hits_recon", "");
-	TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.1, 0.1);
-	h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
+	//TH2F* h_res_x_z = new TH2F("h_res_x_z", "Residuals vs z", 600, 0, 18 * Tracker::instance()->getModuleN(), 79, -0.1, 0.1);
+	//h_res_x_z->SetDirectory(cd_All_Hits); h_res_x_z->GetXaxis()->SetTitle("cm");  h_res_x_z->GetYaxis()->SetTitle("cm");
 	TH2F* h_SD_z_res_Recon = new TH2F("h_SD_z_res_Recon", "Residuals SD: Recon", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 80, 400);
 	h_SD_z_res_Recon->SetDirectory(cd_All_Hits); h_SD_z_res_Recon->GetXaxis()->SetTitle("Module/Layer separation [cm]");  h_SD_z_res_Recon->GetYaxis()->SetTitle("Residual SD [um]");
 	TH2F* h_SD_z_res_Est = new TH2F("h_SD_z_res_Est", "Residuals SD: Expect", 600, 0, 18 * Tracker::instance()->getModuleN(), 59, 120, 150);
@@ -454,14 +454,10 @@ int main(int argc, char* argv[]) {
 	helper << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
 
 	helper << fixed << setprecision(4);
-	// SETTING GEOMETRY
-	Tracker::instance()->setGeometry(debug_geom, plot_centres, debugBool);
-	helper << "Geometry is set!" << endl << endl;
-
 	// XXX: definition of broken lines here in the future
 
-	// MISALIGNMENT
-	Tracker::instance()->misalign(debug_mis, pede_mis, plot_centres, debugBool, metric);
+	// SETTING GEOMETRY and MISALIGNMENT
+	Tracker::instance()->setGeometry(debug_geom, debug_mis, pede_mis, plot_centres, debugBool, metric);
 	helper << "Misalignment is complete!" << endl;
 	helper << fixed << setprecision(setPrecision);
 
@@ -560,7 +556,7 @@ int main(int argc, char* argv[]) {
 				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); //h_DGL2->Fill(dgl2);XXX
 
 				//Track-based hit parameters
-				h_res_x_z->Fill(generated_MC.z_recon[hitCount], generated_MC.residuals[hitCount]);
+				//h_res_x_z->Fill(generated_MC.z_recon[hitCount], generated_MC.residuals[hitCount]);
 				h_track_true->Fill(generated_MC.x_track_true[hitCount]);
 				h_track_recon->Fill(generated_MC.x_track_recon[hitCount]);
 				h_track_TR_diff->Fill(generated_MC.x_track_recon[hitCount] - generated_MC.x_track_true[hitCount]);
@@ -691,175 +687,175 @@ int main(int argc, char* argv[]) {
 	bool strongPotting = false; // XXX HACK [!!! some debug-style histos no longer supported]
 
 	// Store alignment parameters from measurements
-	vector<float> sigma_recon_actual;
-	vector<float> sigmaError_recon_actual;
-	vector<float> pull_actual;
-	vector<float> pull_actual_SD;
-	vector<float> Res_mean;
-	vector<float> Res_mean_SD;
+	// vector<float> sigma_recon_actual;
+	// vector<float> sigmaError_recon_actual;
+	// vector<float> pull_actual;
+	// vector<float> pull_actual_SD;
+	// vector<float> Res_mean;
+	// vector<float> Res_mean_SD;
 
 	//Filling TH2 for residual SD and pulls
-	int z_counter = 0;
-	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-		for (int i_view = 0; i_view < Tracker::instance()->getViewN(); i_view++) {
-			for (int i_layer = 0; i_layer < Tracker::instance()->getLayerN(); i_layer++) {
-				string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
-				// Residuals
-				h_name.str(""); h_name << "UV/h_residual_recon_M_" << i_module << "_" << UV;
-				TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
-				sigma_recon_actual.push_back(hRes_actual->GetStdDev() * 10000); // um ->cm
-				sigmaError_recon_actual.push_back(hRes_actual->GetStdDevError() * 10000); // um ->cm
-				h_SD_z_res_Recon->Fill(Tracker::instance()->getIdealZDistance(z_counter), hRes_actual->GetStdDev() * 10000); // um ->cm
-				h_SD_z_res_Recon->SetBinError(Tracker::instance()->getIdealZDistance(z_counter), hRes_actual->GetStdDev() * 10000, hRes_actual->GetStdDevError() * 10000); // um ->cm
-				h_SD_z_res_Recon->SetMarkerStyle(33); h_SD_z_res_Recon->SetMarkerColor(kRed);
-				Res_mean.push_back(hRes_actual->GetMean());
-				Res_mean_SD.push_back(hRes_actual->GetStdDev());
-				h_SD_z_res_Est->Fill(Tracker::instance()->getIdealZDistance(z_counter) , Tracker::instance()->get_sigma_recon_estimated(i_module, i_view, i_layer) * 10000); // um ->cm
-				h_SD_z_res_Est->SetMarkerStyle(33);
-				h_SD_z_res_Est->SetMarkerColor(kBlue);
-				// Pulls
-				h_name.str(""); h_name << "UV/h_pull_M_" << i_module << "_" << UV;
-				TH1F* h_pull = (TH1F*)file->Get( h_name.str().c_str() );
-				pull_actual.push_back(h_pull->GetMean());
-				pull_actual_SD.push_back(h_pull->GetStdDev());
-				h_Pulls_z->Fill(Tracker::instance()->getIdealZDistance(z_counter), h_pull->GetStdDev());
-				h_Pulls_z->SetBinError(Tracker::instance()->getIdealZDistance(z_counter), h_pull->GetStdDev(), h_pull->GetStdDevError());
-				h_Pulls_z->SetMarkerStyle(33); h_Pulls_z->SetMarkerColor(kRed);
-				z_counter++;
-			}// layer
-		} // view
-	} // modules
+	// int z_counter = 0;
+	// for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
+	// 	for (int i_view = 0; i_view < Tracker::instance()->getViewN(); i_view++) {
+	// 		for (int i_layer = 0; i_layer < Tracker::instance()->getLayerN(); i_layer++) {
+	// 			string UV = Tracker::instance()->getUVmapping(i_view, i_layer);
+	// 			// Residuals
+	// 			h_name.str(""); h_name << "UV/h_residual_recon_M_" << i_module << "_" << UV;
+	// 			TH1F* hRes_actual = (TH1F*)file->Get( h_name.str().c_str() );
+	// 			sigma_recon_actual.push_back(hRes_actual->GetStdDev() * 10000); // um ->cm
+	// 			sigmaError_recon_actual.push_back(hRes_actual->GetStdDevError() * 10000); // um ->cm
+	// 			h_SD_z_res_Recon->Fill(Tracker::instance()->getIdealZDistance(z_counter), hRes_actual->GetStdDev() * 10000); // um ->cm
+	// 			h_SD_z_res_Recon->SetBinError(Tracker::instance()->getIdealZDistance(z_counter), hRes_actual->GetStdDev() * 10000, hRes_actual->GetStdDevError() * 10000); // um ->cm
+	// 			h_SD_z_res_Recon->SetMarkerStyle(33); h_SD_z_res_Recon->SetMarkerColor(kRed);
+	// 			Res_mean.push_back(hRes_actual->GetMean());
+	// 			Res_mean_SD.push_back(hRes_actual->GetStdDev());
+	// 			h_SD_z_res_Est->Fill(Tracker::instance()->getIdealZDistance(z_counter) , Tracker::instance()->get_sigma_recon_estimated(i_module, i_view, i_layer) * 10000); // um ->cm
+	// 			h_SD_z_res_Est->SetMarkerStyle(33);
+	// 			h_SD_z_res_Est->SetMarkerColor(kBlue);
+	// 			// Pulls
+	// 			h_name.str(""); h_name << "UV/h_pull_M_" << i_module << "_" << UV;
+	// 			TH1F* h_pull = (TH1F*)file->Get( h_name.str().c_str() );
+	// 			pull_actual.push_back(h_pull->GetMean());
+	// 			pull_actual_SD.push_back(h_pull->GetStdDev());
+	// 			h_Pulls_z->Fill(Tracker::instance()->getIdealZDistance(z_counter), h_pull->GetStdDev());
+	// 			h_Pulls_z->SetBinError(Tracker::instance()->getIdealZDistance(z_counter), h_pull->GetStdDev(), h_pull->GetStdDevError());
+	// 			h_Pulls_z->SetMarkerStyle(33); h_Pulls_z->SetMarkerColor(kRed);
+	// 			z_counter++;
+	// 		}// layer
+	// 	} // view
+	// } // modules
 
 	//Dealing with Chi2 and residual [true] fits
 	//Use Pearson chi-square method, using expected errors instead of the observed one given by TH1::GetBinError (default case).
 	//The expected error is instead estimated from the the square-root of the bin function value.
-	TF1* chi2pdf = new TF1("chi2pdf", "[2]*ROOT::Math::chisquared_pdf(x,[0],[1])", 0, 40);
-	chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_true->Integral("WIDTH"));
-	h_chi2_true->Fit("chi2pdf", "Q");
-	h_residual_true->Fit("gaus", "Q");
-	Chi2_recon_actual = h_chi2_recon->GetMean();
+	//TF1* chi2pdf = new TF1("chi2pdf", "[2]*ROOT::Math::chisquared_pdf(x,[0],[1])", 0, 40);
+	//chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_true->Integral("WIDTH"));
+	//h_chi2_true->Fit("chi2pdf", "Q");
+	// h_residual_true->Fit("gaus", "Q");
+	// Chi2_recon_actual = h_chi2_recon->GetMean();
 
 	//Residuals SD per layer
-	vector<float> zDistance = Tracker::instance()->getIdealZDistanceVector();
-	vector<float> sigma_recon_estimated = Tracker::instance()->get_sigma_recon_estimatedVector();
-	TCanvas *cRes = new TCanvas("cRes", "cRes", 700, 500);
-	const Int_t n = Tracker::instance()->getLayerTotalN();
-	Float_t* z_distance  = &zDistance[0];
-	Float_t* Res_Recon_SD  = &sigma_recon_actual[0];
-	Float_t* Res_Recon_SD_error = &sigmaError_recon_actual[0];
-	auto gr = new TGraphErrors(n, z_distance, Res_Recon_SD, 0, Res_Recon_SD_error);
-	gr->SetTitle("Residuals SD");
-	gr->SetMarkerColor(kWhite);
-	gr->SetLineColor(kRed);
-	gr->SetMarkerStyle(1);
-	gr->Draw("A*");
-	Float_t* Res_Est_SD  = &sigma_recon_estimated[0];
-	for (int i = 0; i < n; i++) {
-		TMarker *m1 = new TMarker(z_distance[i], Res_Est_SD[i] * 10000, 20);
-		m1->SetMarkerColor(kBlue); m1->Draw();
-	}
-	gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
-	gr->GetYaxis()->SetTitle("Residual SD [um]");
-	auto axis = gr->GetXaxis();
-	axis->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
-	gr->GetHistogram()->SetMaximum(148.);   // along
-	gr->GetHistogram()->SetMinimum(130.);  //   Y
-	cRes->Write();
+	// vector<float> zDistance = Tracker::instance()->getIdealZDistanceVector();
+	// //vector<float> sigma_recon_estimated = Tracker::instance()->get_sigma_recon_estimatedVector();
+	// TCanvas *cRes = new TCanvas("cRes", "cRes", 700, 500);
+	// const Int_t n = Tracker::instance()->getLayerTotalN();
+	// Float_t* z_distance  = &zDistance[0];
+	// Float_t* Res_Recon_SD  = &sigma_recon_actual[0];
+	// Float_t* Res_Recon_SD_error = &sigmaError_recon_actual[0];
+	// auto gr = new TGraphErrors(n, z_distance, Res_Recon_SD, 0, Res_Recon_SD_error);
+	// gr->SetTitle("Residuals SD");
+	// gr->SetMarkerColor(kWhite);
+	// gr->SetLineColor(kRed);
+	// gr->SetMarkerStyle(1);
+	// gr->Draw("A*");
+	// //Float_t* Res_Est_SD  = &sigma_recon_estimated[0];
+	// for (int i = 0; i < n; i++) {
+	// 	TMarker *m1 = new TMarker(z_distance[i], Res_Est_SD[i] * 10000, 20);
+	// 	m1->SetMarkerColor(kBlue); m1->Draw();
+	// }
+	// gr->GetXaxis()->SetTitle("Module/Layer separation [cm]");
+	// gr->GetYaxis()->SetTitle("Residual SD [um]");
+	// auto axis = gr->GetXaxis();
+	// axis->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
+	// gr->GetHistogram()->SetMaximum(148.);   // along
+	// gr->GetHistogram()->SetMinimum(130.);  //   Y
+	// cRes->Write();
 
-	//Pulls per layer
-	TCanvas *cPull = new TCanvas("cPull", "cPull", 200, 10, 700, 500);
-	Float_t* Pull_Recon  = &pull_actual[0];
-	Float_t* Pull_Recon_SD = &pull_actual_SD[0];
-	auto gr2 = new TGraphErrors(n, z_distance, Pull_Recon, 0, Pull_Recon_SD);
-	gr2->SetTitle("Pulls [Error = SD]");
-	gr2->SetMarkerColor(kWhite);
-	gr2->SetLineColor(kRed);
-	gr2->SetMarkerStyle(1);
-	gr2->Draw("A*");
-	gr2->GetXaxis()->SetTitle("Module/Layer separation [cm]");
-	gr2->GetYaxis()->SetTitle("Pulls per layer [Error = SD]");
-	auto axis2 = gr2->GetXaxis();
-	axis2->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
-	gr2->GetHistogram()->SetMaximum(5.0);   // along
-	gr2->GetHistogram()->SetMinimum(-3.0);  //   Y
-	cPull->Write();
+	// //Pulls per layer
+	// TCanvas *cPull = new TCanvas("cPull", "cPull", 200, 10, 700, 500);
+	// Float_t* Pull_Recon  = &pull_actual[0];
+	// Float_t* Pull_Recon_SD = &pull_actual_SD[0];
+	// auto gr2 = new TGraphErrors(n, z_distance, Pull_Recon, 0, Pull_Recon_SD);
+	// gr2->SetTitle("Pulls [Error = SD]");
+	// gr2->SetMarkerColor(kWhite);
+	// gr2->SetLineColor(kRed);
+	// gr2->SetMarkerStyle(1);
+	// gr2->Draw("A*");
+	// gr2->GetXaxis()->SetTitle("Module/Layer separation [cm]");
+	// gr2->GetYaxis()->SetTitle("Pulls per layer [Error = SD]");
+	// auto axis2 = gr2->GetXaxis();
+	// axis2->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
+	// gr2->GetHistogram()->SetMaximum(5.0);   // along
+	// gr2->GetHistogram()->SetMinimum(-3.0);  //   Y
+	// cPull->Write();
 
-	//Residual means per layer: reveal the shear affect of misalignment
-	TCanvas *cResMean = new TCanvas("cResMean", "cResMean", 200, 10, 700, 500);
-	Float_t* Res_meanR  = &Res_mean[0];
-	Float_t* Res_mean_SDR = &Res_mean_SD[0];
-	auto gr3 = new TGraphErrors(n, z_distance, Res_meanR, 0, Res_mean_SDR);
-	gr3->SetTitle("Residual means [Error = SD]");
-	gr3->SetMarkerColor(kWhite);
-	gr3->SetLineColor(kRed);
-	gr3->SetMarkerStyle(1);
-	gr3->Draw("A*");
-	gr3->GetXaxis()->SetTitle("Module/Layer separation [cm]");
-	gr3->GetYaxis()->SetTitle("Residual means per layer [Error = SD] [cm]");
-	for (int i = 0; i < n; i++) {
-		TMarker *m2 = new TMarker(z_distance[i], Tracker::instance()->get_shearMis(i), 20);
-		m2->SetMarkerColor(kBlue);
-		m2->Draw();
-	}
-	auto axis3 = gr3->GetXaxis();
-	axis3->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
-	gr3->GetHistogram()->SetMaximum(0.2);   // along
-	gr3->GetHistogram()->SetMinimum(-0.2);  //   Y
-	cResMean->Write();
+	// //Residual means per layer: reveal the shear affect of misalignment
+	// TCanvas *cResMean = new TCanvas("cResMean", "cResMean", 200, 10, 700, 500);
+	// Float_t* Res_meanR  = &Res_mean[0];
+	// Float_t* Res_mean_SDR = &Res_mean_SD[0];
+	// auto gr3 = new TGraphErrors(n, z_distance, Res_meanR, 0, Res_mean_SDR);
+	// gr3->SetTitle("Residual means [Error = SD]");
+	// gr3->SetMarkerColor(kWhite);
+	// gr3->SetLineColor(kRed);
+	// gr3->SetMarkerStyle(1);
+	// gr3->Draw("A*");
+	// gr3->GetXaxis()->SetTitle("Module/Layer separation [cm]");
+	// gr3->GetYaxis()->SetTitle("Residual means per layer [Error = SD] [cm]");
+	// for (int i = 0; i < n; i++) {
+	// 	TMarker *m2 = new TMarker(z_distance[i], Tracker::instance()->get_shearMis(i), 20);
+	// 	m2->SetMarkerColor(kBlue);
+	// 	m2->Draw();
+	// }
+	// auto axis3 = gr3->GetXaxis();
+	// axis3->SetLimits(0., 18 * Tracker::instance()->getModuleN());              // along X
+	// gr3->GetHistogram()->SetMaximum(0.2);   // along
+	// gr3->GetHistogram()->SetMinimum(-0.2);  //   Y
+	// cResMean->Write();
 
 	// Debug-style plots:
-	if (strongPotting) {
-		//Residuals per module
-		TCanvas *cResAllM = new TCanvas("cResAllM", "cResAllM", 700, 900);
-		TText T; T.SetTextFont(42); T.SetTextAlign(21);
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_name.str(""); h_name << "Modules/h_Residuals_Module_" << i_module;
-			TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
-			hd1->SetFillColor(colourVector[i_module]);
-			hd1->Draw("same");
-			gStyle->SetOptStat("");
-			hd1->SetTitle("");
-		}
-		T.DrawTextNDC(.5, .95, "Residuals");
-		cResAllM->Write();
+	// if (strongPotting) {
+	// 	//Residuals per module
+	// 	TCanvas *cResAllM = new TCanvas("cResAllM", "cResAllM", 700, 900);
+	// 	TText T; T.SetTextFont(42); T.SetTextAlign(21);
+	// 	for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+	// 		h_name.str(""); h_name << "Modules/h_Residuals_Module_" << i_module;
+	// 		TH1F* hd1 = (TH1F*)file->Get( h_name.str().c_str() );
+	// 		hd1->SetFillColor(colourVector[i_module]);
+	// 		hd1->Draw("same");
+	// 		gStyle->SetOptStat("");
+	// 		hd1->SetTitle("");
+	// 	}
+	// 	T.DrawTextNDC(.5, .95, "Residuals");
+	// 	cResAllM->Write();
 
 
-		//Stacked DCA per straw in each module
-		vector<THStack*> stackModule;
-		for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_name.str(""); h_name << "DCA_Module_" << i_module;
-			THStack* stack = new THStack(h_name.str().c_str(), " ");
-			stackModule.push_back(stack);
-		}
-		//THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
-		TCanvas *cDCA = new TCanvas("cDCA", "cDCA", 700, 900);
-		T.SetTextFont(42); T.SetTextAlign(21);
-		cDCA->Divide((Tracker::instance()->getModuleN() + 1) / 2, (Tracker::instance()->getModuleN() + 1) / 2);
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
-				h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
-				TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
-				stackModule[i_module]->Add(hs3);
-			}
-		}
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
-			cDCA->cd(i_module + 1); stackModule[i_module]->Draw(); T.DrawTextNDC(.5, .95, h_title.str().c_str());
-		}
-		cDCA->Write();
+	// 	//Stacked DCA per straw in each module
+	// 	vector<THStack*> stackModule;
+	// 	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
+	// 		h_name.str(""); h_name << "DCA_Module_" << i_module;
+	// 		THStack* stack = new THStack(h_name.str().c_str(), " ");
+	// 		stackModule.push_back(stack);
+	// 	}
+	// 	//THStack* stackModule[] = {hs_DCA_Module_0, hs_DCA_Module_1, hs_DCA_Module_2, hs_DCA_Module_3, hs_DCA_Module_4, hs_DCA_Module_5, hs_DCA_Module_6, hs_DCA_Module_7};
+	// 	TCanvas *cDCA = new TCanvas("cDCA", "cDCA", 700, 900);
+	// 	T.SetTextFont(42); T.SetTextAlign(21);
+	// 	cDCA->Divide((Tracker::instance()->getModuleN() + 1) / 2, (Tracker::instance()->getModuleN() + 1) / 2);
+	// 	for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+	// 		for (int i_straw = 0 ; i_straw < Tracker::instance()->getStrawN(); i_straw++) {
+	// 			h_name.str(""); h_name << "Straws/h" << i_module << "_straw" << i_straw;
+	// 			TH1F* hs3 = (TH1F*)file->Get( h_name.str().c_str() );
+	// 			stackModule[i_module]->Add(hs3);
+	// 		}
+	// 	}
+	// 	for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+	// 		h_title.str(""); h_title << "Module " << i_module << " DCA per straw";
+	// 		cDCA->cd(i_module + 1); stackModule[i_module]->Draw(); T.DrawTextNDC(.5, .95, h_title.str().c_str());
+	// 	}
+	// 	cDCA->Write();
 
-		//Stacked reconstructed hits
-		TCanvas *cStack = new TCanvas("cStack", "cStack", 700, 900);
-		T.SetTextFont(42); T.SetTextAlign(21);
-		for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
-			h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << i_module;
-			TH1F* hs4 = (TH1F*)file->Get( h_name.str().c_str() );
-			hs_hits_recon->Add(hs4);
-		}
-		cStack->Divide(1, 1);
-		cStack->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5, .95, "Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
-		cStack->Write();
-	} // strong plotting
+	// 	//Stacked reconstructed hits
+	// 	TCanvas *cStack = new TCanvas("cStack", "cStack", 700, 900);
+	// 	T.SetTextFont(42); T.SetTextAlign(21);
+	// 	for (int i_module = 0 ; i_module < Tracker::instance()->getModuleN(); i_module++) {
+	// 		h_name.str(""); h_name << "Modules/hs_hits_recon_Module" << i_module;
+	// 		TH1F* hs4 = (TH1F*)file->Get( h_name.str().c_str() );
+	// 		hs_hits_recon->Add(hs4);
+	// 	}
+	// 	cStack->Divide(1, 1);
+	// 	cStack->cd(1);  hs_hits_recon->Draw(); T.DrawTextNDC(.5, .95, "Recon Hits per Module"); hs_hits_recon->GetXaxis()->SetTitle("[cm]");
+	// 	cStack->Write();
+	// } // strong plotting
 
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << " " << endl;
@@ -868,9 +864,9 @@ int main(int argc, char* argv[]) {
 	helper << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
 	helper << "Number of DCA (==drift radii) smeared below 0 is " << negDCA << endl;
 	stringstream out1, out2, out3, out4, out5;
-	out1 << "Expected Mean Chi2 (for a general straight line fit) " << Tracker::instance()->get_Chi2_recon_estimated();
+	//out1 << "Expected Mean Chi2 (for a general straight line fit) " << Tracker::instance()->get_Chi2_recon_estimated();
 	out2 << "Measured Mean Chi2 (circle fit) " << Chi2_recon_actual;
-	Logger::Instance()->write(Logger::WARNING, out1.str());
+	//Logger::Instance()->write(Logger::WARNING, out1.str());
 	Logger::Instance()->write(Logger::WARNING, out2.str());
 	LOG << out1.rdbuf() << endl; LOG << out2.rdbuf() << endl;
 	float rejectsFrac = Tracker::instance()->getRejectedHitsDCA();
