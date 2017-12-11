@@ -129,15 +129,16 @@ RotationCentres Tracker::getCentre(std::vector< std::vector< std::vector< std::v
 	// for a module given by i_global get first and last straws of the first and last layers
 	for (int i_global = 0; i_global < moduleN; i_global++) {
 
-		std::vector<float> U0_x = mod_lyr_strawPositionX[i_global][0][0];  // x
-		float U0_first_x = U0_x[0]; float U0_last_x = U0_x[strawN - 1];
+		std::vector<float> U0_x = mod_lyr_strawPositionX[i_global][0][0];  // U0x
+		std::vector<float> V1_x = mod_lyr_strawPositionX[i_global][1][1];  // V1x
+		float U0_first_x = U0_x[0]; float V1_last_x = V1_x[strawN - 1];
 		std::vector<float> U0_z = mod_lyr_strawPositionZ[i_global][0][0];  // z
 		std::vector<float> V1_z = mod_lyr_strawPositionZ[i_global][1][1];  // z
 		float U0_first_z = U0_z[0]; float V1_last_z = V1_z[strawN - 1];
 
 		float z_c(0), x_c(0);
 		//cout << "i_global= " << i_global << " U0_first_x= " << U0_first_x << " U0_last_x=" << U0_last_x << " U0_first_z= " << U0_first_z << " V1_first_z= " << V1_first_z << endl;
-		x_c = (U0_last_x + U0_first_x) / 2; // XXX check sign
+		x_c = (V1_last_x + U0_first_x) / 2; // XXX check sign
 		z_c = (V1_last_z + U0_first_z) / 2;
 
 		centre.z_centres.push_back(z_c);
@@ -530,7 +531,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				// TRUTH PARAMETERS
 				//The registered hit position on the misaligned detector is smeared by its resolution
 				// zTrack is just the distance[z_counter] - in-line with the layer [chose the middle straw]
-				xTrack = xSlope * mod_lyr_strawMisPositionZ[i_module][i_view][i_layer][int(strawN/2)] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
+				xTrack = xSlope * mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][int(strawN/2)] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
 				MC.x_track_true.push_back(xTrack);  // True in-line (gen.) track position
 
 				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
@@ -646,6 +647,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 // MC misalignment of detectors and setting assumed geometry
 void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& pede_mis, ofstream& plot_centres, bool debugBool, ofstream& metric) {
 
+	float misDispTheta(0), ThetaOffset(0); // effective misalignment and offsets [mis. corrections]
+
 	//Geometry of detector arrangement (Ideal Geometry)
 	float dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
 	int layer_n = 0;  // layer label
@@ -675,8 +678,35 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 		dZ += moduleSpacing;
 	} // modules
 
-	//Now get rotational centres for the assumed geometry:
+	//Now get rotational centres for the assumed geometry, add offsets if necessary
 	RotationCentres idealCentres = Tracker::getCentre(mod_lyr_strawIdealPositionX, mod_lyr_strawIdealPositionZ, plot_centres);
+	dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
+	dX = startingXDistanceStraw0; // the increment in x for straws in a layers
+	for (int i_module = 0; i_module < moduleN; i_module++) {
+		ThetaOffset = offsetTheta[i_module];
+		for (int i_view = 0; i_view < viewN; i_view++) {
+			for (int i_layer = 0; i_layer < layerN; i_layer++) {
+				for (int i_straw = 0; i_straw < strawN; i_straw++) {
+					float local_z = dZ - idealCentres.z_centres[i_module]; // translating to local module coordinates
+					float local_x = dX - idealCentres.x_centres[i_module];
+					//2D rotation matrix with CC convention from (z=0 horizontal/beam axis)
+					float rotated_z = local_z * cos(ThetaOffset) - local_x * sin (ThetaOffset);
+					float rotated_x = local_z * sin(ThetaOffset) + local_x * cos (ThetaOffset);
+					float global_z = rotated_z + idealCentres.z_centres[i_module];
+					float global_x = rotated_x + idealCentres.x_centres[i_module];
+					mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][i_straw] = global_z; // vector will contain all z coordinates of layers
+					mod_lyr_strawIdealPositionX[i_module][i_view][i_layer][i_straw]= global_x;
+					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
+				} //end of Straws loop
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
+				if (i_view == 1) { dX = startingXDistanceStraw0; } //set displacement in x for the next layer in the view
+				layer_n++;
+				if (i_layer == 0) { dZ += layerSpacing; } // increment spacing between layers in a view once only
+			} // layers
+			if (i_view == 0) { dZ += viewSpacing; } // increment spacing between views in a module once only
+		} // views
+		dZ += moduleSpacing;
+	} // modules
 
 	// Print out:
 	if (debugBool) {
@@ -710,7 +740,7 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 
 	//Now misaligning detectors
 	//float misDispX(0), Xoffset(0); // effective misalignment
-	float misDispTheta(0), ThetaOffset(0); // effective misalignment
+	
 	dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
 	layer_n = 0;  // layer label
 	metric << "MTheta: ";
@@ -732,8 +762,9 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
 					float local_z = dZ - idealCentres.z_centres[i_module]; // translating to local module coordinates
 					float local_x = dX - idealCentres.x_centres[i_module];
-					float rotated_z = local_z * cos(misDispTheta) + local_x * sin (misDispTheta);
-					float rotated_x = local_x * cos(misDispTheta) - local_z * sin (misDispTheta);
+					//2D rotation matrix with CC convention from (z=0 horizontal/beam axis)
+					float rotated_z = local_z * cos(misDispTheta) - local_x * sin (misDispTheta);
+					float rotated_x = local_z * sin(misDispTheta) + local_x * cos (misDispTheta);
 					float global_z = rotated_z + idealCentres.z_centres[i_module];
 					float global_x = rotated_x + idealCentres.x_centres[i_module];
 					mod_lyr_strawMisPositionZ[i_module][i_view][i_layer].push_back(global_z); // vector will contain all z coordinates of layers

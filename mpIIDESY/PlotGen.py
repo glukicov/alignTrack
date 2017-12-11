@@ -105,7 +105,7 @@ for i_module in range(0, moduleN):
 				dXM= float(layerMx[i_totalLayers][i_straw])
 				dZI= float(layerIz[i_totalLayers][i_straw])
 				dZM= float(layerMz[i_totalLayers][i_straw])
-				print "dXI= ", dXI, " dXM= ", dXM, " dZI= ", " dZM= ", dZM
+				#print "dXI= ", dXI, " dXM= ", dXM, " dZI= ", " dZM= ", dZM
 				IdealX[i_module][i_view][i_layer][i_straw]=dXI
 				IdealZ[i_module][i_view][i_layer][i_straw]=dZI
 				MisX[i_module][i_view][i_layer][i_straw]=dXM
@@ -181,7 +181,7 @@ for i_module in range(0, moduleN):
 		for i_layer in range(0, layerN):
 			for i_straw in range(0, strawN):
 				circle = plt.Circle((MisZ[i_module][i_view][i_layer][i_straw], MisX[i_module][i_view][i_layer][i_straw]), 0.25, color='black', fill=False)
-				plt.plot(MisX[i_module][i_view][i_layer][i_straw], MisX[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
+				plt.plot(MisZ[i_module][i_view][i_layer][i_straw], MisX[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes.add_artist(circle)
 			i_totalLayers+=1 #once we read all straws in that layer -> go to the next absolute layer to get the Z coordinate
 
@@ -190,9 +190,9 @@ for i_hits in range(0, len(gen_hitX)):
 	axes.add_artist(circle3)		
 
 #axes.set_ylim([0.4,1.6])
-axes.set_ylim([beamX0-6,beamX1+3])
+axes.set_ylim([-3,2.5])
 #axes.set_xlim([54,60])
-axes.set_xlim([beamZ0-1,beamZ1+1])
+axes.set_xlim([3,60])
 #plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
 plt.title("Misaligned Geometry with True Tracks")
@@ -225,9 +225,9 @@ for i_hits in range(0, len(fit_hitX)):
 	axes2.add_artist(circle)	
 	
 #axes2.set_ylim([0.4,1.6])
-axes2.set_ylim([beamX0-6,beamX1+3])
+axes2.set_ylim([-3,2.5])
 #axes2.set_xlim([54,60])
-axes2.set_xlim([beamZ0-1,beamZ1+1])
+axes2.set_xlim([3,60])
 plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
 plt.title("Ideal Geometry with Reconstructed Tracks")

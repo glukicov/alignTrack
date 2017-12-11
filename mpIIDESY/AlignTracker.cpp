@@ -476,6 +476,12 @@ int main(int argc, char* argv[]) {
 	helper << "Calculating residuals..." << endl;
 
 //------------------------------------------Main Mille Track Loop---------------------------------------------------------//
+	//Passing constants to plotting scripts
+	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
+	<< Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
+	<< Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
+	<< "  " << Tracker::instance()->getBeamStop() <<  endl;
+
 	bool StrongDebugBool = false;
 	//Generating tracks
 	for (int trackCount = 0; trackCount < Tracker::instance()->getTrackNumber(); trackCount++) {
@@ -669,15 +675,7 @@ int main(int argc, char* argv[]) {
 	} // end of track count // End of Mille // End of collecting residual records
 	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
 
-	//Passing constants to plotting script
-
-	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
-	<< Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
-	<< Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
-	<< "  " << Tracker::instance()->getBeamStop() <<  endl;
-
-
-
+	
 	//------------------------------------------ROOT: Fitting Functions---------------------------------------------------------//
 
 	helper << endl;
