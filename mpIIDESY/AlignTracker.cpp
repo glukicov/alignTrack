@@ -310,7 +310,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
-	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  149,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
+	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  349,  -60, 60); h_DGL1->SetDirectory(cd_PEDE);
 	TH1F* h_DGL2 = new TH1F("h_DGL2", "DGL2: All Modules",  149,  -0.017, 0.017); h_DGL2->SetDirectory(cd_PEDE);
 
 	// "special" histos
@@ -521,9 +521,9 @@ int main(int argc, char* argv[]) {
 				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1 = 0.0;  //dR/d𝛉 TODO
 				//float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx
 				//float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/d
+				float dgl1 = ( m*x*x + z*x - z*c - m*z*z - m*x*c - m*m*x*z ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/d𝛉
 				float dergl[nagl] = {dgl1};
 				// float dergl[nagl] = {dgl1, dgl2};
 				//Labels
@@ -560,6 +560,7 @@ int main(int argc, char* argv[]) {
 				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
 				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
 				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); //h_DGL2->Fill(dgl2);XXX
+				//cout << "dgl1" << dgl1 << endl;
 
 				//Track-based hit parameters
 				//h_res_x_z->Fill(generated_MC.z_recon[hitCount], generated_MC.residuals[hitCount]);
@@ -731,7 +732,7 @@ int main(int argc, char* argv[]) {
 	//chi2pdf->SetParameters(Tracker::instance()->get_Chi2_recon_estimated(), 0., h_chi2_true->Integral("WIDTH"));
 	//h_chi2_true->Fit("chi2pdf", "Q");
 	// h_residual_true->Fit("gaus", "Q");
-	// Chi2_recon_actual = h_chi2_recon->GetMean();
+	Chi2_recon_actual = h_chi2_recon->GetMean();
 
 	//Residuals SD per layer
 	// vector<float> zDistance = Tracker::instance()->getIdealZDistanceVector();

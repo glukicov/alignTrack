@@ -127,7 +127,7 @@ private:
 	//float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	//float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	//float dispTheta[8] = {0.0, 0.611, -0.610, 0.0, 0.0, 0.0, 0.0}; // radians
-	float dispTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispTheta[8] = {0.0, 0.1, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
 	float offsetTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //radians
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
