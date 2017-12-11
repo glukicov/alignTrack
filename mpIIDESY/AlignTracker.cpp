@@ -512,7 +512,8 @@ int main(int argc, char* argv[]) {
 				//Global derivatives
 				//float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx
 				//float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/d
-				float dgl1 = ( m*x*x + z*x - z*c - m*z*z - m*x*c - m*m*x*z ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/d𝛉
+				//float dgl1 = ( m*x*x + z*x - z*c - m*z*z - m*x*c - m*m*x*z ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/d𝛉
+				float dgl1 = m * x;
 				float dergl[nagl] = {dgl1};
 				// float dergl[nagl] = {dgl1, dgl2};
 				//Labels
@@ -699,10 +700,11 @@ int main(int argc, char* argv[]) {
     text_recon->AddText(Form("max = %g", max_slope_recon));
     h_recon_slope->GetListOfFunctions()->Add(text_recon);// 'hack' to get it drawn with the hist
 
-    TF1 *gaussSlope = new TF1("gaussSlope", "gaus", -0.005, 0.005);
-    gaussSlope->SetParameters(0.0, 0.005);
-    h_slope->Fit("gaussSlope","Q");
-    h_recon_slope->Fit("gaussSlope","Q");
+    TF1 *gaussSlope1 = new TF1("gaussSlope1", "gaus", -0.004, 0.004);
+    //gaussSlope->SetParameters(0.0, 0.005);
+    h_slope->Fit("gaussSlope1","Q");
+    TF1 *gaussSlope2 = new TF1("gaussSlope2", "gaus", -0.005, 0.005);
+    h_recon_slope->Fit("gaus","Q");
 
     Chi2_recon_actual = h_chi2_recon->GetMean();
 
