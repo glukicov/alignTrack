@@ -127,7 +127,7 @@ private:
 	//float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	//float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	//float dispTheta[8] = {0.0, 0.611, -0.610, 0.0, 0.0, 0.0, 0.0}; // radians
-	float dispTheta[8] = {0.0, 0.1, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
 	float offsetTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //radians
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
@@ -173,8 +173,6 @@ private:
 	// **** MC CALCULATION CONTAINERS ****  //
 	// Hits-based
 	std::vector<int> layer; // record of layers that were hit
-	//std::vector<float> projectionX; //projection of measurement direction in (X)
-	//std::vector<float> resolutionLayer;   //resolution [to record vector of resolution per layer if not constant] //XXX [this is not used at the moment]
 	//std::vector<float> sdevX;// the actual shift in x due to the imposed misalignment (alignment parameter)
 	//std::vector<float> sdevZ;// the actual shift in z due to the imposed misalignment (alignment parameter)
 
@@ -192,18 +190,6 @@ private:
 	vector<float> xRecon;  // ideal straw x
 	vector<float> zRecon;  // ideal straw z
 	vector<float> radRecon; // reconstructed fit circle radius (DCA)
-
-	//Misalignment
-	// vector<float> charMis;  // The alignment parameter: absolute misalignment of a plane
-	// vector<float> relMis;  // Relative misalignment (w.r.t to overall mis. - per layer)
-	// vector<float> shearMis; // vector to hold the shear misalignment for each plane [mean of the residuals per plane]
-	// vector<float> zDistance_centered; // SD calculations assumes mean z of 0 [vector to hold z distances w.r.t to pivot point]
-	// float overallMis; // the overall misalignment - calculated in the misalignment method  [same for all modules]
-	//float Chi2_recon_estimated = 0.0; // Estimated (recon.) Chi2 of the fit
-	// float pivotPoint_estimated = 0.0; // Mean z point (pivot point)
-	// float squaredZSum = 0.0; // Squared sum of centred Z distances
-	// float MisZdistanceSum = 0.0; // Sum of Mis * z distance
-	// float MisSum = 0.0; // Sum of all misalignments [per layer]
 
 	//Matrix memory space
 	int mat_n = moduleN; // # number of global parameters
@@ -248,10 +234,6 @@ public:
 	void set_uniform_file(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
 
 	void set_gaussian_file(std::string); // Set filename for Gaussian random numbers
-
-	//size_t getPeakRSS( ); // Peak Dynamic Memory used
-
-	//size_t getCurrentRSS( );
 
 	//
 	// Setter methods
@@ -300,54 +282,10 @@ public:
 	// Getter methods
 	//
 
-	// float get_Chi2_recon_estimated() {
-	// 	return Chi2_recon_estimated;
-	// }
-
-	// float get_pivotPoint_estimated() {
-	// 	return pivotPoint_estimated;
-	// }
-
-	// vector<float> get_sigma_recon_estimatedVector() {
-	// 	vector<float> result;
-	// 	for (int i_module = 0; i_module < moduleN; i_module++) {
-	// 		for (int i_view = 0; i_view < viewN; i_view++) {
-	// 			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-	// 				result.push_back(sigma_recon_estimated[i_module][i_view][i_layer]);
-	// 			}
-	// 		}
-	// 	}
-	// 	return result;
-	// }
-
-	// float get_shearMis(int i) {
-	// 	return shearMis[i];
-	// }
-
-
-	// float get_sigma_recon_estimated(int i, int j, int k) {
-	// 	return sigma_recon_estimated[i][j][k];
-	// }
 
 	string getUVmapping(int i, int j) {
 		return UVmapping[i][j];
 	}
-
-	// std::vector<float> getIdealZDistanceVector() {
-	// 	return distanceIdealZ;
-	// }
-
-	// float getIdealZDistance(int i) {
-	// 	return distanceIdealZ[i];
-	// }
-
-	// int getLayer(int i) {
-	// 	return layer[i];
-	// }
-
-	// float getProjectionX(int i) {
-	// 	return projectionX[i];
-	// }
 
 	// float getSdevX(int i) {
 	// 	return sdevX[i];
@@ -355,10 +293,6 @@ public:
 
 	// float getSdevZ(int i) {
 	// 	return sdevZ[i];
-	// }
-
-	// float getOverallMis() {
-	// 	return overallMis;
 	// }
 
 	int getRejectedHitsDCA() {

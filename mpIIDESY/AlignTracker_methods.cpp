@@ -818,13 +818,6 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 
 	//--- For Modules only [MC misalignment set per module -> transfer to each layer] -- //
 
-	//Overall Misalignment [w.r.t to other modules]
-	// float sum_of_elems = 0.0;
-	// for (vector<float>::iterator it = sdevZ.begin(); it != sdevZ.end(); ++it) {
-	// 	sum_of_elems += *it;
-	// }
-	// overallMis = sum_of_elems / moduleN;
-
 	cout << "Misalignment(M) and Offsets(O): " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << "M" << noshowpos << i_module + 1 << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. ";
@@ -836,97 +829,8 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 			//pede_mis << sdevX[i_module] << " " << sdevZ[i_module] << " ";
 			pede_mis << dispTheta[i_module] << " ";
 		}
-		//float relMisTmp = sdevZ[i_module] - overallMis;
-		//now push these misalignment parameters for all layers in the module [for use later]
-		// for (int i_view = 0; i_view < viewN; i_view++) {
-		// 	for (int i_layer = 0; i_layer < layerN; i_layer++) {
-		// 		relMis.push_back(relMisTmp);           //relative misalignment per layer [w.r.t to other modules]
-		// 		charMis.push_back(sdevZ[i_module]);  // absolute misalignment per layer
-		// 	} // view
-		// } // layer
-		//cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
 	} // modules
-	//cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
 	cout << noshowpos;
-
-	//--- Calculations for Each Layer -- //
-	// XXX ONLY VALID FOR 2-parameter line fit (i.e. not circle fit)
-	// XXX Verbose calculation via separate loops on purpose - to demonstrate the alignment methods
-	// For straight-line case only.
-
-	// constants
-	// float N = float(layerTotalN); // total N of layers
-	// float D = Tracker::instance()->getResolution(); // Original detector resolution
-	// int i_totalLayers; // dummy layer counter
-
-	// // Pivot Point
-	// i_totalLayers = 0;
-	// for (int i_module = 0; i_module < moduleN; i_module++) {
-	// 	for (int i_view = 0; i_view < viewN; i_view++) {
-	// 		for (int i_layer = 0; i_layer < layerN; i_layer++) {
-	// 			pivotPoint_estimated += distanceMisZ[i_totalLayers];
-	// 			i_totalLayers++;
-	// 		}// layer
-	// 	} // view
-	// } // modules
-	// pivotPoint_estimated = pivotPoint_estimated / N;
-
-	// // Centred Distances and squared distances
-	// i_totalLayers = 0;
-	// for (int i_module = 0; i_module < moduleN; i_module++) {
-	// 	for (int i_view = 0; i_view < viewN; i_view++) {
-	// 		for (int i_layer = 0; i_layer < layerN; i_layer++) {
-	// 			float tmpZDistance = distanceMisZ[i_totalLayers] - pivotPoint_estimated;
-	// 			zDistance_centered.push_back(tmpZDistance);
-	// 			squaredZSum += pow(tmpZDistance, 2);
-	// 			i_totalLayers++;
-	// 		}// layer
-	// 	} // view
-	// } // modules
-
-	// // Estimated SD of residuals, Sum of mis., and squared sum of mis.
-	// i_totalLayers = 0;
-	// for (int i_module = 0; i_module < moduleN; i_module++) {
-	// 	sigma_recon_estimated.push_back(vector< vector< float > > ());
-	// 	for (int i_view = 0; i_view < viewN; i_view++) {
-	// 		sigma_recon_estimated[i_module].push_back( vector<float>  () );
-	// 		for (int i_layer = 0; i_layer < layerN; i_layer++) {
-	// 			float simga_est = D * sqrt( (N - 1) / N - (pow(zDistance_centered[i_totalLayers], 2) / squaredZSum) );
-	// 			sigma_recon_estimated[i_module][i_view].push_back(simga_est);
-	// 			MisZdistanceSum += charMis[i_totalLayers] * zDistance_centered[i_totalLayers];
-	// 			MisSum += charMis[i_totalLayers];
-	// 			i_totalLayers++;
-	// 		}// layer
-	// 	} // view
-	// } // modules
-
-	// // Predicted means of residuals [a.k.a "shear misalignment"]
-	// i_totalLayers = 0;
-	// for (int i_module = 0; i_module < moduleN; i_module++) {
-	// 	for (int i_view = 0; i_view < viewN; i_view++) {
-	// 		for (int i_layer = 0; i_layer < layerN; i_layer++) {
-	// 			float charM = charMis[i_totalLayers];
-	// 			float z = zDistance_centered[i_totalLayers];
-	// 			float shearMistmp = charM - MisSum / N - (z * MisZdistanceSum) / squaredZSum;
-	// 			shearMis.push_back(shearMistmp);
-	// 			i_totalLayers++;
-	// 		}// layer
-	// 	} // view
-	// } // modules
-
-	// // The Chi2 estimation requires misalignment parameters per layer
-	// Chi2_recon_estimated = N - 2.0; // 2 parameter fit
-	// i_totalLayers = 0;
-	// for (int i_module = 0; i_module < moduleN; i_module++) {
-	// 	for (int i_view = 0; i_view < viewN; i_view++) {
-	// 		for (int i_layer = 0; i_layer < layerN; i_layer++) {
-	// 			float M = shearMis[i_totalLayers];
-	// 			float z = zDistance_centered[i_totalLayers];
-	// 			Chi2_recon_estimated += ( (M * M) - (M) / (N) - (2.0 * M * z) / (squaredZSum) ) / (D * D) ;
-	// 			i_totalLayers++;
-	// 		}// layer
-	// 	} // view
-	// } // modules
 
 }//end of misalign
 
@@ -955,46 +859,3 @@ float Tracker::generate_uniform() {
 	float uniform = (( RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
 	return uniform;
 }
-
-/**
- * Returns the peak (maximum so far) resident set size [RSS] (physical
- * memory use) measured in bytes, or zero if the value cannot be
- * determined on this OS. By Dr. David R. Nadeau:
- * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
- */
-// size_t Tracker::getPeakRSS( ) {
-// #if defined(_WIN32)
-// 	/* Windows -------------------------------------------------- */
-// 	PROCESS_MEMORY_COUNTERS info;
-// 	GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
-// 	return (size_t)info.PeakWorkingSetSize;
-
-// #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-// 	/* AIX and Solaris ------------------------------------------ */
-// 	struct psinfo psinfo;
-// 	int fd = -1;
-// 	if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
-// 		return (size_t)0L;      /* Can't open? */
-// 	if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
-// 	{
-// 		close( fd );
-// 		return (size_t)0L;      /* Can't read? */
-// 	}
-// 	close( fd );
-// 	return (size_t)(psinfo.pr_rssize * 1024L);
-
-// #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-// 	/* BSD, Linux, and OSX -------------------------------------- */
-// 	struct rusage rusage;
-// 	getrusage( RUSAGE_SELF, &rusage );
-// #if defined(__APPLE__) && defined(__MACH__)
-// 	return (size_t)rusage.ru_maxrss;
-// #else
-// 	return (size_t)(rusage.ru_maxrss * 1024L);
-// #endif
-
-// #else
-// 	/* Unknown OS ----------------------------------------------- */
-// 	return (size_t)0L;          /* Unsupported. */
-// #endif
-// }
