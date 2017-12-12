@@ -287,8 +287,10 @@ int main(int argc, char* argv[]) {
 	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
 	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  170,  -0.017, 0.017);
+	TH1F* h_slope_fit = new TH1F("h_slope_fit", "Slope: Truth",  99,  -0.005, 0.005);
 	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  104,  -1.3, 1.3);
 	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 170,  -0.017, 0.017);
+	TH1F* h_recon_slope_fit = new TH1F("h_recon_slope_fit", "Slope: Recon", 99,  -0.005, 0.005);
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  104,  -1.3, 1.3);
 	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
 	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
@@ -644,6 +646,7 @@ int main(int argc, char* argv[]) {
 
 			//Filling Track-based plots
 			h_slope->Fill(generated_MC.slope_truth);
+			h_slope_fit->Fill(generated_MC.slope_truth);
 			if (generated_MC.slope_truth>max_slope_truth){
 				max_slope_truth=generated_MC.slope_truth;
 			}
@@ -656,6 +659,7 @@ int main(int argc, char* argv[]) {
 			h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth - generated_MC.intercept_recon);
 			h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
 			h_recon_slope->Fill(generated_MC.slope_recon);
+			h_recon_slope_fit->Fill(generated_MC.slope_recon);
 			if (generated_MC.slope_recon>max_slope_recon){
 				max_slope_recon=generated_MC.slope_recon;
 			}
@@ -699,12 +703,9 @@ int main(int argc, char* argv[]) {
     text_recon->AddText(Form("min = %g", min_slope_recon));
     text_recon->AddText(Form("max = %g", max_slope_recon));
     h_recon_slope->GetListOfFunctions()->Add(text_recon);// 'hack' to get it drawn with the hist
-
-    TF1 *gaussSlope1 = new TF1("gaussSlope1", "gaus", -0.004, 0.004);
-    //gaussSlope->SetParameters(0.0, 0.005);
-    h_slope->Fit("gaussSlope1","Q");
-    TF1 *gaussSlope2 = new TF1("gaussSlope2", "gaus", -0.005, 0.005);
-    h_recon_slope->Fit("gaus","Q");
+  
+    h_recon_slope_fit->Fit("gaus");
+    h_slope_fit->Fit("gaus");
 
     Chi2_recon_actual = h_chi2_recon->GetMean();
 
