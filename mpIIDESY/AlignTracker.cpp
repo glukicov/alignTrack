@@ -287,10 +287,8 @@ int main(int argc, char* argv[]) {
 	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
 	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  170,  -0.017, 0.017);
-	TH1F* h_slope_fit = new TH1F("h_slope_fit", "Slope: Truth",  99,  -0.005, 0.005);
 	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  104,  -1.3, 1.3);
 	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 170,  -0.017, 0.017);
-	TH1F* h_recon_slope_fit = new TH1F("h_recon_slope_fit", "Slope: Recon", 99,  -0.005, 0.005);
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  104,  -1.3, 1.3);
 	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
 	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
@@ -515,7 +513,9 @@ int main(int argc, char* argv[]) {
 				//float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx
 				//float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/d
 				//float dgl1 = ( m*x*x + z*x - z*c - m*z*z - m*x*c - m*m*x*z ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/d𝛉
-				float dgl1 = m * x;
+				//float dgl1 = Tracker::instance()->getDispTheta(generated_MC.Module_i[hitCount])* x;
+				//float dgl1= ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
+				float dgl1= x*m;
 				float dergl[nagl] = {dgl1};
 				// float dergl[nagl] = {dgl1, dgl2};
 				//Labels
@@ -646,26 +646,12 @@ int main(int argc, char* argv[]) {
 
 			//Filling Track-based plots
 			h_slope->Fill(generated_MC.slope_truth);
-			h_slope_fit->Fill(generated_MC.slope_truth);
-			if (generated_MC.slope_truth>max_slope_truth){
-				max_slope_truth=generated_MC.slope_truth;
-			}
-			if (generated_MC.slope_truth<min_slope_truth){
-				min_slope_truth=generated_MC.slope_truth;
-			}
 			h_intercept->Fill(generated_MC.intercept_truth);
 			h_x0->Fill(generated_MC.x0);
 			h_x1->Fill(generated_MC.x1);
 			h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth - generated_MC.intercept_recon);
 			h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
 			h_recon_slope->Fill(generated_MC.slope_recon);
-			h_recon_slope_fit->Fill(generated_MC.slope_recon);
-			if (generated_MC.slope_recon>max_slope_recon){
-				max_slope_recon=generated_MC.slope_recon;
-			}
-			if (generated_MC.slope_truth<min_slope_recon){
-				min_slope_recon=generated_MC.slope_recon;
-			}
 			h_recon_intercept->Fill(generated_MC.intercept_recon);
 			h_pval->Fill(generated_MC.p_value);
 			h_chi2_circle->Fill(generated_MC.chi2_circle);
@@ -690,22 +676,6 @@ int main(int argc, char* argv[]) {
 	helper << "ROOT fitting parameters and output:" << endl;
 
 	bool strongPotting = false; // XXX HACK [!!! some debug-style histos no longer supported]
-
-	TPaveText *text_truth = new TPaveText(.175, .675, .45, .875, "NDC");
-	text_truth->AddText(Form("min = %g", min_slope_truth));
-	text_truth->AddText(Form("max = %g", max_slope_truth));
-	text_truth->SetTextAlign(12);
-	text_truth->SetBorderSize(0);
-    h_slope->GetListOfFunctions()->Add(text_truth);// 'hack' to get it drawn with the hist
-    TPaveText *text_recon = new TPaveText(.175, .675, .45, .875, "NDC");
-    text_recon->SetTextAlign(12);
-    text_recon->SetBorderSize(0);
-    text_recon->AddText(Form("min = %g", min_slope_recon));
-    text_recon->AddText(Form("max = %g", max_slope_recon));
-    h_recon_slope->GetListOfFunctions()->Add(text_recon);// 'hack' to get it drawn with the hist
-  
-    h_recon_slope_fit->Fit("gaus");
-    h_slope_fit->Fit("gaus");
 
     Chi2_recon_actual = h_chi2_recon->GetMean();
 

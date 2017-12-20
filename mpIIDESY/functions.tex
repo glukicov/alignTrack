@@ -205,11 +205,84 @@ DGL_2 = \frac{\partial R}{\partial z} = \frac{ m(c+mz-x) }  { \sqrt{m^2+1} \cdot
 
 \clearpage
 
+Evaluating Circle Fit and Misalignment ($M$) as an anti-clockwise (AC) rotation ($\theta$) along the beam axis ($z=0$) through the detector centre. We now have 3 coordinate systems to refer to the straw positions: \\
+(1) global coordinates ($z$, $x$) - relative to the \say{global} (0,0). The derivatives of interest should be given w.r.t these coordinates. \\ 
+(2) local (\say{detector}) coordinates ($z_d$, $x_d$) in the un-rotated frame - relative to the centre of rotation of a detector, which is given by ($z^{centre}$, $x^{centre}$). \\ 
+(3) local (\say{detector}) coordinates ($z'_{d}$, $x'_d$) in the rotated frame. \\
+Such that, for a centre of rotation ($z^{centre}_d$, $x^{centre}_d$) = ($z^{',centre}_{d}$, $x^{',centre}_d$ = (0,0) ). \\ 
+
+With $z_d'=z_d(\theta)$ and $x'_d=x_d(\theta)$ transformations (the action of AC rotation) is given by
+\begin{equation}
+\begin{bmatrix}z_d'\\x_d'\\\end{bmatrix}=\begin{bmatrix}\cos \theta &-\sin \theta \\\sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}z_d\\x_d\\\end{bmatrix} = \begin{bmatrix}z_d\cos \theta -x_d\sin \theta \\z_d\sin \theta +x_d\cos \theta \\\end{bmatrix}.
+\end{equation}
+Then, we need to translate back to the global coordinates by
+\begin{equation}
+\begin{bmatrix}z\\x\\\end{bmatrix}=\begin{bmatrix}z_d'+z^{centre}\\x_d'+x^{centre}\\\end{bmatrix}=\begin{bmatrix}z_d\cos \theta -x_d\sin \theta + z^{centre} \\z_d\sin \theta +x_d\cos \theta + x^{centre} \\\end{bmatrix}.
+\end{equation}
+
+In the end, we need an expression for $\frac{\partial R}{\partial\theta}$ in terms of \textbf{reconstructed} (i.e. measured) parameters only. Essentially, 
+\begin{equation}
+\frac{\partial R}{\partial\theta} = \frac{\partial DCA(z,x,m,c)}{\partial\theta}= \frac{\partial DCA(z(\theta),x(\theta),m,c)}{\partial\theta},
+\end{equation}
+or, in general, 
+\begin{equation}
+\frac{\partial R}{\partial\theta} = \frac{\partial R}{\partial m}\frac{\partial m}{\partial \theta} == \frac{\partial DCA(\theta)}{\partial\theta} = \frac{\partial DCA(m)}{\partial m}\frac{\partial m(\theta)}{\partial \theta},  \label{eq:partialRM}
+\end{equation}
+where $m$ represents a measurement (e.g. straw displacement).
+
+\begin{equation}
+\begin{split}
+\mathrm{Residual}= R =\mathrm{Point \ To \ Line \ DCA} - \mathrm{Drift \ Circle \ Radius} = DCA(z(\theta),x(\theta),m,c) - r = \\
+= \frac{ |c+mz(\theta)-x(\theta)| }  { \sqrt{m^2+1} } -r = \frac{ |c+m(z_d\cos \theta -x_d\sin \theta + z^{centre})-(z_d\sin \theta +x_d\cos \theta + x^{centre})| }  { \sqrt{m^2+1} } -r=\\ = \frac{ |c+mz_d\cos \theta -mx_d\sin \theta + mz^{centre} -z_d\sin \theta - x_d\cos \theta - x^{centre}| }  { \sqrt{m^2+1} } -r
+\end{split}
+\end{equation}
+We can use Eq.~\ref{eq:partialRM}
+\begin{equation}
+\begin{split}
+\frac{\partial R}{\partial\theta} = \frac{\partial R}{\partial z}\frac{\partial z}{\partial \theta} + \frac{\partial R}{\partial x}\frac{\partial x}{\partial \theta} = \\ \frac{ m(c+mz-x) }  { \sqrt{m^2+1} \cdot |c+mz-x| } \times (-z_d\sin \theta - x_d\cos \theta) \ + \\ \frac{ c+mz-x }  { \sqrt{m^2+1} \cdot |c+mz-x| } \times (z_d\cos \theta - x_d\sin \theta) = \\
+\frac{ m(c+mz-x) }  { \sqrt{m^2+1} \cdot |c+mz-x| } \times (-x'_d) + \\ \frac{ c+mz-x }  { \sqrt{m^2+1} \cdot |c+mz-x| } \times (z'_d) = \\
+\frac{ m(c+mz-x) }  { \sqrt{m^2+1} \cdot |c+mz-x| } \times (-x'_d) + \\ \frac{ c+mz-x }  { \sqrt{m^2+1} \cdot |c+mz-x| } \times (z'_d) =
+,
+\end{split}
+\end{equation}
+
+
+\begin{equation}	
+\mathrm{Resolution} = \sigma = 150 \ \mu m = 0.015 \ \mathrm{cm}
+\end{equation}
+
+\begin{equation}	
+\mathrm{Label}= \mathrm{Module \ Number} \times 10 + \mathrm{Global \ Parameter \ Number} = (e.g. \ 21, 31, \ etc.) 
+\end{equation}
+
+\begin{equation}
+DLC_1 = \frac{\partial R}{\partial c} = \frac{ c+mz-x }  { \sqrt{m^2+1} \cdot |c+mz-x| }
+\end{equation}
+
+\begin{equation}
+DLC_2 = \frac{ \partial R}{\partial m} = \frac{ (m^2+1)\cdot z\cdot(c+mz-x) - m\cdot |c+mz-x|^2 }{ (m^2+1)^{3/2} \cdot |c+mz-x|  }
+\end{equation}
+
+\begin{equation}	
+DGL_1 = \frac{\partial R}{\partial\theta} = \frac{(\sin(\theta)(mz-x)+cos(\theta)(mx+z)) \cdot (-c+\sin(\theta)(mx+z)+\cos(\theta)(x-mz)}{\sqrt{m^2+1} \cdot |c+(mz-x)\cos(\theta) - (mx+z)\sin(\theta)|},
+\end{equation}
+where $\theta$ is still the truth parameter, so we really do need to use small angle approximation here: $\cos(\theta) \rightarrow 1$ and $\cos(\theta) \rightarrow \theta \approx 0$, with small $\theta$, so that 
+
+\begin{equation}	
+DGL_1 = \frac{\partial R}{\partial\theta} = \frac{mx^2+zx-zc-mz^2-mxc-m^2xz}{\sqrt{m^2+1} \cdot |c+mz-x|}.
+\end{equation}
+
+
+
+
+
+\clearpage 
+
 PEDE inputs for Circle Fit and Misalignment ($M$) as an anti-clockwise (AC) rotation ($\theta$) along the beam axis ($z=0$) through the detector centre, with $x'=x(\theta)$ and $z'=z(\theta)$, so that $dR/d\theta$ can be calculated substituting for  
 \begin{equation}
-\begin{bmatrix}z'\\x'\\\end{bmatrix}=\begin{bmatrix}\cos \theta &-\sin \theta \\\sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}x\\y\\\end{bmatrix} = \begin{bmatrix}z\cos \theta -x\sin \theta \\z\sin \theta +x\cos \theta \\\end{bmatrix},
+\begin{bmatrix}z'\\x'\\\end{bmatrix}=\begin{bmatrix}\cos \theta &-\sin \theta \\\sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}z\\x\\\end{bmatrix} = \begin{bmatrix}z\cos \theta -x\sin \theta \\z\sin \theta +x\cos \theta \\\end{bmatrix},
 \end{equation}
-into 
+into - we also need to translate back to the detectors centre by adding ...
 \begin{equation}
 \begin{split}
 \mathrm{Residual}= R =\mathrm{Point \ To \ Line \ DCA} - \mathrm{Drift \ Circle \ Radius} = DCA(z(\theta),x(\theta),m,c) - r = \\
@@ -241,8 +314,6 @@ where $\theta$ is still the truth parameter, so we really do need to use small a
 \begin{equation}	
 DGL_1 = \frac{\partial R}{\partial\theta} = \frac{mx^2+zx-zc-mz^2-mxc-m^2xz}{\sqrt{m^2+1} \cdot |c+mz-x|}.
 \end{equation}
-The validity of the above expression should be revised after the PEDE tests. 
-\clearpage
 
 
 
