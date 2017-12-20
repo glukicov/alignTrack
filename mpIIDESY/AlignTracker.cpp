@@ -465,11 +465,6 @@ int main(int argc, char* argv[]) {
 	helper << "Calculating residuals..." << endl;
 
 //------------------------------------------Main Mille Track Loop---------------------------------------------------------//
-	//Passing constants to plotting scripts
-	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
-	<< Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
-	<< Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
-	<< "  " << Tracker::instance()->getBeamStop() <<  endl;
 
 	bool StrongDebugBool = false;
 	//Generating tracks
@@ -505,17 +500,21 @@ int main(int argc, char* argv[]) {
 				float m = generated_MC.slope_recon;
 				float c = generated_MC.intercept_recon;
 
+			    // TODO add centre of rotation for a module for that hit
+			    float zc = generated_MC.zCentre_straw[hitCount];
+				float xc = generated_MC.xCentre_straw[hitCount];
+			
 				//Local derivatives
 				float dlc1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) ; // "DCA magnitude" dR/dc
 				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
 				//float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx
-				//float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/d
+				//float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/dz
 				//float dgl1 = ( m*x*x + z*x - z*c - m*z*z - m*x*c - m*m*x*z ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/d𝛉
 				//float dgl1 = Tracker::instance()->getDispTheta(generated_MC.Module_i[hitCount])* x;
 				//float dgl1= ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
-				float dgl1= x*m;
+				float dgl1= ( ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (-x + xc )  )  +  ( ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (z - zc) );
 				float dergl[nagl] = {dgl1};
 				// float dergl[nagl] = {dgl1, dgl2};
 				//Labels
@@ -666,6 +665,12 @@ int main(int argc, char* argv[]) {
 		} // cut on DCA check
 
 	} // end of track count // End of Mille // End of collecting residual records
+	//Passing constants to plotting scripts
+	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
+	<< Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " <<recordN << " "
+	<< Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
+	<< "  " << Tracker::instance()->getBeamStop() <<  endl;
+
 	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
 
 	
