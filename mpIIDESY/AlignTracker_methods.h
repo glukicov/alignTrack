@@ -63,6 +63,8 @@ struct MCData {
 	float p_value;
 	float chi2_circle;
 	bool cut = false; // cut trigger to kill the track
+	std::vector<float> zCentre_straw;
+	std::vector<float> xCentre_straw;
 };
 
 // DCA structure - calculated for each hit
@@ -124,7 +126,7 @@ private:
 
 	//float dispX[8] = {0.0, 0.03, -0.03, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 	//float dispZ[8] = {0.0, 0.005, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.0, 0.01, -0.005, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispTheta[8] = {0.0, -0.03, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks

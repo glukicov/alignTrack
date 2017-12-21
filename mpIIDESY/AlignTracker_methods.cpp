@@ -518,6 +518,9 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.slope_truth = xSlope;
 	MC.intercept_truth = xIntercept;
 
+	//Now get the centres of the ideal modules (not truth) and pass to main
+	RotationCentres idealCentres = Tracker::getCentre(mod_lyr_strawIdealPositionX, mod_lyr_strawIdealPositionZ, debug_calc);
+
 	//The main loop is for modules [they produce label of Global Parameters]:
 	// Then looping over layers and views
 	// within layers we will have loops over straws in that layer [to find out which straw was hit and dca]
@@ -598,6 +601,10 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						MC.View_i.push_back(i_view);
 						MC.Layer_i.push_back(i_layer);
 						MC.Straw_i.push_back(mis_ID);
+
+						//push back the tracker centre for the hit
+						MC.zCentre_straw.push_back(idealCentres.z_centres[i_module]);
+						MC.xCentre_straw.push_back(idealCentres.x_centres[i_module]);
 
 						MC.hit_count++;
 						z_counter++;  // incrementing distance of planes
