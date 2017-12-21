@@ -17,7 +17,7 @@ with open("Tracker_p_constants.txt") as f:
         trackN=int(number_str[4])
         #parN=int(number_str[9])
         
-parN = 2
+parN = 1
 print "Parameters from Simulation:"
 print "moduleN= ",moduleN
 print "trackN= ",trackN

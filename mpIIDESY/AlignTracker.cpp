@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->write(Logger::NOTE, "");
 	msg0 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg0.str());
-	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.7) - Gleb Lukicov (UCL) - November 2017         " << Logger::def();
+	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.8) - Gleb Lukicov (UCL) - December 2017         " << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg01.str());
 	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg1.str());
@@ -281,7 +281,7 @@ int main(int argc, char* argv[]) {
 	// Book histograms [once only] - Key quantities
 	TH1F* h_sigma = new TH1F("h_sigma", "Resolution (#sigma)",  49,  Tracker::instance()->getResolution() - 0.001,
 	                         Tracker::instance()->getResolution() + 0.001); // F=float bins, name, title, nBins, Min, Max
-	TH1F* h_res_MP2 = new TH1F("h_res_MP2", "Residuals: Recon",  199, -0.06, 0.06);
+	TH1F* h_res_MP2 = new TH1F("h_res_MP2", "Residuals: Recon",  199, -0.08, 0.08);
 	TH1F* h_dca = new TH1F("h_dca", "DCA",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_dca_unsmeared = new TH1F("h_dca_unsmeared", "Unsmeared DCA",  98,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
@@ -306,11 +306,11 @@ int main(int argc, char* argv[]) {
 	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Intercept",  119,  -0.06, 0.06);
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
 	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 89, -0.1, 90);
-	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 89, -0.1, 4);
+	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 89, -0.1, 10.0);
 	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
-	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  349,  -60, 60); h_DGL1->SetDirectory(cd_PEDE);
+	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  349,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
 	TH1F* h_DGL2 = new TH1F("h_DGL2", "DGL2: All Modules",  149,  -0.017, 0.017); h_DGL2->SetDirectory(cd_PEDE);
 
 	//Use array of pointer of type TH1x to set axis titles and directories
@@ -509,12 +509,7 @@ int main(int argc, char* argv[]) {
 				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				//float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx
-				//float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/dz
-				//float dgl1 = ( m*x*x + z*x - z*c - m*z*z - m*x*c - m*m*x*z ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/d𝛉
-				//float dgl1 = Tracker::instance()->getDispTheta(generated_MC.Module_i[hitCount])* x;
-				//float dgl1= ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
-				float dgl1= ( ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (-x + xc )  )  +  ( ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (z - zc) );
+				float dgl1= ( ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (-x + xc )  )  +  ( ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (z - zc) ); //dR/d𝛉
 				float dergl[nagl] = {dgl1};
 				// float dergl[nagl] = {dgl1, dgl2};
 				//Labels

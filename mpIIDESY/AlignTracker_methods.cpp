@@ -495,7 +495,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	float x1 = x0; // for parallel lines only
 	float xSlope = 0.0; // for parallel lines only
 
-	bool generalLines = true;    // XXX quick hack
+	bool generalLines = false;    // XXX quick hack
 	if (generalLines == true) {
 
 		float signXSlope;
