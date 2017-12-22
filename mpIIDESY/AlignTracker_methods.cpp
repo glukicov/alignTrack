@@ -749,9 +749,9 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 	//Now misaligning detectors
 	dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
 	layer_n = 0;  // layer label
-	metric << "MTheta: ";
+	//metric << "MTheta: ";
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		metric <<  fixed << setprecision(0) << dispX[i_module] << dispZ[i_module] << dispTheta[i_module] ;
+		//metric <<  fixed << setprecision(0) << dispX[i_module] << dispZ[i_module] << dispTheta[i_module] ;
 		float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0+disp)
 		//sdevX.push_back(0.0); // vector to store the actual of misalignment
 		mod_lyr_strawMisPositionX.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
@@ -822,7 +822,7 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 
 	//--- For Modules only [MC misalignment set per module -> transfer to each layer] -- //
 
-	cout << "Misalignment(M) and Offsets(O): " << endl;
+	cout << "Misalignment(M)" << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos <<dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
 		//M" << noshowpos << i_module + 1 << "z :: "  << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]

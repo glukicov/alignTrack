@@ -127,9 +127,9 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	float dispX[8] =     {0.0, 0.01, -0.02, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] =     {0.0, 0.0,  0.0,  0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.0, 0.0,  0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispX[8] =     {0.0, 0.04, -0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] =     {0.0, -0.05, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispTheta[8] = {0.0, 0.01, -0.02, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
