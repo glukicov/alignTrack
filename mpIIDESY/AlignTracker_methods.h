@@ -23,23 +23,22 @@
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
 */
 struct MCData {
-	int hit_count; /** Number of hits in detector */
+	int hitCount; /** Number of hits in detector */
 	// *** Hit Parameters *** // 
-	std::vector<float> residuals; // Recon residuals between the fitted track and a drift circle 
-	std::vector<float> hit_sigmas; /** Resolution for hits in detector per hit */
-	std::vector<int> label_1; // dR/dx
-	std::vector<int> label_2; // dR/dz 
-	std::vector<int> label_3; // dR/d𝛉
+	std::vector<float> residualsRecon; // Recon residuals between the fitted track and a drift circle 
+	std::vector<float> residualsTruth; // Truth residuals
+	std::vector<int> label1; // dR/dx
+	std::vector<int> label2; // dR/dz 
+	std::vector<int> label3; // dR/d𝛉
 	std::vector<int> LR; // +1 = L -1=R - truth LR information 
-	std::vector<float> residuals_gen; // Truth residuals
 	std::vector<float> strawID; // for reconstruction
 	std::vector<float> dca; // truth dca 
 	std::vector<float> driftRad; // recon dca of the hit [should be the same as truth!]
-	std::vector<float> dca_unsmeared;  
-	std::vector<float> z_straw; // the z position of straw centre
-	std::vector<float> x_straw; // the x position of straw centre
-	std::vector<float> zCentre_module; // rotational centre of a module in z 
-	std::vector<float> xCentre_module; // rotational centre of a module in x 
+	std::vector<float> dcaUnsmeared;  
+	std::vector<float> zStraw; // the z position of straw centre
+	std::vector<float> xStraw; // the x position of straw centre
+	std::vector<float> zCentreModule; // rotational centre of a module in z 
+	std::vector<float> xCentreModule; // rotational centre of a module in x 
 	//Detector coordinates [for a hit]
 	std::vector<int> Module_i;
 	std::vector<int> View_i;
@@ -48,12 +47,12 @@ struct MCData {
 	// ** Track parameters ** //
 	float x0; // entrance of beam in x 
 	float x1; // exit 
-	float slope_truth; 
-	float intercept_truth;
-	float slope_recon;
-	float intercept_recon;
-	float p_value;
-	float chi2_circle;
+	float slopeTruth; 
+	float interceptTruth;
+	float slopeRecon;
+	float interceptRecon;
+	float pValue;
+	float chi2Circle;
 	bool cut = false; // cut trigger to kill the track
 	
 };
@@ -76,17 +75,17 @@ struct ReconData {
 
 // Returned once per track
 struct ResidualData {
-	std::vector<float> residuals; // residual between the fitted track and radius of the fit circle;
-	float slope_recon;
-	float intercept_recon;
-	float p_value;
-	float chi2_circle;
+	std::vector<float> residualsRecon; // residual between the fitted track and radius of the fit circle;
+	float slopeRecon;
+	float interceptRecon;
+	float pValue;
+	float chi2Circle;
 };
 
 // Define and return the centre of rotational symmetry
 struct RotationCentres {
-	std::vector<float> z_centres;
-	std::vector<float> x_centres;
+	std::vector<float> zCentres;
+	std::vector<float> xCentres;
 };
 
 /**
@@ -116,8 +115,8 @@ private:
 	static constexpr int nlc = 2; // dR/dc dR/dm
 	static constexpr int ngl = 3; //  dR/dx dR/dz  dR/d𝛉
 	//Matrix memory space
-	int mat_n = moduleN; // # number of global parameters
-	int mat_nc = 0; // # number of constraints
+	int matN = moduleN; // # number of global parameters
+	int matNC = 0; // # number of constraints
 
 	float pValCut = 0.00; // from 0->1
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
@@ -125,9 +124,9 @@ private:
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {0.0, 0.00, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] =     {0.0, 0.02, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
 	float dispZ[8] =     {0.0, 0.00, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.0, 0.00, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispTheta[8] = {0.0, 0.00, -0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
 
 	// **** GEOMETRIC CONSTANTS ****  // XXX will be taken from gm2geom in the future
 	// define detector geometry [all distances are in cm]
@@ -189,34 +188,34 @@ public:
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
 
-	float generate_gaus(); // using the RandomBuffer class
+	float generateGaus(); // using the RandomBuffer class
 
-	float generate_uniform(); // using the RandomBuffer class
+	float generateUniform(); // using the RandomBuffer class
 
-	float pointToLineDCA(float z_straw, float x_straw, float x_slope, float x_intercept); //simple 2D DCA
+	float pointToLineDCA(float zStraw, float xStraw, float xSlopeTruth, float xInterceptTruth); //simple 2D DCA
 
-	DCAData DCAHit(std::vector<float> xLayer, std::vector<float> zLayer, float xTrack, float xSlpoe, float xIntercept, bool debugBool); // calls DCA to chose the right straw
+	DCAData DCAHit(std::vector<float> xLayer, std::vector<float> zLayer, float xTrack, float xSlpoeTruth, float xInterceptTruth, bool debugBool); // calls DCA to chose the right straw
 
-	ReconData HitRecon(int det_ID, float det_dca, std::vector<float> xLayer, std::vector<float> zLayer); //return the dca to ideal geometry, and centre of the circle
+	ReconData HitRecon(int detID, float detDca, std::vector<float> xLayer, std::vector<float> zLayer); //return the dca to ideal geometry, and centre of the circle
 
 	ResidualData GetResiduals(std::vector<float> zRecon, std::vector<float> xRecon, std::vector<float> radRecon, int dataSize, std::ofstream& plot_fit, bool debugBool, bool useTruth, std::vector<int> LR_truth);
 
-	MCData MC_launch(float, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool);
+	MCData MCLaunch(float scatterError, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool);
 
 	void setGeometry(std::ofstream&, std::ofstream&, std::ofstream&, std::ofstream&, bool, std::ofstream&); // MC misalignment of detectors
 
 	//This function will return a vector for the centre of rotation for all modules
 	RotationCentres getCentre(std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionX, std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionZ, std::ofstream& plot_centres);
 
-	void write_constraint_file(std::ofstream&, std::ofstream&, bool, std::ofstream& metric);  // Writes a constraint file for use with PEDE.
+	void writeConstraintFile(std::ofstream&, std::ofstream&, bool, std::ofstream& metric);  // Writes a constraint file for use with PEDE.
 
-	void write_presigma_file(std::ofstream&, std::ofstream& metric);  // Writes a pre-sigma parameter file for use with PEDE.
+	void writePresigmaFile(std::ofstream&, std::ofstream& metric);  // Writes a pre-sigma parameter file for use with PEDE.
 
-	void write_steering_file(std::ofstream&, std::ofstream& metric); // Steering file for PEDE.
+	void writeSteeringFile(std::ofstream&, std::ofstream& metric); // Steering file for PEDE.
 
-	void set_uniform_file(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
+	void setUniformFile(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
 
-	void set_gaussian_file(std::string); // Set filename for Gaussian random numbers
+	void setGaussianFile(std::string); // Set filename for Gaussian random numbers
 
 	//
 	// Setter methods

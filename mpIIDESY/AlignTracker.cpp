@@ -127,9 +127,9 @@ int main(int argc, char* argv[]) {
 	int recordN = 0; //records = tracks
 	float scatterError; // multiple scattering error [calculated here and passed back to the Tracker class]
 	// Those variable are set inside the hits loop, and used outside - hence global scope
-	float residuals_true_sum_2 = 0.0; // squared sum of the true residuals (from measurements)
-	float residuals_recon_sum_2 = 0.0; // squared sum of the recon. residuals (from measurements)
-	float Chi2_recon_actual = 0.0; // Reconstructed Chi2 (from measurements)
+	float residualsTrueSum_2 = 0.0; // squared sum of the true residuals (from measurements)
+	float residualsReconSum_2 = 0.0; // squared sum of the recon. residuals (from measurements)
+	float Chi2ReconActual = 0.0; // Reconstructed Chi2 (from measurements)
 	int negDCA = 0; // counting negatively smeared DCAs
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
 	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
@@ -212,8 +212,8 @@ int main(int argc, char* argv[]) {
 
 	// See https://github.com/glukicov/alignTrack for instructions to generate random numbers
 	try {
-		Tracker::instance()->set_uniform_file("uniform_ran.txt");
-		Tracker::instance()->set_gaussian_file("gaussian_ran.txt");
+		Tracker::instance()->setUniformFile("uniform_ran.txt");
+		Tracker::instance()->setGaussianFile("gaussian_ran.txt");
 	}
 
 	catch (ios_base::failure& e) {
@@ -236,7 +236,6 @@ int main(int argc, char* argv[]) {
 
 	//Debug files [only filled with "d" option]: file streams for debug files
 	// Setting fixed precision for floating point values
-	ofstream debug_mp2("Tracker_d_mille.txt");  debug_mp2 << fixed << setprecision(setPrecision);  //Inputs into binary files
 	ofstream debug_calc("Tracker_d_calc.txt");  debug_calc << fixed << setprecision(setPrecision);     // intermediate calculation
 	ofstream debug_mis("Tracker_d_mis.txt");    debug_mis << fixed << setprecision(setPrecision);    // Misalignment
 	ofstream debug_geom("Tracker_d_geom.txt");  debug_geom << fixed << setprecision(setPrecision);    // Geometry
@@ -266,7 +265,7 @@ int main(int argc, char* argv[]) {
 	TDirectory* cd_PEDE = file->mkdir("PEDE");
 
 	// Book histograms [once only] - Key quantities
-	TH1F* h_sigma = new TH1F("h_sigma", "Resolution (#sigma)",  49,  Tracker::instance()->getResolution() - 0.001,
+	TH1F* h_sigma_MP2 = new TH1F("h_sigma_MP2", "Resolution (#sigma)",  49,  Tracker::instance()->getResolution() - 0.001,
 	                         Tracker::instance()->getResolution() + 0.001); // F=float bins, name, title, nBins, Min, Max
 	TH1F* h_res_MP2 = new TH1F("h_res_MP2", "Residuals: Recon",  199, -0.08, 0.08);
 	TH1F* h_dca = new TH1F("h_dca", "DCA",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
@@ -300,7 +299,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_DGL3 = new TH1F("h_DGL3", "DGL3: All Modules",  149,  -1.1, 1.1); h_DGL3->SetDirectory(cd_PEDE);
 
 	//Use array of pointer of type TH1x to set axis titles and directories
-	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_res_MP2, h_dca, 
+	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma_MP2, h_res_MP2, h_dca, 
 		h_truth_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_residual_recon,
 		h_driftRad, h_dca_unsmeared
 	};
@@ -308,7 +307,7 @@ int main(int argc, char* argv[]) {
 		TH1F* temp = cmTitle[i];
 		cmTitle[i]->SetXTitle("[cm]");
 	}
-	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_chi2_true, h_residual_recon,
+	TH1F* cdAllHits_F[] = {h_sigma_MP2, h_res_MP2, h_dca, h_chi2_true, h_residual_recon,
 		h_chi2_recon, h_driftRad, h_dca_unsmeared
 	};
 	TH1F* cdTracks_F[] = {h_truth_intercept, h_truth_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
@@ -434,15 +433,15 @@ int main(int argc, char* argv[]) {
 	helper << fixed << setprecision(setPrecision);
 
 	// Write a constraint file, for use with pede
-	Tracker::instance()->write_constraint_file(constraint_file, debug_con, debugBool, metric);
+	Tracker::instance()->writeConstraintFile(constraint_file, debug_con, debugBool, metric);
 	helper << "Constraints are written! [see Tracker_con.txt]" << endl;
 
 	//Now writing the steering file
-	Tracker::instance()->write_steering_file(steering_file, metric);
+	Tracker::instance()->writeSteeringFile(steering_file, metric);
 	helper << "Steering file was generated! [see Tracker_con.txt]" << endl;
 
 	// Now set pre-sigma for know global parameters
-	Tracker::instance()->write_presigma_file(presigma_file, metric);
+	Tracker::instance()->writePresigmaFile(presigma_file, metric);
 	helper << "Presigma Parameter file was generated! [see Tracker_par.txt]" << endl;
 
 	helper << "Calculating residuals..." << endl;
@@ -460,28 +459,28 @@ int main(int argc, char* argv[]) {
 		if (debugBool && StrongDebugBool) { helper << "Track: " << trackCount << endl; }
 
 		//Generating tracks
-		MCData generated_MC = Tracker::instance()->MC_launch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen,
+		MCData generatedMC = Tracker::instance()->MCLaunch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen,
 		                                                     plot_hits_fit, debugBool);
 
 		//First of all, check if track has not failed the cut
-		if (generated_MC.cut == false) {
+		if (generatedMC.cut == false) {
 
-			for (int hitCount = 0; hitCount < generated_MC.hit_count; hitCount++) { //counting only hits going though detector
+			for (int hitCount = 0; hitCount < generatedMC.hitCount; hitCount++) { //counting only hits going though detector
 
 				//******************PEDE INPUTS******************************
-				float rMeas_mp2 =  generated_MC.residuals[hitCount]; //Residual
-				float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; //Resolution
+				float resiudalRecon =  generatedMC.residualsRecon[hitCount]; //Reconstructed Residual
+				float resolution =  Tracker::instance()->getResolution(); //Resolution
 				//Number of local and global parameters
 				const int nalc = Tracker::instance()->getNLC(); 
 				const int nagl = Tracker::instance()->getNGL(); 
 			
 				//Variables for derivative calculations:
-				float z = generated_MC.z_straw[hitCount];
-				float x = generated_MC.x_straw[hitCount];
-				float m = generated_MC.slope_recon;
-				float c = generated_MC.intercept_recon;
-			    float zc = generated_MC.zCentre_module[hitCount]; // rotational centre 
-				float xc = generated_MC.xCentre_module[hitCount]; // rotational centre 
+				float z = generatedMC.zStraw[hitCount];
+				float x = generatedMC.xStraw[hitCount];
+				float m = generatedMC.slopeRecon;
+				float c = generatedMC.interceptRecon;
+			    float zc = generatedMC.zCentreModule[hitCount]; // rotational centre 
+				float xc = generatedMC.xCentreModule[hitCount]; // rotational centre 
 			
 				//Local derivatives: see alignment.tex for derivations
 				float dlc1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) ; // "DCA magnitude" dR/dc
@@ -493,51 +492,47 @@ int main(int argc, char* argv[]) {
 				float dgl3= ( ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (-x + xc )  )  +  ( ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (z - zc) ); //dR/d𝛉
 				float dergl[] = {dgl1, dgl2, dgl3};
 				//Labels
-				int l1 = generated_MC.label_1[hitCount]; //Mx
-				int l2 = generated_MC.label_2[hitCount]; //Mz
-				int l3 = generated_MC.label_3[hitCount]; //M𝛉
+				int l1 = generatedMC.label1[hitCount]; //Mx
+				int l2 = generatedMC.label2[hitCount]; //Mz
+				int l3 = generatedMC.label3[hitCount]; //M𝛉
 				int label[] = {l1, l2, l3};
 
 				//TODO multiple scattering errors (no correlations) (for imodel == 1)
 				//add break points multiple scattering later XXX (for imodel == 2)
 				//! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
 
-				if (debugBool and StrongDebugBool) {
-					debug_mp2   << " " << derlc[0] << " " << derlc[1] << " " << dergl[0] << " " << dergl[1] << " " << dergl[2] << " "  << label[0]  << " "
-					<< label[1] << " " << label[2] <<  " "  << rMeas_mp2 << "  " << sigma_mp2 << endl;
-				}
-				M.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
+				M.mille(nalc, derlc, nagl, dergl, label, resiudalRecon, resolution);
 
 				//***********************************Sanity Plots******************************************//
 				//Getting the "detector coordinates"
-				int moduleN = generated_MC.Module_i[hitCount];
-				int viewN = generated_MC.View_i[hitCount];
-				int layerN = generated_MC.Layer_i[hitCount];
-				int strawID = generated_MC.Straw_i[hitCount];
+				int moduleN = generatedMC.Module_i[hitCount];
+				int viewN = generatedMC.View_i[hitCount];
+				int layerN = generatedMC.Layer_i[hitCount];
+				int strawID = generatedMC.Straw_i[hitCount];
 				string UV = Tracker::instance()->getUVmapping(viewN, layerN); // converting view/layer ID into conventional labels
 
 				//Fill for all hits
-				h_res_MP2 -> Fill (rMeas_mp2); // residuals
-				h_sigma -> Fill(sigma_mp2); // errors
-				h_dca->Fill(generated_MC.dca[hitCount]); // truth DCA
-				h_driftRad->Fill(generated_MC.driftRad[hitCount]); // recon DCA
-				h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]); 
+				h_res_MP2 -> Fill (resiudalRecon); // residuals
+				h_sigma_MP2 -> Fill(resolution); // errors
+				h_dca->Fill(generatedMC.dca[hitCount]); // truth DCA
+				h_driftRad->Fill(generatedMC.driftRad[hitCount]); // recon DCA
+				h_dca_unsmeared->Fill(generatedMC.dcaUnsmeared[hitCount]); 
 				h_labels->Fill(l1); h_labels->Fill(l2); h_labels->Fill(l3);
 				h_id ->Fill(strawID);
-				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
+				if (generatedMC.driftRad[hitCount] < 0) negDCA++;
 				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); h_DGL2->Fill(dgl2); h_DGL3->Fill(dgl3);
 
 				//Calculating Chi2 stats:
-				float residual_gen = generated_MC.residuals_gen[hitCount];
-				h_residual_true->Fill(residual_gen);
-				residuals_true_sum_2 += pow(residual_gen / sigma_mp2, 2);
-				h_residual_recon->Fill(rMeas_mp2); //already used as input to mille
-				residuals_recon_sum_2 += pow(rMeas_mp2 / sigma_mp2, 2);
+				float residualTruth = generatedMC.residualsTruth[hitCount];
+				h_residual_true->Fill(residualTruth);
+				residualsTrueSum_2 += pow(residualTruth / resolution, 2);
+				h_residual_recon->Fill(resiudalRecon); //already used as input to mille
+				residualsReconSum_2 += pow(resiudalRecon / resolution, 2);
 
 				//Fill for hits in modules/layers/straws
 				h_name.str(""); h_name << "UV/h_dca_M_" << moduleN << "_" << UV;
 				TH1F* h1 = (TH1F*)file->Get( h_name.str().c_str() );
-				h1->Fill(generated_MC.dca[hitCount]);
+				h1->Fill(generatedMC.dca[hitCount]);
 
 				h_name.str(""); h_name << "UV/h_strawID_M_" << moduleN << "_" << UV;
 				TH1I* h2 = (TH1I*)file->Get( h_name.str().c_str() );
@@ -545,40 +540,40 @@ int main(int argc, char* argv[]) {
 
 				h_name.str(""); h_name << "UV/h_LR_M_" << moduleN << "_" << UV;
 				TH1F* h3 = (TH1F*)file->Get( h_name.str().c_str() );
-				h3 ->Fill(generated_MC.LR[hitCount]);
+				h3 ->Fill(generatedMC.LR[hitCount]);
 
 				h_name.str(""); h_name << "Straws/h" << moduleN << "_straw" << strawID;
 				TH1F* h4 = (TH1F*)file->Get( h_name.str().c_str() );
-				h4->Fill(generated_MC.dca[hitCount]);
+				h4->Fill(generatedMC.dca[hitCount]);
 				h4-> SetFillColor(colourVector[strawID]);
 
 				h_name.str(""); h_name << "Modules/h_DCA_Module_" << moduleN;
 				TH1F* h7 = (TH1F*)file->Get( h_name.str().c_str() );
-				h7->Fill(generated_MC.dca[hitCount]);
+				h7->Fill(generatedMC.dca[hitCount]);
 
 				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN;
 				TH1F* h8 = (TH1F*)file->Get( h_name.str().c_str() );
-				h8->Fill(rMeas_mp2);
+				h8->Fill(resiudalRecon);
 
 				h_name.str(""); h_name << "UV/h_residual_recon_M_" << moduleN << "_" << UV;
 				TH1F* h9 = (TH1F*)file->Get( h_name.str().c_str() );
-				h9->Fill(rMeas_mp2);
+				h9->Fill(resiudalRecon);
 
 				h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
 				TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
-				h11->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+				h11->Fill( resiudalRecon / resolution);
 
 				h_name.str(""); h_name << "Modules/h_pull_M_" << moduleN;
 				TH1F* h12 = (TH1F*)file->Get( h_name.str().c_str() );
-				h12->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
+				h12->Fill( resiudalRecon / resolution);
 
-				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN << "_" << generated_MC.LR[hitCount];
+				h_name.str(""); h_name << "Modules/h_Residuals_Module_" << moduleN << "_" << generatedMC.LR[hitCount];
 				TH1F* h13 = (TH1F*)file->Get( h_name.str().c_str() );
-				h13->Fill(rMeas_mp2);
+				h13->Fill(resiudalRecon);
 
 				//Now plot global and local derivatives for straw 3 only in each UV
 				if (strawID == 2) {
-					h_name.str(""); h_name << "PEDE/h_DLC1_M" << moduleN << UV << "_" << generated_MC.LR[hitCount];
+					h_name.str(""); h_name << "PEDE/h_DLC1_M" << moduleN << UV << "_" << generatedMC.LR[hitCount];
 					TH1F* h14 = (TH1F*)file->Get( h_name.str().c_str() );
 					h14->Fill(dlc1);
 
@@ -586,7 +581,7 @@ int main(int argc, char* argv[]) {
 					TH1F* h15 = (TH1F*)file->Get( h_name.str().c_str() );
 					h15->Fill(dlc2);
 
-					h_name.str(""); h_name << "PEDE/h_DGL1_M" << moduleN << UV  << "_" << generated_MC.LR[hitCount];
+					h_name.str(""); h_name << "PEDE/h_DGL1_M" << moduleN << UV  << "_" << generatedMC.LR[hitCount];
 					TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
 					h16->Fill(dgl1);
 
@@ -597,28 +592,28 @@ int main(int argc, char* argv[]) {
 
 			//***********************************Sanity Plots: Once per Track******************************************/
 			//For true tracks
-			float chi2_true = residuals_true_sum_2;
-			h_chi2_true->Fill(chi2_true);
+			float chi2True = residualsTrueSum_2;
+			h_chi2_true->Fill(chi2True);
 			//For recon tracks
-			float chi2_recon = residuals_recon_sum_2;
-			h_chi2_recon->Fill(chi2_recon);
+			float chi2Recon = residualsReconSum_2;
+			h_chi2_recon->Fill(chi2Recon);
 			//Resetting counters for next track
-			residuals_true_sum_2 = 0;
-			residuals_recon_sum_2 = 0;
-			h_hitCount->Fill(generated_MC.hit_count);
+			residualsTrueSum_2 = 0;
+			residualsReconSum_2 = 0;
+			h_hitCount->Fill(generatedMC.hitCount);
 
 			//Filling Track-based plots
-			h_truth_slope->Fill(generated_MC.slope_truth);
-			h_truth_intercept->Fill(generated_MC.intercept_truth);
-			h_x0->Fill(generated_MC.x0);
-			h_x1->Fill(generated_MC.x1);
-			h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth - generated_MC.intercept_recon);
-			h_reconMinusTrue_track_slope->Fill(generated_MC.slope_truth - generated_MC.slope_recon);
-			h_recon_slope->Fill(generated_MC.slope_recon);
-			h_recon_intercept->Fill(generated_MC.intercept_recon);
-			h_pval->Fill(generated_MC.p_value);
-			h_chi2_circle->Fill(generated_MC.chi2_circle);
-			h_chi2_circle_ndf->Fill(generated_MC.chi2_circle / (generated_MC.hit_count - 2));
+			h_truth_slope->Fill(generatedMC.slopeTruth);
+			h_truth_intercept->Fill(generatedMC.interceptTruth);
+			h_x0->Fill(generatedMC.x0);
+			h_x1->Fill(generatedMC.x1);
+			h_reconMinusTrue_track_intercept->Fill(generatedMC.interceptTruth - generatedMC.interceptRecon);
+			h_reconMinusTrue_track_slope->Fill(generatedMC.slopeTruth - generatedMC.slopeRecon);
+			h_recon_slope->Fill(generatedMC.slopeRecon);
+			h_recon_intercept->Fill(generatedMC.interceptRecon);
+			h_pval->Fill(generatedMC.pValue);
+			h_chi2_circle->Fill(generatedMC.chi2Circle);
+			h_chi2_circle_ndf->Fill(generatedMC.chi2Circle / (generatedMC.hitCount - 2));
 
 			// XXX additional measurements from MS IF (imodel == 2) THEN
 			//IF (imodel >= 3) THEN
@@ -646,7 +641,7 @@ int main(int argc, char* argv[]) {
 
 	bool strongPotting = false; // XXX HACK [!!! some debug-style histos no longer supported]
 
-    Chi2_recon_actual = h_chi2_recon->GetMean();
+    Chi2ReconActual = h_chi2_recon->GetMean();
 
     helper << "-------------------------------------------------------------------------" << endl;
     helper << " " << endl;
@@ -655,7 +650,7 @@ int main(int argc, char* argv[]) {
     helper << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
     helper << "Number of DCA (==drift radii) smeared below 0 is " << negDCA << endl;
     stringstream out1, out2, out3, out4, out5;
-    out2 << "Measured Mean Chi2 (circle fit) " << Chi2_recon_actual;
+    out2 << "Measured Mean Chi2 (circle fit) " << Chi2ReconActual;
     Logger::Instance()->write(Logger::WARNING, out2.str());
     LOG << out1.rdbuf() << endl; LOG << out2.rdbuf() << endl;
     float rejectsFrac = Tracker::instance()->getRejectedHitsDCA();
@@ -694,12 +689,10 @@ int main(int argc, char* argv[]) {
 	// Close text files
 	constraint_file.close();
 	steering_file.close();
-	debug_mp2.close();
-	debug_calc.close();
 	debug_mis.close();
 	debug_geom.close();
+	debug_calc.close();
 	debug_off.close();
-	debug_mc.close();
 	debug_con.close();
 
 	file->Write();
