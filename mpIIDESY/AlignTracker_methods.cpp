@@ -453,10 +453,6 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 				// "DCA from that line to the straw centre" - "Radius of the drift circle"
 				float Res = Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
 				resData.residuals.push_back(Res);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
-
-				float xTrack_recon = gradient * zRecon[i_hit] + intercept; // Recon track position in-line with the layer [from line x=ym+c]
-				resData.x_track_recon.push_back(xTrack_recon);  // Recon in-line (gen.) track position
-
 			} // hits
 
 			// Passing recon track parameters to MC
@@ -535,8 +531,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				//The registered hit position on the misaligned detector is smeared by its resolution
 				// zTrack is just the distance[z_counter] - in-line with the layer [chose the middle straw]
 				xTrack = xSlope * mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][int(strawN/2)] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
-				MC.x_track_true.push_back(xTrack);  // True in-line (gen.) track position
-
 				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
 				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPositionX[i_module][i_view][i_layer], mod_lyr_strawMisPositionZ[i_module][i_view][i_layer], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
 				//Check for trigger on DCA < 500 um, and only continue calculations not triggered
@@ -546,7 +540,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 					//Rejection of hits due to geometry (i.e. missed hits)
 					//No signal in a straw = no signal in the layer
 					if (dca > strawRadius && hitCut == true) { //[between (0,0.25]
-						MC.hit_bool.push_back(0);
 						incRejectedHitsDCA();
 						if (debugBool) {cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
 						z_counter++;  // incrementing distance of planes
@@ -561,13 +554,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						MC.dca_unsmeared.push_back(MisDetector.dcaUnsmeared);
 						MC.strawID.push_back(mis_ID);
 						MC.LR.push_back(mis_LRSign);
-						//Recording hit information
-						MC.hit_list.push_back(z_counter); //push back the absolute layer # into the hit list
-						MC.hit_bool.push_back(1);  // 1 = hit
-						stringstream absolute_hit;
-						//Making absolute strawID for hit for plotting:
-						absolute_hit << mis_ID;
-						MC.absolute_straw_hit.push_back(absolute_hit.str().c_str());
 						if (debugBool && StrongDebugBool) {cout << "DCA is= " << dca << " for straw ID= " << mis_ID << " was hit from " << mis_LRSign << endl;}
 						// RECONSTRUCTED PARAMETERS
 						//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
@@ -582,7 +568,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
 						//Module number [for labelling] - after (if) passing the rejection.
 						// Millepede accepts only positive non-zero integers as labels
-						MC.i_hits.push_back(i_module + 1); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
 						// M0=10, M1=20... // x=1, z=2, 𝛉=3
 						int label_1 = (i_module + 1) * 10 + 1; // x
 						int label_2 = (i_module + 1) * 10 + 2; // z
@@ -592,11 +577,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						MC.label_3.push_back(label_3);
 
 						//Constants of the hit
-						//MC.z_true.push_back(distanceMisZ[z_counter]);
-						//MC.z_recon.push_back(distanceIdealZ[z_counter]);
 						MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
-						MC.nlc.push_back(Tracker::instance()->getNLC());
-						MC.ngl.push_back(Tracker::instance()->getNGL());
 
 						//Sanity Plots: Hits
 						MC.dca.push_back(dca); // DCA [sanity]
@@ -607,8 +588,8 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						MC.Straw_i.push_back(mis_ID);
 
 						//push back the tracker centre for the hit
-						MC.zCentre_straw.push_back(idealCentres.z_centres[i_module]);
-						MC.xCentre_straw.push_back(idealCentres.x_centres[i_module]);
+						MC.zCentre_module.push_back(idealCentres.z_centres[i_module]);
+						MC.xCentre_module.push_back(idealCentres.x_centres[i_module]);
 
 						MC.hit_count++;
 						z_counter++;  // incrementing distance of planes
@@ -631,7 +612,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 		MC.intercept_recon = res_Data.intercept_recon;
 		MC.x_straw = xRecon;
 		MC.z_straw = zRecon;
-		MC.x_track_recon = res_Data.x_track_recon;
 		MC.p_value = res_Data.p_value;
 		MC.chi2_circle = res_Data.chi2_circle;
 		MC.driftRad = radRecon; // vector

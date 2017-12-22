@@ -13,19 +13,21 @@ Python Plotting Scripts:
 Tracker
 Functions
 
-Python Iterative Test Scripts:
+Python Iterative Test Scripts for establishing PEDE performance:
+Seed
+FoM 
 
 Grid Submission Scripts:
 
-Function Derivations in functions.tex
+Function Derivations in alignment.tex
 
 ROOT Plotting macro rootlogon.C [loaded automatically e.g.: rootbrowse Tracker.root]
 
 Other?
-TODO Describe all code -> Add to Github
+TODO Describe all code -> Add to Github/Redmine
 
-============================= Test Model v0.9 =======================================
-*Simple 2D case (2D alignment as rotation along detector centre) with Circle Fit.
+============================= Test Model v1.0 =======================================
+*Simple 2D case (2D alignment as 2D translation and rotation along detector centre) with Circle Fit.
 * No B-field, straight tracks, no MS, 100% efficiency.
 *(!) NATURAL UNITS (PEDE): cm, rad, GeV [natural units will be omitted]
 
@@ -35,13 +37,13 @@ TODO Describe all code -> Add to Github
 Terminology:
 -detector=module (==the alignment object)
 -Local Parameters: track parameters (e.g slope and intercept)
--Global Parameters: x and z position of a detector
+-Global Parameters: x and z position of a detector (and 𝛉 as a rotation through centre)
 
 Gaussian (gaus) Smearing: Mean=0, RMS=1  (on hits via detector resolution)
 Beam originates (in z direction) from z=0, straight tracks, no scattering,
     tracks are lines between z=beamStart and z=beamStop, with uniformly generated x1 and slope.
 Resolution (i.e. tracker systematic) is implemented.
-Misalignment is implemented "manually" for each module in +/- x/z direction
+Misalignment is implemented "manually" for each module in +/- x/z direction, +/- 𝛉
 [all layers in module are dependent (i.e. move together)]
 
 Features [can be on or off - see AlignTracker.h]:
@@ -127,13 +129,11 @@ int main(int argc, char* argv[]) {
 	// Those variable are set inside the hits loop, and used outside - hence global scope
 	float residuals_true_sum_2 = 0.0; // squared sum of the true residuals (from measurements)
 	float residuals_recon_sum_2 = 0.0; // squared sum of the recon. residuals (from measurements)
-	float pivotPoint_actual = 0.0; // central z point from measurements
 	float Chi2_recon_actual = 0.0; // Reconstructed Chi2 (from measurements)
 	int negDCA = 0; // counting negatively smeared DCAs
 	const Color_t colourVector[] = {kMagenta, kOrange, kBlue, kGreen, kYellow, kRed, kGray, kBlack}; //8 colours for up to 8 modules
 	gErrorIgnoreLevel = kWarning; // Display ROOT Warning and above messages [i.e. suppress info]
 	gROOT->Macro("rootlogon.C");
-	float min_slope_truth(0), max_slope_truth(0), min_slope_recon(0), max_slope_recon(0);  // min/max of x-axis for h_slope
 	// Simple LR mapping for ROOT plots
 	char nameLR[] = {'L', 'R'};
 	char nameResSign[] = {'P', 'N'};
@@ -159,24 +159,12 @@ int main(int argc, char* argv[]) {
 		try {
 			compareStr = argv[1];
 			tracksInput = stoi(argv[2]);
-			//ThetaOffset1= stof(argv[3]);
-			//ThetaOffset2= stof(argv[4]);
-			// offset1X = stof(argv[3]);
-			// offset2X = stof(argv[4]);
-			// offset1Z = stof(argv[5]);
-			// offset2Z = stof(argv[6]);
 		}
 		catch (ios_base::failure& e) {
 			Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
 		}
 	} // end of 2nd else [correct # arguments]
 
-	//Tracker::instance()->setThetaOffset1(ThetaOffset1);
-	//Tracker::instance()->setThetaOffset2(ThetaOffset2);
-	// Tracker::instance()->setXOffset1(offset1X);
-	// Tracker::instance()->setXOffset2(offset2X);
-	// Tracker::instance()->setZOffset1(offset1Z);
-	// Tracker::instance()->setZOffset2(offset2Z);
 	//this is also passed to Tracker functions, with debug file names
 	if (compareStr == "d") {
 		debugBool = true; // print out to debug files [and verbose cout output]
@@ -264,7 +252,6 @@ int main(int argc, char* argv[]) {
 	ofstream pede_mis("Tracker_pede_mis.txt");  pede_mis << fixed << setprecision(setPrecision);  // Misalignments
 	ofstream timeFile("Tracker_time.txt", ios_base::app);  timeFile << fixed << setprecision(setPrecision);  // Misalignments
 	ofstream metric("Tracker_metric.txt"); stringstream metricStr; metricStr.str(""); //metric << fixed << setprecision(setPrecision);  // Misalignments
-	//ofstream debug_append("Tracker_d_append.txt", std::ios_base::app);  debug_append << fixed << setprecision(setPrecision);  // Misalignments
 
 	//------------------------------------------ROOT: Booking etc.---------------------------------------------------------//
 
@@ -283,19 +270,17 @@ int main(int argc, char* argv[]) {
 	                         Tracker::instance()->getResolution() + 0.001); // F=float bins, name, title, nBins, Min, Max
 	TH1F* h_res_MP2 = new TH1F("h_res_MP2", "Residuals: Recon",  199, -0.08, 0.08);
 	TH1F* h_dca = new TH1F("h_dca", "DCA",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
+	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
 	TH1F* h_dca_unsmeared = new TH1F("h_dca_unsmeared", "Unsmeared DCA",  98,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
-	TH1I* h_id_dca = new TH1I("h_id_dca", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
+	TH1I* h_id = new TH1I("h_id", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
-	TH1F* h_slope = new TH1F("h_slope", "Slope: Truth",  170,  -0.017, 0.017);
-	TH1F* h_intercept = new TH1F("h_intercept", "Intercept: Truth ",  104,  -1.3, 1.3);
+	TH1F* h_truth_slope = new TH1F("h_truth_slope", "Slope: Truth",  170,  -0.017, 0.017);
+	TH1F* h_truth_intercept = new TH1F("h_truth_intercept", "Intercept: Truth ",  104,  -1.3, 1.3);
 	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 170,  -0.017, 0.017);
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  104,  -1.3, 1.3);
 	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
 	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
-	//Track/Hits-based
-	TH1F* h_track_true = new TH1F("h_track_true", "All track points: Truth",  49,  -3, 3);
-	TH1F* h_track_recon = new TH1F("h_track_recon", "All track points: Recon",  49,  -3, 3);
-	TH1F* h_track_TR_diff = new TH1F("h_track_TR_diff", "#Delta (Recon-True) track points",  149, -0.03, 0.03);
+	//Track/Hits-based	
 	TH1I* h_labels = new TH1I("h_labels", "Labels in PEDE",  72, 10, 46);
 	TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals: Truth", 500, -0.06, 0.06);
 	TH1F* h_chi2_true = new TH1F("h_chi2_true", "#Chi^{2}: Truth", 40, -1, 50);
@@ -307,7 +292,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
 	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 89, -0.1, 90);
 	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 89, -0.1, 10.0);
-	TH1F* h_driftRad = new TH1F("h_driftRad", "Drift Rad: circle fit",  149,  -0.1, Tracker::instance()->getStrawRadius() + 0.25);
+	
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
 	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  349,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
@@ -315,21 +300,21 @@ int main(int argc, char* argv[]) {
 	TH1F* h_DGL3 = new TH1F("h_DGL3", "DGL3: All Modules",  149,  -1.1, 1.1); h_DGL3->SetDirectory(cd_PEDE);
 
 	//Use array of pointer of type TH1x to set axis titles and directories
-	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon,
-		h_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_residual_recon,
-		h_driftRad, h_track_TR_diff, h_dca_unsmeared
+	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_res_MP2, h_dca, 
+		h_truth_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_residual_recon,
+		h_driftRad, h_dca_unsmeared
 	};
 	for (int i = 0; i < (int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++) {
 		TH1F* temp = cmTitle[i];
 		cmTitle[i]->SetXTitle("[cm]");
 	}
-	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon, h_residual_true, h_chi2_true, h_residual_recon,
-		h_chi2_recon, h_driftRad, h_track_TR_diff, h_dca_unsmeared
+	TH1F* cdAllHits_F[] = {h_sigma, h_res_MP2, h_dca, h_chi2_true, h_residual_recon,
+		h_chi2_recon, h_driftRad, h_dca_unsmeared
 	};
-	TH1F* cdTracks_F[] = {h_intercept, h_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
+	TH1F* cdTracks_F[] = {h_truth_intercept, h_truth_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
 		h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle, h_chi2_circle_ndf
 	};
-	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id_dca};
+	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id};
 	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
 		cdAllHits_F[i]->SetDirectory(cd_All_Hits);
 	}
@@ -394,11 +379,8 @@ int main(int argc, char* argv[]) {
 					if (i_LR == 0) {auto hluv2 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, -1.00001, -0.99995); hluv2->SetDirectory(cd_PEDE);}
 					if (i_LR == 1) {auto hluv2 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  247, 0.99995, 1.00001); hluv2->SetDirectory(cd_PEDE);}
 				}
-
 			} // layers
-
 		} // views
-
 	} // modules
 
 	//Modules
@@ -467,7 +449,7 @@ int main(int argc, char* argv[]) {
 
 //------------------------------------------Main Mille Track Loop---------------------------------------------------------//
 
-	bool StrongDebugBool = false;
+	bool StrongDebugBool = true;
 	//Generating tracks
 	for (int trackCount = 0; trackCount < Tracker::instance()->getTrackNumber(); trackCount++) {
 		//float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
@@ -490,46 +472,39 @@ int main(int argc, char* argv[]) {
 				float rMeas_mp2 =  generated_MC.residuals[hitCount]; //Residual
 				float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; //Resolution
 				//Number of local and global parameters
-				// const int nalc = Tracker::instance()->getNLC(); 
-				// const int nagl = Tracker::instance()->getNGL(); // TODO pass nlc ngl from methods
-				const int nalc = 2; 
-				const int nagl = 3; 
-
-				//label to associate hits within different layers with a correct module
-				// same as ModuleN+1 [already converted]
-
+				const int nalc = Tracker::instance()->getNLC(); 
+				const int nagl = Tracker::instance()->getNGL(); 
+			
 				//Variables for derivative calculations:
 				float z = generated_MC.z_straw[hitCount];
 				float x = generated_MC.x_straw[hitCount];
 				float m = generated_MC.slope_recon;
 				float c = generated_MC.intercept_recon;
-
-			    // TODO add centre of rotation for a module for that hit
-			    float zc = generated_MC.zCentre_straw[hitCount];
-				float xc = generated_MC.xCentre_straw[hitCount];
+			    float zc = generated_MC.zCentre_module[hitCount]; // rotational centre 
+				float xc = generated_MC.xCentre_module[hitCount]; // rotational centre 
 			
-				//Local derivatives
+				//Local derivatives: see alignment.tex for derivations
 				float dlc1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) ; // "DCA magnitude" dR/dc
 				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
-				float derlc[nalc] = {dlc1, dlc2};
+				float derlc[] = {dlc1, dlc2};
 				//Global derivatives
 				float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx
 				float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/dz
 				float dgl3= ( ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (-x + xc )  )  +  ( ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (z - zc) ); //dR/d𝛉
-				float dergl[nagl] = {dgl1, dgl2, dgl3};
+				float dergl[] = {dgl1, dgl2, dgl3};
 				//Labels
 				int l1 = generated_MC.label_1[hitCount]; //Mx
 				int l2 = generated_MC.label_2[hitCount]; //Mz
 				int l3 = generated_MC.label_3[hitCount]; //M𝛉
-				int label[nagl] = {l1, l2, l3};
+				int label[] = {l1, l2, l3};
 
 				//TODO multiple scattering errors (no correlations) (for imodel == 1)
 				//add break points multiple scattering later XXX (for imodel == 2)
 				//! add 'broken lines' offsets for multiple scattering XXX (for imodel == 3)
 
-				if (debugBool) {
-					debug_mp2  << nalc << " " << derlc[0] << " " << derlc[1] << " " << nagl << " " << dergl[0] << " "  << label[0]  << " "
-					<< rMeas_mp2 << "  " << sigma_mp2 << endl;
+				if (debugBool and StrongDebugBool) {
+					debug_mp2   << " " << derlc[0] << " " << derlc[1] << " " << dergl[0] << " " << dergl[1] << " " << dergl[2] << " "  << label[0]  << " "
+					<< label[1] << " " << label[2] <<  " "  << rMeas_mp2 << "  " << sigma_mp2 << endl;
 				}
 				M.mille(nalc, derlc, nagl, dergl, label, rMeas_mp2, sigma_mp2);
 
@@ -544,20 +519,13 @@ int main(int argc, char* argv[]) {
 				//Fill for all hits
 				h_res_MP2 -> Fill (rMeas_mp2); // residuals
 				h_sigma -> Fill(sigma_mp2); // errors
-				h_dca->Fill(generated_MC.dca[hitCount]); // DCA
-				h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]);
-				h_labels->Fill(l1); h_labels->Fill(l2); h_labels->Fill(l3);// XXX
-				h_id_dca ->Fill(strawID);
-				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
+				h_dca->Fill(generated_MC.dca[hitCount]); // truth DCA
+				h_driftRad->Fill(generated_MC.driftRad[hitCount]); // recon DCA
+				h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]); 
+				h_labels->Fill(l1); h_labels->Fill(l2); h_labels->Fill(l3);
+				h_id ->Fill(strawID);
 				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
 				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); h_DGL2->Fill(dgl2); h_DGL3->Fill(dgl3);
-				//cout << "dgl1" << dgl1 << endl;
-
-				//Track-based hit parameters
-				//h_res_x_z->Fill(generated_MC.z_recon[hitCount], generated_MC.residuals[hitCount]);
-				h_track_true->Fill(generated_MC.x_track_true[hitCount]);
-				h_track_recon->Fill(generated_MC.x_track_recon[hitCount]);
-				h_track_TR_diff->Fill(generated_MC.x_track_recon[hitCount] - generated_MC.x_track_true[hitCount]);
 
 				//Calculating Chi2 stats:
 				float residual_gen = generated_MC.residuals_gen[hitCount];
@@ -598,7 +566,6 @@ int main(int argc, char* argv[]) {
 
 				h_name.str(""); h_name << "UV/h_pull_M_" << moduleN << "_" << UV;
 				TH1F* h11 = (TH1F*)file->Get( h_name.str().c_str() );
-				//h11->Fill( rMeas_mp2 / sqrt( residual_gen - Tracker::instance()->get_sigma_recon_estimated(moduleN, viewN, layerN) ) );
 				h11->Fill( rMeas_mp2 / Tracker::instance()->getResolution());
 
 				h_name.str(""); h_name << "Modules/h_pull_M_" << moduleN;
@@ -623,10 +590,7 @@ int main(int argc, char* argv[]) {
 					TH1F* h16 = (TH1F*)file->Get( h_name.str().c_str() );
 					h16->Fill(dgl1);
 
-					// h_name.str(""); h_name << "PEDE/h_DGL2_M" << moduleN << UV;
-					// TH1F* h17 = (TH1F*)file->Get( h_name.str().c_str() );
-					// h17->Fill(dgl2); XXX
-				}
+				}  // straw 3
 
 				hitsN++; //count hits
 			} // end of hits loop
@@ -644,8 +608,8 @@ int main(int argc, char* argv[]) {
 			h_hitCount->Fill(generated_MC.hit_count);
 
 			//Filling Track-based plots
-			h_slope->Fill(generated_MC.slope_truth);
-			h_intercept->Fill(generated_MC.intercept_truth);
+			h_truth_slope->Fill(generated_MC.slope_truth);
+			h_truth_intercept->Fill(generated_MC.intercept_truth);
 			h_x0->Fill(generated_MC.x0);
 			h_x1->Fill(generated_MC.x1);
 			h_reconMinusTrue_track_intercept->Fill(generated_MC.intercept_truth - generated_MC.intercept_recon);
@@ -691,9 +655,7 @@ int main(int argc, char* argv[]) {
     helper << Tracker::instance()->getTrackNumber() - recordN << " records rejected (" << rejectedTracks << " %)." << endl;
     helper << "Number of DCA (==drift radii) smeared below 0 is " << negDCA << endl;
     stringstream out1, out2, out3, out4, out5;
-	//out1 << "Expected Mean Chi2 (for a general straight line fit) " << Tracker::instance()->get_Chi2_recon_estimated();
     out2 << "Measured Mean Chi2 (circle fit) " << Chi2_recon_actual;
-	//Logger::Instance()->write(Logger::WARNING, out1.str());
     Logger::Instance()->write(Logger::WARNING, out2.str());
     LOG << out1.rdbuf() << endl; LOG << out2.rdbuf() << endl;
     float rejectsFrac = Tracker::instance()->getRejectedHitsDCA();

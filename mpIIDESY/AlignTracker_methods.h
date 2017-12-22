@@ -24,50 +24,38 @@
 */
 struct MCData {
 	int hit_count; /** Number of hits in detector */
-	//Hits
-	std::vector<float> z_true; /** Z-positions of generated hits in detector */ //distances
-	std::vector<float> z_recon; /** Z-positions of recon hits in detector */ //distances
-	std::vector<float> residuals; /** X-positions of residuals between ideal and real geometry */
-	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
-	std::vector<float> nlc; /** Resolution for hits in detector */
-	std::vector<float> ngl; /** Resolution for hits in detector */
-	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
-	std::vector<int> label_1;
-	std::vector<int> label_2;
-	std::vector<int> label_3;
-	std::vector<int> hit_list;  // same of layers (absolute)
-	std::vector<int> hit_bool;  // same of layers (absolute) +1 = hit 0=no hit
-	std::vector<string> absolute_straw_hit; // for plotting
-	std::vector<int> LR; // +1 = L -1=R
-	std::vector<float> residuals_gen;
-	std::vector<int> residuals_fit;
-	std::vector<float> strawID;
-	std::vector<float> dca; /** X-positions of recorded hits in a real detector */
-	std::vector<float> dca_unsmeared; /** X-positions of recorded hits in a real detector */
-	//Detector coordinates
+	// *** Hit Parameters *** // 
+	std::vector<float> residuals; // Recon residuals between the fitted track and a drift circle 
+	std::vector<float> hit_sigmas; /** Resolution for hits in detector per hit */
+	std::vector<int> label_1; // dR/dx
+	std::vector<int> label_2; // dR/dz 
+	std::vector<int> label_3; // dR/d𝛉
+	std::vector<int> LR; // +1 = L -1=R - truth LR information 
+	std::vector<float> residuals_gen; // Truth residuals
+	std::vector<float> strawID; // for reconstruction
+	std::vector<float> dca; // truth dca 
+	std::vector<float> driftRad; // recon dca of the hit [should be the same as truth!]
+	std::vector<float> dca_unsmeared;  
+	std::vector<float> z_straw; // the z position of straw centre
+	std::vector<float> x_straw; // the x position of straw centre
+	std::vector<float> zCentre_module; // rotational centre of a module in z 
+	std::vector<float> xCentre_module; // rotational centre of a module in x 
+	//Detector coordinates [for a hit]
 	std::vector<int> Module_i;
 	std::vector<int> View_i;
 	std::vector<int> Layer_i;
 	std::vector<int> Straw_i;
-	//track parameters
-	float x0;
-	float x1;
-	float slope_truth;
+	// ** Track parameters ** //
+	float x0; // entrance of beam in x 
+	float x1; // exit 
+	float slope_truth; 
 	float intercept_truth;
 	float slope_recon;
 	float intercept_recon;
-	float meanXReconTrack;
-	float meanZReconTrack;
-	std::vector<float> driftRad;
-	std::vector<float> z_straw;
-	std::vector<float> x_straw;
-	std::vector<float> x_track_true; /** X-positions of true hits (generated line x coordinate in line with a layer) in detector */
-	std::vector<float> x_track_recon; // reconstructed x position of the line
 	float p_value;
 	float chi2_circle;
 	bool cut = false; // cut trigger to kill the track
-	std::vector<float> zCentre_straw;
-	std::vector<float> xCentre_straw;
+	
 };
 
 // DCA structure - calculated for each hit
@@ -80,24 +68,22 @@ struct DCAData {
 };
 
 struct ReconData {
+	// Straw positions:
 	float z;
 	float x;
-	float dcaRecon;
+	float dcaRecon; // should be the same as truth
 };
 
-
-// Returned - calculated once per track
+// Returned once per track
 struct ResidualData {
-	std::vector<float> residuals; // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
+	std::vector<float> residuals; // residual between the fitted track and radius of the fit circle;
 	float slope_recon;
 	float intercept_recon;
-	float meanXReconTrack;
-	float meanZReconTrack;
-	std::vector<float> x_track_recon;
 	float p_value;
 	float chi2_circle;
 };
 
+// Define and return the centre of rotational symmetry
 struct RotationCentres {
 	std::vector<float> z_centres;
 	std::vector<float> x_centres;
@@ -120,29 +106,27 @@ private:
 	int rejectedHitsDCA = 0; // rejected hits due to DCA > straw radius
 	int multipleHitsLayer = 0; // passed over from DCAData [if >1 hit per layer]
 	int ambiguityHit = 0; //Exactly in the middle of 2 straws
-	int hitLayerCounter; // absolute layer ID for the hit
 	bool cutTriggered; // FLAG: set as false at each track generation, triggered if smeared DCA < trackCut [below]
 	bool missedHit; // FLAG: set as false at each track generation, triggered if smeared DCA > strawRadius
 
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
-
-	float dispX[8] =     {0.0, 0.04, -0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] =     {0.0, -0.05, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.0, 0.01, -0.02, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
-
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
-	static const int nlc = 2; // dR/dc dR/dm
-	static const int ngl = 3; //  dR/dx dR/dz  dR/d𝛉 
+	static constexpr int nlc = 2; // dR/dc dR/dm
+	static constexpr int ngl = 3; //  dR/dx dR/dz  dR/d𝛉 
 
 	float pValCut = 0.00; // from 0->1
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
+	bool useTruthLR = true; // use LR information from generated tracks [requires DCA cut!]
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
-	bool useTruthLR = true;
+	
+	//Set truth misalignment of modules 
+	float dispX[8] =     {0.0, 0.00, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] =     {0.0, 0.00, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispTheta[8] = {0.0, 0.00, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
 
-
-	// **** GEOMETRIC CONSTANTS ****  //
+	// **** GEOMETRIC CONSTANTS ****  // XXX will be taken from gm2geom in the future
 	// define detector geometry [all distances are in cm]
 	static const int moduleN = 4; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
@@ -161,9 +145,11 @@ private:
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
+	// The offset is a "software" fix to get the ideal (assumed) geometry closer to the truth geometry
 	float offsetX[8] =     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	float offsetZ[8] =     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	float offsetTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //radians
+	
 	// **** BEAM PARAMETERS ****  // [all distances are in cm]
 	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
 	static constexpr float beamPositionLength = 2.0;
@@ -326,11 +312,11 @@ public:
 		return resolution;
 	}
 
-	int getNLC() {
+	const int getNLC() {
 		return nlc;
 	}
 	
-	int getNGL() {
+	const int getNGL() {
 		return ngl;
 	}
 
