@@ -190,7 +190,7 @@ for i_hits in range(0, len(gen_hitX)):
 	axes.add_artist(circle3)		
 
 #axes.set_ylim([0.4,1.6])
-axes.set_ylim([-3,2.5])
+axes.set_ylim([-3.6,3.3])
 #axes.set_xlim([54,60])
 axes.set_xlim([3,60])
 #plt.xlabel("z [cm]")
@@ -225,7 +225,7 @@ for i_hits in range(0, len(fit_hitX)):
 	axes2.add_artist(circle)	
 	
 #axes2.set_ylim([0.4,1.6])
-axes2.set_ylim([-3,2.5])
+axes2.set_ylim([-3.6,3.3])
 #axes2.set_xlim([54,60])
 axes2.set_xlim([3,60])
 plt.xlabel("z [cm]")

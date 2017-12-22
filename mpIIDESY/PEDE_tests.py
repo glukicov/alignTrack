@@ -27,7 +27,7 @@ with open("TimeConstants.txt") as f:
 		intercept = float(number_str[1])
 
 for i in range(0, len(tracksCut)):
-	subprocess.call(["./AlignTracker", "n" , str(tracksCut[i]), "0.0", "0.0"])
+	subprocess.call(["./AlignTracker", "n" , str(tracksCut[i])])
 	
 	subprocess.call(["./pede", "Tracker_str.txt" ])
 	

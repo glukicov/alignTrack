@@ -29,9 +29,12 @@ struct MCData {
 	std::vector<float> z_recon; /** Z-positions of recon hits in detector */ //distances
 	std::vector<float> residuals; /** X-positions of residuals between ideal and real geometry */
 	std::vector<float> hit_sigmas; /** Resolution for hits in detector */
+	std::vector<float> nlc; /** Resolution for hits in detector */
+	std::vector<float> ngl; /** Resolution for hits in detector */
 	std::vector<int> i_hits; /* vector of modules that were actually hit [after passing rejection test] */
 	std::vector<int> label_1;
 	std::vector<int> label_2;
+	std::vector<int> label_3;
 	std::vector<int> hit_list;  // same of layers (absolute)
 	std::vector<int> hit_bool;  // same of layers (absolute) +1 = hit 0=no hit
 	std::vector<string> absolute_straw_hit; // for plotting
@@ -124,16 +127,14 @@ private:
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
 
-	//float dispX[8] = {0.0, 0.03, -0.03, 0.00, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	//float dispZ[8] = {0.0, 0.005, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.0, 0.03, -0.02, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispX[8] =     {0.0, 0.01, -0.02, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] =     {0.0, 0.0,  0.0,  0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
+	float dispTheta[8] = {0.0, 0.0,  0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
 
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
-
 	static const int nlc = 2; // dR/dc dR/dm
-	// static const int ngl = 2; // dR/dx dR/dz 
-	static const int ngl = 1; // dR/d𝛉 
+	static const int ngl = 3; //  dR/dx dR/dz  dR/d𝛉 
 
 	float pValCut = 0.00; // from 0->1
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
@@ -160,8 +161,8 @@ private:
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
 	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
-	//float offsetX[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
-	//float offsetZ[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	float offsetX[8] =     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
+	float offsetZ[8] =     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
 	float offsetTheta[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; //radians
 	// **** BEAM PARAMETERS ****  // [all distances are in cm]
 	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
@@ -258,13 +259,13 @@ public:
 	// 	offsetZ[2] = off2;
 	// }
 
-	void setThetaOffset1(float off1) {
-		offsetTheta[1] = off1;
-	}
+	// void setThetaOffset1(float off1) {
+	// 	offsetTheta[1] = off1;
+	// }
 
-	void setThetaOffset2(float off2) {
-		offsetTheta[2] = off2;
-	}
+	// void setThetaOffset2(float off2) {
+	// 	offsetTheta[2] = off2;
+	// }
 
 	void incRejectedHitsDCA() {
 		rejectedHitsDCA = rejectedHitsDCA + 1;
@@ -287,18 +288,7 @@ public:
 		return UVmapping[i][j];
 	}
 
-	// float getSdevX(int i) {
-	// 	return sdevX[i];
-	// }
-
-	// float getSdevZ(int i) {
-	// 	return sdevZ[i];
-	// }
-
-	float getDispTheta(int i){
-		return dispTheta[i];
-	}
-
+	
 	int getRejectedHitsDCA() {
 		return rejectedHitsDCA;
 	}
@@ -334,6 +324,14 @@ public:
 
 	float getResolution() {
 		return resolution;
+	}
+
+	int getNLC() {
+		return nlc;
+	}
+	
+	int getNGL() {
+		return ngl;
 	}
 
 	int getLayerN() {

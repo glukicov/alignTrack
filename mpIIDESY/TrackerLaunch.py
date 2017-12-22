@@ -20,7 +20,7 @@ with open("Tracker_p_constants.txt") as f:
         number_str = line.split()
         moduleN=int(number_str[0])
 
-parN=1
+parN=3
 # Quickly open the PEDe file and count lines only:
 lineN= sum(1 for line in open('PEDE_Mis.txt'))
             
@@ -56,7 +56,7 @@ with open("PEDE_Mis.txt") as f:
 		for i_par in range(0, moduleN*parN):
 			label=int(number_str[0+i_par*3])
 			# if (label==21 or label==22 or label==31 or label==32):
-			if (label==21 or label==31):
+			if (label==21 or label==31 or label==22 or label==32 or label==23 or label==33):
 				error=float(number_str[2+i_par*3])
 				misal=float(number_str[1+i_par*3])
 				Labels[line_i][i_par]=label
@@ -93,7 +93,7 @@ plt.rcParams.update({'font.size': 8})
 
 constN =2 # TODO 
 # expectPars=(21, 22, 31, 32)
-expectPars=(21, 31)
+expectPars=(21, 31, 22, 32, 23, 33)
 moduleN=moduleN-constN  
 
 #Plot difference for all modules
@@ -155,7 +155,8 @@ for i_counter in range(0, parN*moduleN):
 			axes.set_ylim(-500, 500)
 		if(i_par==21 or i_par==31):
 			axes.set_ylim(-10, 10)
-
+		else:
+			axes.set_ylim(-30, 30)
 
 		plt.xlabel("Number of Tracks", fontsize=10)
 		if (i_module!=2 or i_module!=3):

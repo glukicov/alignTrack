@@ -495,7 +495,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	float x1 = x0; // for parallel lines only
 	float xSlope = 0.0; // for parallel lines only
 
-	bool generalLines = false;    // XXX quick hack
+	bool generalLines = true;    // XXX quick hack
 	if (generalLines == true) {
 
 		float signXSlope;
@@ -583,16 +583,20 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						//Module number [for labelling] - after (if) passing the rejection.
 						// Millepede accepts only positive non-zero integers as labels
 						MC.i_hits.push_back(i_module + 1); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
-						// M0=10, M1=20 // x=1, z=2
+						// M0=10, M1=20... // x=1, z=2, 𝛉=3
 						int label_1 = (i_module + 1) * 10 + 1; // x
 						int label_2 = (i_module + 1) * 10 + 2; // z
+						int label_3 = (i_module + 1) * 10 + 3; // 𝛉
 						MC.label_1.push_back(label_1);
 						MC.label_2.push_back(label_2);
+						MC.label_3.push_back(label_3);
 
-						//Z-coordinate of hits
+						//Constants of the hit
 						//MC.z_true.push_back(distanceMisZ[z_counter]);
 						//MC.z_recon.push_back(distanceIdealZ[z_counter]);
 						MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
+						MC.nlc.push_back(Tracker::instance()->getNLC());
+						MC.ngl.push_back(Tracker::instance()->getNGL());
 
 						//Sanity Plots: Hits
 						MC.dca.push_back(dca); // DCA [sanity]
@@ -654,8 +658,6 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 // MC misalignment of detectors and setting assumed geometry
 void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& pede_mis, ofstream& plot_centres, bool debugBool, ofstream& metric) {
 
-	float misDispTheta(0), ThetaOffset(0); // effective misalignment and offsets [mis. corrections]
-
 	//Geometry of detector arrangement (Ideal Geometry)
 	float dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
 	int layer_n = 0;  // layer label
@@ -671,8 +673,8 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 				mod_lyr_strawIdealPositionZ[i_module][i_view].push_back(vector<float> ());
 				layer.push_back(layer_n);  // layer label array [starting from 0th layer]
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
-					mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer].push_back(dZ); // vector will contain all z coordinates of layers
-					mod_lyr_strawIdealPositionX[i_module][i_view][i_layer].push_back(dX);
+					mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer].push_back(dZ + offsetZ[i_module]); // vector will contain all z coordinates of layers
+					mod_lyr_strawIdealPositionX[i_module][i_view][i_layer].push_back(dX + offsetX[i_module]);
 					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
 				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
@@ -690,15 +692,14 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 	dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
 	dX = startingXDistanceStraw0; // the increment in x for straws in a layers
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		ThetaOffset = offsetTheta[i_module];
 		for (int i_view = 0; i_view < viewN; i_view++) {
 			for (int i_layer = 0; i_layer < layerN; i_layer++) {
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
 					float local_z = dZ - idealCentres.z_centres[i_module]; // translating to local module coordinates
 					float local_x = dX - idealCentres.x_centres[i_module];
 					//2D rotation matrix with CC convention from (z=0 horizontal/beam axis)
-					float rotated_z = local_z * cos(ThetaOffset) - local_x * sin (ThetaOffset);
-					float rotated_x = local_z * sin(ThetaOffset) + local_x * cos (ThetaOffset);
+					float rotated_z = local_z * cos(offsetTheta[i_module]) - local_x * sin (offsetTheta[i_module]);
+					float rotated_x = local_z * sin(offsetTheta[i_module]) + local_x * cos (offsetTheta[i_module]);
 					float global_z = rotated_z + idealCentres.z_centres[i_module];
 					float global_x = rotated_x + idealCentres.x_centres[i_module];
 					mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][i_straw] = global_z; // vector will contain all z coordinates of layers
@@ -746,15 +747,11 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 
 
 	//Now misaligning detectors
-	//float misDispX(0), Xoffset(0); // effective misalignment
-	
 	dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
 	layer_n = 0;  // layer label
 	metric << "MTheta: ";
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		misDispTheta = dispTheta[i_module];
-		ThetaOffset = offsetTheta[i_module];
-		metric <<  fixed << setprecision(0) << misDispTheta << " (" << ThetaOffset  << "); ";
+		metric <<  fixed << setprecision(0) << dispX[i_module] << dispZ[i_module] << dispTheta[i_module] ;
 		float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0+disp)
 		//sdevX.push_back(0.0); // vector to store the actual of misalignment
 		mod_lyr_strawMisPositionX.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
@@ -770,12 +767,12 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 					float local_z = dZ - idealCentres.z_centres[i_module]; // translating to local module coordinates
 					float local_x = dX - idealCentres.x_centres[i_module];
 					//2D rotation matrix with CC convention from (z=0 horizontal/beam axis)
-					float rotated_z = local_z * cos(misDispTheta) - local_x * sin (misDispTheta);
-					float rotated_x = local_z * sin(misDispTheta) + local_x * cos (misDispTheta);
+					float rotated_z = local_z * cos(dispTheta[i_module]) - local_x * sin (dispTheta[i_module]);
+					float rotated_x = local_z * sin(dispTheta[i_module]) + local_x * cos (dispTheta[i_module]);
 					float global_z = rotated_z + idealCentres.z_centres[i_module];
 					float global_x = rotated_x + idealCentres.x_centres[i_module];
-					mod_lyr_strawMisPositionZ[i_module][i_view][i_layer].push_back(global_z); // vector will contain all z coordinates of layers
-					mod_lyr_strawMisPositionX[i_module][i_view][i_layer].push_back(global_x);
+					mod_lyr_strawMisPositionZ[i_module][i_view][i_layer].push_back(global_z + dispZ[i_module]); // vector will contain all z coordinates of layers
+					mod_lyr_strawMisPositionX[i_module][i_view][i_layer].push_back(global_x + dispX[i_module]);
 					dX =  dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
 				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
@@ -827,14 +824,14 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 
 	cout << "Misalignment(M) and Offsets(O): " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		cout << "M" << noshowpos << i_module + 1 << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. ";
+		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos <<dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
 		//M" << noshowpos << i_module + 1 << "z :: "  << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
-		cout << "O" << noshowpos << i_module + 1 << "𝛉 :: " << showpos << offsetTheta[i_module] << " rad." << endl;
+		//cout << "O" << noshowpos << i_module + 1 << "𝛉 :: " << showpos << offsetTheta[i_module] << " rad." << endl;
 		//O" << noshowpos << i_module + 1 << "z :: " << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
 		//pede_mis << (offsetZ[i_module]-sdevZ[i_module]) << " ";
 		if (i_module == 1 || i_module == 2) { // TODO move to pre-sigma function
 			//pede_mis << sdevX[i_module] << " " << sdevZ[i_module] << " ";
-			pede_mis << dispTheta[i_module] << " ";
+			pede_mis << dispX[i_module] << " " << dispZ[i_module] << " " <<  dispTheta[i_module] << " ";
 		}
 	} // modules
 	cout << noshowpos;

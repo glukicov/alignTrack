@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017
-*   Modified: 8 December 2017
+*   Modified: 22 December 2017
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the
 PEDE routine, to align the tracking detector for the g-2
@@ -24,7 +24,7 @@ ROOT Plotting macro rootlogon.C [loaded automatically e.g.: rootbrowse Tracker.r
 Other?
 TODO Describe all code -> Add to Github
 
-============================= Test Model v0.8 =======================================
+============================= Test Model v0.9 =======================================
 *Simple 2D case (2D alignment as rotation along detector centre) with Circle Fit.
 * No B-field, straight tracks, no MS, 100% efficiency.
 *(!) NATURAL UNITS (PEDE): cm, rad, GeV [natural units will be omitted]
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
 	string compareStr; //for debug vs. normal output as specified by the user
 	int tracksInput; // number of tracks to generate as specified by the user
 	//float offset1X(0), offset2X(0), offset1Z(0), offset2Z(0); // TODO implement as an input .txt file of offsets?
-	float ThetaOffset1(0), ThetaOffset2(0); // TODO implement as an input .txt file of offsets?
+	//float ThetaOffset1(0), ThetaOffset2(0); // TODO implement as an input .txt file of offsets?
 	bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
 	bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py
 	//Set up counters for hits and records (tracks)
@@ -153,14 +153,14 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->enableCriticalErrorThrow();
 
 	// Check if correct number of arguments specified, exiting if not
-	if (argc > 5) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. #tracks, offset1, offset2.  e.g. ./AlignTracker n 100000 0.0 0.0");}
-	else if (argc < 5) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag, #tracks, offset1, offset2. e.g. ./AlignTracker n 100000 0.0 0.0");}
+	if (argc > 3) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. #tracks, offset1, offset2.  e.g. ./AlignTracker n 100000 0.0 0.0");}
+	else if (argc < 3) {Logger::Instance()->write(Logger::ERROR, "Too few arguments - please specify verbosity flag, #tracks, offset1, offset2. e.g. ./AlignTracker n 100000 0.0 0.0");}
 	else { // Set filenames to read random numbers from, using arguments. Catch exception if these files do not exist.
 		try {
 			compareStr = argv[1];
 			tracksInput = stoi(argv[2]);
-			ThetaOffset1= stof(argv[3]);
-			ThetaOffset2= stof(argv[4]);
+			//ThetaOffset1= stof(argv[3]);
+			//ThetaOffset2= stof(argv[4]);
 			// offset1X = stof(argv[3]);
 			// offset2X = stof(argv[4]);
 			// offset1Z = stof(argv[5]);
@@ -171,8 +171,8 @@ int main(int argc, char* argv[]) {
 		}
 	} // end of 2nd else [correct # arguments]
 
-	Tracker::instance()->setThetaOffset1(ThetaOffset1);
-	Tracker::instance()->setThetaOffset2(ThetaOffset2);
+	//Tracker::instance()->setThetaOffset1(ThetaOffset1);
+	//Tracker::instance()->setThetaOffset2(ThetaOffset2);
 	// Tracker::instance()->setXOffset1(offset1X);
 	// Tracker::instance()->setXOffset2(offset2X);
 	// Tracker::instance()->setZOffset1(offset1Z);
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->write(Logger::NOTE, "");
 	msg0 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg0.str());
-	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.8) - Gleb Lukicov (UCL) - December 2017         " << Logger::def();
+	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.9) - Gleb Lukicov (UCL) - December 2017         " << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg01.str());
 	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg1.str());
@@ -312,6 +312,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
 	TH1F* h_DGL1 = new TH1F("h_DGL1", "DGL1: All Modules",  349,  -1.1, 1.1); h_DGL1->SetDirectory(cd_PEDE);
 	TH1F* h_DGL2 = new TH1F("h_DGL2", "DGL2: All Modules",  149,  -0.017, 0.017); h_DGL2->SetDirectory(cd_PEDE);
+	TH1F* h_DGL3 = new TH1F("h_DGL3", "DGL3: All Modules",  149,  -1.1, 1.1); h_DGL3->SetDirectory(cd_PEDE);
 
 	//Use array of pointer of type TH1x to set axis titles and directories
 	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma, h_res_MP2, h_dca, h_track_true, h_track_recon,
@@ -489,8 +490,11 @@ int main(int argc, char* argv[]) {
 				float rMeas_mp2 =  generated_MC.residuals[hitCount]; //Residual
 				float sigma_mp2 = generated_MC.hit_sigmas[hitCount]; //Resolution
 				//Number of local and global parameters
-				const int nalc = 2; //TODO pass from Methods
-				const int nagl = 1; //TODO pass from Methods
+				// const int nalc = Tracker::instance()->getNLC(); 
+				// const int nagl = Tracker::instance()->getNGL(); // TODO pass nlc ngl from methods
+				const int nalc = 2; 
+				const int nagl = 3; 
+
 				//label to associate hits within different layers with a correct module
 				// same as ModuleN+1 [already converted]
 
@@ -509,14 +513,15 @@ int main(int argc, char* argv[]) {
 				float dlc2 = ( (m * m + 1) * z * (c + m * z - x) - m * pow(abs(c + m * z - x), 2) ) / ( pow(m * m + 1, 1.5) * abs(c + m * z - x)  ) ; //dR/dm
 				float derlc[nalc] = {dlc1, dlc2};
 				//Global derivatives
-				float dgl1= ( ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (-x + xc )  )  +  ( ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (z - zc) ); //dR/d𝛉
-				float dergl[nagl] = {dgl1};
-				// float dergl[nagl] = {dgl1, dgl2};
+				float dgl1 = ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) );  //dR/dx
+				float dgl2 = ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ); //dR/dz
+				float dgl3= ( ( m * ( c + m * z - x ) ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (-x + xc )  )  +  ( ( c + m * z - x ) / ( sqrt(m * m + 1) * abs(c + m * z - x) ) * (z - zc) ); //dR/d𝛉
+				float dergl[nagl] = {dgl1, dgl2, dgl3};
 				//Labels
 				int l1 = generated_MC.label_1[hitCount]; //Mx
-				//int l2 = generated_MC.label_2[hitCount]; //Mz
-				int label[nagl] = {l1};
-				//int label[nagl] = {l1, l2};
+				int l2 = generated_MC.label_2[hitCount]; //Mz
+				int l3 = generated_MC.label_3[hitCount]; //M𝛉
+				int label[nagl] = {l1, l2, l3};
 
 				//TODO multiple scattering errors (no correlations) (for imodel == 1)
 				//add break points multiple scattering later XXX (for imodel == 2)
@@ -541,11 +546,11 @@ int main(int argc, char* argv[]) {
 				h_sigma -> Fill(sigma_mp2); // errors
 				h_dca->Fill(generated_MC.dca[hitCount]); // DCA
 				h_dca_unsmeared->Fill(generated_MC.dca_unsmeared[hitCount]);
-				h_labels->Fill(l1); //h_labels->Fill(l2); // XXX
+				h_labels->Fill(l1); h_labels->Fill(l2); h_labels->Fill(l3);// XXX
 				h_id_dca ->Fill(strawID);
 				h_driftRad->Fill(generated_MC.driftRad[hitCount]);
 				if (generated_MC.driftRad[hitCount] < 0) negDCA++;
-				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); //h_DGL2->Fill(dgl2);XXX
+				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); h_DGL2->Fill(dgl2); h_DGL3->Fill(dgl3);
 				//cout << "dgl1" << dgl1 << endl;
 
 				//Track-based hit parameters
