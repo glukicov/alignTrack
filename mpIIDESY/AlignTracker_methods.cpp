@@ -123,6 +123,34 @@ void Tracker::write_presigma_file(ofstream& presigma_file, ofstream& metric) {
 	} // constrain file open
 } // end of writing cons file
 
+
+RotationCentres Tracker::getCentre(std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionX, std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionZ, ofstream& plot_centres) {
+	RotationCentres centre;
+	// for a module given by i_global get first and last straws of the first and last layers
+	for (int i_global = 0; i_global < moduleN; i_global++) {
+
+		std::vector<float> U0_x = mod_lyr_strawPositionX[i_global][0][0];  // U0x
+		std::vector<float> V1_x = mod_lyr_strawPositionX[i_global][1][1];  // V1x
+		float U0_first_x = U0_x[0]; float V1_last_x = V1_x[strawN - 1];
+		std::vector<float> U0_z = mod_lyr_strawPositionZ[i_global][0][0];  // z
+		std::vector<float> V1_z = mod_lyr_strawPositionZ[i_global][1][1];  // z
+		float U0_first_z = U0_z[0]; float V1_last_z = V1_z[strawN - 1];
+
+		float z_c(0), x_c(0);
+		//cout << "i_global= " << i_global << " U0_first_x= " << U0_first_x << " U0_last_x=" << U0_last_x << " U0_first_z= " << U0_first_z << " V1_first_z= " << V1_first_z << endl;
+		x_c = (V1_last_x + U0_first_x) / 2; // XXX check sign
+		z_c = (V1_last_z + U0_first_z) / 2;
+
+		centre.z_centres.push_back(z_c);
+		centre.x_centres.push_back(x_c);
+		plot_centres << z_c << " " << x_c << " ";
+	}
+	plot_centres << endl;
+	return centre;
+}
+
+
+
 /**
    DCA for a point to a line in 2D space
 */
@@ -149,7 +177,7 @@ float Tracker::pointToLineDCA(float z_straw, float x_straw, float x_slope, float
     @Inputs (see DCA method) + vector of straws' x coordinates in a layer, and a return type: "dca_hit"  or "x_line"
     @return hit_distance - dca of the straw that was hit, or x coordinate of the line on the same z as a straw
 */
-DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float xSlpoe, float xIntercept, bool debugBool) {
+DCAData Tracker::DCAHit(vector<float> xLayer, vector<float> zLayer, float xTrack, float xSlpoe, float xIntercept, bool debugBool) {
 
 	DCAData dca_data;
 
@@ -167,7 +195,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 	// compares less than the hit, the hit must be from the L (+1)
 	if (xTrack > xLayer[0]) {
 		// hit distance is then the dca from the L of the straw with highest x coordinate
-		hitDistance = pointToLineDCA(zStraw, xLayer[0], xSlpoe, xIntercept);
+		hitDistance = pointToLineDCA(zLayer[0], xLayer[0], xSlpoe, xIntercept);
 		LR = +1; // assign truth L
 		index = 0;
 		if (debugBool && StrongDebugBool) {
@@ -177,7 +205,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 	// Another scenario, is that the hit is smaller than the x coordinate of the last straw
 	else if (xTrack < xLayer[lastID]) {
 		// hit distance is the dca from the R of the last straw
-		hitDistance = pointToLineDCA(zStraw, xLayer[lastID], xSlpoe, xIntercept);
+		hitDistance = pointToLineDCA(zLayer[0], xLayer[lastID], xSlpoe, xIntercept);
 		LR = -1;
 		index = lastID;
 		if (debugBool && StrongDebugBool) {
@@ -189,10 +217,12 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 	// the two [the straw-position vector iterator only checks the vertical distance] and assign LRma
 	else {
 		//we have already taken care of the end-straws, so now just need to look in between
+		int z_counter=0;
 		for (int i_counter = 0; i_counter < xLayer.size(); i_counter++) {
 			if (xLayer[i_counter] < xTrack) {
 				lower = xLayer[i_counter];
 				upper = xLayer[i_counter - 1];
+				z_counter++;
 				if (debugBool && StrongDebugBool) cout << "lower= " << lower << " upper " << upper << endl;
 				//as soon as we find a single straw that is at lower x than the hit,
 				// our search is over
@@ -201,8 +231,8 @@ DCAData Tracker::DCAHit(vector<float> xLayer, float zStraw, float xTrack, float 
 		}
 jmp:
 
-		float hit_distance_low = pointToLineDCA(zStraw, lower, xSlpoe, xIntercept);
-		float hit_distance_up = pointToLineDCA(zStraw, upper, xSlpoe, xIntercept);
+		float hit_distance_low = pointToLineDCA(zLayer[z_counter], lower, xSlpoe, xIntercept);
+		float hit_distance_up = pointToLineDCA(zLayer[z_counter-1], upper, xSlpoe, xIntercept);
 
 		if (hit_distance_low < strawRadius && hit_distance_up < strawRadius) {
 			if (debugBool) {cout << "Multiple straws in layer were hit!" << endl;}
@@ -265,14 +295,14 @@ jmp:
 
 
 // Adds dca to the ideal geometry
-ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, float z_distance) {
+ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, vector<float> zLayer) {
 
 	ReconData recon_data;
 	bool StrongDebugBool = false; //quick hack XXX for even more debug output
 	float x_IdealStraw = xLayer[det_ID];
 	float recon_dca = det_dca; //adds dca to the assumed straw x coordinate
 	if (StrongDebugBool) { cout << "recon_dca= " << recon_dca << "; x_IdealStraw= " << x_IdealStraw <<  " det_dca= " << det_dca << endl;}
-	recon_data.z = z_distance;
+	recon_data.z = zLayer[det_ID];
 	recon_data.x = x_IdealStraw;
 	recon_data.dcaRecon = recon_dca;
 	return recon_data;
@@ -468,16 +498,16 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	bool generalLines = false;    // XXX quick hack
 	if (generalLines == true) {
 
-	float signXSlope;
-	if (Tracker::generate_uniform() >= 0.5) {
-		signXSlope = 1.0;
-	}
-	else {
-		signXSlope = -1.0;
-	}
-	//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
-	xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
-	x1 = xSlope * beamStop + xIntercept; // "xExit"
+		float signXSlope;
+		if (Tracker::generate_uniform() >= 0.5) {
+			signXSlope = 1.0;
+		}
+		else {
+			signXSlope = -1.0;
+		}
+		//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
+		xSlope = (Tracker::generate_uniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
+		x1 = xSlope * beamStop + xIntercept; // "xExit"
 
 	} // end of generalLines == true HACK
 
@@ -488,10 +518,13 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 	MC.slope_truth = xSlope;
 	MC.intercept_truth = xIntercept;
 
+	//Now get the centres of the ideal modules (not truth) and pass to main
+	RotationCentres idealCentres = Tracker::getCentre(mod_lyr_strawIdealPositionX, mod_lyr_strawIdealPositionZ, debug_calc);
+
 	//The main loop is for modules [they produce label of Global Parameters]:
 	// Then looping over layers and views
 	// within layers we will have loops over straws in that layer [to find out which straw was hit and dca]
-	int z_counter = 0; // distance in z is incremented from 0 to TotalLayerN
+	int z_counter = 0; // planes in z are incremented from 0 to TotalLayerN
 	if (debugBool && StrongDebugBool) {cout << "Calculating hits/dca:" << endl;}
 	//loops over modules, views, layers
 	for (int i_module = 0; i_module < moduleN; i_module++) {
@@ -500,12 +533,12 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				missedHit = false; // set flag to false until triggered
 				// TRUTH PARAMETERS
 				//The registered hit position on the misaligned detector is smeared by its resolution
-				// zTrack is just the distance[z_counter] - in-line with the layer
-				xTrack = xSlope * distanceMisZ[z_counter] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
+				// zTrack is just the distance[z_counter] - in-line with the layer [chose the middle straw]
+				xTrack = xSlope * mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][int(strawN/2)] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
 				MC.x_track_true.push_back(xTrack);  // True in-line (gen.) track position
 
 				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
-				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPosition[i_module][i_view][i_layer], distanceMisZ[z_counter], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
+				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPositionX[i_module][i_view][i_layer], mod_lyr_strawMisPositionZ[i_module][i_view][i_layer], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
 				//Check for trigger on DCA < 500 um, and only continue calculations not triggered
 				if (cutTriggered) {MC.cut = true;} // set cut to true for the main, and return MC.cut as true only.
 				if (cutTriggered == false) {
@@ -539,7 +572,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						// RECONSTRUCTED PARAMETERS
 						//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
 
-						ReconData ReconDetector = Tracker::HitRecon(mis_ID, dca, mod_lyr_strawIdealPosition[i_module][i_view][i_layer], distanceIdealZ[z_counter]);
+						ReconData ReconDetector = Tracker::HitRecon(mis_ID, dca, mod_lyr_strawIdealPositionX[i_module][i_view][i_layer], mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer]);
 						float zCircle = ReconDetector.z;
 						float xCircle = ReconDetector.x;
 						float radCircle = ReconDetector.dcaRecon;
@@ -550,15 +583,15 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						//Module number [for labelling] - after (if) passing the rejection.
 						// Millepede accepts only positive non-zero integers as labels
 						MC.i_hits.push_back(i_module + 1); // vector of modules that were actually hit [after passing rejection test: for MP2 labelling]
-						 // M0=10, M1=20 // x=1, z=2
-						int label_1 = (i_module + 1)*10 + 1; // x 
-						int label_2 = (i_module + 1)*10 + 2;  // z 
-						MC.label_1.push_back(label_1); 
-						MC.label_2.push_back(label_2); 
+						// M0=10, M1=20 // x=1, z=2
+						int label_1 = (i_module + 1) * 10 + 1; // x
+						int label_2 = (i_module + 1) * 10 + 2; // z
+						MC.label_1.push_back(label_1);
+						MC.label_2.push_back(label_2);
 
-						//Z-coordinate of hits 
-						MC.z_true.push_back(distanceMisZ[z_counter]);
-						MC.z_recon.push_back(distanceIdealZ[z_counter]);
+						//Z-coordinate of hits
+						//MC.z_true.push_back(distanceMisZ[z_counter]);
+						//MC.z_recon.push_back(distanceIdealZ[z_counter]);
 						MC.hit_sigmas.push_back(Tracker::instance()->getResolution());
 
 						//Sanity Plots: Hits
@@ -568,6 +601,10 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 						MC.View_i.push_back(i_view);
 						MC.Layer_i.push_back(i_layer);
 						MC.Straw_i.push_back(mis_ID);
+
+						//push back the tracker centre for the hit
+						MC.zCentre_straw.push_back(idealCentres.z_centres[i_module]);
+						MC.xCentre_straw.push_back(idealCentres.x_centres[i_module]);
 
 						MC.hit_count++;
 						z_counter++;  // incrementing distance of planes
@@ -601,7 +638,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 			for (int i_module = 0; i_module < moduleN; i_module++) {
 				for (int i_view = 0; i_view < viewN; i_view++) {
 					for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer
-						plot_hits_gen << mod_lyr_strawMisPosition[i_module][i_view][i_layer][MC.strawID[i_counter]] << " " << distanceMisZ[i_counter] << " "  << MC.dca[i_counter] << endl;
+						plot_hits_gen << mod_lyr_strawMisPositionX[i_module][i_view][i_layer][MC.strawID[i_counter]] << " " << mod_lyr_strawMisPositionZ[i_module][i_view][i_layer][MC.strawID[i_counter]] << " "  << MC.dca[i_counter] << endl;
 						plot_hits_fit << xRecon[i_counter] << " " << zRecon[i_counter] << " "  << radRecon[i_counter] << endl;
 						i_counter++;
 					}
@@ -614,18 +651,32 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 
 } // end of MC
 
-//Geometry of detector arrangement (Ideal Geometry)
-void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
+// MC misalignment of detectors and setting assumed geometry
+void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& pede_mis, ofstream& plot_centres, bool debugBool, ofstream& metric) {
 
+	float misDispTheta(0), ThetaOffset(0); // effective misalignment and offsets [mis. corrections]
+
+	//Geometry of detector arrangement (Ideal Geometry)
 	float dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
 	int layer_n = 0;  // layer label
+	float dX = startingXDistanceStraw0; // the increment in x for straws in a layers
 	for (int i_module = 0; i_module < moduleN; i_module++) {
+		mod_lyr_strawIdealPositionX.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
+		mod_lyr_strawIdealPositionZ.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
 		for (int i_view = 0; i_view < viewN; i_view++) {
+			mod_lyr_strawIdealPositionX[i_module].push_back(vector<vector<float> >());
+			mod_lyr_strawIdealPositionZ[i_module].push_back(vector<vector<float> >());
 			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				distanceIdealZ.push_back(dZ + offsetZ[i_module]); // vector will contain all z coordinates of layers
+				mod_lyr_strawIdealPositionX[i_module][i_view].push_back(vector<float> ());
+				mod_lyr_strawIdealPositionZ[i_module][i_view].push_back(vector<float> ());
 				layer.push_back(layer_n);  // layer label array [starting from 0th layer]
-				//resolutionLayer.push_back(Tracker::instance()->getResolution()); //resolution in each layer
-				projectionX.push_back(float(1.0));  // x projection of hits in each layer
+				for (int i_straw = 0; i_straw < strawN; i_straw++) {
+					mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer].push_back(dZ); // vector will contain all z coordinates of layers
+					mod_lyr_strawIdealPositionX[i_module][i_view][i_layer].push_back(dX);
+					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
+				} //end of Straws loop
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
+				if (i_view == 1) { dX = startingXDistanceStraw0; } //set displacement in x for the next layer in the view
 				layer_n++;
 				if (i_layer == 0) { dZ += layerSpacing; } // increment spacing between layers in a view once only
 			} // layers
@@ -634,23 +685,35 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 		dZ += moduleSpacing;
 	} // modules
 
-	// Geometry of detector arrangement in X
-	float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0)
+	//Now get rotational centres for the assumed geometry, add offsets if necessary
+	RotationCentres idealCentres = Tracker::getCentre(mod_lyr_strawIdealPositionX, mod_lyr_strawIdealPositionZ, plot_centres);
+	dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
+	dX = startingXDistanceStraw0; // the increment in x for straws in a layers
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		mod_lyr_strawIdealPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
+		ThetaOffset = offsetTheta[i_module];
 		for (int i_view = 0; i_view < viewN; i_view++) {
-			mod_lyr_strawIdealPosition[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
 			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				mod_lyr_strawIdealPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
-					mod_lyr_strawIdealPosition[i_module][i_view][i_layer].push_back(dX+offsetX[i_module]);
+					float local_z = dZ - idealCentres.z_centres[i_module]; // translating to local module coordinates
+					float local_x = dX - idealCentres.x_centres[i_module];
+					//2D rotation matrix with CC convention from (z=0 horizontal/beam axis)
+					float rotated_z = local_z * cos(ThetaOffset) - local_x * sin (ThetaOffset);
+					float rotated_x = local_z * sin(ThetaOffset) + local_x * cos (ThetaOffset);
+					float global_z = rotated_z + idealCentres.z_centres[i_module];
+					float global_x = rotated_x + idealCentres.x_centres[i_module];
+					mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][i_straw] = global_z; // vector will contain all z coordinates of layers
+					mod_lyr_strawIdealPositionX[i_module][i_view][i_layer][i_straw]= global_x;
 					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
 				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
 				if (i_view == 1) { dX = startingXDistanceStraw0; } //set displacement in x for the next layer in the view
-			}//end of Layers loop
-		}// end of View loop
-	}//Modules
+				layer_n++;
+				if (i_layer == 0) { dZ += layerSpacing; } // increment spacing between layers in a view once only
+			} // layers
+			if (i_view == 0) { dZ += viewSpacing; } // increment spacing between views in a module once only
+		} // views
+		dZ += moduleSpacing;
+	} // modules
 
 	// Print out:
 	if (debugBool) {
@@ -663,73 +726,70 @@ void Tracker::setGeometry(ofstream& debug_geom,  bool debugBool) {
 				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
 					cout << "IDEAL M" << i_module + 1 << noshowpos << UVmapping[i_view][i_layer] << " X : ";
 					for (int i_straw = 0; i_straw < strawN; i_straw++) {
-						cout << showpos << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
-						debug_geom << mod_lyr_strawIdealPosition[i_module][i_view][i_layer][i_straw] << " ";
+						cout << showpos << mod_lyr_strawIdealPositionX[i_module][i_view][i_layer][i_straw] << " ";
+						debug_geom << mod_lyr_strawIdealPositionX[i_module][i_view][i_layer][i_straw] << " ";
 					} // straws
-					cout << noshowpos << "  | Z= " << distanceIdealZ[Zcounter] << " [cm]" << endl;  // TODO align the cout better
-					debug_geom << distanceIdealZ[Zcounter] << endl;
-					Zcounter++;
+					cout << endl;
+					debug_geom << endl;
+					cout << "IDEAL M" << i_module + 1 << noshowpos << UVmapping[i_view][i_layer] << " Z : ";
+					for (int i_straw = 0; i_straw < strawN; i_straw++) {
+						cout << showpos << mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][i_straw] << " ";
+						debug_geom << mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][i_straw] << " ";
+					} // straws
+					cout << endl;
+					debug_geom << endl;
 				} // end of Layers
-
 			}// end of View loop
 			cout << endl;
 		}//Modules
-	}
+	} // debug
 
-} // end of geom
 
-// MC misalignment of detectors
-void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, ofstream& metric) {
-
-	//Now misaligning detectors in x
-	float misDispX(0), Xoffset(0); // effective misalignment
-	metric << "Mx: ";
+	//Now misaligning detectors
+	//float misDispX(0), Xoffset(0); // effective misalignment
+	
+	dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
+	layer_n = 0;  // layer label
+	metric << "MTheta: ";
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		misDispX = dispX[i_module];
-		Xoffset = offsetX[i_module];
-		metric <<  fixed << setprecision(0) << misDispX*1e4 << " (" << Xoffset*1e4  << "); ";
-		float dX = startingXDistanceStraw0 + (misDispX); // starting on the x-axis (z, 0+disp)
-		sdevX.push_back(misDispX);  // vector to store the actual of misalignment
-		mod_lyr_strawMisPosition.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
+		misDispTheta = dispTheta[i_module];
+		ThetaOffset = offsetTheta[i_module];
+		metric <<  fixed << setprecision(0) << misDispTheta << " (" << ThetaOffset  << "); ";
+		float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0+disp)
+		//sdevX.push_back(0.0); // vector to store the actual of misalignment
+		mod_lyr_strawMisPositionX.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
+		mod_lyr_strawMisPositionZ.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
 		for (int i_view = 0; i_view < viewN; i_view++) {
-			mod_lyr_strawMisPosition[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
+			mod_lyr_strawMisPositionX[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
+			mod_lyr_strawMisPositionZ[i_module].push_back(vector<vector<float> >()); //initialize the first index with a 2D vector
 			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				mod_lyr_strawMisPosition[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
+				mod_lyr_strawMisPositionX[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
+				mod_lyr_strawMisPositionZ[i_module][i_view].push_back(vector<float> ()); //initialize the first index with a 2D vector
+				layer.push_back(layer_n);  // layer label array [starting from 0th layer]
 				for (int i_straw = 0; i_straw < strawN; i_straw++) {
-					mod_lyr_strawMisPosition[i_module][i_view][i_layer].push_back(dX);
+					float local_z = dZ - idealCentres.z_centres[i_module]; // translating to local module coordinates
+					float local_x = dX - idealCentres.x_centres[i_module];
+					//2D rotation matrix with CC convention from (z=0 horizontal/beam axis)
+					float rotated_z = local_z * cos(misDispTheta) - local_x * sin (misDispTheta);
+					float rotated_x = local_z * sin(misDispTheta) + local_x * cos (misDispTheta);
+					float global_z = rotated_z + idealCentres.z_centres[i_module];
+					float global_x = rotated_x + idealCentres.x_centres[i_module];
+					mod_lyr_strawMisPositionZ[i_module][i_view][i_layer].push_back(global_z); // vector will contain all z coordinates of layers
+					mod_lyr_strawMisPositionX[i_module][i_view][i_layer].push_back(global_x);
 					dX =  dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
-				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement + (misDispX); } //set displacement in x for the next layer in the view
-				if (i_view == 1) { dX = startingXDistanceStraw0 + (misDispX); } //set displacement in x for the next layer in the view
-			}//end of Layers loop
-		}// end of View loop
-
-	}//Modules
-
-	//Now misaligning detectors in z
-	float misDispZ(0), Zoffset(0); // effective misalignment
-	float dZ = startingZDistanceStraw0; // the increment in z for consecutive layers
-	metric << "Mz: ";
-	int layer_n = 0;  // layer label
-	for (int i_module = 0; i_module < moduleN; i_module++) {
-		misDispZ = dispZ[i_module];
-		Zoffset = offsetZ[i_module];
-		sdevZ.push_back(misDispZ);  // vector to store the actual of misalignment
-		metric <<  fixed << setprecision(0) << misDispZ * 1e4 << " (" << Zoffset * 1e4  << "); ";
-		for (int i_view = 0; i_view < viewN; i_view++) {
-			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				distanceMisZ.push_back(dZ + misDispZ); // vector will contain all z coordinates of layers
-				layer.push_back(layer_n);  // layer label array [starting from 0th layer]
-				//resolutionLayer.push_back(Tracker::instance()->getResolution()); //resolution in each layer
-				projectionX.push_back(float(1.0));  // x projection of hits in each layer
+				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
+				if (i_view == 1) { dX = startingXDistanceStraw0; } //set displacement in x for the next layer in the view
 				layer_n++;
 				if (i_layer == 0) { dZ += layerSpacing; } // increment spacing between layers in a view once only
-			} // layers
+			}//end of Layers loop
 			if (i_view == 0) { dZ += viewSpacing; } // increment spacing between views in a module once only
-		} // views
+		}// end of View loop
 		dZ += moduleSpacing;
-	} // modules
+	}//Modules
 
+	//Now get rotational centres for the misaligned geometry (sanity check)
+	RotationCentres misCentres = Tracker::getCentre(mod_lyr_strawMisPositionX, mod_lyr_strawMisPositionZ, plot_centres);
 
 	// Print out:
 	if (debugBool) {
@@ -742,15 +802,20 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, 
 				for (int i_layer = 0; i_layer < layerN; i_layer++) { //per module
 					cout << "MIS M" << noshowpos << i_module + 1 << UVmapping[i_view][i_layer] << " X : ";
 					for (int i_straw = 0; i_straw < strawN; i_straw++) {
-						cout << showpos  << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
-						debug_mis << mod_lyr_strawMisPosition[i_module][i_view][i_layer][i_straw] << " ";
+						cout << showpos  << mod_lyr_strawMisPositionX[i_module][i_view][i_layer][i_straw] << " ";
+						debug_mis << mod_lyr_strawMisPositionX[i_module][i_view][i_layer][i_straw] << " ";
 
 					} //end of Straws loop
-					cout << " | Z= " << noshowpos << distanceMisZ[Zcounter] << " [cm]" << endl;
-					debug_mis << distanceMisZ[Zcounter] << endl;
-					Zcounter++;
+					cout << endl;
+					debug_mis << endl;
+					cout << "MIS M" << noshowpos << i_module + 1 << UVmapping[i_view][i_layer] << " Z : ";
+					for (int i_straw = 0; i_straw < strawN; i_straw++) {
+						cout << showpos  << mod_lyr_strawMisPositionZ[i_module][i_view][i_layer][i_straw] << " ";
+						debug_mis << mod_lyr_strawMisPositionZ[i_module][i_view][i_layer][i_straw] << " ";
+					} //end of Straws loop
+					cout << endl;
+					debug_mis << endl;
 				} // end of Layers
-
 			}// end of View loop
 			cout << endl;
 		}//Modules
@@ -760,111 +825,19 @@ void Tracker::misalign(ofstream& debug_mis, ofstream& pede_mis, bool debugBool, 
 
 	//--- For Modules only [MC misalignment set per module -> transfer to each layer] -- //
 
-	//Overall Misalignment [w.r.t to other modules]
-	float sum_of_elems = 0.0;
-	for (vector<float>::iterator it = sdevZ.begin(); it != sdevZ.end(); ++it) {
-		sum_of_elems += *it;
-	}
-	overallMis = sum_of_elems / moduleN;
 	cout << "Misalignment(M) and Offsets(O): " << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		cout << "M" << noshowpos << i_module + 1 << "x :: " << showpos << sdevX[i_module] << " cm. M" << noshowpos << i_module + 1 << "z :: "  << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
-		cout << "O" << noshowpos << i_module + 1 << "x :: " << showpos << offsetX[i_module] << "cm O" << noshowpos << i_module + 1 << "z :: " << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
+		cout << "M" << noshowpos << i_module + 1 << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. ";
+		//M" << noshowpos << i_module + 1 << "z :: "  << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
+		cout << "O" << noshowpos << i_module + 1 << "𝛉 :: " << showpos << offsetTheta[i_module] << " rad." << endl;
+		//O" << noshowpos << i_module + 1 << "z :: " << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
 		//pede_mis << (offsetZ[i_module]-sdevZ[i_module]) << " ";
-		if (i_module==1 || i_module==2){ // TODO move to pre-sigma function 
-			pede_mis << sdevX[i_module] << " " << sdevZ[i_module] << " ";
+		if (i_module == 1 || i_module == 2) { // TODO move to pre-sigma function
+			//pede_mis << sdevX[i_module] << " " << sdevZ[i_module] << " ";
+			pede_mis << dispTheta[i_module] << " ";
 		}
-		float relMisTmp = sdevZ[i_module] - overallMis;
-		//now push these misalignment parameters for all layers in the module [for use later]
-		for (int i_view = 0; i_view < viewN; i_view++) {
-			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				relMis.push_back(relMisTmp);           //relative misalignment per layer [w.r.t to other modules]
-				charMis.push_back(sdevZ[i_module]);  // absolute misalignment per layer
-			} // view
-		} // layer
-		//cout << showpos << "Relative: " << relMisTmp << " cm." << endl;
 	} // modules
-	//cout << "The overall misalignment was " << overallMis << " cm" <<  endl << endl;
 	cout << noshowpos;
-
-	//--- Calculations for Each Layer -- //
-	// XXX ONLY VALID FOR 2-parameter line fit (i.e. not circle fit)
-	// XXX Verbose calculation via separate loops on purpose - to demonstrate the alignment methods
-	// For straight-line case only.
-
-	// constants
-	float N = float(layerTotalN); // total N of layers
-	float D = Tracker::instance()->getResolution(); // Original detector resolution
-	int i_totalLayers; // dummy layer counter
-
-	// Pivot Point
-	i_totalLayers = 0;
-	for (int i_module = 0; i_module < moduleN; i_module++) {
-		for (int i_view = 0; i_view < viewN; i_view++) {
-			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				pivotPoint_estimated += distanceMisZ[i_totalLayers];
-				i_totalLayers++;
-			}// layer
-		} // view
-	} // modules
-	pivotPoint_estimated = pivotPoint_estimated / N;
-
-	// Centred Distances and squared distances
-	i_totalLayers = 0;
-	for (int i_module = 0; i_module < moduleN; i_module++) {
-		for (int i_view = 0; i_view < viewN; i_view++) {
-			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				float tmpZDistance = distanceMisZ[i_totalLayers] - pivotPoint_estimated;
-				zDistance_centered.push_back(tmpZDistance);
-				squaredZSum += pow(tmpZDistance, 2);
-				i_totalLayers++;
-			}// layer
-		} // view
-	} // modules
-
-	// Estimated SD of residuals, Sum of mis., and squared sum of mis.
-	i_totalLayers = 0;
-	for (int i_module = 0; i_module < moduleN; i_module++) {
-		sigma_recon_estimated.push_back(vector< vector< float > > ());
-		for (int i_view = 0; i_view < viewN; i_view++) {
-			sigma_recon_estimated[i_module].push_back( vector<float>  () );
-			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				float simga_est = D * sqrt( (N - 1) / N - (pow(zDistance_centered[i_totalLayers], 2) / squaredZSum) );
-				sigma_recon_estimated[i_module][i_view].push_back(simga_est);
-				MisZdistanceSum += charMis[i_totalLayers] * zDistance_centered[i_totalLayers];
-				MisSum += charMis[i_totalLayers];
-				i_totalLayers++;
-			}// layer
-		} // view
-	} // modules
-
-	// Predicted means of residuals [a.k.a "shear misalignment"]
-	i_totalLayers = 0;
-	for (int i_module = 0; i_module < moduleN; i_module++) {
-		for (int i_view = 0; i_view < viewN; i_view++) {
-			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				float charM = charMis[i_totalLayers];
-				float z = zDistance_centered[i_totalLayers];
-				float shearMistmp = charM - MisSum / N - (z * MisZdistanceSum) / squaredZSum;
-				shearMis.push_back(shearMistmp);
-				i_totalLayers++;
-			}// layer
-		} // view
-	} // modules
-
-	// The Chi2 estimation requires misalignment parameters per layer
-	Chi2_recon_estimated = N - 2.0; // 2 parameter fit
-	i_totalLayers = 0;
-	for (int i_module = 0; i_module < moduleN; i_module++) {
-		for (int i_view = 0; i_view < viewN; i_view++) {
-			for (int i_layer = 0; i_layer < layerN; i_layer++) {
-				float M = shearMis[i_totalLayers];
-				float z = zDistance_centered[i_totalLayers];
-				Chi2_recon_estimated += ( (M * M) - (M) / (N) - (2.0 * M * z) / (squaredZSum) ) / (D * D) ;
-				i_totalLayers++;
-			}// layer
-		} // view
-	} // modules
 
 }//end of misalign
 
@@ -893,46 +866,3 @@ float Tracker::generate_uniform() {
 	float uniform = (( RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
 	return uniform;
 }
-
-/**
- * Returns the peak (maximum so far) resident set size [RSS] (physical
- * memory use) measured in bytes, or zero if the value cannot be
- * determined on this OS. By Dr. David R. Nadeau:
- * http://nadeausoftware.com/articles/2012/07/c_c_tip_how_get_process_resident_set_size_physical_memory_use
- */
-// size_t Tracker::getPeakRSS( ) {
-// #if defined(_WIN32)
-// 	/* Windows -------------------------------------------------- */
-// 	PROCESS_MEMORY_COUNTERS info;
-// 	GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
-// 	return (size_t)info.PeakWorkingSetSize;
-
-// #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
-// 	/* AIX and Solaris ------------------------------------------ */
-// 	struct psinfo psinfo;
-// 	int fd = -1;
-// 	if ( (fd = open( "/proc/self/psinfo", O_RDONLY )) == -1 )
-// 		return (size_t)0L;      /* Can't open? */
-// 	if ( read( fd, &psinfo, sizeof(psinfo) ) != sizeof(psinfo) )
-// 	{
-// 		close( fd );
-// 		return (size_t)0L;      /* Can't read? */
-// 	}
-// 	close( fd );
-// 	return (size_t)(psinfo.pr_rssize * 1024L);
-
-// #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-// 	/* BSD, Linux, and OSX -------------------------------------- */
-// 	struct rusage rusage;
-// 	getrusage( RUSAGE_SELF, &rusage );
-// #if defined(__APPLE__) && defined(__MACH__)
-// 	return (size_t)rusage.ru_maxrss;
-// #else
-// 	return (size_t)(rusage.ru_maxrss * 1024L);
-// #endif
-
-// #else
-// 	/* Unknown OS ----------------------------------------------- */
-// 	return (size_t)0L;          /* Unsupported. */
-// #endif
-// }
