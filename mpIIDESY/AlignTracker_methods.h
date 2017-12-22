@@ -114,7 +114,10 @@ private:
 	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
 	static constexpr int nlc = 2; // dR/dc dR/dm
-	static constexpr int ngl = 3; //  dR/dx dR/dz  dR/d𝛉 
+	static constexpr int ngl = 3; //  dR/dx dR/dz  dR/d𝛉
+	//Matrix memory space
+	int mat_n = moduleN; // # number of global parameters
+	int mat_nc = 0; // # number of constraints
 
 	float pValCut = 0.00; // from 0->1
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
@@ -160,15 +163,12 @@ private:
 	// **** MC CALCULATION CONTAINERS ****  //
 	// Hits-based
 	std::vector<int> layer; // record of layers that were hit
-	//std::vector<float> sdevX;// the actual shift in x due to the imposed misalignment (alignment parameter)
-	//std::vector<float> sdevZ;// the actual shift in z due to the imposed misalignment (alignment parameter)
 
 	// Vectors to hold Ideal and Misaligned (true) X positions [moduleN 0-7][viewN 0-1][layerN 0-1][strawN 0-31]
 	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPositionX;
 	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPositionX;
 	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawIdealPositionZ;  // Z distance between planes [this is set in geometry]
 	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPositionZ;  // Z distance between misaligned planes [this is set in misalignment]
-	//std::vector< std::vector< std::vector< float > > > sigma_recon_estimated;
 
 	// Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
 	std::vector< std::vector< string > > UVmapping; // set in the constructor
@@ -177,10 +177,6 @@ private:
 	vector<float> xRecon;  // ideal straw x
 	vector<float> zRecon;  // ideal straw z
 	vector<float> radRecon; // reconstructed fit circle radius (DCA)
-
-	//Matrix memory space
-	int mat_n = moduleN; // # number of global parameters
-	int mat_nc = 0; // # number of constraints
 
 	// Class constructor and destructor
 	Tracker();
@@ -228,30 +224,6 @@ public:
 	void setTrackNumber(int tracks) {
 		trackNumber = tracks;
 	}
-
-	// void setXOffset1(float off1) {
-	// 	offsetX[1] = off1;
-	// }
-
-	// void setXOffset2(float off2) {
-	// 	offsetX[2] = off2;
-	// }
-
-	// void setZOffset1(float off1) {
-	// 	offsetZ[1] = off1;
-	// }
-
-	// void setZOffset2(float off2) {
-	// 	offsetZ[2] = off2;
-	// }
-
-	// void setThetaOffset1(float off1) {
-	// 	offsetTheta[1] = off1;
-	// }
-
-	// void setThetaOffset2(float off2) {
-	// 	offsetTheta[2] = off2;
-	// }
 
 	void incRejectedHitsDCA() {
 		rejectedHitsDCA = rejectedHitsDCA + 1;

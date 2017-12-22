@@ -13,9 +13,6 @@ Tracker* Tracker::s_instance = NULL;
 Constructor for tracker class.
  */
 Tracker::Tracker() {
-
-	// non-static variables definition here
-
 	// Set mapping for U0...V1
 	string tempMapping[4] = {"U0", "U1", "V0", "V1"};
 	for (int i_view = 0; i_view < viewN; i_view++) {
@@ -41,12 +38,15 @@ Tracker::~Tracker() {
    @return Pointer to tracker instance.
  */
 Tracker* Tracker::instance() {
-
 	// Create pointer to class instance if one doesn't exist already, then return that pointer.
 	if (s_instance == NULL) s_instance = new Tracker();
 	return s_instance;
 }
 
+/**
+   Write a steering file to the supplied file-stream.
+    @param steering_file reference to ofstream to write steering file to.
+ */
 void Tracker::write_steering_file(ofstream& steering_file, ofstream& metric) {
 	if (steering_file.is_open()) {
 
@@ -69,12 +69,11 @@ void Tracker::write_steering_file(ofstream& steering_file, ofstream& metric) {
 		              << "end ! optional for end-of-data" << endl;
 	} // steering file open
 } // steering function
+
 /**
    Write a constraint file to the supplied file-stream.
-    @param constraint_file Reference to ofstream to write constraint file to.
+    @param constraint_file reference to ofstream to write constraint file to.
  */
-
-// XXX constraints are ignored with HIP method
 void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_con, bool debugBool, ofstream& metric) {
 	// Check constraints file is open, then write.
 	if (constraint_file.is_open()) {
@@ -85,10 +84,8 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
 		//Fixing module 0 and the last module
 		for (int i_module = 0; i_module < moduleN; i_module++) {
 			if (i_module == 0 || i_module == moduleN - 1) {
-				//if (i_module == 1 || i_module == 2) {
 
 				//constraint_file << "Constraint 0.0" << endl;
-
 				labelt << "-; "; // = no constraintss
 				//int labelt = i_module + 1; // Millepede accepts +ive labels only
 				//mat_nc++; // increment number of constraints
@@ -101,6 +98,10 @@ void Tracker::write_constraint_file(ofstream& constraint_file, ofstream& debug_c
 	cout << "Memory space requirement (inversion method, i.e. upper bound) = " << ( mat_n * mat_n + mat_n ) / 2 + mat_n * mat_nc + ( mat_nc * mat_nc + mat_nc ) / 2 << endl;
 } // end of writing cons file
 
+/**
+   Write a presigma parameter file to the supplied file-stream.
+    @param presigma_file reference to ofstream to write presigma file to.
+ */
 void Tracker::write_presigma_file(ofstream& presigma_file, ofstream& metric) {
 	// Check constraints file is open, then write.
 	if (presigma_file.is_open()) {
@@ -120,15 +121,19 @@ void Tracker::write_presigma_file(ofstream& presigma_file, ofstream& metric) {
 				} // end of fixed modules
 			} //end of global parameter loop
 		} // end of detectors loop
-	} // constrain file open
-} // end of writing cons file
+	} // presigma file open
+} // end of writing presigma file
 
-
+/**
+   Define centre of rotation
+   @return rotation centres for each module
+ */
 RotationCentres Tracker::getCentre(std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionX, std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawPositionZ, ofstream& plot_centres) {
 	RotationCentres centre;
 	// for a module given by i_global get first and last straws of the first and last layers
 	for (int i_global = 0; i_global < moduleN; i_global++) {
 
+		//Set the centre of a modules as a rotation point
 		std::vector<float> U0_x = mod_lyr_strawPositionX[i_global][0][0];  // U0x
 		std::vector<float> V1_x = mod_lyr_strawPositionX[i_global][1][1];  // V1x
 		float U0_first_x = U0_x[0]; float V1_last_x = V1_x[strawN - 1];
@@ -137,8 +142,7 @@ RotationCentres Tracker::getCentre(std::vector< std::vector< std::vector< std::v
 		float U0_first_z = U0_z[0]; float V1_last_z = V1_z[strawN - 1];
 
 		float z_c(0), x_c(0);
-		//cout << "i_global= " << i_global << " U0_first_x= " << U0_first_x << " U0_last_x=" << U0_last_x << " U0_first_z= " << U0_first_z << " V1_first_z= " << V1_first_z << endl;
-		x_c = (V1_last_x + U0_first_x) / 2; // XXX check sign
+		x_c = (V1_last_x + U0_first_x) / 2;
 		z_c = (V1_last_z + U0_first_z) / 2;
 
 		centre.z_centres.push_back(z_c);
@@ -149,15 +153,13 @@ RotationCentres Tracker::getCentre(std::vector< std::vector< std::vector< std::v
 	return centre;
 }
 
-
-
 /**
    DCA for a point to a line in 2D space
+   @return dca
 */
 float Tracker::pointToLineDCA(float z_straw, float x_straw, float x_slope, float x_intercept) {
 
 	//http://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
-
 	//converting from x=mz+c -> mz+x+c=0
 	float a = -x_slope;
 	float b = 1.0;
@@ -166,16 +168,13 @@ float Tracker::pointToLineDCA(float z_straw, float x_straw, float x_slope, float
 	float y0 = x_straw;
 
 	float dca = abs( a * x0 + b * y0 + c ) / sqrt( a * a + b * b  ) ;
-
-	//cout << "m= " << a << " c= " << c << " z= " << x0 << " -x= " << y0 << " dca= " << dca <<  endl;
-
 	return dca;
 }
 
 
 /** Uses DCA function to find the shortest dca between straws (i.e. which straw was hit in that layer)
     @Inputs (see DCA method) + vector of straws' x coordinates in a layer, and a return type: "dca_hit"  or "x_line"
-    @return hit_distance - dca of the straw that was hit, or x coordinate of the line on the same z as a straw
+    @return hit_distance - dca of the straw that was hit
 */
 DCAData Tracker::DCAHit(vector<float> xLayer, vector<float> zLayer, float xTrack, float xSlpoe, float xIntercept, bool debugBool) {
 
@@ -185,7 +184,6 @@ DCAData Tracker::DCAHit(vector<float> xLayer, vector<float> zLayer, float xTrack
 
 	//Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
 	// xTrack is the point of the line "in-line with the layers"
-
 	float lower, upper, hitDistance;
 	int lastID = strawN - 1; // the ID of the very last straw in the vector
 	int LR, index; //L= +1 or R=-1 hit looking downstream
@@ -217,7 +215,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, vector<float> zLayer, float xTrack
 	// the two [the straw-position vector iterator only checks the vertical distance] and assign LRma
 	else {
 		//we have already taken care of the end-straws, so now just need to look in between
-		int z_counter=0;
+		int z_counter = 0;
 		for (int i_counter = 0; i_counter < xLayer.size(); i_counter++) {
 			if (xLayer[i_counter] < xTrack) {
 				lower = xLayer[i_counter];
@@ -232,7 +230,7 @@ DCAData Tracker::DCAHit(vector<float> xLayer, vector<float> zLayer, float xTrack
 jmp:
 
 		float hit_distance_low = pointToLineDCA(zLayer[z_counter], lower, xSlpoe, xIntercept);
-		float hit_distance_up = pointToLineDCA(zLayer[z_counter-1], upper, xSlpoe, xIntercept);
+		float hit_distance_up = pointToLineDCA(zLayer[z_counter - 1], upper, xSlpoe, xIntercept);
 
 		if (hit_distance_low < strawRadius && hit_distance_up < strawRadius) {
 			if (debugBool) {cout << "Multiple straws in layer were hit!" << endl;}
@@ -274,7 +272,6 @@ jmp:
 	dca_data.dcaUnsmeared = hitDistance;
 	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * Tracker::generate_gaus();
 	//Apply a 500 um cut on the WHOLE track
-
 	if (abs(hitDistanceSmeared) < trackCut && trackCutBool) {
 		cutTriggered = true; // will be checked in the MC_Launch on DCA return
 	}
@@ -294,14 +291,13 @@ jmp:
 }
 
 
-// Adds dca to the ideal geometry
+// Adds DCA to the ideal geometry
 ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, vector<float> zLayer) {
 
 	ReconData recon_data;
 	bool StrongDebugBool = false; //quick hack XXX for even more debug output
 	float x_IdealStraw = xLayer[det_ID];
 	float recon_dca = det_dca; //adds dca to the assumed straw x coordinate
-	if (StrongDebugBool) { cout << "recon_dca= " << recon_dca << "; x_IdealStraw= " << x_IdealStraw <<  " det_dca= " << det_dca << endl;}
 	recon_data.z = zLayer[det_ID];
 	recon_data.x = x_IdealStraw;
 	recon_data.dcaRecon = recon_dca;
@@ -309,11 +305,9 @@ ReconData Tracker::HitRecon(int det_ID, float det_dca, vector<float> xLayer, vec
 }
 
 // Function to return residuals to the fitted line (due to dca point scatter + resolution of the detector)
-// @ Inputs: ideal points (x,z)
-
-//Truth can be used as an optional input
-
-// z,x position of straws, radius of drift circle, # circles, plotting file for input, verbosity flag, truth flag
+// @ Inputs: z,x position of straws, radius of drift circle, # circles, plotting file for input, verbosity flag, truth flag
+// Truth can be used as an optional input [e.g. LR information]
+// @return vector of residuals for each straw
 ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, vector<float> radRecon, int dataSize, ofstream& plot_fit, bool debugBool, bool useTruthLR, vector<int> LR_truth) {
 
 	ResidualData resData; // return slope, intercept of the fitted track
@@ -369,12 +363,11 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		// Roots of this function are minima or maxima of Chi2
 		// Finding one that has positive derivative doesn't work, so fill in all roots and take one with best Chi2
 		// TF1::GetX(0) isn't too clever at finding roots - so we'll loop over the function range and give tighter range for root finding
-
 		// Holders for intercepts & gradients that satisfy Chi2 minimisation/maximisation
 		vector<double> gradients, intercepts;
 
 		// Set some step size for loop - needs to be small enough that we don't miss roots where function crosses and re-crosses zero within this range
-		double stepSize = 0.1; // XXX
+		double stepSize = 0.1;
 
 		// Loop over range and push back all roots to vectors
 		double prevValue = dX2_dm->Eval(dX2_dm->GetXmin());
@@ -530,7 +523,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 				// TRUTH PARAMETERS
 				//The registered hit position on the misaligned detector is smeared by its resolution
 				// zTrack is just the distance[z_counter] - in-line with the layer [chose the middle straw]
-				xTrack = xSlope * mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][int(strawN/2)] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
+				xTrack = xSlope * mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][int(strawN / 2)] + xIntercept; // true track position in-line with the layer [from line x=ym+c]
 				// DCA will return the pointToLineDCA (smeared by resolution) and strawID [+truth parameters: LR sign etc. xHit and zHit]
 				DCAData MisDetector = Tracker::DCAHit(mod_lyr_strawMisPositionX[i_module][i_view][i_layer], mod_lyr_strawMisPositionZ[i_module][i_view][i_layer], xTrack, xSlope, xIntercept, debugBool); // position on the detector [from dca]
 				//Check for trigger on DCA < 500 um, and only continue calculations not triggered
@@ -600,6 +593,7 @@ MCData Tracker::MC_launch(float scatterError, ofstream& debug_calc, ofstream& de
 		}// end of View loop
 	}// end of looping over modules
 
+	// Now for the whole track, if not cut
 	if (cutTriggered == false) {
 
 		if (debugBool && StrongDebugBool) {cout << "Calculating residuals..." << endl;}
@@ -683,7 +677,7 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 					float global_z = rotated_z + idealCentres.z_centres[i_module];
 					float global_x = rotated_x + idealCentres.x_centres[i_module];
 					mod_lyr_strawIdealPositionZ[i_module][i_view][i_layer][i_straw] = global_z; // vector will contain all z coordinates of layers
-					mod_lyr_strawIdealPositionX[i_module][i_view][i_layer][i_straw]= global_x;
+					mod_lyr_strawIdealPositionX[i_module][i_view][i_layer][i_straw] = global_x;
 					dX = dX - strawSpacing; //while we are in the same layer: increment straw spacing in x
 				} //end of Straws loop
 				if (i_view == 0) { dX = startingXDistanceStraw0 - layerDisplacement; } //set displacement in x for the next layer in the view
@@ -731,9 +725,7 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 	layer_n = 0;  // layer label
 	//metric << "MTheta: ";
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		//metric <<  fixed << setprecision(0) << dispX[i_module] << dispZ[i_module] << dispTheta[i_module] ;
 		float dX = startingXDistanceStraw0; // starting on the x-axis (z, 0+disp)
-		//sdevX.push_back(0.0); // vector to store the actual of misalignment
 		mod_lyr_strawMisPositionX.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
 		mod_lyr_strawMisPositionZ.push_back(vector<vector<vector<float> > >()); //initialize the first index with a 2D vector
 		for (int i_view = 0; i_view < viewN; i_view++) {
@@ -804,13 +796,8 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 
 	cout << "Misalignment(M)" << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos <<dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
-		//M" << noshowpos << i_module + 1 << "z :: "  << showpos << sdevZ[i_module] << " cm. "; // absolute misalignment [as set by MC]
-		//cout << "O" << noshowpos << i_module + 1 << "𝛉 :: " << showpos << offsetTheta[i_module] << " rad." << endl;
-		//O" << noshowpos << i_module + 1 << "z :: " << offsetZ[i_module] << " cm. " << endl; // absolute misalignment [as set by MC]
-		//pede_mis << (offsetZ[i_module]-sdevZ[i_module]) << " ";
+		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos << dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
 		if (i_module == 1 || i_module == 2) { // TODO move to pre-sigma function
-			//pede_mis << sdevX[i_module] << " " << sdevZ[i_module] << " ";
 			pede_mis << dispX[i_module] << " " << dispZ[i_module] << " " <<  dispTheta[i_module] << " ";
 		}
 	} // modules
