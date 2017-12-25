@@ -494,7 +494,6 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 		else {
 			signXSlope = -1.0;
 		}
-		//xSlope = (Tracker::generate_uniform() * signXSlope) * (0.5 * beamPositionLength / beamStop);
 		xSlope = (Tracker::generateUniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
 		x1 = xSlope * beamStop + xIntercept; // "xExit"
 
@@ -607,6 +606,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 		MC.chi2Circle = resData.chi2Circle;
 		MC.driftRad = radRecon; // vector
 
+		//plotting files 
 		if (debugBool) {
 			plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
 			int i_counter = 0;
