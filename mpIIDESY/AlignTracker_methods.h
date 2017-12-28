@@ -5,7 +5,8 @@
 * the method class, as well as function declarations, and definitions of functions.
 */
 #include "random_buffer.h" // courtesy of John Smeaton (UCL)
-///XXX some includes may become redundant
+
+///XXX some includes may be redundant
 #include <algorithm>
 #include <vector>
 #include <string>
@@ -96,9 +97,7 @@ class Tracker {
 private:
 
 	static Tracker* s_instance; // Pointer to instance of class
-
 	int trackNumber; // Number of tracks (i.e. records) to be simulated passing through detector - passed as command line argument
-
 	static constexpr float twoR = 2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
 
 	// **** COUNTERS ****  //
@@ -118,15 +117,15 @@ private:
 	int matN = moduleN; // # number of global parameters
 	int matNC = 0; // # number of constraints
 
-	float pValCut = 0.00; // from 0->1
+	float pValCut = 0.0; // from 0.0->1.0
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
 	bool useTruthLR = true; // use LR information from generated tracks [requires DCA cut!]
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {0.0, 0.02, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] =     {0.0, 0.00, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.0, 0.00, -0.03, 0.0, 0.0, 0.0, 0.0, 0.0}; // radians
+	float dispX[8] =     {0.00,  0.02,  0.00,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] =     {0.00,  0.00,  0.00,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispTheta[8] = {0.00,  0.00,  0.03,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
 
 	// **** GEOMETRIC CONSTANTS ****  // XXX will be taken from gm2geom in the future
 	// define detector geometry [all distances are in cm]
@@ -239,8 +238,6 @@ public:
 	//
 	// Getter methods
 	//
-
-
 	string getUVmapping(int i, int j) {
 		return UVmapping[i][j];
 	}
@@ -341,6 +338,5 @@ public:
 	}
 
 };
-
 
 #endif

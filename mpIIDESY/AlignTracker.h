@@ -2,13 +2,14 @@
 #define ALIGNTRACKER
 
 //This header file declares main function, and imports necessary dependencies for AlignTracker.cpp [description of purpose is there]
-#include "AlignTracker_helper.h" // helper functions
+
 #include "Mille.h"  // courtesy of Gero Flucke (DESY) 
 #include "Mille.cc" // courtesy of Gero Flucke (DESY) 
-#include "AlignTracker_methods.h" // Methods and functions for the main programme (AlignTracker.cpp)
 #include "Logger.hh"  // Logger courtesy of Tom Stuttard (UCL) - from gm2trackdaq repository
+#include "AlignTracker_methods.h" // Methods and functions for the main programme (AlignTracker.cpp)
+#include "AlignTracker_helper.h" // helper functions
 
-//XXX Some includes maybe redundant
+//XXX Some includes may be redundant
 #include <iostream>
 #include <fstream>
 #include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */

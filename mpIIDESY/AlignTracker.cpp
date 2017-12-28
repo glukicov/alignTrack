@@ -1,30 +1,38 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
 *   Created: 17 April 2017
-*   Modified: 22 December 2017
+*   Modified: 22 January 2018
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the
 PEDE routine, to align the tracking detector for the g-2
 experiment.
 Methods and functions are contained in AlignTracker_methods.cpp (Tracker Singleton class)
 
-TODO:
-Python Plotting Scripts:
-Tracker
-Functions
+***Python and Bash Scripts:
+*PlotGen.py - plot generated tracks and modules [after e.g. ./AlignTrack p 1]
+*randomIntGenerator.py - generates random numbers
+*plotdM.py - plot difference between PEDE and MC
+*timeLaunch.py - measures time of MC execution for different number of tracks
+*PlotFunc.py - plots relevant derivative functions analytically 
 
 Python Iterative Test Scripts for establishing PEDE performance:
-Seed
-FoM
+*Seed:
+	PEDE_tests_seed.bash - starts tests for same number of tracks with varying seed.
+
+*FoM:
+	PEDE_tests.py - starts iterative comparison of PEDE vs MC for different number of tracks
+	[using TrackerLaunch.py for plotting and ConcatenatePEDE.py for combining results]
+*MisProfile.py - FoM for Chi2 
 
 Grid Submission Scripts:
+in LaunchPEDE_grid/ : 
+*MC_pede/ - clean source files to tarball on a grid node for compilation
+*send.sh - specifies the grid conditions and input files
+*grid_submit.sh - specifies the job execution
 
 Function Derivations in alignment.tex
 
 ROOT Plotting macro rootlogon.C [loaded automatically e.g.: rootbrowse Tracker.root]
-
-Other?
-TODO Describe all code -> Add to Github/Redmine
 
 ============================= Test Model v1.0 =======================================
 *Simple 2D case (2D alignment as 2D translation and rotation along detector centre) with Circle Fit.
@@ -112,14 +120,12 @@ int main(int argc, char* argv[]) {
 	    ver_string(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #endif
 
-//------------------------------------------Variable Initialisation---------------------------------------------------------//
+//------------------------------------------Global Variables Initialisation---------------------------------------------------------//
 
 	int imodel = 0;  //Model type (see above) TODO implement this as an argument to main [for broken lines, MF, etc.]
 	int setPrecision = 7; // precision (# decimal points) of printout for debug text files and cout
 	string compareStr; //for debug vs. normal output as specified by the user
 	int tracksInput; // number of tracks to generate as specified by the user
-	//float offset1X(0), offset2X(0), offset1Z(0), offset2Z(0); // TODO implement as an input .txt file of offsets?
-	//float ThetaOffset1(0), ThetaOffset2(0); // TODO implement as an input .txt file of offsets?
 	bool debugBool = false; // './AlignTracker n' - for normal, of ./AlignTracker d' - for verbose debug output
 	bool plotBool = false; // './AlignTracker p' - for plotting with PlotGen.py
 	//Set up counters for hits and records (tracks)
@@ -136,21 +142,16 @@ int main(int argc, char* argv[]) {
 	gROOT->Macro("rootlogon.C");
 	// Simple LR mapping for ROOT plots
 	char nameLR[] = {'L', 'R'};
-	char nameResSign[] = {'P', 'N'};
-	const char* nameLC[] = {"DLC1", "DLC2"};
 	int valueLR[] = { -1, 1};
-	// True/False -> Yes/No mapping
-	const char* boolYN[2] = {"No", "Yes"};
+	const char* boolYN[2] = {"No", "Yes"}; // True/False -> Yes/No mapping
 
 	// use overloading to duplicate cout into the log file
 	ofstream LOG; LOG.open("Tracker_log.txt"); MyStreamingHelper helper(LOG, cout);
 	cout << fixed << setprecision(setPrecision); // set precision of standard screen output
 	helper << fixed << setprecision(setPrecision); // set precision of log file output
 
-	//Tell the logger to only show message at INFO level or above
-	Logger::Instance()->setLogLevel(Logger::NOTE);
-	//Tell the logger to throw exceptions when ERROR messages are received
-	Logger::Instance()->enableCriticalErrorThrow();
+	Logger::Instance()->setLogLevel(Logger::NOTE); //Tell the logger to only show message at INFO level or above
+	Logger::Instance()->enableCriticalErrorThrow(); //Tell the logger to throw exceptions when ERROR messages are received
 
 	// Check if correct number of arguments specified, exiting if not
 	if (argc > 3) { Logger::Instance()->write(Logger::ERROR, "Too many arguments -  please specify verbosity flag. #tracks, offset1, offset2.  e.g. ./AlignTracker n 100000 0.0 0.0");}
@@ -164,23 +165,20 @@ int main(int argc, char* argv[]) {
 			Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
 		}
 	} // end of 2nd else [correct # arguments]
-
+	Tracker::instance()->setTrackNumber(tracksInput);
 	//this is also passed to Tracker functions, with debug file names
 	if (compareStr == "d") {
 		debugBool = true; // print out to debug files [and verbose cout output]
-		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******DEBUG MODE*****");
 	}
 	else if (compareStr == "p") {
 		plotBool = true;
 		debugBool = true; // print out to debug files and plotting files - use with low track #
-		Tracker::instance()->setTrackNumber(tracksInput);
 		Logger::Instance()->write(Logger::WARNING,  "******PLOTTING MODE*****");
 	}
 	else if (compareStr == "n" || compareStr == "a") {
 		debugBool = false; // print out to debug files
 		plotBool = false;  // print out to plotting files
-		Tracker::instance()->setTrackNumber(tracksInput);
 	}
 	else {
 		Logger::Instance()->write(Logger::ERROR, "Please specify verbosity flag. (e.g. debug [d], plot[p] or align/normal [a/n])");
@@ -191,7 +189,7 @@ int main(int argc, char* argv[]) {
 	Logger::Instance()->write(Logger::NOTE, "");
 	msg0 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg0.str());
-	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v0.9) - Gleb Lukicov (UCL) - December 2017         " << Logger::def();
+	msg01 << Logger::yellow() << "  g-2 Tracker Alignment (v1.0) - Gleb Lukicov (UCL) - January 2018         " << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg01.str());
 	msg1 << Logger::blue() <<  "*********************************************************************" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg1.str());
@@ -215,7 +213,6 @@ int main(int argc, char* argv[]) {
 		Tracker::instance()->setUniformFile("uniform_ran.txt");
 		Tracker::instance()->setGaussianFile("gaussian_ran.txt");
 	}
-
 	catch (ios_base::failure& e) {
 		cerr << "Filestream exception caught: " << e.what() << endl;
 		cerr << "Please ensure valid filenames are specified!" << endl;
@@ -329,14 +326,11 @@ int main(int argc, char* argv[]) {
 	for (int i_module = 0; i_module < Tracker::instance()->getModuleN(); i_module++) {
 		for (int i_view = 0; i_view < Tracker::instance()->getViewN(); i_view++) {
 			for (int i_layer = 0; i_layer < Tracker::instance()->getLayerN(); i_layer++) {
-
 				string UV = Tracker::instance()->getUVmapping(i_view, i_layer); // converting view/layer ID into conventional labels
-
 				h_name.str(""); h_name << "h_residual_recon_M_" << i_module << "_" << UV;
 				h_title.str(""); h_title << "Residuals Recon M" << i_module << " " << UV ;
 				auto hl4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  149, -0.2, 0.2);
 				hl4->GetXaxis()->SetTitle("[cm]"); hl4->SetDirectory(cd_UV);
-
 			} // layers
 		} // views
 	} // modules
@@ -347,7 +341,6 @@ int main(int argc, char* argv[]) {
 		h_title.str(""); h_title << "Residuals Recon M" << i_module;
 		auto hm4 = new TH1F(h_name.str().c_str(), h_title.str().c_str(),  199, -0.2, 0.2);
 		hm4->GetXaxis()->SetTitle("[cm]"); hm4->SetDirectory(cd_Modules);
-		
 		// LR splitting
 		for (int i_LR = 0; i_LR < 2; i_LR++) {
 			h_name.str(""); h_name << "h_Residuals_Module_" << i_module << "_" <<  valueLR[i_LR];
@@ -357,11 +350,9 @@ int main(int argc, char* argv[]) {
 		}
 	} // end of modules loop
 
-
-
 //------------------------------------------Mille Routines---------------------------------------------------------//
 
-	// Creating .bin, steering, and constrain files
+	// Creating .bin, steering, presigma and constrain files
 	Mille M (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
 	helper << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
 
@@ -392,13 +383,11 @@ int main(int argc, char* argv[]) {
 	bool StrongDebugBool = true;
 	//Generating tracks
 	for (int trackCount = 0; trackCount < Tracker::instance()->getTrackNumber(); trackCount++) {
-		//float p=pow(10.0, 1+Tracker::instance()->generate_uniform());
-		//scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p;
+		//float p=pow(10.0, 1+Tracker::instance()->generate_uniform()); // XXX
+		//scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p; // XXX
 		scatterError = 0; // set no scatterError for now
-		char tmpNameResSign; //to assign sign label for the residual [+/-]
-
 		if (debugBool && StrongDebugBool) { helper << "Track: " << trackCount << endl; }
-
+		
 		//Generating tracks
 		MCData generatedMC = Tracker::instance()->MCLaunch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen,
 		                     plot_hits_fit, debugBool);
@@ -444,7 +433,7 @@ int main(int argc, char* argv[]) {
 
 				M.mille(nalc, derlc, nagl, dergl, label, resiudalRecon, resolution);
 
-				//***********************************Sanity Plots******************************************//
+				//***********************************Sanity Plots: Hits******************************************//
 				//Getting the "detector coordinates"
 				int moduleN = generatedMC.Module_i[hitCount];
 				int viewN = generatedMC.View_i[hitCount];
@@ -463,7 +452,7 @@ int main(int argc, char* argv[]) {
 				if (generatedMC.driftRad[hitCount] < 0) negDCA++;
 				h_DLC1->Fill(dlc1); h_DLC2->Fill(dlc2); h_DGL1->Fill(dgl1); h_DGL2->Fill(dgl2); h_DGL3->Fill(dgl3);
 
-				//Calculating Chi2 stats:
+				//Calculating Chi2:
 				float residualTruth = generatedMC.residualsTruth[hitCount];
 				h_residual_true->Fill(residualTruth);
 				residualsTrueSum_2 += pow(residualTruth / resolution, 2);
@@ -486,7 +475,7 @@ int main(int argc, char* argv[]) {
 				hitsN++; //count hits
 			} // end of hits loop
 
-			//***********************************Sanity Plots: Once per Track******************************************/
+			//***********************************Sanity Plots: Tracks******************************************/
 			//For true tracks
 			float chi2True = residualsTrueSum_2;
 			h_chi2_true->Fill(chi2True);
@@ -528,16 +517,13 @@ int main(int argc, char* argv[]) {
 
 	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
 
-
 	//------------------------------------------ROOT: Fitting Functions---------------------------------------------------------//
 
 	helper << endl;
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << "ROOT fitting parameters and output:" << endl;
 
-	bool strongPotting = false; // XXX HACK [!!! some debug-style histos no longer supported]
-
-	Chi2ReconActual = h_chi2_recon->GetMean();
+	Chi2ReconActual = h_chi2_recon->GetMean(); // Get reconstructed Chi2
 
 	helper << "-------------------------------------------------------------------------" << endl;
 	helper << " " << endl;
@@ -590,7 +576,7 @@ int main(int argc, char* argv[]) {
 	debug_calc.close();
 	debug_off.close();
 	debug_con.close();
-
+	// Close ROOT file
 	file->Write();
 	file->Close();
 

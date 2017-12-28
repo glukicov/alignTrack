@@ -10,7 +10,7 @@ using namespace std;
 Tracker* Tracker::s_instance = NULL;
 
 /**
-Constructor for tracker class.
+Constructor for the tracker class.
  */
 Tracker::Tracker() {
 	// Set mapping for U0...V1
@@ -30,7 +30,6 @@ Tracker::Tracker() {
 */
 Tracker::~Tracker() {
 }
-
 
 /**
    Get pointer to only instance of tracker class, creating this instance if it doesn't already exist.
@@ -52,7 +51,6 @@ void Tracker::writeSteeringFile(ofstream& steering_file, ofstream& metric) {
 
 		stringstream pede_method; pede_method.str(""); pede_method << "method inversion 5 0.001";
 		metric << "| " << pede_method.str().c_str();
-		//stringstream pede_method; pede_method.str(""); pede_method << "method fullGMRES 5 0.001";
 		stringstream msg_method;
 		msg_method << Logger::yellow() << pede_method.str().c_str();
 		Logger::Instance()->write(Logger::NOTE, msg_method.str());
@@ -81,18 +79,17 @@ void Tracker::writeConstraintFile(ofstream& constraint_file, ofstream& debug_con
 		float one = 1.0;
 		metric << " | C: ";
 		stringstream labelt;
-		//Fixing module 0 and the last module
-		for (int i_module = 0; i_module < moduleN; i_module++) {
-			if (i_module == 0 || i_module == moduleN - 1) {
+		// Given number of constraints
+		int i_module=0; //select first module 
+		for (int i_NC = 0; i_NC < matNC ; i_NC++) {
+			
+			constraint_file << "Constraint 0.0" << endl;
+			//labelt << "-; "; // == no constraintss // XXX
+			int labelt = i_module + 1; // Millepede accepts +ive labels only
+			constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
+			i_module=moduleN -1 ; // select last module
 
-				//constraint_file << "Constraint 0.0" << endl;
-				labelt << "-; "; // = no constraintss
-				//int labelt = i_module + 1; // Millepede accepts +ive labels only
-				//mat_nc++; // increment number of constraints
-				//constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
-
-			} // end of fixed modules
-		} // end of detectors loop
+		} // end of NC loop
 		metric << labelt.str().c_str();
 	} // constrain file open
 	cout << "Memory space requirement (inversion method, i.e. upper bound) = " << ( matN * matN + matN ) / 2 + matN * matNC + ( matNC * matNC + matNC ) / 2 << endl;
@@ -170,7 +167,6 @@ float Tracker::pointToLineDCA(float zStraw, float xStraw, float xSlope, float xI
 	float dca = abs( a * x0 + b * y0 + c ) / sqrt( a * a + b * b  ) ;
 	return dca;
 }
-
 
 /** Uses DCA function to find the shortest dca between straws (i.e. which straw was hit in that layer)
     @Inputs (see DCA method) + vector of straws' x coordinates in a layer, and a return type: "dca_hit"  or "x_line"
@@ -606,7 +602,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 		MC.chi2Circle = resData.chi2Circle;
 		MC.driftRad = radRecon; // vector
 
-		//plotting files 
+		//plotting files
 		if (debugBool) {
 			plot_gen << x0 << " " << x1 << " " << beamStart << " " << beamStop << " " << endl;
 			int i_counter = 0;
@@ -616,14 +612,14 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 						plot_hits_gen << mod_lyr_strawMisPositionX[i_module][i_view][i_layer][MC.strawID[i_counter]] << " " << mod_lyr_strawMisPositionZ[i_module][i_view][i_layer][MC.strawID[i_counter]] << " "  << MC.dca[i_counter] << endl;
 						plot_hits_fit << xRecon[i_counter] << " " << zRecon[i_counter] << " "  << radRecon[i_counter] << endl;
 						i_counter++;
-					}
-				}
-			}
-		}
+					} // layers
+				} // views
+			} // modules 
+		} // plotting 
 
 	} // dca cut
-	return MC; // Return data from simulated track
 
+	return MC; // Return data from simulated track
 } // end of MC
 
 // MC misalignment of detectors and setting assumed geometry
@@ -770,7 +766,6 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 					for (int i_straw = 0; i_straw < strawN; i_straw++) {
 						cout << showpos  << mod_lyr_strawMisPositionX[i_module][i_view][i_layer][i_straw] << " ";
 						debug_mis << mod_lyr_strawMisPositionX[i_module][i_view][i_layer][i_straw] << " ";
-
 					} //end of Straws loop
 					cout << endl;
 					debug_mis << endl;
@@ -787,10 +782,7 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 		}//Modules
 	}
 
-// Estimating misalignment parameters from geometry and assumed constants:
-
-	//--- For Modules only [MC misalignment set per module -> transfer to each layer] -- //
-
+	// Print out misalignment per module 
 	cout << "Misalignment(M)" << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos << dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
@@ -800,7 +792,7 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 	} // modules
 	cout << noshowpos;
 
-}//end of misalign
+}//end of misalign and set geometry 
 
 /**
    Set filename to read uniform random numbers from.
