@@ -303,12 +303,10 @@ int main(int argc, char* argv[]) {
 		TH1F* temp = cmTitle[i];
 		cmTitle[i]->SetXTitle("[cm]");
 	}
-	TH1F* cdAllHits_F[] = {h_sigma_MP2, h_res_MP2, h_dca, h_chi2_true, h_residual_recon,
-	                       h_chi2_recon, h_driftRad, h_dca_unsmeared
-	                      };
+	TH1F* cdAllHits_F[] = {h_sigma_MP2, h_res_MP2, h_dca, h_chi2_true, h_residual_recon, h_residual_true,
+	                       h_chi2_recon, h_driftRad, h_dca_unsmeared };
 	TH1F* cdTracks_F[] = {h_truth_intercept, h_truth_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
-	                      h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle, h_chi2_circle_ndf
-	                     };
+	                      h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle, h_chi2_circle_ndf };
 	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id};
 	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
 		cdAllHits_F[i]->SetDirectory(cd_All_Hits);

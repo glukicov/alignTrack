@@ -287,7 +287,35 @@ We can now use Eq.~\ref{eq:partialRM} to write the expression for the desired re
 where all inputs come either from measurement or assumption of ideal geometry (i.e. no truth inputs).
 The full set of inputs to PEDE from a circle-fit with misalignment ($M$) as an anti-clockwise (AC) rotation ($\theta$) along the beam axis ($z=0$) through the detector centre, as well as all other cases of misalignment, is presented in Sc.~\ref{sec:deriv}.
 
+\clearpage
+\subsection{Results from MC and PEDE.}
+The effect of misalignment affects the truth geometry of the detector, and not the reconstructed magnitude of the DCA, which is unchanged by the misalignment. This is justified, as we get a defined drift time irrespective of a global position of a straw. 
 
+At the point of generation of a hit, the hit is assigned Left or Right (LR) \say{sign}. For example, if the his is generated on the left side of the straw centre relative to the beam, it will be an \say{L} hit. Hits generated close to the straw centre can be smeared to the other side, biasing the fit if the truth LR information is used. This effect can be further magnified if the said hit is further misaligned in the same direction (i.e. away from the truth hit position) by the effect of misalignment. For this reason, a cut on tracks with any hits less than \SI{500}{\micro\metre} is implemented, if LR truth information is used in the circle fit. 
+
+A distribution of p-values of reconstructed tracks for a case of no misalignment and with module 3 misaligned by - \SI{20}{\micro\metre} in $x$, \SI{10}{\micro\metre} in z and rotated through the module centre by 0.3 $^{\circ}$ is shown in Fig.~\ref{fig:pval}.
+\vspace{-0.2cm}
+\begin{figure}[!ht]
+\centering
+\subfloat[]{\includegraphics[scale = 0.3]{fig/p1.png}}
+\subfloat[]{\includegraphics[scale = 0.34]{fig/p2.png}}
+    \vspace{-0.1cm}
+    \caption{Distribution of p-values for 1M requested tracks. The DCA ($\leq$ \SI{500}{\micro\metre}) rejection on tracks eliminated 90\% of tracks, which introduces a small biasing. a) No misalignment b) Module 3 is misaligned, with increased residuals contributing small p-values.}
+\label{fig:pval} 
+\end{figure}
+\vspace{-0.2cm}\\
+Finally, a figure-of-merit for alignment capability of pede for misaligned modules 2 and 3 in $x$, $z$ and $\theta$ is shown in Fig.~\ref{fig:PEDEFOM}.
+\vspace{-0.2cm}
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale = 0.35]{fig/pedefom.png}
+    \vspace{-0.1cm}
+    \caption{Figure of Merit: The difference in misalignment between the simulation input and the PEDE prediction vs. the number of generated tracks.}
+\label{fig:PEDEFOM} 
+\end{figure}
+\vspace{-0.2cm}
+
+\clearpage
 \section{Future work}\label{sec:future}
 \vspace{-0.2cm}
 \vspace{-0.2cm}
