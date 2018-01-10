@@ -123,9 +123,9 @@ private:
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {0.00,  0.00,  -0.002,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] =     {0.00,  0.00,  0.01,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.00,  0.00,  0.005,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
+	float dispX[8] =     {0.00,  0.004,  -0.01,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] =     {0.00,  0.0,  0.01,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispTheta[8] = {0.00,  -0.02,  0.005,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
 
 	// **** GEOMETRIC CONSTANTS ****  // XXX will be taken from gm2geom in the future
 	// define detector geometry [all distances are in cm]

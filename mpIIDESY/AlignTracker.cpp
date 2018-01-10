@@ -1,7 +1,7 @@
 /*
 *   Gleb Lukicov (g.lukicov@ucl.ac.uk) @ Fermilab
-*   Created: 17 April 2017
-*   Modified: 22 January 2018
+*   Created: 3 January 2018
+*   Modified: 5 January 2018
 ----------------------------------------------------------------
 This programme uses MC methods to produce a .bin data file for the
 PEDE routine, to align the tracking detector for the g-2
@@ -88,7 +88,6 @@ Millepede II Manual and SC: http://www.desy.de/~kleinwrt/MP2/doc/html/index.html
 *
 *
 **/
-
 #include "AlignTracker.h"
 
 using namespace std;
@@ -351,7 +350,8 @@ int main(int argc, char* argv[]) {
 //------------------------------------------Mille Routines---------------------------------------------------------//
 
 	// Creating .bin, steering, presigma and constrain files
-	Mille M (outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
+	Mille M(outFileName, asBinary, writeZero);  // call to Mille.cc to create a .bin file
+	
 	helper << "Generating test data for g-2 Tracker Alignment in PEDE:" << endl;
 
 	helper << fixed << setprecision(4);

@@ -139,7 +139,9 @@ for i_counter in range(0, parN*moduleN):
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'green')
 	for i_lines in range(0, lineN):
-		dM=(Misals[i_lines][i_counter+3]-mis_C[i_counter])*1e4
+		dM=(Misals[i_lines][i_counter+3]-mis_C[i_counter])*1e4 # cm -> um 
+		if(i_par==23 or i_par==33):
+			dM=(Misals[i_lines][i_counter+3]-mis_C[i_counter])*1e3  #rad -> urad 
 		#dM=(Misals[i_lines][i_counter+2]-mis_C[i_counter])*1e4
 		#print 'Misals[i_lines][i_module]=', Misals[i_lines][i_module], 'mis_C[i_module]=', mis_C[i_module], 'dM=', dM
 		errorM=Errors[i_lines][i_counter+3]*1e4
@@ -161,8 +163,10 @@ for i_counter in range(0, parN*moduleN):
 			plt.title('FoM M%s $\Theta$'  %(int(i_par/10)) , fontsize=10)
 
 		plt.xlabel("Number of Tracks", fontsize=10)
-		if (i_module!=2 or i_module!=3):
+		if (i_par==21 or i_par==31 or i_par==22 or i_par==32):
 			plt.ylabel("$\Delta$ Misalignment [um]")
+		if (i_par==23 or i_par==33):
+			plt.ylabel("$\Delta$ Misalignment [urad]")
 plt.subplots_adjust(hspace=.4)
 plt.gcf().subplots_adjust(top=0.90)
 plt.suptitle(str(metric), fontsize=6, style='oblique',  color="green")
