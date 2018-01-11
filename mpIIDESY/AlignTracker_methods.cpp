@@ -474,7 +474,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 
 	//Track parameters for rand-generated line MC [start and end positions outside of detectors]
 	// redefining the track as x=ym+c
-	float x0 = beamPositionLength * randomFacility->Gaus(0.0, 1.0) - 1.0; //uniform vertex
+	float x0 = beamPositionLength * randomFacility->Uniform(0.0,1.0) - 1.0; //uniform vertex
 	float xIntercept = x0; // by definition
 
 	float x1 = x0; // for parallel lines only
