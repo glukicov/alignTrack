@@ -207,17 +207,6 @@ int main(int argc, char* argv[]) {
 	helper << "Resolution is " << Tracker::instance()->getResolution() << " cm  [hit smearing]." << endl;
 	helper << endl;
 
-	// See https://github.com/glukicov/alignTrack for instructions to generate random numbers
-	try {
-		Tracker::instance()->setUniformFile("uniform_ran.txt");
-		Tracker::instance()->setGaussianFile("gaussian_ran.txt");
-	}
-	catch (ios_base::failure& e) {
-		cerr << "Filestream exception caught: " << e.what() << endl;
-		cerr << "Please ensure valid filenames are specified!" << endl;
-		cerr << "Have random numbers been generated with randomIntGenerator.py?" << endl;
-		return 1;
-	}
 //------------------------------------------Setting Output Files---------------------------------------------------------//
 
 	//arguments for Mille constructor:
@@ -557,8 +546,6 @@ int main(int argc, char* argv[]) {
 	msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg4.str());
 	Logger::Instance()->setUseColor(true); // back to default colours
-	helper << "Normal random numbers were used " << RandomBuffer::instance()->getNormTotal() << " times" << endl;
-	helper << "Gaussian random numbers were used " << RandomBuffer::instance()->getGausTotal() << " times" << endl;
 	if (debugBool) {
 		Logger::Instance()->write(Logger::WARNING, "Text debug files were produced: ls Tracker_d_*.txt");
 	}

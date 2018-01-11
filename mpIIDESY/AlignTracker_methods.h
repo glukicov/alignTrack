@@ -4,7 +4,6 @@
 /* This header file contains definitions of constant variables used in
 * the method class, as well as function declarations, and definitions of functions.
 */
-#include "random_buffer.h" // courtesy of John Smeaton (UCL)
 
 ///XXX some includes may be redundant
 #include <algorithm>
@@ -19,6 +18,8 @@
 #include <bitset>
 #include <TF1.h>
 #include <TMath.h>
+#include <TRandom3.h> // Random number facility XXX use art random? 
+#include "Logger.hh"
 
 /**
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
@@ -98,7 +99,10 @@ private:
 
 	static Tracker* s_instance; // Pointer to instance of class
 	int trackNumber; // Number of tracks (i.e. records) to be simulated passing through detector - passed as command line argument
-	static constexpr float twoR = 2.0; //For normalisation of uniform random numbers [0,1] : (MAX+RND)/(twoR*MAX)
+
+	// XXX use as input for grid jobs
+	int randomSeed = 1234;
+	TRandom3* randomFacility = new TRandom3(randomSeed);
 
 	// **** COUNTERS ****  //
 	int rejectedHitsDCA = 0; // rejected hits due to DCA > straw radius
@@ -123,9 +127,9 @@ private:
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {0.00,  0.004,  -0.01,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] =     {0.00,  0.0,  0.01,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.00,  -0.02,  0.005,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
+	float dispX[8] =     {0.00,  0.00,  0.00,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispZ[8] =     {0.00,  0.00,  0.00,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispTheta[8] = {0.00,  0.00,  0.00,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
 
 	// **** GEOMETRIC CONSTANTS ****  // XXX will be taken from gm2geom in the future
 	// define detector geometry [all distances are in cm]
@@ -169,12 +173,12 @@ private:
 	std::vector< std::vector< std::vector< std::vector< float > > > > mod_lyr_strawMisPositionZ;  // Z distance between misaligned planes [this is set in misalignment]
 
 	// Vector to store the mapping of Views and Layers in a module U0, U1, V0, V1
-	std::vector< std::vector< string > > UVmapping; // set in the constructor
+	std::vector< std::vector< std::string > > UVmapping; // set in the constructor
 
 	//vector to store x coordinates of the track as seen from the ideal detector
-	vector<float> xRecon;  // ideal straw x
-	vector<float> zRecon;  // ideal straw z
-	vector<float> radRecon; // reconstructed fit circle radius (DCA)
+	std::vector<float> xRecon;  // ideal straw x
+	std::vector<float> zRecon;  // ideal straw z
+	std::vector<float> radRecon; // reconstructed fit circle radius (DCA)
 
 	// Class constructor and destructor
 	Tracker();
@@ -186,10 +190,6 @@ public:
 
 	// Function to simulate a track through the detector, then return data for plane hits.
 	// Uses MC method to reject hits going outside of the detector
-
-	float generateGaus(); // using the RandomBuffer class
-
-	float generateUniform(); // using the RandomBuffer class
 
 	float pointToLineDCA(float zStraw, float xStraw, float xSlopeTruth, float xInterceptTruth); //simple 2D DCA
 
@@ -211,10 +211,6 @@ public:
 	void writePresigmaFile(std::ofstream&, std::ofstream& metric);  // Writes a pre-sigma parameter file for use with PEDE.
 
 	void writeSteeringFile(std::ofstream&, std::ofstream& metric); // Steering file for PEDE.
-
-	void setUniformFile(std::string); // Set filename for uniform random numbers [randomIntGenerator.py - see https://github.com/glukicov/alignTrack]
-
-	void setGaussianFile(std::string); // Set filename for Gaussian random numbers
 
 	//
 	// Setter methods
@@ -238,7 +234,7 @@ public:
 	//
 	// Getter methods
 	//
-	string getUVmapping(int i, int j) {
+	std::string getUVmapping(int i, int j) {
 		return UVmapping[i][j];
 	}
 

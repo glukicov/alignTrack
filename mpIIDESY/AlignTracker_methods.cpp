@@ -49,9 +49,9 @@ Tracker* Tracker::instance() {
 void Tracker::writeSteeringFile(ofstream& steering_file, ofstream& metric) {
 	if (steering_file.is_open()) {
 
-		stringstream pede_method; pede_method.str(""); pede_method << "method inversion 5 0.001";
+		std::stringstream pede_method; pede_method.str(""); pede_method << "method inversion 5 0.001";
 		metric << "| " << pede_method.str().c_str();
-		stringstream msg_method;
+		std::stringstream msg_method;
 		msg_method << Logger::yellow() << pede_method.str().c_str();
 		Logger::Instance()->write(Logger::NOTE, msg_method.str());
 
@@ -61,7 +61,7 @@ void Tracker::writeSteeringFile(ofstream& steering_file, ofstream& metric) {
 		              << "Tracker_par.txt   ! parameters (presgima) text file (if applicable)" << endl
 		              << "Cfiles ! following bin files are Cfiles" << endl
 		              << "Tracker_data.bin   ! binary data file" << endl
-		              << pede_method.str().c_str() << endl
+		              << "method inversion 5 0.001" << endl
 		              << "printrecord 2 -1 ! produces mpdebug.txt for record 2 with the largest value of χ2/Ndf" << endl
 		              << " "  << endl
 		              << "end ! optional for end-of-data" << endl;
@@ -249,7 +249,7 @@ jmp:
 		}
 		//if DCAs are equal, drop the dice... XXX won't be relevant with hit rejection
 		if (hit_distance_up == hit_distance_low) {
-			float random = Tracker::generateUniform();
+			float random = randomFacility->Uniform(0.0,1.0);
 			if (random < 0.5) {
 				hitDistance = hit_distance_low;
 			}
@@ -266,7 +266,7 @@ jmp:
 
 	//Now smear the DCA data
 	dcaData.dcaUnsmeared = hitDistance;
-	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * Tracker::generateGaus();
+	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * randomFacility->Gaus(0.0, 1.0);
 	//Apply a 500 um cut on the WHOLE track
 	if (abs(hitDistanceSmeared) < trackCut && trackCutBool) {
 		cutTriggered = true; // will be checked in the MC_Launch on DCA return
@@ -474,7 +474,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 
 	//Track parameters for rand-generated line MC [start and end positions outside of detectors]
 	// redefining the track as x=ym+c
-	float x0 = beamPositionLength * Tracker::generateUniform() - 1.0; //uniform vertex
+	float x0 = beamPositionLength * randomFacility->Gaus(0.0, 1.0) - 1.0; //uniform vertex
 	float xIntercept = x0; // by definition
 
 	float x1 = x0; // for parallel lines only
@@ -484,13 +484,13 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 	if (generalLines == true) {
 
 		float signXSlope;
-		if (Tracker::generateUniform() >= 0.5) {
+		if (randomFacility->Uniform(0.0,1.0) >= 0.5) {
 			signXSlope = 1.0;
 		}
 		else {
 			signXSlope = -1.0;
 		}
-		xSlope = (Tracker::generateUniform() * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
+		xSlope = (randomFacility->Uniform(0.0,1.0) * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
 		x1 = xSlope * beamStop + xIntercept; // "xExit"
 
 	} // end of generalLines == true HACK
@@ -793,29 +793,3 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 	cout << noshowpos;
 
 }//end of misalign and set geometry 
-
-/**
-   Set filename to read uniform random numbers from.
-   @param uniform_filename String for filename of file of uniform random numbers.
- */
-void Tracker::setUniformFile(string uniform_filename) {
-	RandomBuffer::instance()->open_uniform_file(uniform_filename);
-}
-
-/**
-   Set filename to read Gaussian random numbers from.
-   @param uniform_filename String for filename of file of Gaussian random numbers.
- */
-void Tracker::setGaussianFile(string gaussian_filename) {
-	RandomBuffer::instance()->open_gaussian_file(gaussian_filename);
-}
-
-float Tracker::generateGaus() {
-	float gaus = RandomBuffer::instance()->get_gaussian_number() / float(RandomBuffer::instance()->get_gaussian_ran_stdev());
-	return gaus;
-}
-
-float Tracker::generateUniform() {
-	float uniform = (( RandomBuffer::instance()->get_uniform_number() + RandomBuffer::instance()->get_uniform_ran_max()) / (twoR * RandomBuffer::instance()->get_uniform_ran_max()));
-	return uniform;
-}
