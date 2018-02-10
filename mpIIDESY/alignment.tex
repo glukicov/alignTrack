@@ -390,11 +390,17 @@ with $r$ defined as the DCA of the hit (from measurement, i.e. \say{drift cylind
 \end{equation}
 
 \begin{equation}
-DLC_1 = \frac{\partial R}{\partial x_L}  
+DLC_1 = \frac{\partial R}{\partial x_L}  = \frac{p_x  t_{min} + x_L - x_P}
+{\sqrt{\left(p_x  t_{min}+x_L-x_P\right){}^2  + 
+\left(p_y  t_{min}+y_L-y_P\right){}^2  +
+\left( t_{min}-z_P\right){}^2}} 
 \end{equation}
 
 \begin{equation}
-DLC_2 = \frac{ \partial R}{\partial y_L} 
+DLC_2 = \frac{ \partial R}{\partial y_L} = \frac{p_y  t_{min} + y_L - y_P}
+{\sqrt{\left(p_x  t_{min}+x_L-x_P\right){}^2  + 
+\left(p_y  t_{min}+y_L-y_P\right){}^2  +
+\left( t_{min}-z_P\right){}^2}} 
 \end{equation}
 
 \begin{equation}
@@ -429,15 +435,16 @@ The DCA between the track and the wire given by
 \begin{equation}
 DCA = || \textbf{W} - \textbf{T} || = || \begin{pmatrix}x_W - x_T\\y_W - y_T\\z_W - z_T\\\end{pmatrix} || = \sqrt{ (x_W - x_T)^2 + (y_W - y_T)^2 + (z_W - z_T)^2},
 \end{equation}
-where \textbf{W} and \textbf{T} are the points of closest approach between the wire and the track, respectively. With vector $\bf{WT}$ perpendicular to both the wire and the track. 
-
-In order to form the required derivatives w.r.t local and global parameters, we need a functional form of DCA expressed in term of the reconstructed track parameters and the position of the straw as well as its gradient? 
+where \textbf{W} and \textbf{T} are the points of closest approach between the wire and the track, respectively. With vector $\bf{WT}$ perpendicular to both the wire and the track. In order to form the required derivatives w.r.t local and global parameters, we need a functional form of DCA expressed in term of the reconstructed track parameters and the position of the straw as well as its gradient? 
 \begin{equation}
-DCA = DCA (p_x, p_y, x_T, y_T, x_W, y_W, z_W),
+DCA = DCA (p_x, p_y, x_T, y_T, x_W, y_W, z_W).
 \end{equation}
 
 There is a clear correlation between the CA on the wire with track parameters, which need to be considered...
+Try to write correlation matrix, and residual can be expressed through chain product..
 The line representing the detector wire, will similarly have to be represented by 4 parameters....but it is in fact parallel to the X-Y plane...
+Do I need definitions of global and local coordinate frames (see rotations)
+
 
 
 \clearpage
