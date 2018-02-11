@@ -348,7 +348,7 @@ First, for simplicity, consider DCA as going between the line (track) and a poin
 
 The point $Q$, with parameter $t_{min}$ is the point of CA to the hit point $P$, such that the squared distance (Point To Line DCA) between $P$ and $Q$ is 
 \begin{equation}
-d^2 = (x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2.
+DCA^2 = (x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2.
 \label{eq:t}
 \end{equation}
 The distance is minimised, by taking the residual w.r.t to $t_{min}$:
@@ -362,14 +362,197 @@ and rearranging, to find
 The above expression for $t_{min}$ can be substituted into Eq.~\ref{eq:t}
 \begin{equation}
 \begin{split}
-d^2 = (x_L - x_P + p_x\frac{p_x x_p + p_yy_p +z_p-p_xx_l-p_yy_l}{p^2_x+p^2_y+1})^2 + \\ 
+DCA^2 = (x_L - x_P + p_x\frac{p_x x_p + p_yy_p +z_p-p_xx_l-p_yy_l}{p^2_x+p^2_y+1})^2 + \\ 
 + (y_L - y_P + p_y\frac{p_x x_p + p_yy_p +z_p-p_xx_l-p_yy_l}{p^2_x+p^2_y+1})^2  + \\
 + (-z_P + \frac{p_x x_p + p_yy_p +z_p-p_xx_l-p_yy_l}{p^2_x+p^2_y+1})^2.
 \end{split}
 \end{equation}
 This allows us to write the derivatives of the residual w.r.t to local (track) parameters: $ p_x, p_y, x_L, x_L$, and global (detector position) parameters: $x_P, y_P, z_P$.
 
-\subsection{Improper 3D Misalignment: translations only.}
+First, let's consider the derivatives of $t_{min}$ w.r.t to the above parameters:
+
+\begin{equation}
+\frac{\partial t_{min}}{\partial x_L} = \frac{-p_x}{p_x^2+p_y^2+1}
+\end{equation}
+
+\begin{equation}
+\frac{\partial t_{min}}{\partial y_L} = \frac{-p_y}{p_x^2+p_y^2+1}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\frac{\partial t_{min}}{\partial p_x} = \frac{x_p-x_l}{p_x^2+p_y^2+1}-\frac{2 p_x \left(-p_xx_l-y_l p_y+p_x x_p+p_y y_p+z_p\right)}{\left(p_x^2+p_y^2+1\right){}^2} = \\ 
+=\frac{x_p-x_l}{p_x^2+p_y^2+1}-\frac{2p_xt_{min}}{p_x^2+p_y^2+1}
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\frac{\partial t_{min}}{\partial p_y} =\frac{y_p-y_l}{p_x^2+p_y^2+1}-\frac{2 p_y \left(-p_xx_l-y_l p_y+p_x x_p+p_y y_p+z_p\right)}{\left(p_x^2+p_y^2+1\right){}^2} = \\
+=\frac{y_p-y_l}{p_x^2+p_y^2+1}-\frac{2p_yt_{min}}{p_x^2+p_y^2+1},
+\end{split}
+\end{equation}
+
+\begin{equation}
+\frac{\partial t_{min}}{\partial x_p} = \frac{p_x}{p_x^2+p_y^2+1}
+\end{equation}
+
+
+\begin{equation}
+\frac{\partial t_{min}}{\partial y_p} = \frac{p_y}{p_x^2+p_y^2+1}
+\end{equation}
+
+\begin{equation}
+\frac{\partial t_{min}}{\partial z_p} = \frac{1}{p_x^2+p_y^2+1}
+\end{equation}
+
+We can now use product and chain rules with implicit differentiation to obtain the desired residuals from Eq.~\ref{eq:t}
+\begin{equation}
+\begin{split}
+DCA(p_x, p_y, x_L, x_L, x_P, y_P, z_P) = \\ = \sqrt{ (x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2}.
+\label{eq:d}
+\end{split}
+\end{equation}
+
+Starting from
+\begin{equation}
+\begin{split}
+\frac{\partial DCA^2}{\partial x_L}  = 2 DCA \frac{\partial DCA}{\partial x_L} =  2 \left(x_L+t_{\min } p_x-x_P\right),
+\end{split}
+\end{equation}
+Hence, 
+\begin{equation}
+\begin{split}
+\frac{\partial DCA}{\partial x_L} = \frac{\partial DCA^2}{\partial x_L} \times \frac{1}{2DCA} = \frac{ x_L+t_{\min } p_x-x_P }{\sqrt{(x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2 }}
+\end{split}
+\end{equation}
+
+Now,
+\begin{equation}
+\begin{split}
+\frac{\partial DCA^2}{\partial p_x}  = 2 DCA \frac{\partial DCA}{\partial x_p} =  2 t_{\min } \left(x_L+t_{\min } p_x-x_P\right).
+\end{split}
+\end{equation}
+
+and
+\begin{equation}
+\begin{split}
+\frac{\partial DCA}{\partial p_x} = \frac{\partial DCA^2}{\partial p_x} \times \frac{1}{2DCA} = \frac{ t_{\min } \left(x_L+t_{\min } p_x-x_P\right)}{\sqrt{(x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2 }}
+\end{split}
+\end{equation}
+
+
+
+
+\subsection{Improper 3D Misalignment: translations only - implicit derivatives}
+
+\begin{equation}
+\begin{split}
+\mathrm{Residual} = R = \mathrm{Point \ To \ Line \ DCA(x_P, y_P, z_P, p_x, p_y, x_L, x_L)} -r = \\
+=\sqrt{ (x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2} -r.
+\end{split}
+\end{equation}
+with $r$ defined as the DCA of the hit (from measurement, i.e. \say{drift cylinder}). 
+
+\begin{equation}	
+\mathrm{Resolution} = \sigma = 150 \ \mu m = 0.015 \ \mathrm{cm}.
+\end{equation}
+
+\begin{equation}	
+\mathrm{Label}= \mathrm{Module \ Number} \times 10 + \mathrm{Global \ Parameter \ Number} = (e.g. \ 21, 36, \ etc.).
+\end{equation}
+
+\begin{equation}
+\begin{split}
+DLC_1 = \frac{\partial R}{\partial x_L}  =  \frac{\partial DCA}{\partial x_L} = \frac{ x_L+t_{\min } p_x-x_P }{\sqrt{(x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2 }}
+\end{split}
+\end{equation}
+
+\begin{equation}
+DLC_2 = \frac{ \partial R}{\partial y_L} = 
+\end{equation}
+
+\begin{equation}
+DLC_3 = \frac{ \partial R}{\partial p_x}  = \frac{\partial DCA}{\partial p_x} = \frac{ t_{\min } \left(x_L+t_{\min } p_x-x_P\right)}{\sqrt{(x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2 }}
+\end{equation}
+
+\begin{equation}
+DLC_4 = \frac{ \partial R}{\partial p_y} 
+\end{equation}
+
+
+\begin{equation}	
+DGL_1 = \frac{\partial R}{\partial x} 
+\end{equation}
+
+\begin{equation}	
+DGL_2 = \frac{\partial R}{\partial y}
+\end{equation}
+
+\begin{equation}	
+DGL_3 = \frac{\partial R}{\partial z} 
+\end{equation}
+
+
+
+
+\subsection{Improper 3D Misalignment: translations only - explicit derivatives}
+
+\begin{equation}
+\begin{split}
+\mathrm{Residual} = R = \mathrm{Point \ To \ Line \ DCA(x_P, y_P, z_P, p_x, p_y, x_L, x_L)} -r = \\
+=\sqrt{ (x_L - x_P + p_xt_{min})^2 + (y_L - y_P + p_yt_{min})^2  + (-z_P + t_{min})^2} -r.
+\end{split}
+\end{equation}
+with $r$ defined as the DCA of the hit (from measurement, i.e. \say{drift cylinder}). 
+
+\begin{equation}	
+\mathrm{Resolution} = \sigma = 150 \ \mu m = 0.015 \ \mathrm{cm}.
+\end{equation}
+
+\begin{equation}	
+\mathrm{Label}= \mathrm{Module \ Number} \times 10 + \mathrm{Global \ Parameter \ Number} = (e.g. \ 21, 36, \ etc.).
+\end{equation}
+
+\begin{equation}
+\begin{split}
+DLC_1 = \frac{\partial R}{\partial x_L}  = \frac{\partial R}{\partial t_{min}} \times \frac{\partial t_{min}}{\partial x_L} + \frac{\partial R}{\partial x_L} = \\
+= \frac{p_x \left(x_L-x_P\right)+y_L p_y+t_{\min } \left(p_x^2+p_y^2+1\right)-p_y y_P-z_P}{\sqrt{\left(x_L+t_{\min } p_x-x_P\right){}^2+\left(y_L+t_{\min } p_y-y_P\right){}^2+\left(t_{\min }-z_P\right){}^2}} \times \\
+\times \frac{-p_x}{p_x^2+p_y^2+1} \times \\
+\times \frac{x_L+t_{\min } p_x-x_P}{\sqrt{\left(x_L+t_{\min } p_x-x_P\right){}^2+\left(y_L+t_{\min } p_y-y_P\right){}^2+\left(t_{\min }-z_P\right){}^2}} = \\ 
+= -\frac{p_x \left(x_L+t_{\min } p_x-x_P\right) \left(p_x\left(x_L-x_P\right)+y_L p_y+t_{\min }\left(p_x^2+p_y^2+1\right)-p_y y_P-z_P\right)}{\left(p_x^2+p_y^2+1\right) \left(^2 \left(x_L+t_{\min } p_x-x_P\right)+^2 \left(y_L+t_{\min } p_y-y_P\right)+^2 \left(t_{\min }-z_P\right)\right)}.
+\end{split}
+\end{equation}
+
+\begin{equation}
+DLC_2 = \frac{ \partial R}{\partial y_L} = 
+\end{equation}
+
+\begin{equation}
+DLC_3 = \frac{ \partial R}{\partial p_x}
+\end{equation}
+
+\begin{equation}
+DLC_4 = \frac{ \partial R}{\partial p_y} 
+\end{equation}
+
+
+\begin{equation}	
+DGL_1 = \frac{\partial R}{\partial x} 
+\end{equation}
+
+\begin{equation}	
+DGL_2 = \frac{\partial R}{\partial y}
+\end{equation}
+
+\begin{equation}	
+DGL_3 = \frac{\partial R}{\partial z} 
+\end{equation}
+
+
+\clearpage
+
+\subsection{Improper 3D Misalignment: translations only - direct derivatives}
 
 \begin{equation}
 \begin{split}
@@ -436,6 +619,12 @@ The DCA between the track and the wire given by
 DCA = || \textbf{W} - \textbf{T} || = || \begin{pmatrix}x_W - x_T\\y_W - y_T\\z_W - z_T\\\end{pmatrix} || = \sqrt{ (x_W - x_T)^2 + (y_W - y_T)^2 + (z_W - z_T)^2},
 \end{equation}
 where \textbf{W} and \textbf{T} are the points of closest approach between the wire and the track, respectively. With vector $\bf{WT}$ perpendicular to both the wire and the track. In order to form the required derivatives w.r.t local and global parameters, we need a functional form of DCA expressed in term of the reconstructed track parameters and the position of the straw as well as its gradient? 
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.6\linewidth]{fig/WireLine.png}
+\caption{Track to wire DCA.}
+\label{fig:WireLine}
+\end{figure}
 \begin{equation}
 DCA = DCA (p_x, p_y, x_T, y_T, x_W, y_W, z_W).
 \end{equation}
@@ -444,8 +633,30 @@ There is a clear correlation between the CA on the wire with track parameters, w
 Try to write correlation matrix, and residual can be expressed through chain product..
 The line representing the detector wire, will similarly have to be represented by 4 parameters....but it is in fact parallel to the X-Y plane...
 Do I need definitions of global and local coordinate frames (see rotations)
+Consider DCA sign... from code 
 
+Now we need to minimise two parameters $t_{min}$ and $s_{min}$ for the track and the wire, respectively.
 
+\begin{equation}
+t_{min} = \frac{-\textbf{d}\cdot\textbf{u} +(\textbf{d}\cdot\textbf{v})(\textbf{u}\cdot\textbf{v}) }{1 - (\textbf{u}\cdot\textbf{v})^2},
+\end{equation}
+and 
+\begin{equation}
+s_{min} = \frac{\textbf{d}\cdot\textbf{u} -(\textbf{d}\cdot\textbf{v})(\textbf{u}\cdot\textbf{v}) }{1 - (\textbf{u}\cdot\textbf{v})^2},
+\end{equation}
+where $\textbf{d}=W_0 -T_0 =\begin{pmatrix}x_W - x_T\\y_W - x_T\\z_W - z_T\\\end{pmatrix}$, with $W_0$ and $T_0$ being some pints on the wire and the track, respectively.
+$\textbf{v}=\begin{pmatrix}p_x\\p_y\\p_z\\\end{pmatrix}$ - the directional vector of the track, and $\textbf{u}=\begin{pmatrix}m_x\\m_y\\m_z\\\end{pmatrix}$ the directional vector of the wire. With these definitions, $\textbf{T}$ and $\textbf{W}$ becomes
+\begin{equation}
+\textbf{W} = \begin{pmatrix}x_W + s_{min}m_x\\y_W + s_{min}m_y\\z_W + s_{min}m_z\\\end{pmatrix},
+\end{equation}
+and 
+\begin{equation}
+\textbf{T} = \begin{pmatrix}x_T + t_{min}p_x\\y_T + t_{min}p_y\\z_T + t_{min}p_z\\\end{pmatrix},
+\end{equation}
+the DCA between two lines is then 
+\begin{equation}
+DCA^2 = ( x_W + s_{min}m_x - x_T - t_{min}p_x )^2 + ( y_W + s_{min}m_y - y_T - t_{min}p_y )^2 + ( z_W + s_{min}m_z - z_T - t_{min}p_z )^2 
+\end{equation}
 
 \clearpage
 
