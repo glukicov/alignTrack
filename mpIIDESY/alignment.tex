@@ -412,32 +412,41 @@ with $r$ defined as the DCA of the hit (from measurement, i.e. \say{drift cylind
 \end{equation}
 
 \begin{equation}
-DLC_1 = \frac{\partial R}{\partial x_T} =   -\frac{1}{\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
+DLC_1 = \frac{\partial R}{\partial x_T} =   -\frac{m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
 \end{equation}
 
 \begin{equation}
-DLC_2 = \frac{ \partial R}{\partial y_T} =  \frac{m_x}{\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}} 
+DLC_2 = \frac{ \partial R}{\partial y_T} =  \frac{m_x (m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}} 
 \end{equation}
 
 \begin{equation}
-DLC_3 = \frac{ \partial R}{\partial p_x} = \frac{\left(m_x p_y-p_x\right) \left(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W\right)}{\left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}-\frac{z_W}{\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
+\begin{split}
+DLC_3 = \frac{ \partial R}{\partial p_x} = \frac{\left(m_x p_y-p_x\right) |m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|}{\left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}-\\
+\frac{z_W(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
+\end{split}
 \end{equation}
 
 \begin{equation}
-DLC_4 = \frac{ \partial R}{\partial p_y} = \frac{m_x z_W}{\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}-\frac{m_x \left(m_x p_y-p_x\right) \left(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W\right)}{\left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}
+\begin{split}
+DLC_4 = \frac{ \partial R}{\partial p_y} = \frac{m_x z_W(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}-\\
+\frac{m_x \left(m_x p_y-p_x\right) |m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|}{\left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}
+\end{split}
 \end{equation}
 
 
 \begin{equation}	
-DGL_1 = \frac{\partial R}{\partial x_W} = \frac{1}{\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}} = - DLC_1
+DGL_1 = \frac{\partial R}{\partial x_W} = \frac{m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}} = - DLC_1
 \end{equation}
 
 \begin{equation}	
-DGL_2 = \frac{\partial R}{\partial z_W} = \frac{m_x p_y-p_x}{\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
+DGL_2 = \frac{\partial R}{\partial z_W} = \frac{(m_x p_y-p_x) (m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
 \end{equation}
 
-\begin{equation}	
-DGL_3 = \frac{\partial R}{\partial m_x} = \frac{p_y z_W+y_T}{\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}-\frac{\left(2 p_y \left(m_x p_y-p_x\right)+2 m_x\right) \left(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W\right)}{2 \left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}
+\begin{equation}
+\begin{split}	
+DGL_3 = \frac{\partial R}{\partial m_x} = \frac{(p_y z_W+y_T)(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}-\\
+\frac{\left(2 p_y \left(m_x p_y-p_x\right)+2 m_x\right) |m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|}{2 \left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}
+\end{split}
 \end{equation}
 
 \subsubsection{Alignment Parameters with 6 DoF}
