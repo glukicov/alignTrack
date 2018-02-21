@@ -80,14 +80,14 @@ void Tracker::writeConstraintFile(ofstream& constraint_file, ofstream& debug_con
 		metric << " | C: ";
 		stringstream labelt;
 		// Given number of constraints
-		int i_module=0; //select first module 
+		int i_module = 0; //select first module
 		for (int i_NC = 0; i_NC < matNC ; i_NC++) {
-			
+
 			constraint_file << "Constraint 0.0" << endl;
 			//labelt << "-; "; // == no constraintss // XXX
 			int labelt = i_module + 1; // Millepede accepts +ive labels only
 			constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
-			i_module=moduleN -1 ; // select last module
+			i_module = moduleN - 1 ; // select last module
 
 		} // end of NC loop
 		metric << labelt.str().c_str();
@@ -249,7 +249,7 @@ jmp:
 		}
 		//if DCAs are equal, drop the dice... XXX won't be relevant with hit rejection
 		if (hit_distance_up == hit_distance_low) {
-			float random = randomFacility->Uniform(0.0,1.0);
+			float random = randomFacility->Uniform(0.0, 1.0);
 			if (random < 0.5) {
 				hitDistance = hit_distance_low;
 			}
@@ -268,7 +268,7 @@ jmp:
 	dcaData.dcaUnsmeared = hitDistance;
 	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * randomFacility->Gaus(0.0, 1.0);
 	//Apply a 500 um cut on the WHOLE track
-	if (abs(hitDistanceSmeared) < trackCut && trackCutBool) {
+	if ( (abs(hitDistanceSmeared) > trackCut || abs(hitDistanceSmeared) < 0.0)  && trackCutBool) {
 		cutTriggered = true; // will be checked in the MC_Launch on DCA return
 	}
 
@@ -359,6 +359,7 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 		// Roots of this function are minima or maxima of Chi2
 		// Finding one that has positive derivative doesn't work, so fill in all roots and take one with best Chi2
 		// TF1::GetX(0) isn't too clever at finding roots - so we'll loop over the function range and give tighter range for root finding
+
 		// Holders for intercepts & gradients that satisfy Chi2 minimisation/maximisation
 		vector<double> gradients, intercepts;
 
@@ -367,23 +368,36 @@ ResidualData Tracker::GetResiduals(vector<float> zRecon, vector<float> xRecon, v
 
 		// Loop over range and push back all roots to vectors
 		double prevValue = dX2_dm->Eval(dX2_dm->GetXmin());
+		if ( std::isnan(prevValue) ||  prevValue == -std::numeric_limits<double>::infinity() ) { 
+			std::cout << "nHits= " << nHits << std::endl; 
+			std::cout << "prevValue= " << prevValue << std::endl;
+
+			for (unsigned int i_hit=0; i_hit < radRecon.size(); i_hit++){
+				std::cout << "radRecon= " << radRecon[i_hit] << std::endl; 
+				std::cout << "xRecon= " << xRecon[i_hit] << std::endl; 
+				std::cout << "zRecon= " << zRecon[i_hit] << std::endl; 
+				std::cout << "LRTruth= " << LRTruth[i_hit] << std::endl; 
+				std::cout << "Tracker::instance()->getResolution()= " << Tracker::instance()->getResolution() << std::endl; 
+
+			}
+
+
+		}
 		for (double mVal = dX2_dm->GetXmin() + stepSize; mVal <= dX2_dm->GetXmax(); mVal += stepSize) {
 			double newValue = dX2_dm->Eval(mVal);
 			if (signbit(prevValue) != signbit(newValue)) {  // if sign doesn't match
 				double m_tmp = dX2_dm->GetX(0, mVal - stepSize, mVal);
 				gradients.push_back(m_tmp);
 				intercepts.push_back( (Su - m_tmp * Sz + sqrt(m_tmp * m_tmp + 1)*Sr) / S );
-				if (debugBool && StrongDebugBool) {cout << "m_tmp= " << m_tmp << " mVal= " << mVal << " prevValue= " << prevValue << " newValue= " << newValue << endl;}
 			}
 			prevValue = newValue;
-			if (debugBool && StrongDebugBool) {cout << "newValue= " << newValue << endl;}
 		} // for mVal loop
 		delete dX2_dm;
 
 		// Throw if we didn't find a root - something went wrong
 		if (gradients.size() == 0) {
 			stringstream exception2;
-			exception2 << "StraightLineTracker::calculateUVLineFits" << "No roots found from chi-squared minimisation function. Check step size and function range.\n";
+			exception2 << "StraightLineTracker::calculateUVLineFits" << " No roots found from chi-squared minimisation function. Check step size and function range.\n";
 			Logger::Instance()->write(Logger::WARNING, exception2.str());
 		}
 
@@ -474,7 +488,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 
 	//Track parameters for rand-generated line MC [start and end positions outside of detectors]
 	// redefining the track as x=ym+c
-	float x0 = beamPositionLength * randomFacility->Uniform(0.0,1.0) - 1.0; //uniform vertex
+	float x0 = beamPositionLength * randomFacility->Uniform(0.0, 1.0) - beamPositionLength/2.0; //uniform vertex
 	float xIntercept = x0; // by definition
 
 	float x1 = x0; // for parallel lines only
@@ -484,13 +498,13 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 	if (generalLines == true) {
 
 		float signXSlope;
-		if (randomFacility->Uniform(0.0,1.0) >= 0.5) {
+		if (randomFacility->Uniform(0.0, 1.0) >= 0.5) {
 			signXSlope = 1.0;
 		}
 		else {
 			signXSlope = -1.0;
 		}
-		xSlope = (randomFacility->Uniform(0.0,1.0) * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
+		xSlope = (randomFacility->Uniform(0.0, 1.0) * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
 		x1 = xSlope * beamStop + xIntercept; // "xExit"
 
 	} // end of generalLines == true HACK
@@ -579,7 +593,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 						MC.hitCount++;
 						z_counter++;  // incrementing distance of planes
 					} // missed hit check
-
+					//missedHit = false; // reset missed hit flag
 				}// DCA cut if
 			}//end of Layers loop
 		}// end of View loop
@@ -614,8 +628,8 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 						i_counter++;
 					} // layers
 				} // views
-			} // modules 
-		} // plotting 
+			} // modules
+		} // plotting
 
 	} // dca cut
 
@@ -782,14 +796,14 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 		}//Modules
 	}
 
-	// Print out misalignment per module 
+	// Print out misalignment per module
 	cout << "Misalignment(M)" << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
-		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos << dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
+		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos << dispX[i_module] << " mm. " << "z :: "  << showpos << dispZ[i_module] << " mm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
 		if (i_module == 1 || i_module == 2) { // TODO move to pre-sigma function
 			pede_mis << dispX[i_module] << " " << dispZ[i_module] << " " <<  dispTheta[i_module] << " ";
 		}
 	} // modules
 	cout << noshowpos;
 
-}//end of misalign and set geometry 
+}//end of misalign and set geometry

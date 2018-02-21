@@ -113,8 +113,10 @@ private:
 
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
-	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
-	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
+	static constexpr float strawRadius = 2.535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
+	static constexpr float resolution = 0.15; // 150um = 0.015 cm for hit smearing
+	//static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
+	static constexpr float trackCut = strawRadius; //500 um = 0.5 mm for dca cut on tracks
 	static constexpr int nlc = 2; // dR/dc dR/dm
 	static constexpr int ngl = 3; //  dR/dx dR/dz  dR/d𝛉
 	//Matrix memory space
@@ -122,12 +124,12 @@ private:
 	int matNC = 0; // # number of constraints
 
 	float pValCut = 0.0; // from 0.0->1.0
-	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
+	bool trackCutBool = false; // if true, tracks will be rejected if DCA > trackCut
 	bool useTruthLR = true; // use LR information from generated tracks [requires DCA cut!]
 	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] =     {0.00,  0.2,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
 	float dispZ[8] =     {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
 	float dispTheta[8] = {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
 
@@ -138,17 +140,16 @@ private:
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
 	static const int layerTotalN = layerN * viewN * moduleN; // total number of layers
-	static constexpr float startingZDistanceStraw0 = 5.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
-	static constexpr float startingXDistanceStraw0 = 2.0; // distance of the very first layer [the first straw] in x // [cm]
-	static constexpr float strawSpacing = 0.606;  // x distance between straws in a layer
-	static constexpr float layerSpacing = 0.515; // z distance between layers in a view
-	static constexpr float viewSpacing = 2.020; // z distance between views in a modules
-	static constexpr float moduleSpacing = 13.735; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
-	static constexpr float layerDisplacement = 0.303; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
+	static constexpr float startingZDistanceStraw0 = 50.0; // distance of the very first layer [the first straw] relative to the "beam" in z // [cm]
+	static constexpr float startingXDistanceStraw0 = 20.0; // distance of the very first layer [the first straw] in x // [cm]
+	static constexpr float strawSpacing = 6.06;  // x distance between straws in a layer
+	static constexpr float layerSpacing = 5.15; // z distance between layers in a view
+	static constexpr float viewSpacing = 20.20; // z distance between views in a modules
+	static constexpr float moduleSpacing = 137.35; // z distance between modules' first layers [first layer of module 1 and first layer of module 2]
+	static constexpr float layerDisplacement = 3.03; // relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
 	//std::vector<float> staircaseXDisplacment = [0.0, 0.723, 0.979, 1.238, 1.503, 1.755, 2.008, 2.259];  // TODO staircase for MF in future [cm]
 	//[ 6880.52, 6873.29, 6863.50, 6851.12, 6836.09, 6818.54, 6798.46, 6775.87]; // from gm2geom [mm]
 	//Area/volume/width required for MS (later on), and for rejection of "missed" hits [dca > strawRadius]
-	static constexpr float strawRadius = 0.2535; // takes as the outerRadiusOfTheGas from gm2geom/strawtracker/strawtracker.fcl // [cm]
 	static constexpr float stereoTheta = 0.1309;  // stereo angle [rad]  // [rad] (7.5000 deg = 0.1309...rad)   // XXX for later 3D versions
 	// The offset is a "software" fix to get the ideal (assumed) geometry closer to the truth geometry
 	float offsetX[8] =     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // To the ideal detector, for second pede iteration
@@ -157,9 +158,9 @@ private:
 	
 	// **** BEAM PARAMETERS ****  // [all distances are in cm]
 	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
-	static constexpr float beamPositionLength = 2.0;
-	static constexpr float beamOffset = 1.0; // offset from 0 in x
-	static constexpr float beamStart = startingZDistanceStraw0 - 5.0; // z
+	static constexpr float beamPositionLength = 20.0;
+	static constexpr float beamOffset = 10.0; // offset from 0 in x
+	static constexpr float beamStart = startingZDistanceStraw0 - 50.0; // z
 	static constexpr float beamStop = (moduleSpacing + viewSpacing + layerSpacing*float(layerN)) * float(moduleN); // z
 
 	// **** MC CALCULATION CONTAINERS ****  //
