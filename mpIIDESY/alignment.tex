@@ -449,7 +449,55 @@ DGL_3 = \frac{\partial R}{\partial m_x} = \frac{(p_y z_W+y_T)(m_x p_y z_W+m_x y_
 \end{split}
 \end{equation}
 
-\subsubsection{Alignment Parameters with 6 DoF}
+\subsubsection{Approximation with parallel tracks}
+
+Taking $p_x$ and $p_z$ $\rightarrow 0$, and with $m_x = \tan(0.1309)=0.1317$:
+
+\begin{equation}
+DLC_1 = \frac{\partial R}{\partial x_T} \approx   \frac{\pm1}{\sqrt{m_x^2+1}} = \pm 0.9914
+\end{equation}
+
+\begin{equation}
+DLC_2 = \frac{ \partial R}{\partial y_T} \approx  \frac{\pm m_x}{\sqrt{m_x^2+1}} = \pm 0.1317 \times 0.9914 = \pm 0.1306
+\end{equation}
+
+
+\begin{equation}
+\begin{split}
+DLC_3 = \frac{ \partial R}{\partial p_x} \approx \frac{\pm z_w}{\sqrt{m_x^2+1}} = \pm z_w \times 0.9914,
+\end{split}
+\end{equation}
+where $ \geq z_w$
+
+\begin{equation}
+\begin{split}
+DLC_4 = \frac{ \partial R}{\partial p_y} \approx \frac{\pm m_x z_w}{\sqrt{m_x^2+1}} \pm z_w \times 0.1306 
+\end{split}
+\end{equation}
+
+
+\begin{equation}	
+DGL_1 = \frac{\partial R}{\partial x_W} \approx  \frac{\pm1}{\sqrt{m_x^2+1}} = \pm 0.9914
+\end{equation}
+
+\begin{equation}	
+DGL_2 = \frac{\partial R}{\partial z_W} \approx  0
+\end{equation}
+
+
+\subsection{Alignment Software Path}
+
+...
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.6\linewidth]{fig/AlignPath.png}
+\caption{Track to wire DCA.}
+\label{fig:AlignPath}
+\end{figure}
+
+
+\subsection{Alignment Parameters with 6 DoF}
 
 Similarly, to the 2D case with rotations, we will need to consider coordinates system transformations. Let's begin with some definitions of our coordinate systems: 
 
