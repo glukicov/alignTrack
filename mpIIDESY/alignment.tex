@@ -70,7 +70,7 @@
 	\vspace{4cm}
 	\vfill
 	\vspace{0.9cm}
-	{\large February 9, 2018}
+	{\large February 23, 2018}
 \end{center}
 \end{titlepage}
 \clearpage
@@ -327,36 +327,42 @@ In this section we will consider a case of misalignment in 3D, with tracker geom
     \caption{Straight MC truth tracks through a misaligned station (in $x$) of 4 tracker modules.}
 \label{fig:4M} 
 \end{figure}
-\vspace{-0.2cm}
-First of all, consider parametrisation of the track. The slope of a line in $i$ direction is given by
+\vspace{-0.2cm} \\
+First of all, consider parametrisation of the track. The slope of a line in $i$ direction, where $i=x, y$ is given by
 \begin{equation}
-m_i = \frac{p_i}{|\bf{p}|}, 	
+m_i = \frac{p_i}{p_z}=\tan\theta_i, 	
 \end{equation}
-where $p_i$ is the momentum in $i$ direction, and $\textbf{p}$ is the momentum vector. 
+where $p_i$ is the momentum in $i$ direction, and $\theta_i$ is the corresponding angle. 
 
 A line in 3D can be parametrised with a variable parameter $t$ as follows
 \begin{equation}
-\textbf{r}(t) = \begin{pmatrix}x_L + m_x  t\\y_L + m_y t\\z_L + m_z t\\\end{pmatrix},
+\textbf{r}(t) = \begin{pmatrix}x\\y\\z\\\end{pmatrix} = \begin{pmatrix}x_L + m_x  t\\y_L + m_y t\\t\\\end{pmatrix}.
 \end{equation}
-where ($x_L, y_L, z_L$)  is some point on the line. However, we only need 4 parameters, out of 6 defined above, to specify the line. A 3D line is defined by two points, each with 3 DoF, giving 6 DoF for the line. The line, however, is invariant under the translation of either of the points along the line, giving 4 DoF. Assuming the track is not parallel to the $xy$ plane, as will be the case for all tracks of interest here, we can remove $z_L$, and $m_z$ dependence, by setting $z_0=0$, and dividing by $m_z$. 
+We only need 4 parameters to specify the line. A 3D line is defined by two points, each with 3 DoF, giving 6 DoF for the line. The line, however, is invariant under the translation of either of the points along the line, giving 4 DoF. Assuming the track is not parallel to the $xy$ plane, as will be the case for all tracks of interest here 
 \begin{equation}
-\textbf{r}_T(t) = \begin{pmatrix}x\\y\\z\\\end{pmatrix} = \begin{pmatrix}x_L + \frac{p_x}{p_z}  t\\y_L + \frac{p_y}{p_z}  t\\  t\\\end{pmatrix} = \begin{pmatrix}x_L + p_x^{'} t\\y_L + p_y^{'}  t\\  t\\\end{pmatrix}= \textbf{v}t+\textbf{r}_T^0=\begin{pmatrix}p_x\\ p_y \\  1\\\end{pmatrix}t + \begin{pmatrix}x_L \\y_L  \\  0\\\end{pmatrix},
+\textbf{r}_T(t) =  \begin{pmatrix}x_L + m_x  t\\y_L + m_y  t\\  t\\\end{pmatrix} =  \textbf{v}t+\textbf{r}_T^0=\begin{pmatrix}m_x\\ m_y \\  1\\\end{pmatrix}t + \begin{pmatrix}x_L \\y_L  \\  0\\\end{pmatrix},
 \label{eq:track}
 \end{equation}
-in the future, we will drop the $^{'}$ notation on momentum components. Therefore, we have decided to
-parametrise our track with the following local parameters $\textbf{b}$
+Therefore, we have decided to parametrise our track with the following local parameters $\textbf{b}$
 \begin{equation}
-\textbf{b} = \begin{pmatrix}x_L \\y_L \\p_x \\ p_y\end{pmatrix}
+\textbf{b} = \begin{pmatrix}x_L \\y_L \\m_x \\ m_y\end{pmatrix}
 \end{equation}
-
 
 \subsection{Track to Wire distance with 3 DoF.}
 
 First of all, we will consider a simpler case with 3 DoF on the detector component - the straw wire. The global alignment parameters $\textbf{a}$ are
 \begin{equation}
-\textbf{a} = \begin{pmatrix}x_W \\z_W \\m_x \end{pmatrix},
+\textbf{a} = \begin{pmatrix}x_W \\z_W \\m_W \end{pmatrix},
 \end{equation}
-which correspond to the displacements in $x$, $z$, as well as a rotation in the $xy$ plane. 
+
+\begin{equation}
+\textbf{a} = \begin{pmatrix}x \\y \\z \end{pmatrix},
+\end{equation}
+which correspond to the displacements in $x$, $z$, as well as a rotation in the $xy$ plane - this corresponds to the \textit{stereo angle}, $\theta_W$ between U and V layers
+
+\begin{equation}
+	m_W = \tan\theta_W.
+\end{equation}
 
 Now we are ready to tackle the real residuals, with DCA between the track and the wire given by
 \begin{equation}
@@ -372,10 +378,10 @@ where \textbf{W} and \textbf{T} are the points of closest approach between the w
 
 The wire can be parametrised as 
 \begin{equation}
-\textbf{r}_W(s) = \begin{pmatrix}x\\y\\z\\\end{pmatrix} = \begin{pmatrix}x_W + m_x s\\ s\\  z_W\\\end{pmatrix} = \textbf{u}s+\textbf{r}_W^0=\begin{pmatrix} m_x \\ 1\\  0\\\end{pmatrix}s + \begin{pmatrix}x_W  \\0 \\  z_W\\\end{pmatrix},
+\textbf{r}_W(s) = \begin{pmatrix}x\\y\\z\\\end{pmatrix} = \begin{pmatrix}x_W + m_W s\\ s\\  z_W\\\end{pmatrix} = \textbf{u}s+\textbf{r}_W^0=\begin{pmatrix} m_W \\ 1\\  0\\\end{pmatrix}s + \begin{pmatrix}x_W  \\0 \\  z_W\\\end{pmatrix},
 \label{eq:wire}
 \end{equation}
-as the position on the straw is constant with $z$, and slope in $x$ is due to the \textit{stereo angle} of $\sim 7.5^{\circ}$, the straw wire is in fact parallel to the $xy$ plane. Additional wire parameters can be added later (e.g. rotation in the $zx$ plane).
+as the position on the straw is constant with $z$, and slope in $x$ is due to the \textit{stereo angle} of $\sim 7.5^{\circ}$, the straw wire is in fact parallel to the $xy$ plane. Additional wire parameters can be added later (e.g. rotation in the $zx$ plane). 
 
 Here, we take a geometrical approach to express the above requirements on the DCA as
 \begin{equation}
@@ -384,10 +390,11 @@ DCA = |\frac{\textbf{u} \times \textbf{v} \cdot (r^0_W - r^0_T) }{||\textbf{u} \
 which projects the distance between the \say{intercepts of the lines} (or any other points), to the normal between the two lines. Using the parametrisations defined above
 \begin{equation}
 \begin{split}
-DCA(x_T, y_T, p_x, p_y, x_W, z_W, m_x) = \frac{|\begin{pmatrix} m_x \\ 1\\  0\\\end{pmatrix} \times \begin{pmatrix} p_x\\ p_y \\  1\\\end{pmatrix} \cdot (\begin{pmatrix}x_W  \\0 \\  z_W\\\end{pmatrix} - \begin{pmatrix}x_T \\y_T  \\  0\\\end{pmatrix}) |}{||\begin{pmatrix} m_x \\ 1\\  0\\\end{pmatrix} \times \begin{pmatrix}p_x\\ p_y \\  1\\\end{pmatrix}||} =  \frac{|\begin{pmatrix} 1 \\ -m_x \\ m_xp_y - p_x  \end{pmatrix} \cdot
-\begin{pmatrix} x_W-x_T \\ -y_T \\ z_W  \end{pmatrix} |}{||\begin{pmatrix} 1 \\ -m_x \\ m_xp_y - p_x  \end{pmatrix}||}  = \\
-= \frac{|z_W (m_x p_y-p_x)+m_x y_T-x_T+x_W|}{\sqrt{\left| m_x p_y-p_x\right|^2+\left| m_x\right|^2+1}}
-= \frac{| p_ym_xz_w-p_xz_w + m_xy_T + x_W - x_T |}{\sqrt{(m_x p_y-p_x)^2+(m_x)^2+1}}.
+DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W) = \frac{|\begin{pmatrix} m_W \\ 1\\  0\\\end{pmatrix} \times \begin{pmatrix} m_x\\ m_y \\  1\\\end{pmatrix} \cdot (\begin{pmatrix}x_W  \\0 \\  z_W\\\end{pmatrix} - \begin{pmatrix}x_T \\y_T  \\  0\\\end{pmatrix}) |}{||\begin{pmatrix} m_W \\ 1\\  0\\\end{pmatrix} \times \begin{pmatrix}m_x\\ m_y \\  1\\\end{pmatrix}||} = 
+\\ = \frac{|\begin{pmatrix} 1 \\ -m_W \\ m_Wm_y - m_x  \end{pmatrix} \cdot
+\begin{pmatrix} x_W-x_T \\ -y_T \\ z_W  \end{pmatrix} |}{||\begin{pmatrix} 1 \\ -m_W \\ m_Wm_y - m_x  \end{pmatrix}||}  = \\
+= \frac{|z_W (m_W m_y-m_x)+m_W y_T-x_T+x_W|}{\sqrt{\left| m_W m_y-m_x\right|^2+\left| m_W\right|^2+1}}
+= \frac{| m_ym_Wz_W-m_xz_W + m_Wy_T + x_W - x_T |}{\sqrt{(m_W m_y-m_x)^2+(m_W)^2+1}}.
 \label{eq:DCAGeom}
 \end{split}
 \end{equation}
@@ -398,7 +405,7 @@ Now we are ready to form the residuals w.r.t to $\textbf{a}$ and  $\textbf{b}$ a
 
 \begin{equation}
 \begin{split}
-\mathrm{Residual} = R = \mathrm{DCA(x_T, y_T, p_x, p_y, x_W, z_W, m_x)} -r = \frac{| p_ym_xz_w-p_xz_w + m_xy_T + x_W - x_T |}{\sqrt{(m_x p_y-p_x)^2+(m_x)^2+1}} -r,
+\mathrm{Residual} = R = \mathrm{DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W)} -r = \frac{| m_ym_Wz_W-m_xz_W + m_Wy_T + x_W - x_T |}{\sqrt{(m_W m_y-m_x)^2+(m_W)^2+1}} -r,
 \end{split}
 \end{equation}
 with $r$ defined as the DCA of the hit (from measurement, i.e. \say{drift cylinder} radius). 
@@ -412,72 +419,72 @@ with $r$ defined as the DCA of the hit (from measurement, i.e. \say{drift cylind
 \end{equation}
 
 \begin{equation}
-DLC_1 = \frac{\partial R}{\partial x_T} =   -\frac{m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
+DLC_1 = \frac{\partial R}{\partial x_T} =   -\frac{m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}
 \end{equation}
 
 \begin{equation}
-DLC_2 = \frac{ \partial R}{\partial y_T} =  \frac{m_x (m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}} 
+DLC_2 = \frac{ \partial R}{\partial y_T} =  \frac{m_W (m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}} 
 \end{equation}
 
 \begin{equation}
 \begin{split}
-DLC_3 = \frac{ \partial R}{\partial p_x} = \frac{\left(m_x p_y-p_x\right) |m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|}{\left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}-\\
-\frac{z_W(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
+DLC_3 = \frac{ \partial R}{\partial m_x} = \frac{\left(m_W m_y-m_x\right) |m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|}{\left(\left(m_W m_y-m_x\right){}^2+m_W^2+1\right){}^{3/2}}-\\
+\frac{z_W(m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}
 \end{split}
 \end{equation}
 
 \begin{equation}
 \begin{split}
-DLC_4 = \frac{ \partial R}{\partial p_y} = \frac{m_x z_W(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}-\\
-\frac{m_x \left(m_x p_y-p_x\right) |m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|}{\left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}
+DLC_4 = \frac{ \partial R}{\partial m_y} = \frac{m_W z_W(m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}-\\
+\frac{m_W \left(m_W m_y-m_x\right) |m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|}{\left(\left(m_W m_y-m_x\right){}^2+m_W^2+1\right){}^{3/2}}
 \end{split}
 \end{equation}
 
 
 \begin{equation}	
-DGL_1 = \frac{\partial R}{\partial x_W} = \frac{m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}} = - DLC_1
+DGL_1 = \frac{\partial R}{\partial x_W} = \frac{m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}} = - DLC_1
 \end{equation}
 
 \begin{equation}	
-DGL_2 = \frac{\partial R}{\partial z_W} = \frac{(m_x p_y-p_x) (m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}
+DGL_2 = \frac{\partial R}{\partial z_W} = \frac{(m_W m_y-m_x) (m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}
 \end{equation}
 
 \begin{equation}
 \begin{split}	
-DGL_3 = \frac{\partial R}{\partial m_x} = \frac{(p_y z_W+y_T)(m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W)}{|m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|\sqrt{\left(m_x p_y-p_x\right){}^2+m_x^2+1}}-\\
-\frac{\left(p_y \left(m_x p_y-p_x\right)+ m_x\right) |m_x p_y z_W+m_x y_T-p_x z_W-x_T+x_W|}{ \left(\left(m_x p_y-p_x\right){}^2+m_x^2+1\right){}^{3/2}}
+DGL_3 = \frac{\partial R}{\partial m_W} = \frac{(m_y z_W+y_T)(m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}-\\
+\frac{\left(m_y \left(m_W m_y-m_x\right)+ m_W\right) |m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|}{ \left(\left(m_W m_y-m_x\right){}^2+m_W^2+1\right){}^{3/2}}
 \end{split}
 \end{equation}
 
 \subsubsection{Approximation with parallel tracks}
 
-Taking $p_x$ and $p_z$ $\rightarrow 0$, and with $m_x = \tan(0.1309)=0.1317$:
+Taking $m_x$ and $m_y$ $\rightarrow 0$, and with $m_W = \tan(\theta_W)=0.1317$ ($\theta_W = 0.1309$ rad is the stereo angle), the above derivatives can be analytically approximated to:
 
 \begin{equation}
-DLC_1 = \frac{\partial R}{\partial x_T} \approx   \frac{\pm1}{\sqrt{m_x^2+1}} = \pm 0.9914
+DLC_1 = \frac{\partial R}{\partial x_T} \approx   \frac{\pm1}{\sqrt{m_W^2+1}} \approx \pm 0.9914 \ (= \cos\theta_W)
 \end{equation}
 
 \begin{equation}
-DLC_2 = \frac{ \partial R}{\partial y_T} \approx  \frac{\pm m_x}{\sqrt{m_x^2+1}} = \pm 0.1317 \times 0.9914 = \pm 0.1306
+DLC_2 = \frac{ \partial R}{\partial y_T} \approx   \frac{ \partial R}{\partial x_T} \times m_W \approx \frac{\pm m_W}{\sqrt{m_W^2+1}} = \pm 0.1317 \times 0.9914 \approx \pm 0.1306 \ (= \sin\theta_W)
 \end{equation}
 
 
 \begin{equation}
 \begin{split}
-DLC_3 = \frac{ \partial R}{\partial p_x} \approx \frac{\pm z_w}{\sqrt{m_x^2+1}} = \pm z_w \times 0.9914,
+DLC_3 = \frac{ \partial R}{\partial m_x} \approx \frac{\pm z_W}{\sqrt{m_W^2+1}} \approx \pm z_W \times 0.9914 \ (= z_W\cos\theta_W),
 \end{split}
 \end{equation}
-where $ \geq z_w$
+where $ \sim 60 \leq |z_W| \leq 450$ mm in the case of 4 modules. 
 
 \begin{equation}
 \begin{split}
-DLC_4 = \frac{ \partial R}{\partial p_y} \approx \frac{\pm m_x z_w}{\sqrt{m_x^2+1}} \pm z_w \times 0.1306 
+DLC_4 = \frac{ \partial R}{\partial m_y} \approx \frac{\pm m_W z_W}{\sqrt{m_W^2+1}} \pm z_W \times 0.1306 \ (= z_W\sin\theta_W)
 \end{split}
 \end{equation}
 
 
 \begin{equation}	
-DGL_1 = \frac{\partial R}{\partial x_W} \approx  \frac{\pm1}{\sqrt{m_x^2+1}} = \pm 0.9914
+DGL_1 = \frac{\partial R}{\partial x_W} \approx  \frac{\pm1}{\sqrt{m_W^2+1}} \approx \pm 0.9914 \ (= \cos\theta_W)
 \end{equation}
 
 \begin{equation}	
@@ -485,13 +492,21 @@ DGL_2 = \frac{\partial R}{\partial z_W} \approx  0
 \end{equation}
 
 
-\subsection{Alignment Software Path}
+\begin{equation}	
+DGL_2 = \frac{\partial R}{\partial y_W} \approx \pm 0.1317 \times 0.9914 \approx \pm 0.1306 \ (= \sin\theta_W)
+\end{equation}
 
-...
+\begin{equation}	
+DGL_3 = \frac{\partial R}{\partial z_W} \approx  0
+\end{equation}
+
+The above expressions can be similarly derived from a geometric argument. 
+
+\subsection{Alignment Software Path}
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.6\linewidth]{fig/AlignPath.png}
+\includegraphics[width=0.4\linewidth]{fig/AlignPath.png}
 \caption{Track to wire DCA.}
 \label{fig:AlignPath}
 \end{figure}
@@ -532,7 +547,7 @@ In the end, we would like to write down a vector containing derivatives of the r
 \end{equation}
 as well as a vector containing derivatives of the residuals w.r.t to the fitted track parameters (local parameters)
 \begin{equation}
-\frac{\partial R}{\partial \textbf{b}} = \begin{pmatrix} \frac{\partial R}{\partial x_T} \\ \frac{\partial R}{\partial y_T} \\ \frac{\partial R}{\partial p_x} \\ \frac{\partial R}{\partial p_y}  \end{pmatrix}.
+\frac{\partial R}{\partial \textbf{b}} = \begin{pmatrix} \frac{\partial R}{\partial x_T} \\ \frac{\partial R}{\partial y_T} \\ \frac{\partial R}{\partial m_x} \\ \frac{\partial R}{\partial m_y}  \end{pmatrix}.
 \end{equation}
 
 With these definitions, the normalised residual pull of a measurement is

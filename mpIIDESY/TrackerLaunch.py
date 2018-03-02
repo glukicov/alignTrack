@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 ####################################################################
+# Sanity plots for Tracker Alignment.  
 # FoM Plots for comparison of actual misalignment vs PEDE results 
 #
-# 
 # Created: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
-# Modified: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
+# Modified: 8 January 2018 by Gleb
 #####################################################################
 
 
@@ -13,33 +13,41 @@ import matplotlib.pyplot as plt #for plotting
 import numpy as np  # smart arrays 
 import itertools # smart lines 
 
-# Getting constants from MC
-with open("Tracker_p_constants.txt") as f:
-     for line in f:  #Line is a string
-        number_str = line.split()
-        moduleN=int(number_str[0])
+# # Getting constants from MC
+# with open("Tracker_p_constants.txt") as f:
+#      for line in f:  #Line is a string
+#         number_str = line.split()
+#         moduleN=int(number_str[0])
 
-parN=3
+parN=1 # GL
 constN =2 # TODO 
-expectPars=(21, 22, 23, 31, 32, 33)
+moduleN = 4 
+# expectPars=(21, 22, 23, 31, 32, 33)
+expectPars=(21, 31)
 # Quickly open the PEDe file and count lines only:
-lineN= sum(1 for line in open('PEDE_Mis.txt'))
+lineN= sum(1 for line in open('PEDE_Mis_art.txt'))
             
 
 print "Parameters from Simulation and PEDE:"
 print "moduleN= ", moduleN
 print "PEDE Trials= ",lineN  
+print "Number of Global Par=" , parN
+print "Number of fixed modules", constN
 
 
-mis_C = [0 for i_module in xrange((moduleN-constN)*parN)]
+mis_C = (0.0, -0.3, 0.2, 0.0)
+
+print "Misal"
+
+# mis_C = [0 for i_module in xrange((moduleN-constN)*parN)]
 # Get 1 set of misalignment from simulation 
 
-with open("Tracker_pede_mis.txt") as f:
-	for line in f:  #Line is a string
-		number_str = line.split()
+# with open("Tracker_pede_mis.txt") as f:
+# 	for line in f:  #Line is a string
+# 		number_str = line.split()
         
-        for i_module in range(0, (moduleN-constN)*parN):
-        	mis_C[i_module]=float(number_str[i_module])
+#         for i_module in range(0, (moduleN-constN)*parN):
+#         	mis_C[i_module]=float(number_str[i_module])
 
 
 
@@ -49,7 +57,7 @@ Errors = [[0 for i_module in xrange((moduleN)*parN)] for i_lines in xrange(lineN
 trackN = [] # track count correspond to line number 
 
 
-with open("PEDE_Mis.txt") as f:
+with open("PEDE_Mis_art.txt") as f:
 	line_i = 0
 	for line in f:  #Line is a string
 		number_str = line.split()
@@ -57,9 +65,12 @@ with open("PEDE_Mis.txt") as f:
 		for i_par in range(0, moduleN*parN):
 			label=int(number_str[0+i_par*3])
 			# if (label==21 or label==22 or label==31 or label==32):
-			if (label==21 or label==22 or  label==23 or label==31 or label==32 or label==33):
+			#if (label==21 or label==22 or  label==23 or label==31 or label==32 or label==33):
+			if (label==21 or label==31):
 				misal=float(number_str[1+i_par*3])
 				error=float(number_str[2+i_par*3])
+				# print misal
+				# print error
 				Labels[line_i][i_par]=label
 				Misals[line_i][i_par]=misal
 				Errors[line_i][i_par]=error
@@ -75,14 +86,14 @@ with open("PEDE_Mis.txt") as f:
 		line_i = line_i + 1
 		
 
-with open("Tracker_metric.txt") as f:
-	line_i = 0
-	for line in f:  #Line is a string
-		metric = line
+# with open("Tracker_metric.txt") as f:
+# 	line_i = 0
+# 	for line in f:  #Line is a string
+# 		metric = line
 
-print Misals
-print Errors
-print mis_C
+print "PEDE Mis: ", Misals
+print "PEDE Errors:" , Errors
+print "Truth Misalignment: " ,mis_C
 
 ##################PLOTING##############################
 
@@ -94,7 +105,7 @@ print mis_C
 
 plt.rcParams.update({'font.size': 8})
 
-moduleN=moduleN-constN  
+moduleN=moduleN-constN  # Only look at misaligned modules 
 
 #Plot difference for all modules
 plt.figure(1)
@@ -139,12 +150,10 @@ for i_counter in range(0, parN*moduleN):
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'green')
 	for i_lines in range(0, lineN):
-		dM=(Misals[i_lines][i_counter+3]-mis_C[i_counter])*1e4 # cm -> um 
-		if(i_par==23 or i_par==33):
-			dM=(Misals[i_lines][i_counter+3]-mis_C[i_counter])*1e3  #rad -> urad 
+		dM=(Misals[i_lines][i_counter+1]-mis_C[i_counter+1])*1e3  # cm to um 
 		#dM=(Misals[i_lines][i_counter+2]-mis_C[i_counter])*1e4
 		#print 'Misals[i_lines][i_module]=', Misals[i_lines][i_module], 'mis_C[i_module]=', mis_C[i_module], 'dM=', dM
-		errorM=Errors[i_lines][i_counter+3]*1e4
+		errorM=Errors[i_lines][i_counter+1]*1e3
 		#errorM=Errors[i_lines][i_counter+2]*1e4
 		print "dM=", dM, "errorM=", errorM
 		plt.errorbar(trackN[i_lines], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
@@ -163,12 +172,10 @@ for i_counter in range(0, parN*moduleN):
 			plt.title('FoM M%s $\Theta$'  %(int(i_par/10)) , fontsize=10)
 
 		plt.xlabel("Number of Tracks", fontsize=10)
-		if (i_par==21 or i_par==31 or i_par==22 or i_par==32):
+		if (i_module!=2 or i_module!=3):
 			plt.ylabel("$\Delta$ Misalignment [um]")
-		if (i_par==23 or i_par==33):
-			plt.ylabel("$\Delta$ Misalignment [urad]")
 plt.subplots_adjust(hspace=.4)
 plt.gcf().subplots_adjust(top=0.90)
-plt.suptitle(str(metric), fontsize=6, style='oblique',  color="green")
+#plt.suptitle(str(metric), fontsize=6, style='oblique',  color="green")
 plt.savefig("FoM_All.png")
 print("File produced: FoM_All.png")
