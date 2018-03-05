@@ -7,7 +7,13 @@
 # Created: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
 # Modified: 8 January 2018 by Gleb
 #####################################################################
+import argparse, sys
 
+parser = argparse.ArgumentParser(description='mode')
+parser.add_argument('-m', '--mode', help='mode')
+args = parser.parse_args()
+
+file = str(args.mode)
 
 import matplotlib.pyplot as plt #for plotting 
 import numpy as np  # smart arrays 
@@ -25,7 +31,7 @@ moduleN = 4
 # expectPars=(21, 22, 23, 31, 32, 33)
 expectPars=(21, 31)
 # Quickly open the PEDe file and count lines only:
-lineN= sum(1 for line in open('PEDE_Mis_art.txt'))
+lineN= sum(1 for line in open(file))
             
 
 print "Parameters from Simulation and PEDE:"
@@ -57,7 +63,7 @@ Errors = [[0 for i_module in xrange((moduleN)*parN)] for i_lines in xrange(lineN
 trackN = [] # track count correspond to line number 
 
 
-with open("PEDE_Mis_art.txt") as f:
+with open(file) as f:
 	line_i = 0
 	for line in f:  #Line is a string
 		number_str = line.split()
@@ -162,7 +168,7 @@ for i_counter in range(0, parN*moduleN):
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
 		if(i_par==21 or i_par==31):
-			axes.set_ylim(-10, 10)
+			axes.set_ylim(-30, 8)
 			plt.title('FoM M%s x'  %(int(i_par/10)) , fontsize=10)
 		if(i_par==22 or i_par==32):
 			axes.set_ylim(-2000, 2000)
@@ -177,5 +183,5 @@ for i_counter in range(0, parN*moduleN):
 plt.subplots_adjust(hspace=.4)
 plt.gcf().subplots_adjust(top=0.90)
 #plt.suptitle(str(metric), fontsize=6, style='oblique',  color="green")
-plt.savefig("FoM_All.png")
-print("File produced: FoM_All.png")
+plt.savefig(str(file)+".png")
+print "File produced:" , str(file), ".png" 
