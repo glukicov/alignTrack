@@ -123,7 +123,7 @@ for i_hits in range(0, len(fit_hitX)):
 	# circle = plt.Circle((fit_hitZ[i_hits], fit_hitX[i_hits]), fit_hitRad[i_hits], color='green', linestyle='--', fill=False)
 	axes2.add_artist(circle)	
 	
-axes2.set_ylim([20,50])
+axes2.set_ylim([20,70])
 axes2.set_xlim([-600,90])
 plt.xlabel("z [mm]")
 plt.ylabel("x [mm]")

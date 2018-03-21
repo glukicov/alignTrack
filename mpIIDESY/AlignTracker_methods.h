@@ -124,7 +124,7 @@ private:
 	float pValCut = 0.0; // from 0.0->1.0
 	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
 	bool useTruthLR = true; // use LR information from generated tracks [requires DCA cut!]
-	bool hitCut = false; // if true, hits will be rejected if DCA > strawRadius
+	bool hitCut = true; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
 	float dispX[8] =     {0.00,  -0.03,  0.02,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
