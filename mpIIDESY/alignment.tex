@@ -112,7 +112,7 @@ The user can write a Monte Carlo (MC) programme to: (1) fully describe the detec
 \end{figure}
 \vspace{-0.2cm}
 
-To understand the \texttt{Millepede II} algorithm a translation (into \texttt{C++}) of the provided (\texttt{Fortran}) toy-model was implemented. The difference in results was consistent with within the precision of \text{C++} floating-point numbers ($10^{-7}$).
+To understand the \texttt{Millepede II} algorithm a translation (into \texttt{C++}) of the provided (\texttt{Fortran}) toy-model was implemented. The difference in results was consistent with within the precision of C++} floating-point numbers ($10^{-7}$).
 \vspace{-0.1cm}
 \subsection{User MC Algorithm}
 \vspace{-0.1cm}
@@ -514,9 +514,64 @@ DLC_1 = \frac{\partial R}{\partial x_T} =   \frac{\pm}{\sqrt{\left(m_W m_y-m_x\r
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.4\linewidth]{fig/AlignPath.png}
-\caption{Track to wire DCA.}
+\caption{Full Alignment path.}
 \label{fig:AlignPath}
 \end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.4\linewidth]{fig/AlignPath2.png}
+\caption{Full Alignment path.}
+\label{fig:AlignPath}
+\end{figure}
+
+
+\subsection{Adding Uniform Magnetic Field}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.4\linewidth]{fig/G4.png}
+\caption{MF.}
+\label{fig:AlignPath}
+\end{figure}
+
+\clearpage
+\subsection{Considering Rotations}
+
+We have 3 possible rotations (see Fig.~\ref{fig:Rotation}) - for now considered around the centre of the tracker module (in y=0 plane): \\
+1) Rotation around x axis ($\theta$) \\
+2) Rotation around y axis ($\phi$) \\
+3) Rotation around z axis ($\psi$) \\
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.4\linewidth]{fig/rotAxis.png}
+\caption{Rotations}
+\label{fig:Rotation}
+\end{figure}
+
+Rotation around the $y$ axis in the y=0 plane is the same as considered previously. Now we need to extend this to 3D geometry, taking into account the angle of the wires. 
+
+\begin{equation}
+\begin{bmatrix}x\\y\\z\end{bmatrix}=\begin{bmatrix}x_d'+x^{centre}\\ y_d + y^{centre} \\z_d'+z^{centre}\\\end{bmatrix}=\begin{bmatrix}z_d\sin \phi +x_d\cos \phi + x^{centre} \\ y_d + y^{centre} \\ z_d\cos \phi -x_d\sin \phi + z^{centre} \\\end{bmatrix}. \label{eq:global}
+\end{equation}
+
+Here, we argue that a point along the straw will have the same vertical height ($y$) before and after the above rotation.
+
+\begin{equation}
+DGL = \frac{ \partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre}).
+\end{equation}
+
+Due to the wire angle the DCA now becomes (with trigonometric re-parametrisation of the wire due to a rotation)
+
+\begin{equation}
+\begin{split}
+DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W) = \frac{|\begin{pmatrix} m_W \cos \phi \\ 1\\   m_W \sin \phi\\\end{pmatrix} \times \begin{pmatrix} m_x\\ m_y \\  1\\\end{pmatrix} \cdot (\begin{pmatrix}x_W  \\0 \\  z_W\\\end{pmatrix} - \begin{pmatrix}x_T \\y_T  \\  0\\\end{pmatrix}) |}{||\begin{pmatrix} m_W \cos \phi \\ 1\\  m_W \sin \phi\\\end{pmatrix} \times \begin{pmatrix}m_x\\ m_y \\  1\\\end{pmatrix}||} = 
+\\ = \frac{z_W (m_W m_y \cos (\phi)-m_x)-y_T (m_W m_x \sin (\phi)-m_W \cos (\phi))+(x_W-x_T) (1-m_W m_y \sin (\phi))}{\sqrt{\left| \cos (\phi) m_W m_y-m_x\right| {}^2+\left| m_W m_x \sin (\phi)-\cos (\phi) m_W\right| {}^2+\left| 1-m_W m_y \sin (\phi)\right| {}^2}} =
+\\ = \frac{z_W m_W m_y \cos (\phi)- z_W m_x- y_T m_W m_x \sin (\phi) + y_T m_W \cos (\phi))+ x_W-x_W m_W m_y \sin (\phi) - x_T +x_T m_W m_y \sin (\phi)}{\sqrt{ \cos (\phi) m_W m_y-m_x {}^2+ m_W m_x \sin (\phi)-\cos (\phi) m_W {}^2+ 1-m_W m_y \sin (\phi){}^2}}
+\label{eq:DCARot}
+\end{split}
+\end{equation}
 
 
 \subsection{Alignment Parameters with 6 DoF}
