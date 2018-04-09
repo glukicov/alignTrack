@@ -446,14 +446,19 @@ DGL_1 = \frac{\partial R}{\partial x_W} = \frac{m_W m_y z_W+m_W y_T-m_x z_W-x_T+
 \end{equation}
 
 \begin{equation}	
-DGL_2 = \frac{\partial R}{\partial z_W} = \frac{(m_W m_y-m_x) (m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}
+DGL_2 = \frac{\partial R}{\partial y_W} = \frac{m_W (m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}  = - DLC_2
 \end{equation}
+
 
 \begin{equation}
 \begin{split}	
 DGL_3 = \frac{\partial R}{\partial m_W} = \frac{(m_y z_W+y_T)(m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}-\\
 \frac{\left(m_y \left(m_W m_y-m_x\right)+ m_W\right) |m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|}{ \left(\left(m_W m_y-m_x\right){}^2+m_W^2+1\right){}^{3/2}}
 \end{split}
+\end{equation}
+
+\begin{equation}	
+DGL_4 = \frac{\partial R}{\partial z_W} = \frac{(m_W m_y-m_x) (m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}
 \end{equation}
 
 \subsubsection{Approximation with parallel tracks}
@@ -559,7 +564,15 @@ Rotation around the $y$ axis in the y=0 plane is the same as considered previous
 Here, we argue that a point along the straw will have the same vertical height ($y$) before and after the above rotation.
 
 \begin{equation}
-DGL = \frac{ \partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre}).
+DGL = \frac{ \partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre})
+\end{equation}
+
+\begin{equation}
+DGL = \frac{ \partial R}{\partial \psi} = \frac{ \partial R}{\partial y_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (y_W - y_{centre}).
+\end{equation}
+
+\begin{equation}
+DGL = \frac{ \partial R}{\partial \theta} = \frac{ \partial R}{\partial y_W} (-z_W + z_{centre}) + \frac{ \partial R}{\partial z_W} (y_W - y_{centre}).
 \end{equation}
 
 Due to the wire angle the DCA now becomes (with trigonometric re-parametrisation of the wire due to a rotation)
@@ -571,6 +584,58 @@ DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W) = \frac{|\begin{pmatrix} m_W \cos \phi \\
 \\ = \frac{z_W m_W m_y \cos (\phi)- z_W m_x- y_T m_W m_x \sin (\phi) + y_T m_W \cos (\phi))+ x_W-x_W m_W m_y \sin (\phi) - x_T +x_T m_W m_y \sin (\phi)}{\sqrt{ \cos (\phi) m_W m_y-m_x {}^2+ m_W m_x \sin (\phi)-\cos (\phi) m_W {}^2+ 1-m_W m_y \sin (\phi){}^2}}
 \label{eq:DCARot}
 \end{split}
+\end{equation}
+
+
+\subsubsection{Alignment Parameters with 3 DoF}
+
+Considering simultaneous translation in x and y, and rotation around the y axis ($\phi$), we have the following local parameters: \\ 
+
+
+\begin{equation}
+\begin{split}
+\mathrm{Residual} = R = \mathrm{DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W)} -r = \frac{| m_ym_Wz_W-m_xz_W + m_Wy_T + x_W - x_T |}{\sqrt{(m_W m_y-m_x)^2+(m_W)^2+1}} -r,
+\end{split}
+\end{equation}
+with $r$ defined as the DCA of the hit (from measurement, i.e. \say{drift cylinder} radius). 
+
+\begin{equation}
+DLC_1 = \frac{\partial R}{\partial x_T} 
+\end{equation}
+
+\begin{equation}
+DLC_2 = \frac{ \partial R}{\partial y_T} 
+\end{equation}
+
+\begin{equation}
+\begin{split}
+DLC_3 = \frac{ \partial R}{\partial m_x} 
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+DLC_4 = \frac{ \partial R}{\partial m_y}
+\end{split}
+\end{equation}
+
+
+\clearpage
+
+\begin{equation}
+DGL_1 = \frac{\partial R}{\partial x_W} = DLC_1
+\end{equation}
+
+\begin{equation}
+DGL_2 = \frac{\partial R}{\partial y_W} = DLC_2
+\end{equation}
+
+\begin{equation}
+DGL_3 = \frac{\partial R}{\partial \phi} 
+\end{equation}
+
+\begin{equation}
+DGL_3 = \frac{\partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre}) = DLC_1 (m_W * m_y - m_x) (-x_W + x_{centre}) + DLC_1 (z_W - z_{centre})
 \end{equation}
 
 

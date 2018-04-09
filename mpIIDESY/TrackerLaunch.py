@@ -25,11 +25,11 @@ import itertools # smart lines
 #         number_str = line.split()
 #         moduleN=int(number_str[0])
 
-parN=2 # GL
+parN=3 # GL
 constN =2 # TODO 
 moduleN = 4 
-# expectPars=(21, 22, 23, 31, 32, 33)
-expectPars=(21, 22, 31, 32)
+expectPars=(21, 22, 23, 31, 32, 33)
+#expectPars=(21, 22, 31, 32)
 # Quickly open the PEDe file and count lines only:
 lineN= sum(1 for line in open(file))
             
@@ -41,7 +41,7 @@ print "Number of Global Par=" , parN
 print "Number of fixed modules", constN
 
 
-mis_C = (0.0, 0.0, -0.15, -0.1, 0.1, 0.05, 0.0, 0.0)
+mis_C = (0.0, 0.0, 0.0, -0.15, 0.08, 0.008726, -0.1, 0.05, -0.01745, 0.0, 0.0, 0.0)
 
 print "Misal"
 
@@ -54,7 +54,6 @@ print "Misal"
         
 #         for i_module in range(0, (moduleN-constN)*parN):
 #         	mis_C[i_module]=float(number_str[i_module])
-
 
 
 Labels = [[0 for i_module in xrange((moduleN)*parN)] for i_lines in xrange(lineN)] 
@@ -70,8 +69,8 @@ with open(file) as f:
 
 		for i_par in range(0, moduleN*parN):
 			label=int(number_str[0+i_par*3])
-			if (label==21 or label==22 or label==31 or label==32):
-			#if (label==21 or label==22 or  label==23 or label==31 or label==32 or label==33):
+			#if (label==21 or label==22 or label==31 or label==32):
+			if (label==21 or label==22 or  label==23 or label==31 or label==32 or label==33):
 			#if (label==21 or label==31):
 				misal=float(number_str[1+i_par*3])
 				error=float(number_str[2+i_par*3])
