@@ -41,7 +41,7 @@ print "Number of Global Par=" , parN
 print "Number of fixed modules", constN
 
 
-mis_C = (0.0, 0.0, 0.0, -0.15, 0.08, 0.008726, -0.1, 0.05, -0.01745, 0.0, 0.0, 0.0)
+mis_C = (0.0, 0.0, 0.0, 0.00872665, 0.00872665, 0.00872665, -0.00872665, -0.00872665, -0.00872665, 0.0, 0.0, 0.0)
 
 print "Misal"
 
@@ -155,7 +155,7 @@ for i_counter in range(0, parN*moduleN):
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'green')
 	for i_lines in range(0, lineN):
-		dM=(Misals[i_lines][i_counter+parN]-mis_C[i_counter+parN])*1e3  # cm to um 
+		dM=(Misals[i_lines][i_counter+parN]-mis_C[i_counter+parN])*1e3  # mm to um rad to mrad 
 		#dM=(Misals[i_lines][i_counter+2]-mis_C[i_counter])*1e4
 		#print 'Misals[i_lines][i_module]=', Misals[i_lines][i_module], 'mis_C[i_module]=', mis_C[i_module], 'dM=', dM
 		errorM=Errors[i_lines][i_counter+parN]*1e3
@@ -167,18 +167,22 @@ for i_counter in range(0, parN*moduleN):
 		#axes.set_ylim([beamX0-1,beamX1+1])
 		axes.set_xlim(-500,trackN[lineN-1]+100)
 		if(i_par==21 or i_par==31):
-			axes.set_ylim(-15, 20)
-			plt.title('FoM M%s x'  %(int(i_par/10)) , fontsize=10)
-		if(i_par==22 or i_par==32):
-			axes.set_ylim(-100, 100)
-			plt.title('FoM M%s y'  %(int(i_par/10)) , fontsize=10)
-		if(i_par==23 or i_par==33):
 			axes.set_ylim(-10, 10)
+			plt.title('FoM M%s $\Phi$'  %(int(i_par/10)) , fontsize=10)
+			if (i_module!=2 or i_module!=3):
+				plt.ylabel("$\Delta$ Misalignment [mrad]")
+		if(i_par==22 or i_par==32):
+			axes.set_ylim(-20, 20)
 			plt.title('FoM M%s $\Theta$'  %(int(i_par/10)) , fontsize=10)
+			if (i_module!=2 or i_module!=3):
+				plt.ylabel("$\Delta$ Misalignment [mrad]")
+		if(i_par==23 or i_par==33):
+			axes.set_ylim(-20, 10)
+			plt.title('FoM M%s $\Psi$'  %(int(i_par/10)) , fontsize=10)
+			if (i_module!=2 or i_module!=3):
+				plt.ylabel("$\Delta$ Misalignment [mrad]")
 
 		plt.xlabel("Number of Tracks", fontsize=10)
-		if (i_module!=2 or i_module!=3):
-			plt.ylabel("$\Delta$ Misalignment [um]")
 plt.subplots_adjust(hspace=.4)
 plt.gcf().subplots_adjust(top=0.90)
 #plt.suptitle(str(metric), fontsize=6, style='oblique',  color="green")

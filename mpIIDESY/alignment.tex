@@ -356,9 +356,9 @@ First of all, we will consider a simpler case with 3 DoF on the detector compone
 \end{equation}
 
 \begin{equation}
-\textbf{a} = \begin{pmatrix}x \\y \\z \end{pmatrix},
+\textbf{a} = \begin{pmatrix}x \\y \\\phi \end{pmatrix},
 \end{equation}
-which correspond to the displacements in $x$, $z$, as well as a rotation in the $xy$ plane - this corresponds to the \textit{stereo angle}, $\theta_W$ between U and V layers
+which correspond to the displacements in $x$, $z$, as well as a rotation in the $xz$ plane - this corresponds to the \textit{stereo angle}, $\theta_W$ between U and V layers
 
 \begin{equation}
 	m_W = \tan\theta_W.
@@ -555,11 +555,10 @@ We have 3 possible rotations (see Fig.~\ref{fig:Rotation}) - for now considered 
 \label{fig:Rotation}
 \end{figure}
 
+\subsubsection{Rotation around y axis}
+
 Rotation around the $y$ axis in the y=0 plane is the same as considered previously. Now we need to extend this to 3D geometry, taking into account the angle of the wires. 
 
-\begin{equation}
-\begin{bmatrix}x\\y\\z\end{bmatrix}=\begin{bmatrix}x_d'+x^{centre}\\ y_d + y^{centre} \\z_d'+z^{centre}\\\end{bmatrix}=\begin{bmatrix}z_d\sin \phi +x_d\cos \phi + x^{centre} \\ y_d + y^{centre} \\ z_d\cos \phi -x_d\sin \phi + z^{centre} \\\end{bmatrix}. \label{eq:global}
-\end{equation}
 
 Here, we argue that a point along the straw will have the same vertical height ($y$) before and after the above rotation.
 
@@ -568,11 +567,7 @@ DGL = \frac{ \partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W
 \end{equation}
 
 \begin{equation}
-DGL = \frac{ \partial R}{\partial \psi} = \frac{ \partial R}{\partial y_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (y_W - y_{centre}).
-\end{equation}
-
-\begin{equation}
-DGL = \frac{ \partial R}{\partial \theta} = \frac{ \partial R}{\partial y_W} (-z_W + z_{centre}) + \frac{ \partial R}{\partial z_W} (y_W - y_{centre}).
+\begin{bmatrix}x\\y\\z\end{bmatrix}=\begin{bmatrix}x_d'+x^{centre}\\ y_d + y^{centre} \\z_d'+z^{centre}\\\end{bmatrix}=\begin{bmatrix}z_d\sin \phi +x_d\cos \phi + x^{centre} \\ y_d + y^{centre} \\ z_d\cos \phi -x_d\sin \phi + z^{centre} \\\end{bmatrix}. \label{eq:global}
 \end{equation}
 
 Due to the wire angle the DCA now becomes (with trigonometric re-parametrisation of the wire due to a rotation)
@@ -584,6 +579,114 @@ DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W) = \frac{|\begin{pmatrix} m_W \cos \phi \\
 \\ = \frac{z_W m_W m_y \cos (\phi)- z_W m_x- y_T m_W m_x \sin (\phi) + y_T m_W \cos (\phi))+ x_W-x_W m_W m_y \sin (\phi) - x_T +x_T m_W m_y \sin (\phi)}{\sqrt{ \cos (\phi) m_W m_y-m_x {}^2+ m_W m_x \sin (\phi)-\cos (\phi) m_W {}^2+ 1-m_W m_y \sin (\phi){}^2}}
 \label{eq:DCARot}
 \end{split}
+\end{equation}
+
+The rotation is pictorially represented in Fig.\ref{fig:phi}.
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.4\linewidth]{fig/phi.png}
+\caption{Rotation}
+\label{fig:phi}
+\end{figure}
+
+
+\subsubsection{Rotation around z axis}
+
+0. Alternatively on straw by straw basis,
+\begin{equation}
+m_W = \tan (\psi_w) =  \tan (\psi_w + \psi)
+\end{equation}
+
+\begin{equation}
+DGL = \frac{ \partial R}{\partial \psi} = \frac{ \partial R}{\partial m_W} \frac{ \partial m_W}{\partial \psi}.
+\end{equation}
+
+1. Using the standard approach (ignoring stereo angle)
+
+\begin{equation}
+\begin{bmatrix}x\\y\\z\end{bmatrix}=\begin{bmatrix}x_d'+x^{centre}\\ y_d' + y^{centre} \\z_d'+z^{centre}\\\end{bmatrix}=\begin{bmatrix}x_d\cos \psi - y_d\sin \psi + x^{centre} \\ x_d \sin \psi + y_d \cos \psi + y^{centre} \\ z_d + z^{centre} \\\end{bmatrix}. \label{eq:global}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\frac{\partial R}{\partial\psi} = \frac{\partial R}{\partial x}\frac{\partial x}{\partial \psi} + \frac{\partial R}{\partial y}\frac{\partial y}{\partial \psi} = \\ DLC_1 \times (-x_d\sin \psi - y_d\cos \psi) \ + \\ DLC_2 \times (x_d\cos \psi - y_d\sin \psi) = \\
+DLC_1 \times (-y'_d) + \\ DLC_2 \times (x'_d) = \\
+DLC_1 \times (-y + y^{centre}) + \\ DLC_2 \times (x - x^{centre}).
+\end{split}
+\end{equation}
+
+\begin{equation}
+DGL = \frac{ \partial R}{\partial \psi} = \frac{ \partial R}{\partial x_W} (-y_W + y_{centre}) + \frac{ \partial R}{\partial y_W} (x_W - x_{centre}).
+\end{equation}
+
+
+Alternatively from first principles,
+
+Using wire parametrisation: $x_d'=m_w \times y+x_w$ and $y_d'=y$, $z_d'=z_w$ where $y$ is a height along the wire. 
+
+\begin{equation}
+\begin{bmatrix}x\\y\\z\end{bmatrix}=\begin{bmatrix}m_w \times y+x_w+x^{centre}\\ y + y^{centre} \\z_d'+z^{centre}\\\end{bmatrix}=\begin{bmatrix}(m_w \times y+x_w)\cos \psi - y\sin \psi + x^{centre} \\ (m_w \times y+x_w) \sin \psi + y \cos \psi + y^{centre} \\ z_d + z^{centre} \\\end{bmatrix}. \label{eq:global}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\frac{\partial R}{\partial\psi} = \frac{\partial R}{\partial x}\frac{\partial x}{\partial \psi} + \frac{\partial R}{\partial y}\frac{\partial y}{\partial \psi} = \\ DLC_1 \times ((m_w \times y+x_w)\sin \psi - y\cos \psi) \ + \\ DLC_2 \times ((m_w \times y+x_w)\cos \psi - y\sin \psi) = \\
+DLC_1 \times (-y'_d) + \\ DLC_2 \times (m_w \times y+x_w) = \\
+DLC_1 \times (-y + y^{centre}) + \\ DLC_2 \times (x - x^{centre}).
+\end{split}
+\end{equation}
+
+\begin{equation}
+DGL = \frac{ \partial R}{\partial \psi} = \frac{ \partial R}{\partial x_W} (-y + y_{centre}) + \frac{ \partial R}{\partial y_W} ((m_w \times y+x_W) - x_{centre}).
+\end{equation}
+
+The rotation is pictorially represented in Fig.\ref{fig:psi}.
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.4\linewidth]{fig/psi.png}
+\caption{Rotation}
+\label{fig:psi}
+\end{figure}
+
+
+\subsubsection{Rotation around x axis}
+
+\begin{equation}
+DGL = \frac{ \partial R}{\partial \theta} = \frac{ \partial R}{\partial y_W} (-z_W + z_{centre}) + \frac{ \partial R}{\partial z_W} (y_W - y_{centre}).
+\end{equation}
+
+
+The rotation is pictorially represented in Fig.\ref{fig:theta}.
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.4\linewidth]{fig/theta.png}
+\caption{Rotation}
+\label{fig:theta}
+\end{figure}
+
+\subsubsection{Summary so far...}
+
+
+\begin{equation}	
+DGL_1 = \frac{\partial R}{\partial x_W} = \frac{m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}} = - DLC_1
+\end{equation}
+
+\begin{equation}	
+DGL_2 = \frac{\partial R}{\partial y_W} = \frac{m_W (m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}}  = - DLC_2
+\end{equation}
+
+
+\begin{equation}
+DGL_3 = \frac{ \partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre})
+\end{equation}
+
+
+\begin{equation}
+DGL_4 = \frac{ \partial R}{\partial \theta} = \frac{ \partial R}{\partial y_W} (-z_W + z_{centre}) + \frac{ \partial R}{\partial z_W} (y_W - y_{centre}).
+\end{equation}
+
+\begin{equation}
+DGL_5 = \frac{ \partial R}{\partial \psi} = \frac{ \partial R}{\partial x_W} (-y + y_{centre}) + \frac{ \partial R}{\partial y_W} ((m_w \times y+x_W) - x_{centre}).
 \end{equation}
 
 
