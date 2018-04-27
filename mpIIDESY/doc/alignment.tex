@@ -240,7 +240,7 @@ The aim of this section is to evaluate circle-fit residuals ($R$) with misalignm
 3) local (\say{detector}) coordinates ($z'_{d}$, $x'_d$) in the rotated frame. Such that, for a centre of rotation ($z^{centre}_d$, $x^{centre}_d$) = ($z^{',centre}_{d}$, $x^{',centre}_d$) = (0,0), in the local coordinates.
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.9\linewidth]{fig/theta.png}
+\includegraphics[width=0.9\linewidth]{fig/2Drot.png}
 \caption{The definition of the 3 coordinate systems.}
 \label{fig:theta}
 \end{figure}\\
@@ -530,16 +530,6 @@ DLC_1 = \frac{\partial R}{\partial x_T} =   \frac{\pm}{\sqrt{\left(m_W m_y-m_x\r
 \label{fig:AlignPath}
 \end{figure}
 
-
-\subsection{Adding Uniform Magnetic Field}
-
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=0.4\linewidth]{fig/G4.png}
-\caption{MF.}
-\label{fig:AlignPath}
-\end{figure}
-
 \clearpage
 \subsection{Considering Rotations}
 
@@ -739,6 +729,30 @@ DGL_3 = \frac{\partial R}{\partial \phi}
 
 \begin{equation}
 DGL_3 = \frac{\partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre}) = DLC_1 (m_W * m_y - m_x) (-x_W + x_{centre}) + DLC_1 (z_W - z_{centre})
+\end{equation}
+
+\subsection{Adding Uniform Magnetic Field}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.4\linewidth]{fig/G4.png}
+\caption{MF.}
+\label{fig:AlignPath}
+\end{figure}
+
+In a uniform field, we need to add a 5th local parameter describing the track - curvature ($\kappa$), where 
+
+\begin{equation}
+\kappa = \frac{1}{p},
+\end{equation}
+where p is the momentum of a particle. In our case, we can use an approximation $p \approx p_z$ to simplify the following local derivative, using $\frac{ \partial m_i}{\partial \kappa} = p_i$, with $i=x,y$.
+
+\begin{equation}
+\begin{split}
+DLC_5 = \frac{ \partial R}{\partial \kappa} = \frac{ \partial R}{\partial \left(\frac{1}{p_z}\right)} = \frac{ \partial R}{\partial m_x}\frac{ \partial m_x}{\partial \kappa} + \frac{ \partial R}{\partial m_y}\frac{ \partial m_y}{\partial \kappa} = p_x \times DLC_3 + p_y \times DLC_4 = \\
+= \frac{(m_W p_y z_w-p_x z_W)(m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W)}{|m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|\sqrt{\left(m_W m_y-m_x\right){}^2+m_W^2+1}} - \\
+-\frac{\left(m_W p_y-p_x\right) \left(m_W m_y-m_x\right) |m_W m_y z_W+m_W y_T-m_x z_W-x_T+x_W|}{\left(\left(m_W m_y-m_x\right){}^2+m_W^2+1\right){}^{3/2}}
+\end{split}
 \end{equation}
 
 

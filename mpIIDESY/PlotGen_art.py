@@ -124,7 +124,7 @@ for i_hits in range(0, len(fit_hitX)):
 	axes2.add_artist(circle)	
 	
 axes2.set_ylim([-70.0, 140.0])
-axes2.set_xlim([-600,100])
+axes2.set_xlim([-100, 600])
 plt.xlabel("z [mm]")
 plt.ylabel("x [mm]")
 plt.title("Ideal Geometry with Reconstructed Tracks")
