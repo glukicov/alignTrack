@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+####################################################################
+# Sanity plots for Tracker Alignment. 
+# Figure-of-Merit for truth misalignment (MC) vs PEDE result.
+#
+# Created: 16 May 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
+# Modified: 8 Jan 2018 by Gleb
+#####################################################################
+
 import sys 
 import argparse
 import glob
@@ -8,32 +16,32 @@ import datetime
 import time
 import subprocess
 
-tracksCut=(1100, 4000, 9000, 15000, 25000, 36000, 50000, 70000, 85000, 100000, 120000, 135000, 150000)
-#tracksCut=(1000, 3000, 8000, 12000)
+#Desired number of tracks in the plot
+tracksN=(1000, 2000, 3000, 5000, 6000, 7000, 10000)
+
+factor = 66  #Based on track rejection 
+
+tracksN = [x * factor for x in tracksN]
 
 subprocess.call(["clear"])
 
-print "Staring PEDE tests with DCA Cut"
+print "Staring PEDE tests"
 
-if ( os.path.isfile("PEDE_Mis.txt") ):
-	os.rename("PEDE_Mis.txt", "PEDE_Mis.txt.BK")
+print "Parameters from Simulation:"
+print "Factor based on track rejection= ",factor
 
-slope = 0.0 
-intercept = 0.0
-with open("TimeConstants.txt") as f:
-	for line in f:  #Line is a string
-		number_str = line.split()
-		slope = float(number_str[0])
-		intercept = float(number_str[1])
+if ( os.path.isfile("PEDE_Mis_art.txt") ):
+	os.rename("PEDE_Mis_art.txt", "BK_PEDE_Mis_art.txt")
 
-for i in range(0, len(tracksCut)):
-	subprocess.call(["./AlignTracker", "n" , str(tracksCut[i])])
+
+for i in range(0, len(tracksN)):
+	subprocess.call(["gm2", "-c", "fomPzCut.fcl", "-n", str(int(tracksN[i]))])
 	
-	subprocess.call(["./pede", "Tracker_str.txt" ])
+	subprocess.call(["/gm2/app/users/glukicov/PEDE/V04-03-08/pede", "SteeringFile.txt" ])
 	
-	subprocess.call(["./ConcatenatePEDE.py"])
+	subprocess.call(["python" ,"ConcatenatePEDE.py"])
 	
 
-subprocess.call(["./TrackerLaunch.py"])
+# subprocess.call(["./TrackerLaunch.py"])
 print "PEDE Tests Complete. "
 
