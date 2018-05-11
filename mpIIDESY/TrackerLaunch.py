@@ -18,42 +18,55 @@ file = str(args.mode)
 import matplotlib.pyplot as plt #for plotting 
 import matplotlib.ticker as ticker
 import numpy as np  # smart arrays 
-import itertools # smart lines 
+import itertools # smart lines
+from time import gmtime, strftime 
 
 
 #Truth Misalignment 
 
-# mis_C = (0, -0.0122, 0.00873, 0) # Theta
-# mis_C = (0, 0.0087, -0.0070, 0) # PSi 
-# mis_C = (0.0, 0.2, -0.1, 0.0) # Y 
-# mis_C = (0.0, 0.0, 0.15, 0.2, -0.2, -0.1, 0.0, 0.0)  # XY
-# mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0,  -0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,)
-# mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.0, 0.0, 0.0, 0.0, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # X
-# mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0087, 0.0, 0.0, 0.0, 0.0, -0.0175, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # Phi 
-# mis_C = (0.0, 0.0, 0.0, 0.00872665, 0.00872665, 0.00872665, -0.00872665, -0.00872665, -0.00872665, 0.0, 0.0, 0.0)
-# mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.2, -0.1, 0.0087, -0.0122, 0.0087, -0.1, 0.15,  -0.0175, 0.00873, -0.0070, 0.0, 0.0, 0.0, 0.0, 0.0)
-# mis_C = ( 0.0, 0.0, 0.0, 0.0, 0.0,   0.2, -0.1, 0.0087, -0.0122, 0.0087,    -0.1, 0.15, -0.0175, 0.00873, -0.0070,   0.0, 0.0, 0.0, 0.0, 0.0) 
-# mis_C = ( 0.0, 0.0, 0.0, 0.0, 0.0,    0.0, 0.0, 0.0, 0.0, 0.0,    0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0)
-# mis_C = ( 0.0, 0.0, 0.0, 0.0,   0.2, 0.045, -0.0122, 0.0087,    -0.1, -0.06, 0.00873, -0.0070,   0.0, 0.0, 0.0, 0.0) 
-# mis_C = ( 0.2, -0.1, -0.0122, 0.0087,   0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0,     -0.1, 0.15, 0.00873, -0.0070) 
-
 #Put only the active alignment parameters 
-mis_C = ( 0.2, -0.1, -0.0122, 0.0087,  -0.1, 0.15, 0.00873, -0.0070) 
+# mis_C = ( 0.2, -0.1, -0.0122, 0.0087,  -0.1, 0.15, 0.00873, -0.0070) 
+# mis_C = (0.15, 0.2, -0.2, -0.1)
+# mis_C = (0.08, 0.045, 0.0087, 0.0087, -0.07, -0.06, -0.0175, -0.0070) 
+# mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0) 
+# mis_C = ( -0.1, 0.15, 0.00873, -0.0070,  0.2, -0.1, -0.0122, 0.0087) 
+# mis_C = ( -0.1, 0.15, 0.00873, -0.0070,  0.2, -0.1, -0.0122, 0.0087) 
+# mis_C = (0.08, 0.045, 0.0087, 0.0087, -0.07, -0.06, -0.0175, -0.0070)
+# mis_C = (0.1, -0.08, -0.1, 0.06) 
 
-#TODO load from Sim
-parN=4 # Alignment parameters  
-constN = 2 #Number of fixed modules 
+# mis_C = ( 0.2, -0.1, 0.0087, 0.0087,  -0.1, 0.15, -0.0175, -0.0070) 
+
+# mis_C = (0.05, -0.1, -0.15)
+# mis_C = (0.05, -0.1, -0.15)
+
+# mis_C = ( 0.2, 0.045, -0.0122, 0.0087,  -0.1, -0.06, 0.00873, -0.0070, 0.0, 0.0, 0.0, 0.0) 
+
+# expectPars=(11, 12, 14, 15, 41, 42, 44, 45)
+# expectPars=(21, 22, 23, 25, 31, 32, 33, 35)
+# expectPars=(21, 22, 24, 25, 31, 32, 34, 35)
+# expectPars = (21, 22, 23, 25, 31, 32, 33, 35)
+
+
+
+mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0) 
+
+expectPars=(31, 32, 33, 35, 41, 42, 43, 45)
+
+
+constN = 1 #Number of fixed modules 
 moduleN = 4 #Total number of modules
+
 alignN = moduleN - constN
-expectPars=(11, 12, 14, 15, 41, 42, 44, 45)
+#TODO load from Sim
+parN=int(len(expectPars)/alignN)# Alignment parameters  
 
 # Quickly open the PEDe file and count lines only:
 lineN= sum(1 for line in open(file))          
 
 print "Parameters from Simulation and PEDE:"
-print "moduleN= ", moduleN
-print "PEDE Trials= ",lineN  
-print "Number of Global Par=" , parN
+print "moduleN ", moduleN
+print "PEDE Trials ",lineN  
+print "Number of Global Par" , parN
 print "Number of fixed modules", constN
 print "Number of variable modules", alignN
 print "Total number of variable parameters", len(expectPars)
@@ -74,6 +87,7 @@ with open(file) as f:
 		#Always 3 element spacing (hence hard-coded 3)
 		for i_par in range(0, moduleN*parN):
 			label=int(number_str[0+i_par*3])
+			#print "label", label
 			misal=float(number_str[1+i_par*3])
 			error=float(number_str[2+i_par*3])
 			if (label in expectPars):
@@ -152,4 +166,4 @@ for i_par in range(0, len(expectPars)):
 	plt.clf()
 		
 
-print "Plots saved from:" , str(file) 
+print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")
