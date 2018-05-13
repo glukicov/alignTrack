@@ -45,12 +45,14 @@ from time import gmtime, strftime
 # expectPars=(21, 22, 23, 25, 31, 32, 33, 35)
 # expectPars=(21, 22, 24, 25, 31, 32, 34, 35)
 # expectPars = (21, 22, 23, 25, 31, 32, 33, 35)
+# expectPars=(31, 32, 33, 35, 41, 42, 43, 45)
 
 
 
-mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0) 
 
-expectPars=(31, 32, 33, 35, 41, 42, 43, 45)
+mis_C = (0.1, -0.09, -0.15, 0.1)
+
+expectPars=(21, 22, 31, 32)
 
 
 constN = 1 #Number of fixed modules 
