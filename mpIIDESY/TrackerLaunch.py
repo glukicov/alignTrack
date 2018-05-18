@@ -41,22 +41,31 @@ from time import gmtime, strftime
 
 # mis_C = ( 0.2, 0.045, -0.0122, 0.0087,  -0.1, -0.06, 0.00873, -0.0070, 0.0, 0.0, 0.0, 0.0) 
 
-# expectPars=(11, 12, 14, 15, 41, 42, 44, 45)
-# expectPars=(21, 22, 23, 25, 31, 32, 33, 35)
-# expectPars=(21, 22, 24, 25, 31, 32, 34, 35)
-# expectPars = (21, 22, 23, 25, 31, 32, 33, 35)
-# expectPars=(31, 32, 33, 35, 41, 42, 43, 45)
+
+# expectPars = (21, 22, 23, 24, 31, 32, 33, 34)
+# expectPars=(31, 32, 33, 34, 41, 42, 43, 44)
 
 
+# mis_C = (0.1, -0.09, -0.15, 0.1)
+# mis_C = (0.0, -0.0, 0.0, 0.35)
+
+# expectPars=(21, 22, 31, 32)
+
+# expectPars=(21, 22, 31, 32)
 
 
-mis_C = (0.1, -0.09, -0.15, 0.1)
+#mis_C = (0.1, 0.05, -0.1, -0.07, 0.05, 0.0)
 
-expectPars=(21, 22, 31, 32)
+mis_C = (0.15, 0.05, -0.15, 0.1, 0.07, 0.0)
 
 
-constN = 1 #Number of fixed modules 
-moduleN = 4 #Total number of modules
+expectPars=(11, 21, 31, 51, 71, 81)
+
+if ( len(mis_C) != len(expectPars) ):
+	print "Enter Truth data in the right format!"
+
+constN = 2 #Number of fixed modules 
+moduleN = 8 #Total number of modules
 
 alignN = moduleN - constN
 #TODO load from Sim
@@ -104,7 +113,7 @@ with open(file) as f:
 		i_count = 0
 		#print i_line
 
-# print data 
+#print data
 # print trackN	
 
 ##################PLOTING##############################
@@ -130,10 +139,11 @@ for i_par in range(0, len(expectPars)):
 	for i_line in range(0, lineN):
 		
 		dM=(data[i_par][i_line][1]-mis_C[i_par])*1e3  # mm to um rad to mrad 
+		#print "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par]
 		errorM=data[i_par][i_line][2]*1e3
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
 		plt.plot(trackN[i_line], dM, marker="_", color="red")
-		axes.set_xlim(-500,trackN[lineN-1]+100)
+		axes.set_xlim(trackN[0]-500,trackN[lineN-1]+500)
 		plt.xlabel("Number of Tracks", fontsize=16)
 		
 		if(splitLabel[1] == 1 or splitLabel[1]==2):
