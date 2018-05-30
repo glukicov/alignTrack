@@ -20,46 +20,18 @@ import matplotlib.ticker as ticker
 import numpy as np  # smart arrays 
 import itertools # smart lines
 from time import gmtime, strftime 
+import subprocess
 
 
-#Truth Misalignment 
+# #Truth Misalignment 
+expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 71, 72, 81, 82)
+mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
 
-#Put only the active alignment parameters 
-# mis_C = ( 0.2, -0.1, -0.0122, 0.0087,  -0.1, 0.15, 0.00873, -0.0070) 
-# mis_C = (0.15, 0.2, -0.2, -0.1)
-# mis_C = (0.08, 0.045, 0.0087, 0.0087, -0.07, -0.06, -0.0175, -0.0070) 
-# mis_C = (0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0) 
-# mis_C = ( -0.1, 0.15, 0.00873, -0.0070,  0.2, -0.1, -0.0122, 0.0087) 
-# mis_C = ( -0.1, 0.15, 0.00873, -0.0070,  0.2, -0.1, -0.0122, 0.0087) 
-# mis_C = (0.08, 0.045, 0.0087, 0.0087, -0.07, -0.06, -0.0175, -0.0070)
-# mis_C = (0.1, -0.08, -0.1, 0.06) 
+# expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 61, 62 , 71, 72, 81, 82 )
+# mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
 
-# mis_C = ( 0.2, -0.1, 0.0087, 0.0087,  -0.1, 0.15, -0.0175, -0.0070) 
-
-# mis_C = (0.05, -0.1, -0.15)
-# mis_C = (0.05, -0.1, -0.15)
-
-# mis_C = ( 0.2, 0.045, -0.0122, 0.0087,  -0.1, -0.06, 0.00873, -0.0070, 0.0, 0.0, 0.0, 0.0) 
-
-
-# expectPars = (21, 22, 23, 24, 31, 32, 33, 34)
-# expectPars=(31, 32, 33, 34, 41, 42, 43, 44)
-
-
-# mis_C = (0.1, -0.09, -0.15, 0.1)
-# mis_C = (0.0, -0.0, 0.0, 0.35)
-
-# expectPars=(21, 22, 31, 32)
-
-# expectPars=(21, 22, 31, 32)
-
-
-#mis_C = (0.1, 0.05, -0.1, -0.07, 0.05, 0.0)
-
-mis_C = (0.15, 0.05, -0.15, 0.1, 0.07, 0.0)
-
-
-expectPars=(11, 21, 31, 51, 71, 81)
+# mis_C = (0.2, 0.15, -0.1, -0.1)
+# expectPars = (21, 22, 31, 32)
 
 if ( len(mis_C) != len(expectPars) ):
 	print "Enter Truth data in the right format!"
@@ -96,7 +68,7 @@ with open(file) as f:
 		number_str = line.split()
 		#Loop over expected parameters and store
 		#Always 3 element spacing (hence hard-coded 3)
-		for i_par in range(0, moduleN*parN):
+		for i_par in range(0, (len(number_str)-1)/3 ):
 			label=int(number_str[0+i_par*3])
 			#print "label", label
 			misal=float(number_str[1+i_par*3])
@@ -139,11 +111,12 @@ for i_par in range(0, len(expectPars)):
 	for i_line in range(0, lineN):
 		
 		dM=(data[i_par][i_line][1]-mis_C[i_par])*1e3  # mm to um rad to mrad 
-		#print "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par]
+		#print "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
 		errorM=data[i_par][i_line][2]*1e3
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
 		plt.plot(trackN[i_line], dM, marker="_", color="red")
-		axes.set_xlim(trackN[0]-500,trackN[lineN-1]+500)
+		#axes.set_xlim(trackN[0]-500,trackN[lineN-1]+500)
+		axes.set_xlim(trackN[0]-500,30500)
 		plt.xlabel("Number of Tracks", fontsize=16)
 		
 		if(splitLabel[1] == 1 or splitLabel[1]==2):
@@ -159,23 +132,48 @@ for i_par in range(0, len(expectPars)):
 			axes.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
 		if (splitLabel[1] == 1):
-			plt.title('FoM M%s X'  %(int(splitLabel[0])) , fontsize=16)
+			plt.title('FoM M%s X'  %(int(splitLabel[0])) , fontsize=18)
 			
 		if(splitLabel[1]==2):
-			plt.title('FoM M%s Y'  %(int(splitLabel[0])) , fontsize=16)
+			plt.title('FoM M%s Y'  %(int(splitLabel[0])) , fontsize=18)
 		
 		if(splitLabel[1]==3):
-			plt.title('FoM M%s $\Phi$'  %(int(splitLabel[0])) , fontsize=16)
-		
-		if(splitLabel[1]==4):
-			plt.title('FoM M%s $\Theta$'   %(int(splitLabel[0])) , fontsize=16)
+			plt.title('FoM M%s $\Phi$'  %(int(splitLabel[0])) , fontsize=18)
 
+		if(splitLabel[1]==4):
+			plt.title('FoM M%s $\Psi$'   %(int(splitLabel[0])) , fontsize=18)
+		
 		if(splitLabel[1]==5):
-			plt.title('FoM M%s $\Psi$'   %(int(splitLabel[0])) , fontsize=16)
+			plt.title('FoM M%s $\Theta$'   %(int(splitLabel[0])) , fontsize=18)
+
+		
 		
 
 	plt.savefig(str(expectPars[i_par])+".png")
 	plt.clf()
-		
+
+#Now combine produced plots into a single file:
+#convert -append 11.png 12.png 1.png
+even=expectPars[1::2]
+odd=expectPars[0::2]
+
+newOdd=[]
+newEven=[]
+
+for i_par in range(0, int(len(expectPars)/2)):
+
+	f1=str(odd[i_par])+".png" 
+	f2=str(even[i_par])+".png"
+	f3=str(i_par)+".png"
+	subprocess.call(["convert" , "-append", str(f1), str(f2), str(f3)])
+	if (i_par % 2 == 0):
+		newEven.append(f3)
+	if (i_par %2 != 0):
+		newOdd.append(f3)
+
+subprocess.call(["convert" , "+append", str(newEven[0]), str(newOdd[0]), str(newEven[1]),  "Row1.png"])
+subprocess.call(["convert" , "+append", str(newOdd[1]), str(newEven[2]), str(newOdd[2]),   "Row2.png"])
+subprocess.call(["convert" , "-append", "Row1.png", "Row2.png", "FoM.png"])
+
 
 print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")
