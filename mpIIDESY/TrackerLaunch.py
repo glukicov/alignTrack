@@ -115,8 +115,8 @@ for i_par in range(0, len(expectPars)):
 		errorM=data[i_par][i_line][2]*1e3
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
 		plt.plot(trackN[i_line], dM, marker="_", color="red")
-		#axes.set_xlim(trackN[0]-500,trackN[lineN-1]+500)
-		axes.set_xlim(trackN[0]-500,30500)
+		axes.set_xlim(trackN[0]-500,trackN[lineN-1]+500)
+		# axes.set_xlim(trackN[0]-500,30500)
 		plt.xlabel("Number of Tracks", fontsize=16)
 		
 		if(splitLabel[1] == 1 or splitLabel[1]==2):
