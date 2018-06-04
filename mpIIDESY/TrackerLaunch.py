@@ -12,6 +12,10 @@ import argparse, sys
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
 args = parser.parse_args()
+from math import log10, floor
+
+def round_sig(x, sig=2):
+	return round(x, sig-int(floor(log10(abs(x))))-1)
 
 file = str(args.mode)
 
@@ -24,8 +28,14 @@ import subprocess
 
 
 # #Truth Misalignment 
-expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 71, 72, 81, 82)
-mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
+# expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 71, 72, 81, 82)
+# mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
+
+expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
+mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
+
+# expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 71, 72, 81, 82)
+# mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
 
 # expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 61, 62 , 71, 72, 81, 82 )
 # mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
@@ -36,22 +46,12 @@ mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
 if ( len(mis_C) != len(expectPars) ):
 	print "Enter Truth data in the right format!"
 
-constN = 2 #Number of fixed modules 
-moduleN = 8 #Total number of modules
-
-alignN = moduleN - constN
-#TODO load from Sim
-parN=int(len(expectPars)/alignN)# Alignment parameters  
 
 # Quickly open the PEDe file and count lines only:
 lineN= sum(1 for line in open(file))          
 
 print "Parameters from Simulation and PEDE:"
-print "moduleN ", moduleN
 print "PEDE Trials ",lineN  
-print "Number of Global Par" , parN
-print "Number of fixed modules", constN
-print "Number of variable modules", alignN
 print "Total number of variable parameters", len(expectPars)
 print " "
 
@@ -89,6 +89,7 @@ with open(file) as f:
 # print trackN	
 
 ##################PLOTING##############################
+offsests=[]
 
 plt.rcParams.update({'font.size': 14})
 #Plot difference for all modules
@@ -102,21 +103,33 @@ for i_par in range(0, len(expectPars)):
 	#put a line at  0 on a plot
 	axes = plt.gca()
 	axes.locator_params(nbins=4, axis='y')
-	line = [[0,0], [trackN[lineN-1], 0]]
+	line = [[0,0], [trackN[lineN-1]+500, 0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	    color = 'green')
+	    color = 'green', linestyle=":")
 	#Loop over data lines 
 
 	for i_line in range(0, lineN):
 		
 		dM=(data[i_par][i_line][1]-mis_C[i_par])*1e3  # mm to um rad to mrad 
-		#print "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
+		print "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
 		errorM=data[i_par][i_line][2]*1e3
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
 		plt.plot(trackN[i_line], dM, marker="_", color="red")
 		axes.set_xlim(trackN[0]-500,trackN[lineN-1]+500)
 		# axes.set_xlim(trackN[0]-500,30500)
+		
+		#Set label on points based on the error precision, for non-fixed modules 
+		errorE = '%e' %  data[i_par][i_line][2]
+		if (data[i_par][i_line][1] != 0):
+			sigDigit = int(errorE.partition('-')[2])
+			label = str(round_sig(data[i_par][i_line][1])) + " mm"
+			offsests.append(round_sig(data[i_par][i_line][1]))
+		else:
+			label = "Exact/Fixed"
+			offsests.append(0.0)
+		axes.annotate(label, (trackN[i_line], dM), fontsize=22)
+		
 		plt.xlabel("Number of Tracks", fontsize=16)
 		
 		if(splitLabel[1] == 1 or splitLabel[1]==2):
@@ -171,9 +184,15 @@ for i_par in range(0, int(len(expectPars)/2)):
 	if (i_par %2 != 0):
 		newOdd.append(f3)
 
-subprocess.call(["convert" , "+append", str(newEven[0]), str(newOdd[0]), str(newEven[1]),  "Row1.png"])
-subprocess.call(["convert" , "+append", str(newOdd[1]), str(newEven[2]), str(newOdd[2]),   "Row2.png"])
+subprocess.call(["convert" , "+append", str(newEven[0]), str(newOdd[0]), str(newEven[1]), str(newOdd[1]),  "Row1.png"])
+subprocess.call(["convert" , "+append", str(newEven[2]), str(newOdd[2]), str(newEven[3]), str(newOdd[3]),   "Row2.png"])
 subprocess.call(["convert" , "-append", "Row1.png", "Row2.png", "FoM.png"])
 
 
 print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")
+
+offsest = " "
+for i in range(0, len(offsests)):
+	offsest += str(offsests[i]) + " "
+
+print "Suggested Offsets from PEDE: ", offsest

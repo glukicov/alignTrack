@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt #for plotting
 import numpy as np  # smart arrays 
 import itertools # smart lines 
 import argparse, sys
+from math import log10, floor
+
+def round_sig(x, sig=2):
+	return round(x, sig-int(floor(log10(abs(x))))-1)
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--moduleN', help='mode')
@@ -111,6 +115,11 @@ plt.xlabel("Layer", fontsize=10)
 
 plt.savefig("layersResiduals.png")
 
+
+pullMean=[]
+pullSD=[]
+module=[]
+
 xMin = -1.0
 xMax = 1.0
 plt.figure(4)
@@ -124,6 +133,9 @@ for i_module in range(1, NModules+1):
 	t = f.Get(str(name))
 	mean = t.GetMean()
 	SD = t.GetRMS()
+	pullMean.append(mean)
+	pullSD.append(SD)
+	module.append(i_module)
 	#print "mean= ", mean , "SD= ", SD
 	plt.errorbar(i_module, mean, yerr=SD, color="red") 
 	plt.plot(i_module, mean, marker="_", color="red")
@@ -136,6 +148,13 @@ axes.set_xlim(0.5, NModules+1)
 axes.set_ylim(xMin, xMax)
 plt.ylabel("Pulls SD [error = SD]")
 plt.xlabel("Module", fontsize=10)
+
+for i in range(0, len(pullMean)):
+	pullMean[i] = round_sig(pullMean[i])
+	print pullMean
+
+for i, txt in enumerate(pullMean):
+    axes.annotate(txt, (module[i], pullMean[i]))
 
 plt.savefig("layersPulls_M.png")
 
