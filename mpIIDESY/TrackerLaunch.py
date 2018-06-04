@@ -33,14 +33,19 @@ import subprocess
 
 expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
-mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)
+# mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)
 
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
-# mis_C=[]
-# offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0)
-# print len(T_mis_C), len(offsets)
-# for i in range(0, len(T_mis_C)):
-# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
+mis_C=[]
+offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0)
+print len(T_mis_C), len(offsets)
+for i in range(0, len(T_mis_C)):
+	mis_C.append(float(T_mis_C[i] - offsets[i]))
+
+offsets = (0.061, 0.01, 0.026, 0.029, 0.0, 0.0, -0.016, -0.02, -0.023, -0.01, -0.017, -0.0043, 0.0, 0.0, 0.027, 0.0051)
+print len(T_mis_C), len(offsets)
+for i in range(0, len(T_mis_C)):
+	mis_C.append(float(T_mis_C[i] - offsets[i]))
 
 print "Truth Misalignments after offsets", mis_C
 
@@ -116,7 +121,7 @@ for i_par in range(0, len(expectPars)):
 	line = [[0,0], [trackN[lineN-1]+500, 0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	    color = 'green', linestyle=":")
+	    color = 'green')
 	#Loop over data lines 
 
 	for i_line in range(0, lineN):
