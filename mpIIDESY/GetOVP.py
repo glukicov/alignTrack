@@ -84,7 +84,6 @@ axes.set_xlim(0, totalLayer+1)
 axes.set_ylim(xMin, xMax)
 plt.ylabel("<Pz/P_Reduced> [error = SD]")
 plt.xlabel("Layer", fontsize=10)
-
 plt.savefig("layersPzP_Reduced.png")
 
 xMin = 0.1
@@ -112,13 +111,8 @@ axes.set_xlim(0, totalLayer+1)
 axes.set_ylim(xMin, xMax)
 plt.ylabel("Residual SD [error = SD error]")
 plt.xlabel("Layer", fontsize=10)
-
 plt.savefig("layersResiduals.png")
 
-
-pullMean=[]
-pullSD=[]
-module=[]
 
 xMin = -1.0
 xMax = 1.0
@@ -133,9 +127,7 @@ for i_module in range(1, NModules+1):
 	t = f.Get(str(name))
 	mean = t.GetMean()
 	SD = t.GetRMS()
-	pullMean.append(mean)
-	pullSD.append(SD)
-	module.append(i_module)
+	axes.annotate(round_sig(mean), (i_module, mean))
 	#print "mean= ", mean , "SD= ", SD
 	plt.errorbar(i_module, mean, yerr=SD, color="red") 
 	plt.plot(i_module, mean, marker="_", color="red")
@@ -146,21 +138,40 @@ plt.plot(
     color = 'grey')
 axes.set_xlim(0.5, NModules+1)
 axes.set_ylim(xMin, xMax)
-plt.ylabel("Pulls SD [error = SD]")
+plt.ylabel("Pulls Mean [error = SD]")
 plt.xlabel("Module", fontsize=10)
-
-for i in range(0, len(pullMean)):
-	pullMean[i] = round_sig(pullMean[i])
-	print pullMean
-
-for i, txt in enumerate(pullMean):
-    axes.annotate(txt, (module[i], pullMean[i]))
-
 plt.savefig("layersPulls_M.png")
+
+
+xMin = -0.1
+xMax = 0.1
+plt.figure(5)
+axes = plt.gca()
+for i_module in range(1, NModules+1):
+	line = [[i_module+0.5,xMin], [i_module+0.5, xMax]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'green')
+	name = "TrackerAlignment/Modules/h_Pulls_Module_" + str(i_module)
+	t = f.Get(str(name))
+	mean = t.GetMean()
+	plt.scatter(i_module, mean,  c='r',s=100)
+	axes.annotate(round_sig(mean), (i_module, mean))
+	
+line = [[0.5,0.0], [NModules+1, 0.0]]
+plt.plot(
+    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+    color = 'grey')
+axes.set_xlim(0.5, NModules+1)
+axes.set_ylim(xMin, xMax)
+plt.ylabel("Pull Mean")
+plt.xlabel("Module", fontsize=10)
+plt.savefig("layersPulls_Zoom_M.png")
+
 
 xMin = -0.2
 xMax = 0.2
-plt.figure(5)
+plt.figure(6)
 axes = plt.gca()
 for i_module in range(1, NModules+1):
 	line = [[i_module+0.5,xMin], [i_module+0.5, xMax]]
@@ -183,7 +194,6 @@ axes.set_xlim(0.5, NModules+1)
 axes.set_ylim(xMin, xMax)
 plt.ylabel("Pulls SD [error = SD]")
 plt.xlabel("Module", fontsize=10)
-
 plt.savefig("layersResiduals_M.png")
 
 print "ROOT File analysed!"
