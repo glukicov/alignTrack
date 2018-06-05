@@ -200,7 +200,7 @@ if (mode == "plot"):
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pull Mean [error = Error on the Mean]", fontsize=20)
 	plt.xlabel("Module", fontsize=20)
-	plt.title("Means pulls per Modules; mean pull (average)", fontsize=18)
+	plt.title("Means pulls per Modules; mean pull ( d(average) )", fontsize=18)
 	plt.savefig("Pulls_M_Zoom.png")
 
 	#-------moduleResiudals----------
@@ -237,6 +237,7 @@ if (mode == "plot"):
 
 	#-------moduleResiudals_Zoom----------
 	#
+	means=[]
 	yMin = -0.015
 	yMax = 0.015
 	plt.figure(7)
@@ -249,11 +250,27 @@ if (mode == "plot"):
 		name = "TrackerAlignment/Modules/h_Residuals_Module_" + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
+		means.append(mean)
 		meanError = t.GetMeanError()
 		plt.errorbar(i_module, mean, yerr=meanError, color="red") 
 		plt.plot(i_module, mean, marker="_", color="red")
 		axes.annotate(round_sig(mean), (i_module, mean))
 		axes.annotate( "("+str(round_sig(meanError))+")", (i_module-0.43, yMin+0.001), fontsize=10)
+
+	avgMean = sum(means)/float(len(means))
+	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'black', linestyle="-")
+	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+	for i in range(0, len(means)):
+		number = round_sig(means[i])-round_sig(avgMean)
+		if (number != 0):
+			#number=int(number*10000)/10000
+			number = number
+		else:
+			number = 0.0
+		axes.annotate( "("+str(number)+")", (i+1-0.4, -0.09))
 
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
@@ -261,7 +278,7 @@ if (mode == "plot"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("Residual Means (Error on the Mean)", fontsize=20)
+	plt.title('Residual Means ( d(average) )', fontsize=20)
 	plt.ylabel("Residual Mean /mm [error = Error on the Mean]", fontsize=18)
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("Residuals_M_Zoom.png")
@@ -357,8 +374,8 @@ if (mode == "mis"):
 	misX=args.mis[0:8]
 	misY=args.mis[8:16]
 
-	yMin = -0.3
-	yMax = 0.3
+	yMin = -0.4
+	yMax = 0.4
 	plt.subplot(211)
 	axes = plt.gca()
 	for i_module in range(1, NModules+1):
@@ -383,9 +400,8 @@ if (mode == "mis"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("Misalignment X", fontsize=20)
-	plt.ylabel("Misalignment [mm]", fontsize=18)
-	plt.xlabel("Module", fontsize=20)
+	plt.title("Misalignment X", fontsize=16)
+	plt.ylabel("Misalignment [mm]", fontsize=16)
 
 	plt.subplot(212)
 	axes2 = plt.gca()
@@ -399,23 +415,24 @@ if (mode == "mis"):
 		
 		#Add tracker image 
 		imagebox = OffsetImage(mod, zoom=0.3)
-		xy = (i_module-0.5, float(misX[i_module-1])+0.08) # coordinates to position this image
+		xy = (i_module-0.5, float(misY[i_module-1])+0.08) # coordinates to position this image
 		ab = AnnotationBbox(imagebox, xy, xybox=(30., -30.),  xycoords='data', boxcoords="offset points", frameon=False)                                  
 		axes2.add_artist(ab)
 		
-		axes2.annotate(misX[i_module-1], (i_module, float(misX[i_module-1])+0.05))
+		axes2.annotate(misY[i_module-1], (i_module, float(misX[i_module-1])+0.05))
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
 	axes2.set_xlim(0.5, NModules+1)
 	axes2.set_ylim(yMin, yMax)
-	plt.title("Misalignment Y", fontsize=20)
-	plt.ylabel("Misalignment [mm]", fontsize=18)
-	plt.xlabel("Module", fontsize=20)
+	plt.title("Misalignment Y", fontsize=16)
+	plt.ylabel("Misalignment [mm]", fontsize=16)
+	plt.xlabel("Module", fontsize=16)
 
 	#plt.show()
 	plt.savefig("Misalignment.png")
 
 	print "Misalignment FoM produced!"
+
 

@@ -8,11 +8,15 @@
 # Modified: 8 May 2018 by Gleb
 #####################################################################
 import argparse, sys
+import ROOT as r
+from ROOT import *
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
 args = parser.parse_args()
 from math import log10, floor
+
+dMData=[] # store all dM
 
 def round_sig(x, sig=2):
 	return round(x, sig-int(floor(log10(abs(x))))-1)
@@ -29,18 +33,19 @@ import subprocess
 
 # #Truth Misalignment 
 # expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 71, 72, 81, 82)
-# mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
+#mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
 
+#mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)
 expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
-T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)
+#T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)
 
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
 
 mis_C=[]
 #Run 1
-#offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0)
-offsets = (-0.29, -0.093, 0.0, 0.0, 0.13, -0.25, -0.3, 0.18, 0.12, 0.092, 0.095, -0.33, 0.22, 0.0026, 0.0, 0.0)
+offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0)
+#offsets = (-0.29, -0.093, 0.0, 0.0, 0.13, -0.25, -0.3, 0.18, 0.12, 0.092, 0.095, -0.33, 0.22, 0.0026, 0.0, 0.0)
 print len(T_mis_C), len(offsets)
 for i in range(0, len(T_mis_C)):
 	mis_C.append(float(T_mis_C[i] - offsets[i]))
@@ -55,16 +60,17 @@ for i in range(0, len(T_mis_C)):
 # for i in range(0, len(T_mis_C)):
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 
+# #Run 3
+# T_mis_C=[]
+# offsests=[]
+# offsets = (0.024, 0.001, 0.0, 0.0, -0.017, 0.0022, -0.025, 0.0024, -0.025, 0.00075, -0.017, 0.00026, 0.0, 0.0, 0.026, -0.0016)
+# T_mis_C=mis_C
+# mis_C = []
+# print len(mis_C), len(offsets)
+# for i in range(0, len(T_mis_C)):
+# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
+
 print "Truth Misalignments after offsets", mis_C
-
-# expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 71, 72, 81, 82)
-# mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.05, 0.07, 0.0, 0.0)
-
-# expectPars = (11, 12, 21, 22, 31, 32, 51, 52, 61, 62 , 71, 72, 81, 82 )
-# mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
-
-# mis_C = (0.2, 0.15, -0.1, -0.1)
-# expectPars = (21, 22, 31, 32)
 
 if ( len(mis_C) != len(expectPars) ):
 	print "Enter Truth data in the right format!"
@@ -134,7 +140,8 @@ for i_par in range(0, len(expectPars)):
 
 	for i_line in range(0, lineN):
 		
-		dM=(data[i_par][i_line][1]-mis_C[i_par])*1e3  # mm to um rad to mrad 
+		dM=(data[i_par][i_line][1]-mis_C[i_par])*1e3  # mm to um rad to mrad
+		dMData.append(dM)
 		#print "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
 		errorM=data[i_par][i_line][2]*1e3
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
@@ -150,11 +157,12 @@ for i_par in range(0, len(expectPars)):
 			offsests.append(round_sig(data[i_par][i_line][1]))
 			axes.annotate(label, (trackN[i_line], dM), fontsize=22)
 		else:
-			#label = "Exact/Fixed"
-			#offsests.append(0.0)
+			label = "Exact/Fixed"
+			offsests.append(0.0)
 			#sigDigit = int(errorE.partition('-')[2])
-			label = str(round_sig(data[i_par][i_line][1])) + " mm"
-			offsests.append(round_sig(data[i_par][i_line][1]))
+			#label = str(round_sig(data[i_par][i_line][1])) + " mm"
+			#offsests.append(round_sig(data[i_par][i_line][1]))
+			
 			axes.annotate(label, (trackN[i_line], 50), fontsize=22)
 		
 		
@@ -215,6 +223,38 @@ for i_par in range(0, int(len(expectPars)/2)):
 subprocess.call(["convert" , "+append", str(newEven[0]), str(newOdd[0]), str(newEven[1]), str(newOdd[1]),  "Row1.png"])
 subprocess.call(["convert" , "+append", str(newEven[2]), str(newOdd[2]), str(newEven[3]), str(newOdd[3]),   "Row2.png"])
 subprocess.call(["convert" , "-append", "Row1.png", "Row2.png", "FoM.png"])
+
+
+#------DM Histo---------
+#
+
+cDM = TCanvas("cDM", "cDM", 700, 700)
+cDM.Divide(1,1)
+minF=min(dMData)-0.1
+maxF=max(dMData)+0.1
+hDM = TH1F("hDM", "Truth - PEDE Alignment; Misalignment [um]", 16, minF, maxF )
+
+for i in range(0, len(dMData)):
+	hDM.Fill(dMData[i])
+
+#Set function to fit
+func = TF1("func", "gaus(0)", minF, maxF)
+#func->SetParameters(0.0, hMean);
+
+#Fit function
+cDM.cd(1)
+hDM.Draw() #Set errors on all bins
+#hDM.Draw("E1") #Set errors on all bins
+#hDM.Fit("func")
+gStyle.SetOptStat("ourRmMe"); #over/under -flows, Rms and Means with errors, number of entries
+gStyle.SetOptFit(1111);  #probability, Chi2, errors, name/values of parameters
+gStyle.SetStatFormat("11.4f");  # 4 sig.fig, f=float
+
+#Save canvas as .png file
+cDM.Modified()
+cDM.Update()
+cDM.Print("dM.png")
+cDM.Print("dM.root")
 
 
 print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")

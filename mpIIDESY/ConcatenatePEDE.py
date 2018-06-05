@@ -1,23 +1,28 @@
 #!/usr/bin/python
 
-####################################################################
-# Concatenates PEDE results for comparison
-#
-# 
+######################################################################
+# Concatenates PEDE results for comparison [as part of PEDE_tests.py]
 #
 # Created: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
-# Modified: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
-#####################################################################
+# Modified: 8 January 2018 by Gleb
+#######################################################################
+import argparse, sys
 
-# Getting constants from MC
-with open("Tracker_p_constants.txt") as f:
-     for line in f:  #Line is a string
+######## HELPER FUNCTIONS AND ARGUMENTS ########
+
+parser = argparse.ArgumentParser(description='mode')
+parser.add_argument('-m', '--mode')
+args = parser.parse_args()
+mode = str(args.mode)
+
+moduleN = 8        
+parN = 2 # GL 
+
+with open('trackN.txt') as f:
+    for line in f:  #Line is a string
         number_str = line.split()
-        moduleN=int(number_str[0])
-        trackN=int(number_str[4])
-        #parN=int(number_str[9])
-        
-parN = 3
+        trackN = int(number_str[0])
+
 print "Parameters from Simulation:"
 print "moduleN= ",moduleN
 print "trackN= ",trackN
@@ -39,8 +44,12 @@ with open("millepede.res") as f:
         else:
             #error.append(0.0) # append no error for HIP method etc.
             error.append(float(number_str[4])) # otherwise, take the error estimate by PEDE
+if (mode == "w"):
+    mode = "w"
+else:
+    mode= "a"
 
-f = open('PEDE_Mis.txt', 'a')
+f = open('PEDE_Mis_art.txt', str(mode))
 for i in range (0, moduleN*parN):
     f.write(str(label[i]))
     f.write(" ")
@@ -52,4 +61,4 @@ f.write(str(trackN))
 f.write("\n")
 f.close()  
 
-print "Misalignments, errors, labels and track # appended to PEDE_Mis.txt"
+print "Misalignments, errors, labels and track # appended to PEDE_Mis_art.txt"
