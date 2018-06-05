@@ -33,19 +33,27 @@ import subprocess
 
 expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
-# mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)
+T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)
 
-T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
+# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0)
+
 mis_C=[]
-offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0)
+#Run 1
+#offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0)
+offsets = (-0.29, -0.093, 0.0, 0.0, 0.13, -0.25, -0.3, 0.18, 0.12, 0.092, 0.095, -0.33, 0.22, 0.0026, 0.0, 0.0)
 print len(T_mis_C), len(offsets)
 for i in range(0, len(T_mis_C)):
 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 
-offsets = (0.061, 0.01, 0.026, 0.029, 0.0, 0.0, -0.016, -0.02, -0.023, -0.01, -0.017, -0.0043, 0.0, 0.0, 0.027, 0.0051)
-print len(T_mis_C), len(offsets)
-for i in range(0, len(T_mis_C)):
-	mis_C.append(float(T_mis_C[i] - offsets[i]))
+# #Run 2
+# T_mis_C=[]
+# offsests=[]
+# offsets = (0.061, 0.01, 0.026, 0.029, 0.0, 0.0, -0.016, -0.02, -0.023, -0.01, -0.017, -0.0043, 0.0, 0.0, 0.027, 0.0051)
+# T_mis_C=mis_C
+# mis_C = []
+# print len(mis_C), len(offsets)
+# for i in range(0, len(T_mis_C)):
+# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 
 print "Truth Misalignments after offsets", mis_C
 
@@ -137,13 +145,16 @@ for i_par in range(0, len(expectPars)):
 		#Set label on points based on the error precision, for non-fixed modules 
 		errorE = '%e' %  data[i_par][i_line][2]
 		if (data[i_par][i_line][1] != 0):
-			sigDigit = int(errorE.partition('-')[2])
+			#sigDigit = int(errorE.partition('-')[2])
 			label = str(round_sig(data[i_par][i_line][1])) + " mm"
 			offsests.append(round_sig(data[i_par][i_line][1]))
 			axes.annotate(label, (trackN[i_line], dM), fontsize=22)
 		else:
-			label = "Exact/Fixed"
-			offsests.append(0.0)
+			#label = "Exact/Fixed"
+			#offsests.append(0.0)
+			#sigDigit = int(errorE.partition('-')[2])
+			label = str(round_sig(data[i_par][i_line][1])) + " mm"
+			offsests.append(round_sig(data[i_par][i_line][1]))
 			axes.annotate(label, (trackN[i_line], 50), fontsize=22)
 		
 		

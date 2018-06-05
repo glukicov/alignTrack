@@ -1,9 +1,9 @@
 {
 	// Open ROOT file of interest
-	TFile fFile("Tracker.root");
+	TFile fFile("TrackerAlignment.root");
 
 	//Open histogram of interest [by coping it as an object]
-	TH1F *h_uniform = (TH1F*)fFile.Get("Tracks/h_slope");
+	TH1F *h_uniform = (TH1F*)fFile.Get("TrackerAlignment/Tracks/h_pValue");
 
 	h_uniform->SetDirectory(0); // to decouple it from the open file directory
 
