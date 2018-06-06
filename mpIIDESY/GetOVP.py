@@ -2,7 +2,6 @@
 
 #Plotter
 
-import ROOT as r
 from ROOT import *
 import matplotlib.pyplot as plt #for plotting 
 import numpy as np  # smart arrays 
@@ -34,7 +33,7 @@ print "Getting Plots for", NModules, "modules"
 
 if (mode == "plot"):
 
-	f = r.TFile.Open('TrackerAlignment.root')
+	f = TFile.Open('TrackerAlignment.root')
 	if f:
 	    print("is open")
 	else:
@@ -140,8 +139,8 @@ if (mode == "plot"):
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		SD = t.GetRMS()
-		axes.annotate(round_sig(mean, 3), (i_module, mean))
-		axes.annotate( "("+str(round_sig(SD, 3))+")", (i_module-0.43, yMin+0.05))
+		axes.annotate(round_sig(mean, 2), (i_module, mean))
+		axes.annotate( "("+str(round_sig(SD, 2))+")", (i_module-0.43, yMin+0.05))
 		#print "mean= ", mean , "SD= ", SD
 		plt.errorbar(i_module, mean, yerr=SD, color="red") 
 		plt.plot(i_module, mean, marker="_", color="red")
@@ -164,6 +163,7 @@ if (mode == "plot"):
 	plt.figure(5)
 	axes = plt.gca()
 	means = []
+	MeanErrors=[]
 	for i_module in range(1, NModules+1):
 		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 		plt.plot(
@@ -174,6 +174,7 @@ if (mode == "plot"):
 		mean = t.GetMean()
 		meanError=t.GetMeanError()
 		means.append(mean)
+		MeanErrors.append(meanError)
 		plt.plot(i_module, mean)
 		plt.errorbar(i_module, mean, yerr=meanError, color="red") 
 		axes.annotate(round_sig(mean), (i_module, mean))
@@ -189,24 +190,24 @@ if (mode == "plot"):
 	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 
 	for i in range(0, len(means)):
-		number = round_sig(means[i])-round_sig(avgMean)
+		number = (means[i]-avgMean)/MeanErrors[i]
 		if (number != 0):
 			#number=int(number*10000)/10000
 			number = number
 		else:
 			number = 0.0
-		axes.annotate( "("+str(number)+")", (i+1-0.4, -0.09))
+		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.09))
 	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pull Mean [error = Error on the Mean]", fontsize=20)
 	plt.xlabel("Module", fontsize=20)
-	plt.title("Means pulls per Modules; mean pull ( d(average) )", fontsize=18)
+	plt.title("Mean pull ( 'z-value' )", fontsize=18)
 	plt.savefig("Pulls_M_Zoom.png")
 
 	#-------moduleResiudals----------
 	#
-	yMin = -0.2
-	yMax = 0.2
+	yMin = -0.2*1e3
+	yMax = 0.2*1e3
 	plt.figure(6)
 	axes = plt.gca()
 	for i_module in range(1, NModules+1):
@@ -219,10 +220,11 @@ if (mode == "plot"):
 		mean = t.GetMean()
 		SD = t.GetRMS()
 		#print "mean= ", mean , "SD= ", SD
-		plt.errorbar(i_module, mean, yerr=SD, color="red") 
-		plt.plot(i_module, mean, marker="_", color="red")
-		axes.annotate(round_sig(mean, 2), (i_module, mean))
-		axes.annotate( "("+str(round_sig(SD, 3))+")", (i_module-0.43, yMin+0.05))
+		# mm to um *1e3 
+		plt.errorbar(i_module, mean*1e3, yerr=SD*1e3, color="red") 
+		plt.plot(i_module, mean*1e3, marker="_", color="red")
+		axes.annotate(round_sig(mean*1e3, 3), (i_module, mean))
+		axes.annotate( "("+str(round_sig(SD*1e3, 3))+")", (i_module-0.43, yMin+0.05*1e3))
 
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
@@ -230,14 +232,15 @@ if (mode == "plot"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("Residual Means /mm (SD)", fontsize=20)
-	plt.ylabel("Residual SD /mm [error = SD /mm]", fontsize=20)
+	plt.title("Residual Means /um (SD)", fontsize=20)
+	plt.ylabel("Residual mean /um [error = SD]", fontsize=20)
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("Residuals_M.png")
 
 	#-------moduleResiudals_Zoom----------
 	#
 	means=[]
+	MeanErrors=[]
 	yMin = -0.015
 	yMax = 0.015
 	plt.figure(7)
@@ -252,10 +255,10 @@ if (mode == "plot"):
 		mean = t.GetMean()
 		means.append(mean)
 		meanError = t.GetMeanError()
+		MeanErrors.append(meanError)
 		plt.errorbar(i_module, mean, yerr=meanError, color="red") 
 		plt.plot(i_module, mean, marker="_", color="red")
 		axes.annotate(round_sig(mean), (i_module, mean))
-		axes.annotate( "("+str(round_sig(meanError))+")", (i_module-0.43, yMin+0.001), fontsize=10)
 
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
@@ -264,13 +267,12 @@ if (mode == "plot"):
 	    color = 'black', linestyle="-")
 	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 	for i in range(0, len(means)):
-		number = round_sig(means[i])-round_sig(avgMean)
+		number = (means[i]-avgMean)/MeanErrors[i]
 		if (number != 0):
-			#number=int(number*10000)/10000
 			number = number
 		else:
 			number = 0.0
-		axes.annotate( "("+str(number)+")", (i+1-0.4, -0.09))
+		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.014))
 
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
@@ -278,8 +280,8 @@ if (mode == "plot"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title('Residual Means ( d(average) )', fontsize=20)
-	plt.ylabel("Residual Mean /mm [error = Error on the Mean]", fontsize=18)
+	plt.title("Residual Means ( 'z-value' )", fontsize=20)
+	plt.ylabel("Residual Mean /um [error = Error on the Mean]", fontsize=18)
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("Residuals_M_Zoom.png")
 
@@ -293,23 +295,20 @@ if (mode == "plot"):
 	#Get parameters from the histogram
 	hBinMin = hUniform.FindFirstBinAbove(0, 1)
 	hBinMax = hUniform.FindLastBinAbove(0, 1)
-	print "hBinMin= ", hBinMin, " hBinMax ", hBinMax
+	#print "hBinMin= ", hBinMin, " hBinMax ", hBinMax
 	hBinNumber = hBinMax - hBinMin # number of non-zero bins
-	print " hBinNumber= ", hBinNumber
+	#print " hBinNumber= ", hBinNumber
 
 	#Calculate mean value of all bins
 	hsum = 0.0
 	for i_bin in range(hBinMin, hBinMax):
 		hsum += hUniform.GetBinContent(i_bin)
-
 	hMean = hsum/hBinNumber
-	print "hMean= ", hMean
-
+	#print "hMean= ", hMean
 	xaxis = hUniform.GetXaxis()
 	minF = xaxis.GetBinLowEdge(hBinMin)
 	maxF = xaxis.GetBinUpEdge(hBinMax)
-
-	print " minF= ", minF, " maxF= ", maxF
+	#print " minF= ", minF, " maxF= ", maxF
 
 	#Set function to fit
 	lineF = TF1("lineF", "pol 0", minF, maxF)
@@ -317,14 +316,16 @@ if (mode == "plot"):
 	#Fit function
 	cUniform.cd(1)
 	hUniform.Draw("E1") #Set errors on all bins
-	hUniform.Fit("lineF")
-	gStyle.SetOptStat("ourRmMe"); #over/under -flows, Rms and Means with errors, number of entries
-	gStyle.SetOptFit(1111);  #probability, Chi2, errors, name/values of parameters
-	gStyle.SetStatFormat("11.4f");  # 4 sig.fig, f=float
+	hUniform.Fit("lineF", "Q") # quite fit 
+	pValF = lineF.GetChisquare()/lineF.GetNDF()
+	hUniform.SetTitle("p-value fit with Chi^{2}/ndf = " + str(round_sig(pValF,3)))
+	gStyle.SetOptStat("ourRmMe") #over/under -flows, Rms and Means with errors, number of entries
+	gStyle.SetOptFit(1111)  #probability, Chi2, errors, name/values of parameters
+	gStyle.SetStatFormat("11.4f")  # 4 sig.fig, f=float
 
 	#Save canvas as .png file
-	cUniform.Modified()
-	cUniform.Update()
+	#cUniform.Modified()
+	#cUniform.Update()
 	cUniform.Print("pValFit.png")
 	cUniform.Print("pValFit.root")
 
@@ -356,10 +357,10 @@ if (mode == "pVal"):
 	    color = 'green')
 
 	for i in range(0, trialN):
-		plt.errorbar(int(i+1), float(pVals[i]), yerr=float(errors[i]), color="red") 
-		plt.plot(int(i+1), float(pVals[i]), marker="_", color="red")
+		plt.errorbar(int(i), float(pVals[i]), yerr=float(errors[i]), color="red") 
+		plt.plot(int(i), float(pVals[i]), marker="_", color="red")
 
-	axes.set_xlim(0.8, trialN+0.2)
+	axes.set_xlim(-0.2, trialN+0.2)
 	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("p-value mean [error = SD]", fontsize=20)
@@ -371,11 +372,19 @@ if (mode == "pVal"):
 #-----Truth Misalignment----
 #
 if (mode == "mis"):
-	misX=args.mis[0:8]
-	misY=args.mis[8:16]
+	misXStr=args.mis[0:8]
+	misYStr=args.mis[8:16]
 
-	yMin = -0.4
-	yMax = 0.4
+	#str in mm to float in um 
+	for i in range(0, len(misXStr)):
+		misXStr[i] = int(round(float(misXStr[i])*1e3))
+		misYStr[i] = int(round(float(misYStr[i])*1e3))
+
+	misX = np.array(misXStr)
+	misY = np.array(misYStr)
+
+	yMin = -400
+	yMax = 400
 	plt.subplot(211)
 	axes = plt.gca()
 	for i_module in range(1, NModules+1):
@@ -383,25 +392,32 @@ if (mode == "mis"):
 		plt.plot(
 		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 		    color = 'green')
-		#print misX[i_module-1]
 		plt.plot(i_module, float(misX[i_module-1]), marker="+", color="red")
 		mod = read_png('mod.png')
 		
 		#Add tracker image 
-		imagebox = OffsetImage(mod, zoom=0.3)
-		xy = (i_module-0.5, float(misX[i_module-1])+0.08) # coordinates to position this image
-		ab = AnnotationBbox(imagebox, xy, xybox=(30., -30.),  xycoords='data', boxcoords="offset points", frameon=False)                                  
-		axes.add_artist(ab)
-		
-		axes.annotate(misX[i_module-1], (i_module, float(misX[i_module-1])+0.05))
+		# imagebox = OffsetImage(mod, zoom=0.15)
+		# xy = (i_module-0.5, float(misX[i_module-1])+150) # coordinates to position this image
+		# ab = AnnotationBbox(imagebox, xy, xybox=(30., -30.),  xycoords='data', boxcoords="offset points", frameon=False)                                  
+		# axes.add_artist(ab)
+		axes.annotate(misX[i_module-1], (i_module-0.3, float(misX[i_module-1])+20))
+	
+	avgMean = sum(misX)/float(len(misX))
+	SD = np.sqrt(np.mean(misX**2))
+	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'black', linestyle="-")
+	plt.text(9.1, avgMean, str(int(round(avgMean))), fontsize=9)
+
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("Misalignment X", fontsize=16)
-	plt.ylabel("Misalignment [mm]", fontsize=16)
+	plt.title("Misalignment X (<X> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
+	plt.ylabel("Misalignment [um]", fontsize=16)
 
 	plt.subplot(212)
 	axes2 = plt.gca()
@@ -414,20 +430,27 @@ if (mode == "mis"):
 		mod = read_png('mod.png')
 		
 		#Add tracker image 
-		imagebox = OffsetImage(mod, zoom=0.3)
-		xy = (i_module-0.5, float(misY[i_module-1])+0.08) # coordinates to position this image
-		ab = AnnotationBbox(imagebox, xy, xybox=(30., -30.),  xycoords='data', boxcoords="offset points", frameon=False)                                  
-		axes2.add_artist(ab)
-		
-		axes2.annotate(misY[i_module-1], (i_module, float(misX[i_module-1])+0.05))
+		# imagebox = OffsetImage(mod, zoom=0.15)
+		# xy = (i_module-0.5, float(misY[i_module-1])+120) # coordinates to position this image
+		# ab = AnnotationBbox(imagebox, xy, xybox=(30., -30.),  xycoords='data', boxcoords="offset points", frameon=False)                                  
+		# axes2.add_artist(ab)
+		axes2.annotate(misY[i_module-1], (i_module-0.3, float(misY[i_module-1])+20))
+
+	avgMean = sum(misY)/float(len(misY))
+	SD = np.sqrt(np.mean(misY**2))
+	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'black', linestyle="-")
+	plt.text(9.1, avgMean, str(int(round(avgMean))), fontsize=9)
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
 	axes2.set_xlim(0.5, NModules+1)
 	axes2.set_ylim(yMin, yMax)
-	plt.title("Misalignment Y", fontsize=16)
-	plt.ylabel("Misalignment [mm]", fontsize=16)
+	plt.title("Misalignment Y (<Y> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
+	plt.ylabel("Misalignment [um]", fontsize=16)
 	plt.xlabel("Module", fontsize=16)
 
 	#plt.show()
