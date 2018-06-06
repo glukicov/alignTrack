@@ -48,17 +48,17 @@ print "Initial Truth Misalignment [mm]: ", mis_C
 
 # ----------------------------
 # Run 1
-mis_C=[] # set temp to 0 
+# mis_C=[] # set temp to 0 
 
-# offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0) # Case 1 (Run 1)
-# raw_input("Offsets Case 1 :: Run 1?") 
+# # offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0) # Case 1 (Run 1)
+# # raw_input("Offsets Case 1 :: Run 1?") 
 
-offsets = (-0.29, -0.093, 0.0, 0.0, 0.13, -0.25, -0.3, 0.18, 0.12, 0.092, 0.095, -0.33, 0.22, 0.0026, 0.0, 0.0) # Case 2 (Run 1)
-raw_input("Offsets Case 2 :: Run 1?") 
+# offsets = (-0.29, -0.093, 0.0, 0.0, 0.13, -0.25, -0.3, 0.18, 0.12, 0.092, 0.095, -0.33, 0.22, 0.0026, 0.0, 0.0) # Case 2 (Run 1)
+# raw_input("Offsets Case 2 :: Run 1?") 
 
-print "Offsets Run 1 [mm]: ", offsets
-for i in range(0, len(T_mis_C)):
-	mis_C.append(float(T_mis_C[i] - offsets[i]))
+# print "Offsets Run 1 [mm]: ", offsets
+# for i in range(0, len(T_mis_C)):
+# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 #----------------------------
 
 #----------------------------
@@ -161,7 +161,7 @@ for i_par in range(0, len(expectPars)):
 		
 		dM=(data[i_par][i_line][1]-mis_C[i_par])*1e3  # mm to um rad to mrad
 		dMData.append(dM)
-		dMPar.append(i_par)
+		dMPar.append(expectPars[i_par])
 		print "i_par:", expectPars[i_par], "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
 		errorM=data[i_par][i_line][2]*1e3
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
@@ -252,13 +252,16 @@ cDM = TCanvas("cDM", "cDM", 700, 700)
 cDM.Divide(2,1)
 minF=min(dMData)-0.1
 maxF=max(dMData)+0.1
-hDMx = TH1F("hDMx", "PEDE - Truth Alignment in X; X Misalignment [um]", 16, minF, maxF )
-hDMy = TH1F("hDMy", "PEDE - Truth Alignment in Y; Y Misalignment [um]", 16, minF, maxF )
+hDMx = TH1F("hDMx", "PEDE - Truth Alignment in X; X Misalignment [um]", 49, minF, maxF )
+hDMy = TH1F("hDMy", "PEDE - Truth Alignment in Y; Y Misalignment [um]", 49, minF, maxF )
 
 for i in range(0, len(dMData)):
-	if (dMPar[i] % 11 == 0): 
+	splitLabel = [int(x) for x in str(dMPar[i_par])]  # 0 = Module, 1= Parameter
+	if (splitLabel[1] == 1):
+		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
 		hDMx.Fill(dMData[i])
-	if (dMPar[i] % 12 == 0): 
+	if (splitLabel[1] == 2):
+		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
 		hDMy.Fill(dMData[i])
 
 #Set function to fit

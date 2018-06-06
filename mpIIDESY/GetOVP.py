@@ -12,7 +12,7 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.cbook import get_sample_data
 from matplotlib._png import read_png
-
+import subprocess
 def round_sig(x, sig=2):
 	return round(x, sig-int(floor(log10(abs(x))))-1)
 
@@ -329,6 +329,9 @@ if (mode == "plot"):
 	cUniform.Print("pValFit.png")
 	cUniform.Print("pValFit.root")
 
+	subprocess.call(["convert" , "+append", "Residuals_M.png" , "Pulls_M.png", "M.png"])
+	subprocess.call(["convert" , "+append", "Residuals_M_Zoom.png" , "Pulls_M_Zoom.png", "M_Zoom.png"])
+	subprocess.call(["convert" , "-append", "M.png" , "M_Zoom.png", "Pulls_Res.png"])
 
 	print "ROOT File analysed!"
 
