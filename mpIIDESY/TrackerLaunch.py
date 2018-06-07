@@ -14,13 +14,13 @@ from ROOT import *
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
 args = parser.parse_args()
-from math import log10, floor
-
-dMData=[] # store all dM
-dMPar=[] # store corresponding par
+from math import log10, floor, ceil
 
 def round_sig(x, sig=2):
 	return round(x, sig-int(floor(log10(abs(x))))-1)
+
+def float_round(num, places = 0, direction = floor):
+    return direction(num * (10**places)) / float(10**places)
 
 file = str(args.mode)
 
@@ -30,6 +30,10 @@ import numpy as np  # smart arrays
 import itertools # smart lines
 from time import gmtime, strftime 
 import subprocess
+import plotly.plotly
+import plotly.graph_objs as go
+import pandas as pd
+plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC7v7')
 
 expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
@@ -38,25 +42,27 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 # T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case 1 (Initial)
 # raw_input("Truth Case 1?") 
 
-T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case 2 (Initial)
-raw_input("Truth Case 2") 
+# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case 2 (Initial)
+
+T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
+
 
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
 print "Initial Truth Misalignment [mm]: ", mis_C
-
+raw_input("Truth Misalignment correct? [press enter]") 
 
 # ----------------------------
-# Run 1
+# #Run 1
 # mis_C=[] # set temp to 0 
 
 # # offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0) # Case 1 (Run 1)
-# # raw_input("Offsets Case 1 :: Run 1?") 
 
-# offsets = (-0.29, -0.093, 0.0, 0.0, 0.13, -0.25, -0.3, 0.18, 0.12, 0.092, 0.095, -0.33, 0.22, 0.0026, 0.0, 0.0) # Case 2 (Run 1)
-# raw_input("Offsets Case 2 :: Run 1?") 
+# offsets = (-0.303, -0.095, 0.0, 0.0, 0.14, -0.248, -0.285, 0.179, 0.134, 0.094, 0.106, -0.332, 0.228, 0.002, 0.0, 0.0) # Case 2 (Run 1)
+
 
 # print "Offsets Run 1 [mm]: ", offsets
+# raw_input("Offsets :: Run 1 correct? [press enter]") 
 # for i in range(0, len(T_mis_C)):
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 #----------------------------
@@ -67,9 +73,10 @@ print "Initial Truth Misalignment [mm]: ", mis_C
 # mis_C = [] 
 
 # offsets = (0.061, 0.01, 0.026, 0.029, 0.0, 0.0, -0.016, -0.02, -0.023, -0.01, -0.017, -0.0043, 0.0, 0.0, 0.027, 0.0051) # Case 1 (Run 2)
-# raw_input("Offsets Case 1 :: Run 2?") 
+
 
 # print "Offsets Run 2 [mm]: ", offsets
+# raw_input("Offsets :: Run 2 correct? [press enter]") 
 # for i in range(0, len(T_mis_C)):
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 #----------------------------
@@ -81,9 +88,10 @@ print "Initial Truth Misalignment [mm]: ", mis_C
 # mis_C = [] 
 
 # offsets = (0.024, 0.001, 0.0, 0.0, -0.017, 0.0022, -0.025, 0.0024, -0.025, 0.00075, -0.017, 0.00026, 0.0, 0.0, 0.026, -0.0016)
-# raw_input("Offsets Case 1 :: Run 3?")
+
 
 # print "Offsets Run 3 [mm]: ", offsets
+# raw_input("Offsets :: Run 2 correct? [press enter]") 
 # for i in range(0, len(T_mis_C)):
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 # #----------------------------
@@ -137,7 +145,10 @@ with open(file) as f:
 # print trackN	
 
 ##################PLOTING##############################
-offsests=[]
+offsests=[] # new offsets 
+dMData=[] # store all dM
+dMPar=[] # store corresponding par
+errors=[]
 
 plt.rcParams.update({'font.size': 14})
 #Plot difference for all modules
@@ -164,6 +175,7 @@ for i_par in range(0, len(expectPars)):
 		dMPar.append(expectPars[i_par])
 		print "i_par:", expectPars[i_par], "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
 		errorM=data[i_par][i_line][2]*1e3
+		errors.append(errorM)
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
 		plt.plot(trackN[i_line], dM, marker="_", color="red")
 		axes.set_xlim(trackN[0]-500,trackN[lineN-1]+500)
@@ -172,9 +184,9 @@ for i_par in range(0, len(expectPars)):
 		#Set label on points based on the error precision, for non-fixed modules 
 		errorE = '%e' %  data[i_par][i_line][2]
 		if (data[i_par][i_line][1] != 0):
-			#sigDigit = int(errorE.partition('-')[2])
+			sigDigit = int(errorE.partition('-')[2])
 			label = str(round_sig(data[i_par][i_line][1])) + " mm"
-			offsests.append(round_sig(data[i_par][i_line][1]))
+			offsests.append(round_sig(data[i_par][i_line][1], sigDigit+1))
 			axes.annotate(label, (trackN[i_line], dM), fontsize=22)
 		else:
 			label = "Exact/Fixed"
@@ -229,20 +241,20 @@ odd=expectPars[0::2]
 newOdd=[]
 newEven=[]
 
-for i_par in range(0, int(len(expectPars)/2)):
+# for i_par in range(0, int(len(expectPars)/2)):
 
-	f1=str(odd[i_par])+".png" 
-	f2=str(even[i_par])+".png"
-	f3=str(i_par)+".png"
-	subprocess.call(["convert" , "-append", str(f1), str(f2), str(f3)])
-	if (i_par % 2 == 0):
-		newEven.append(f3)
-	if (i_par %2 != 0):
-		newOdd.append(f3)
+# 	f1=str(odd[i_par])+".png" 
+# 	f2=str(even[i_par])+".png"
+# 	f3=str(i_par)+".png"
+# 	subprocess.call(["convert" , "-append", str(f1), str(f2), str(f3)])
+# 	if (i_par % 2 == 0):
+# 		newEven.append(f3)
+# 	if (i_par %2 != 0):
+# 		newOdd.append(f3)
 
-subprocess.call(["convert" , "+append", str(newEven[0]), str(newOdd[0]), str(newEven[1]), str(newOdd[1]),  "Row1.png"])
-subprocess.call(["convert" , "+append", str(newEven[2]), str(newOdd[2]), str(newEven[3]), str(newOdd[3]),   "Row2.png"])
-subprocess.call(["convert" , "-append", "Row1.png", "Row2.png", "FoM.png"])
+# subprocess.call(["convert" , "+append", str(newEven[0]), str(newOdd[0]), str(newEven[1]), str(newOdd[1]),  "Row1.png"])
+# subprocess.call(["convert" , "+append", str(newEven[2]), str(newOdd[2]), str(newEven[3]), str(newOdd[3]),   "Row2.png"])
+# subprocess.call(["convert" , "-append", "Row1.png", "Row2.png", "FoM.png"])
 
 
 #------DM Histo---------
@@ -255,13 +267,14 @@ maxF=max(dMData)+0.1
 hDMx = TH1F("hDMx", "PEDE - Truth Alignment in X; X Misalignment [um]", 49, minF, maxF )
 hDMy = TH1F("hDMy", "PEDE - Truth Alignment in Y; Y Misalignment [um]", 49, minF, maxF )
 
+# Fill histos for align-able modules (error =0 == fixed module)
 for i in range(0, len(dMData)):
-	splitLabel = [int(x) for x in str(dMPar[i_par])]  # 0 = Module, 1= Parameter
-	if (splitLabel[1] == 1):
-		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
+	splitLabel = [int(x) for x in str(dMPar[i])]  # 0 = Module, 1= Parameter
+	if (splitLabel[1] == 1 and errors[i] !=0):
+		#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
 		hDMx.Fill(dMData[i])
-	if (splitLabel[1] == 2):
-		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
+	if (splitLabel[1] == 2 and errors[i] !=0):
+		#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
 		hDMy.Fill(dMData[i])
 
 #Set function to fit
@@ -285,11 +298,39 @@ cDM.Update()
 cDM.Print("dM.png")
 cDM.Print("dM.root")
 
-
-print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")
-
 offsest = " "
 for i in range(0, len(offsests)):
-	offsest += str(offsests[i]) + " "
+	if (errors[i] != 0.0):
+		offsest += str(round(offsests[i]*1e3)/1e3) + " "
+	else:
+		offsest += str(offsests[i]) + " "
+
 
 print "New suggested Offsets from PEDE [mm]: ", offsest
+
+
+offsests_um=[]
+mis_C_um=[]
+for i in range(0, len(offsests)):
+	#print offsests[i]
+	#print int(round(offsests[i]*1e3))
+	offsests_um.append(round(offsests[i]*1e3))
+	mis_C_um.append(round(T_mis_C[i]*1e3))
+
+trace = go.Table(
+    header=dict(values=['Labels', 'Truth [um]', 'Iteration 0 [um]'],
+                line = dict(color='#7D7F80'),
+                fill = dict(color='#a1c3d1'),
+                align = ['left'] * 5),
+    cells=dict(values=[expectPars, mis_C_um, offsests_um],
+               line = dict(color='#7D7F80'),
+               fill = dict(color='#EDFAFF'),
+               align = ['left'] * 5))
+
+layout = dict(width=500, height=600)
+data = [trace]
+fig = dict(data=data, layout=layout)
+plotly.plotly.iplot(fig, filename = 'styled_table')
+
+
+print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")
