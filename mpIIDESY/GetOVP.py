@@ -21,6 +21,7 @@ parser.add_argument('-m', '--moduleN', help='mode')
 parser.add_argument("-mode", "--mode")
 parser.add_argument("-pvals", "--pvals", nargs='+')
 parser.add_argument("-mis", "--mis", nargs='+')
+parser.add_argument("-abs", "--abs")
 args = parser.parse_args()
 
 #These can be inputs from MC 
@@ -460,10 +461,17 @@ if (mode == "mis"):
 	misXStr=args.mis[0:8]
 	misYStr=args.mis[8:16]
 
-	#str in mm to float in um 
-	for i in range(0, len(misXStr)):
-		misXStr[i] = int(round(float(misXStr[i])*1e3))
-		misYStr[i] = int(round(float(misYStr[i])*1e3))
+	#absolute misalignment
+	if (args.abs == "Y"):
+		for i in range(0, len(misXStr)):
+			misXStr[i] = abs(int(round(float(misXStr[i])*1e3)))
+			misYStr[i] = abs(int(round(float(misYStr[i])*1e3)))
+	else:
+		#str in mm to float in um 
+		for i in range(0, len(misXStr)):
+			misXStr[i] = int(round(float(misXStr[i])*1e3))
+			misYStr[i] = int(round(float(misYStr[i])*1e3))
+
 
 	misX = np.array(misXStr)
 	misY = np.array(misYStr)

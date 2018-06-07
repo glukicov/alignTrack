@@ -42,9 +42,9 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 # T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case 1 (Initial)
 # raw_input("Truth Case 1?") 
 
-# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case 2 (Initial)
+T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case 2 (Initial)
 
-T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
+# T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
 
 
 # Run 0 
@@ -53,18 +53,18 @@ print "Initial Truth Misalignment [mm]: ", mis_C
 raw_input("Truth Misalignment correct? [press enter]") 
 
 # ----------------------------
-# #Run 1
-# mis_C=[] # set temp to 0 
+#Run 1
+mis_C=[] # set temp to 0 
 
-# # offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0) # Case 1 (Run 1)
+# offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0) # Case 1 (Run 1)
 
-# offsets = (-0.303, -0.095, 0.0, 0.0, 0.14, -0.248, -0.285, 0.179, 0.134, 0.094, 0.106, -0.332, 0.228, 0.002, 0.0, 0.0) # Case 2 (Run 1)
+offsets = (-0.303, -0.095, 0.0, 0.0, 0.14, -0.248, -0.285, 0.179, 0.134, 0.094, 0.106, -0.332, 0.228, 0.002, 0.0, 0.0) # Case 2 (Run 1)
 
 
-# print "Offsets Run 1 [mm]: ", offsets
-# raw_input("Offsets :: Run 1 correct? [press enter]") 
-# for i in range(0, len(T_mis_C)):
-# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
+print "Offsets Run 1 [mm]: ", offsets
+raw_input("Offsets :: Run 1 correct? [press enter]") 
+for i in range(0, len(T_mis_C)):
+	mis_C.append(float(T_mis_C[i] - offsets[i]))
 #----------------------------
 
 #----------------------------
@@ -297,6 +297,19 @@ cDM.Modified()
 cDM.Update()
 cDM.Print("dM.png")
 cDM.Print("dM.root")
+
+xSD=hDMx.GetRMS()
+xSDError=hDMx.GetRMSError()
+xMean=hDMx.GetMean()
+xMeanError=hDMx.GetMeanError()
+ySD=hDMy.GetRMS()
+ySDError=hDMy.GetRMSError()
+yMean=hDMy.GetMean()
+yMeanError=hDMy.GetMeanError()
+
+print "xSD=",round(xSD),"+/-",round(xSDError), "xMean=",round(xMean),"+/-",round(xMeanError)
+print "ySD=",round(ySD),"+/-",round(ySDError), "yMean=",round(yMean),"+/-",round(yMeanError)
+
 
 offsest = " "
 for i in range(0, len(offsests)):
