@@ -126,6 +126,8 @@ if (mode == "plot"):
 
 	#-------modulePulls----------
 	#
+	PullsSD=[]
+	PullsSDError=[]
 	yMin = -1.1
 	yMax = 1.1
 	plt.figure(4)
@@ -139,6 +141,9 @@ if (mode == "plot"):
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		SD = t.GetRMS()
+		SDError = t.GetRMSError()
+		PullsSD.append(SD)
+		PullsSDError.append(SDError)
 		axes.annotate(round_sig(mean, 2), (i_module, mean))
 		axes.annotate( "("+str(round_sig(SD, 2))+")", (i_module-0.43, yMin+0.05))
 		#print "mean= ", mean , "SD= ", SD
@@ -206,6 +211,8 @@ if (mode == "plot"):
 
 	#-------moduleResiudals----------
 	#
+	ResidualRMS=[]
+	ResidualRMSError=[]
 	yMin = -0.2*1e3
 	yMax = 0.2*1e3
 	plt.figure(6)
@@ -219,6 +226,9 @@ if (mode == "plot"):
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		SD = t.GetRMS()
+		SDError = t.GetRMSError()
+		ResidualRMS.append(SD*1e3)
+		ResidualRMSError.append(SDError*1e3)
 		#print "mean= ", mean , "SD= ", SD
 		# mm to um *1e3 
 		plt.errorbar(i_module, mean*1e3, yerr=SD*1e3, color="red") 
@@ -285,6 +295,76 @@ if (mode == "plot"):
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("Residuals_M_Zoom.png")
 
+	#----Residual SD 
+	yMin = 100
+	yMax = 260
+	means=[]
+	plt.figure(8)
+	axes = plt.gca()
+	for i_module in range(1, NModules+1):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(
+		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+		    color = 'green')
+		plt.errorbar(i_module, ResidualRMS[i_module-1], yerr=ResidualRMSError[i_module-1], color="red") 
+		plt.plot(i_module, ResidualRMS[i_module-1], marker="_", color="red")
+		axes.annotate(int(round_sig( ResidualRMS[i_module-1], 3)), (i_module,  ResidualRMS[i_module-1]))
+		means.append(ResidualRMS[i_module-1])
+
+	avgMean = sum(means)/float(len(means))
+	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'black', linestyle="-")
+	plt.text(9.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
+
+	line = [[0.5,0.0], [NModules+1, 0.0]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'grey')
+	axes.set_xlim(0.5, NModules+1)
+	axes.set_ylim(yMin, yMax)
+	plt.title("Residual SD", fontsize=20)
+	plt.ylabel("Residual SD /um [error = SD Error]", fontsize=18)
+	plt.xlabel("Module", fontsize=20)
+	plt.savefig("ResidualsSD_M.png")
+
+	#----Pull SD 
+	yMin = 0.6
+	yMax = 1.8
+	means=[]
+	plt.figure(9)
+	axes = plt.gca()
+	for i_module in range(1, NModules+1):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(
+		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+		    color = 'green')
+		plt.errorbar(i_module, PullsSD[i_module-1], yerr=PullsSDError[i_module-1], color="red") 
+		plt.plot(i_module, PullsSD[i_module-1], marker="_", color="red")
+		axes.annotate(round_sig( PullsSD[i_module-1], 2), (i_module,  PullsSD[i_module-1]))
+		means.append(PullsSD[i_module-1])
+
+	avgMean = sum(means)/float(len(means))
+	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'black', linestyle="-")
+	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+
+	line = [[0.5,0.0], [NModules+1, 0.0]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'grey')
+	axes.set_xlim(0.5, NModules+1)
+	axes.set_ylim(yMin, yMax)
+	plt.title("Pulls SD", fontsize=20)
+	plt.ylabel("Pulls SD [error = SD Error]", fontsize=18)
+	plt.xlabel("Module", fontsize=20)
+	plt.savefig("PullsSD_M.png")
+
+
+
 	#------pValFit---------
 	#
 	myStyle  =  TStyle("MyStyle", "My Root Styles")
@@ -332,6 +412,8 @@ if (mode == "plot"):
 	subprocess.call(["convert" , "+append", "Residuals_M.png" , "Pulls_M.png", "M.png"])
 	subprocess.call(["convert" , "+append", "Residuals_M_Zoom.png" , "Pulls_M_Zoom.png", "M_Zoom.png"])
 	subprocess.call(["convert" , "-append", "M.png" , "M_Zoom.png", "Pulls_Res.png"])
+
+	subprocess.call(["convert" , "+append", "ResidualsSD_M.png" , "PullsSD_M.png", "SD.png"])
 
 	print "ROOT File analysed!"
 
