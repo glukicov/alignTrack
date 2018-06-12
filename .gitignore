@@ -9,6 +9,7 @@
 *.root
 *.pyc
 *.txt.BK
+*.gif
 Mptest2
 Mptest2.root
 GenerateFitUniform
