@@ -52,20 +52,20 @@ mis_C=T_mis_C  # the truth is the only misalignment
 print "Initial Truth Misalignment [mm]: ", mis_C
 raw_input("Truth Misalignment correct? [press enter]") 
 
-# ----------------------------
-#Run 1
-mis_C=[] # set temp to 0 
+# # ----------------------------
+# #Run 1
+# mis_C=[] # set temp to 0 
 
-# offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0) # Case 1 (Run 1)
+# # offsets = (0.014, 0.11, 0.0, 0.0, -0.12, -0.17, 0.0, 0.0, -0.057, 0.088, 0.017, -0.0085, 0.063, 0.07, 0.0, 0.0) # Case 1 (Run 1)
 
-offsets = (-0.303, -0.095, 0.0, 0.0, 0.14, -0.248, -0.285, 0.179, 0.134, 0.094, 0.106, -0.332, 0.228, 0.002, 0.0, 0.0) # Case 2 (Run 1)
+# offsets = (-0.303, -0.095, 0.0, 0.0, 0.14, -0.248, -0.285, 0.179, 0.134, 0.094, 0.106, -0.332, 0.228, 0.002, 0.0, 0.0) # Case 2 (Run 1)
 
 
-print "Offsets Run 1 [mm]: ", offsets
-raw_input("Offsets :: Run 1 correct? [press enter]") 
-for i in range(0, len(T_mis_C)):
-	mis_C.append(float(T_mis_C[i] - offsets[i]))
-#----------------------------
+# print "Offsets Run 1 [mm]: ", offsets
+# raw_input("Offsets :: Run 1 correct? [press enter]") 
+# for i in range(0, len(T_mis_C)):
+# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
+# #----------------------------
 
 #----------------------------
 # # Run 2
@@ -184,9 +184,9 @@ for i_par in range(0, len(expectPars)):
 		#Set label on points based on the error precision, for non-fixed modules 
 		errorE = '%e' %  data[i_par][i_line][2]
 		if (data[i_par][i_line][1] != 0):
-			sigDigit = int(errorE.partition('-')[2])
+			#sigDigit = int(errorE.partition('-')[2])
 			label = str(round_sig(data[i_par][i_line][1])) + " mm"
-			offsests.append(round_sig(data[i_par][i_line][1], sigDigit+1))
+			offsests.append(round_sig(data[i_par][i_line][1], 4))
 			axes.annotate(label, (trackN[i_line], dM), fontsize=22)
 		else:
 			label = "Exact/Fixed"

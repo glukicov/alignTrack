@@ -80,14 +80,14 @@ void Tracker::writeConstraintFile(ofstream& constraint_file, ofstream& debug_con
 		metric << " | C: ";
 		stringstream labelt;
 		// Given number of constraints
-		int i_module=0; //select first module 
+		int i_module = 0; //select first module
 		for (int i_NC = 0; i_NC < matNC ; i_NC++) {
-			
+
 			constraint_file << "Constraint 0.0" << endl;
 			//labelt << "-; "; // == no constraintss // XXX
 			int labelt = i_module + 1; // Millepede accepts +ive labels only
 			constraint_file << labelt << " " << fixed << setprecision(5) << one << endl;
-			i_module=moduleN -1 ; // select last module
+			i_module = moduleN - 1 ; // select last module
 
 		} // end of NC loop
 		metric << labelt.str().c_str();
@@ -249,7 +249,7 @@ jmp:
 		}
 		//if DCAs are equal, drop the dice... XXX won't be relevant with hit rejection
 		if (hit_distance_up == hit_distance_low) {
-			float random = randomFacility->Uniform(0.0,1.0);
+			float random = randomFacility->Uniform(0.0, 1.0);
 			if (random < 0.5) {
 				hitDistance = hit_distance_low;
 			}
@@ -474,7 +474,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 
 	//Track parameters for rand-generated line MC [start and end positions outside of detectors]
 	// redefining the track as x=ym+c
-	float x0 = beamPositionLength * randomFacility->Uniform(0.0,1.0) - 1.0; //uniform vertex
+	float x0 = beamPositionLength * randomFacility->Uniform(0.0, 1.0) - 1.0; //uniform vertex
 	float xIntercept = x0; // by definition
 
 	float x1 = x0; // for parallel lines only
@@ -484,13 +484,13 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 	if (generalLines == true) {
 
 		float signXSlope;
-		if (randomFacility->Uniform(0.0,1.0) >= 0.5) {
+		if (randomFacility->Uniform(0.0, 1.0) >= 0.5) {
 			signXSlope = 1.0;
 		}
 		else {
 			signXSlope = -1.0;
 		}
-		xSlope = (randomFacility->Uniform(0.0,1.0) * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
+		xSlope = (randomFacility->Uniform(0.0, 1.0) * signXSlope) * 0.015; // unifrom slope between -0.015 and 0.015: provides nice coverage for 8 straws
 		x1 = xSlope * beamStop + xIntercept; // "xExit"
 
 	} // end of generalLines == true HACK
@@ -614,8 +614,8 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 						i_counter++;
 					} // layers
 				} // views
-			} // modules 
-		} // plotting 
+			} // modules
+		} // plotting
 
 	} // dca cut
 
@@ -782,7 +782,7 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 		}//Modules
 	}
 
-	// Print out misalignment per module 
+	// Print out misalignment per module
 	cout << "Misalignment(M)" << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos << dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
@@ -792,4 +792,4 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 	} // modules
 	cout << noshowpos;
 
-}//end of misalign and set geometry 
+}//end of misalign and set geometry

@@ -20,29 +20,41 @@ parser.add_argument("-mis", "--mis")
 parser.add_argument("-trackN", "--trackN")
 args = parser.parse_args()
 
+########Geometrical Constants [mm]####################
+moduleN = 8 #number of movable detectors/module [independent modules]
+strawN = 8 #number of measurement elements in x direction  [number of straws per layer]
+viewN = 2 #There are two views per module (U and V) 
+layerN = 2 #there are 2 layers per view [4 layers per module]
+layerTotalN = layerN * viewN * moduleN # total number of layers
+startingZDistanceStraw0 = 0.0 # distance of the very first layer [the first straw] relative to the "beam" in z [cm]
+startingXDistanceStraw0 = 0.0 # distance of the very first layer [the first straw] in x [cm]
+strawSpacing = 6.06 # x distance between straws in a layer
+layerSpacing = 5.15 # z distance between layers in a view
+viewSpacing = 20.20 # z distance between views in a modules
+moduleSpacing = 134.3 # z distance between modules' first layers [first layer of module 1 and first layer of module 2]
+layerDisplacement = 3.03 # relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
+
+CentreXY = [[0 for i in xrange(2)] for i_module in xrange(moduleN)] # global scope
 def getCentre(mod_lyr_strawPositionX, mod_lyr_strawPositionZ):
-	CentreXY = [[0 for i in xrange(2)] for i_module in xrange(moduleN)]
+	
 
 	#for a module given by i_global get first and last straws of the first and last layers
 	for i_global in range(0, moduleN):
 		#Set the centre of a modules as a rotation point
-		std::vector<float> U0_x = mod_lyr_strawPositionX[i_global][0][0];  // U0x
-		std::vector<float> V1_x = mod_lyr_strawPositionX[i_global][1][1];  // V1x
-		float U0_first_x = U0_x[0]; float V1_last_x = V1_x[strawN - 1];
-		std::vector<float> U0_z = mod_lyr_strawPositionZ[i_global][0][0];  // z
-		std::vector<float> V1_z = mod_lyr_strawPositionZ[i_global][1][1];  // z
-		float U0_first_z = U0_z[0]; float V1_last_z = V1_z[strawN - 1];
+		U0_x = mod_lyr_strawPositionX[i_global][0][0];  # U0x
+		V1_x = mod_lyr_strawPositionX[i_global][1][1];  # V1x
+		U0_first_x = U0_x[0] 
+		V1_last_x = V1_x[strawN - 1]
+		U0_z = mod_lyr_strawPositionZ[i_global][0][0]  # z
+		V1_z = mod_lyr_strawPositionZ[i_global][1][1]  # z
+		U0_first_z = U0_z[0]
+		V1_last_z = V1_z[strawN - 1]
 
-		float z_c(0), x_c(0);
-		x_c = (V1_last_x + U0_first_x) / 2;
-		z_c = (V1_last_z + U0_first_z) / 2;
+		x_c = (V1_last_x + U0_first_x) / 2.0
+		z_c = (V1_last_z + U0_first_z) / 2.0
 
-		centre.zCentres.push_back(z_c);
-		centre.xCentres.push_back(x_c);
-		plot_centres << z_c << " " << x_c << " ";
-	}
-	plot_centres << endl;
-	return centre;
+		CentreXY[i_module][0]=(z_c)
+		CentreXY[i_module][1]=(x_c)
 
 
 ### Set Simulation Parameters #######
@@ -73,18 +85,6 @@ print "MeanDecayPointZ= ",MeanDecayPointZ, "mm"
 
 
 ########Construct Geometry [mm]####################
-moduleN = 8 #number of movable detectors/module [independent modules]
-strawN = 8 #number of measurement elements in x direction  [number of straws per layer]
-viewN = 2 #There are two views per module (U and V) 
-layerN = 2 #there are 2 layers per view [4 layers per module]
-layerTotalN = layerN * viewN * moduleN # total number of layers
-startingZDistanceStraw0 = 0.0 # distance of the very first layer [the first straw] relative to the "beam" in z [cm]
-startingXDistanceStraw0 = 0.0 # distance of the very first layer [the first straw] in x [cm]
-strawSpacing = 6.06 # x distance between straws in a layer
-layerSpacing = 5.15 # z distance between layers in a view
-viewSpacing = 20.20 # z distance between views in a modules
-moduleSpacing = 134.3 # z distance between modules' first layers [first layer of module 1 and first layer of module 2]
-layerDisplacement = 3.03 # relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
 
 #Store detector coordinates 
 MisX = [[[[0 for i_straw in xrange(strawN)] for i_layer in xrange(layerN) ] for i_view in xrange(viewN)] for i_module in xrange(moduleN)]
@@ -120,6 +120,7 @@ for i_module in range(0, moduleN):
 	dZ += moduleSpacing
 #Modules
 
+getCentre(MisX, MisZ)
 
 ##################PLOTING##############################
 #Misaligned Geometry and Generated tracks 
@@ -127,11 +128,13 @@ plt.figure(1)
 yMin=-50.0
 yMax=50.0
 xMin=-1100
-xMax=1100
+xMax=1400
 axes = plt.gca()
 
 for i_module in range(0, len(strawModuleZPosition)):
-	plt.scatter(strawModuleZPosition[i_module], strawModuleXPosition[i_module], color='black', marker="*", s=10)
+	plt.scatter(CentreXY[i_module][0], CentreXY[i_module][1], color='green', marker="*", s=10)
+
+CentreXY[i_module][0]
 
 #Then draw all other straws 
 for i_module in range(0, moduleN):

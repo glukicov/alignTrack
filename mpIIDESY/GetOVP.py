@@ -252,8 +252,8 @@ if (mode == "plot"):
 	#
 	means=[]
 	MeanErrors=[]
-	yMin = -0.015
-	yMax = 0.015
+	yMin = -15
+	yMax = 15
 	plt.figure(7)
 	axes = plt.gca()
 	for i_module in range(1, NModules+1):
@@ -264,12 +264,12 @@ if (mode == "plot"):
 		name = "TrackerAlignment/Modules/h_Residuals_Module_" + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
-		means.append(mean)
+		means.append(mean*1e3)
 		meanError = t.GetMeanError()
 		MeanErrors.append(meanError)
-		plt.errorbar(i_module, mean, yerr=meanError, color="red") 
-		plt.plot(i_module, mean, marker="_", color="red")
-		axes.annotate(round_sig(mean), (i_module, mean))
+		plt.errorbar(i_module, mean*1e3, yerr=meanError*1e3, color="red") 
+		plt.plot(i_module, mean*1e3, marker="_", color="red")
+		axes.annotate(round_sig(mean*1e3), (i_module, mean*1e3))
 
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
@@ -278,12 +278,12 @@ if (mode == "plot"):
 	    color = 'black', linestyle="-")
 	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 	for i in range(0, len(means)):
-		number = (means[i]-avgMean)/MeanErrors[i]
+		number = (means[i]-avgMean)/(MeanErrors[i]*1e3)
 		if (number != 0):
 			number = number
 		else:
 			number = 0.0
-		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.014))
+		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.014*1e3))
 
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
@@ -409,6 +409,17 @@ if (mode == "plot"):
 	#cUniform.Update()
 	cUniform.Print("pValFit.png")
 	cUniform.Print("pValFit.root")
+
+	for i_module in range(1, NModules+1):
+		name = "TrackerAlignment/Modules/h_MCyx_M" + str(i_module)
+		hist = f.Get(name)
+		c = TCanvas("c", "c", 700, 700)
+		c.Divide(1,1)
+		c.cd(1)
+   		hist.Draw("COLZ")
+   		c.Print("MC"+str(i_module)+".png")
+
+   	subprocess.call(["convert" , "MC*.png", "MCHits_afterCuts.gif"])
 
 	subprocess.call(["convert" , "+append", "Residuals_M.png" , "Pulls_M.png", "M.png"])
 	subprocess.call(["convert" , "+append", "Residuals_M_Zoom.png" , "Pulls_M_Zoom.png", "M_Zoom.png"])
