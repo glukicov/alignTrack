@@ -277,8 +277,8 @@ for i_track in range(0, trackN):
 
 				#Now smear the DCA data
 				dcaUnsmeared = hitDistance;
-				hitDistanceSmeared = hitDistance ### TODO 
-				#hitDistanceSmeared = hitDistance + resolution * randomFacility->Gaus(0.0, 1.0);
+				#hitDistanceSmeared = hitDistance ### TODO 
+				hitDistanceSmeared = hitDistance + resolution * np.random.normal(mu, sigma);
 				
 				dca = hitDistanceSmeared
 				DCAs.append(dca)
@@ -315,158 +315,98 @@ for i_track in range(0, trackN):
 	#print hitsPerTrack
 	#Now for the whole track, if not cut
 	if (cutTriggered == False and hitsPerTrack >= layerCut):
+	
+		dataSize = len(radRecon)
+
+		#LSR fit from: http://codesam.blogspot.com/2011/06/least-square-linear-regression-of-data.html
+		SUMx = 0.0;     #//sum of x values
+		SUMy = 0.0;     #//sum of y values
+		SUMxy = 0.0;    #//sum of x * y
+		SUMxx = 0.0;    #//sum of x^2
+		SUMres = 0.0;   #//sum of squared residue
+		res = 0.0;      #//residue squared
+		slope = 0.0;    #//slope of regression line
+		y_intercept = 0.0; #//y intercept of regression line
+		SUM_Yres = 0.0; #//sum of squared of the discrepancies
+		AVGy = 0.0;     #//mean of y
+		AVGx = 0.0;     #//mean of x
+		Yres = 0.0;     #//squared of the discrepancies
+		Rsqr = 0.0;     #//coefficient of determina		
+		#//calculate various sums 
+		for i in range(0, dataSize):
+		    #//sum of x
+		    SUMx = SUMx + zRecon[i];
+		    #//sum of y
+		    SUMy = SUMy + xRecon[i];
+		    #//sum of squared x*y
+		    SUMxy = SUMxy +zRecon[i] * xRecon[i];
+		   # //sum of squared x
+		    SUMxx = SUMxx + zRecon[i] * zRecon[i];
 		
-		hitCount+=len(radRecon);
-		trackCount+=1
+		#//calculate the means of x and y
+		AVGy = SUMy / dataSize;
+		VGx = SUMx / dataSize;		
+		#//slope or a1
+		slope = (dataSize * SUMxy - SUMx * SUMy) / (dataSize * SUMxx - SUMx*SUMx);	
+		#//y itercept or a0
+		y_intercept = AVGy - slope * AVGx;		
+		if (1==1):
+		    print("x mean(AVGx) = %0.5E\n", AVGx);
+		    print("y mean(AVGy) = %0.5E\n", AVGy);
+		    print ("\n");
+		    print ("The linear equation that best fits the given data:\n");
+		    print ("       y = %2.8lfx + %2.8f\n", slope, y_intercept);
+		    print ("------------------------------------------------------------\n");
+		    print ("   Original (x,y)   (y_i - y_avg)^2     (y_i - a_o - a_1*x_i)^2\n");
+		    print ("------------------------------------------------------------\n")
+		#//calculate squared residues, their sum etc.
+		for i in range(0, dataSize):
+		    #//current (y_i - a0 - a1 * x_i)^2
+		    Yres = np.power((xRecon[i] - y_intercept - (slope * zRecon[i])), 2);
+		    
+		    xFit = slope*zRecon[i]+y_intercept; 
+		    #resData.x_fitted.append(xFit);
+		    xRes = xFit - xRecon[i];
+		    #resData.residuals.push_back(xRes); 
+		    
+		    #sum of (y_i - a0 - a1 * x_i)^2
+		    SUM_Yres += Yres;	
+		    #current residue squared (y_i - AVGy)^2
+		    rres = np.power(xRecon[i] - AVGy, 2);	
+		    #sum of squared residues
+		    SUMres += res;
+			#calculate r^2 coefficient of determination
+    		Rsqr = (SUMres - SUM_Yres) / SUMres;	
+		if (1==1):
+		    print("--------------------------------------------------\n");
+		    print("Sum of (y_i - y_avg)^2 = %0.5E\t\n", SUMres);
+		    print("Sum of (y_i - a_o - a_1*x_i)^2 = %0.5E\t\n", SUM_Yres);
+		    print("Standard deviation(St) = %0.5E\n", np.sqrt(SUMres / (dataSize - 1)));
+		    print("Standard error of the estimate(Sr) = %0.5E\t\n", np.sqrt(SUM_Yres / (dataSize-2)));
+		    print("Coefficient of determination(r^2) = %0.5E\t\n", (SUMres - SUM_Yres)/SUMres);
+		    print("Correlation coefficient(r) = %0.5E\t\n", np.sqrt(Rsqr));		
+    
+    
 
-		#from James's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
-		nHits = hitsPerTrack # same for no hit rejection
-
-		#These sums are parameters for the analytic results that don't change between LR combos (use U here but equally applicable to V coordinate)
-		S, Sz, Su, Szz, Suu, Suz = (0,)*6 # // also good declaration style fur custom types
-		for i_hit in range(0, nHits): 
-			z = zRecon[i_hit];
-			u = xRecon[i_hit];
-			err2 = np.power(resolution, 2); # the error is determined by the resolution [constant]
-			S   += 1. / err2;
-			Sz  += z / err2;
-			Su  += u / err2;
-			Szz += z * z / err2;
-			Suu += u * u / err2;
-			Suz += u * z / err2;
-		# // hits
-
-		# Number of LR combinations (2^N or 1 if using truth)
-		nLRCombos = np.power(2, nHits);
-		if (useTruthLR):
-			nLRCombos = 1;
-
-		#Loop over all LR combinations and produce line fit for each one
-		for LRCombo  in range (0, nLRCombos):
-			#These sums are the other parameters for the analytic results
-			Sr, Sru, Srz = (0,)*3
-			for i_hit in range (0, nHits):
-				z = zRecon[i_hit];
-				u = xRecon[i_hit];
-				err2 = pow(resolution, 2); # the error is determined by the resolution
-				r = radRecon[i_hit];
-
-				# Set r based on whether it's left (+ve r) or right (-ve r)
-				if (LRTruth[i_hit] == -1): 
-					r = -r;
-				Sr  += r / err2;
-				Sru += r * u / err2;
-				Srz += r * z / err2;
-			#hits
-
-			#Make function of derivate of Chi-Squared w.r.t. gradient - quite an algebraically intensive calculation
-			#Range assumes that we've hit more than one layer.
-			dX2_dm = TF1("dX2_dm", "-x*x + [0]*x*sqrt(x*x+1) + [1]*x + [2]*sqrt(x*x+1) + 1", -40, 40)
-			dX2_dm.SetParameter(0, (Sr * Su / S - Sru) / (Su * Sz / S - Suz));
-			dX2_dm.SetParameter(1, ( (Su * Su / S - Suu) - (Sz * Sz / S - Szz) ) / (Su * Sz / S - Suz) );
-			dX2_dm.SetParameter(2, (Sr * Sz / S - Srz) / (Su * Sz / S - Suz));
-
-			# // Roots of this function are minima or maxima of Chi2
-			# // Finding one that has positive derivative doesn't work, so fill in all roots and take one with best Chi2
-			# // TF1::GetX(0) isn't too clever at finding roots - so we'll loop over the function range and give tighter range for root finding
-			# // Holders for intercepts & gradients that satisfy Chi2 minimisation/maximisation
-			gradients=[]
-			intercepts=[]
-
-			#Set some step size for loop - needs to be small enough that we don't miss roots where function crosses and re-crosses zero within this range
-			stepSize = 0.1;
-
-			#Loop over range and push back all roots to vectors
-			prevValue = dX2_dm.Eval(dX2_dm.GetXmin());
-			yValue = np.arange(dX2_dm.GetXmin() + stepSize,  dX2_dm.GetXmax(), stepSize)
-			for i in range(0, len(yValue)):
-				mVal=yValue[i]
-				newValue = dX2_dm.Eval(mVal);
-				if (np.signbit(prevValue) != np.signbit(newValue)):
-					m_tmp = dX2_dm.GetX(0, mVal - stepSize, mVal);
-					gradients.append(m_tmp);
-					intercepts.append( (Su - m_tmp * Sz + sqrt(m_tmp * m_tmp + 1)*Sr) / S );
-				prevValue = newValue;
-			# for mVal loop
-
-			#Throw if we didn't find a root - something went wrong
-			if (len(gradients) == 0):
-				sys.stderr.write("No roots found from chi-squared minimisation function. Check step size and function range.")
-
-			# Holders for final gradient/intercept result - initialised to 0 here to keep compiler happy, but should never make it through logic with these
-			gradient = 0;
-			intercept = 0;
-
-			#Loop over possible gradient/intercepts and calculate chi2 value - then take lowest value as best gradient/intercept
-			chi2ValMin = float("inf")
-			for grad in range(0, len(gradients)):
-
-				chi2Val = 0;
-				for i_hit in range(0, nHits):
-
-					z = zRecon[i_hit];
-					u = xRecon[i_hit];
-					r = radRecon[i_hit];
-					err2 = pow(resolution, 2); # the error is determined by the resolution
-
-					# Set r based on whether it's left (+ve r) or right (-ve r)
-					if (LRTruth[i_hit] == -1):
-					 	r = -r;
-
-					#Calculate distance of track from wire and use it for Chi2 calculation
-					d = (gradients[grad] * z + intercepts[grad] - u) / sqrt(gradients[grad] * gradients[grad] + 1);
-					#double d = Tracker::pointToLineDCA(z, u, gradient, intercept);
-					chi2Val += pow(d - r, 2) / err2;
-
-				# // hits
-
-				# Store gradient/intercept for lowest chi2 val;
-				if (chi2Val < chi2ValMin) :
-					gradient  = gradients[grad];
-					intercept = intercepts[grad];
-					chi2ValMin = chi2Val;
-				
-			# // end of grad/inter.
-
-			#/ Convert to p-value and add track to vector if it passes p-value cut
-			pVal = TMath.Prob(chi2ValMin, nHits - 2); #Two fit parameters
-			pValue = pVal;
-			h_pValue.Fill(pValue)
-			chi2Circle = chi2ValMin;
-
-			if (pVal > pValCut):
-				# We'll want to store left/right hits so set these
-				for i_hit in range(0, nHits):
-					#XXX Now that we know the slope and the gradient of the best fit line through drift circles,
-					# we can calculate the residual for each drift circle, which is
-					# "DCA from that line to the straw centre" - "Radius of the drift circle"
-					residualRecon = pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
-					h_residualRecon.Fill(residualRecon)
-				# // hits
-
-				#TODO 
-				# // Passing recon track parameters to MC
-				# resData.slopeRecon = gradient;     // slope of the best fit line
-				# resData.interceptRecon = intercept; // intercept
-				# // Python plotting
-				# if (debugBool && cutTriggered == false) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
-				
-			# // p-value cut
-		# // LRCombinations [once for useTruthLR]
-
+    	# if (1==1):
+    	# 	print slope*beamStart+y_intercept , slope*beamStop+y_intercept  , beamStart  , beamStop 
+ 
 		gen[trackCount][0]=beamStart
 		gen[trackCount][1]= x0
 		gen[trackCount][2]=beamStop
 		gen[trackCount][3]=x1
 
 		fit[trackCount][0]=beamStart
-		x0Recon = gradient*beamStart + intercept
+		x0Recon = slope*beamStart + y_intercept
 		fit[trackCount][1]= x0Recon
 		fit[trackCount][2]=beamStop
-		fit[trackCount][3]= gradient*beamStop + intercept
+		fit[trackCount][3]= slope*beamStop + y_intercept
 			
 		h_vertexReco.Fill(x0Recon)
 		h_vertexResidual.Fill(xIntercept-x0Recon)
+
+		hitCount+=len(radRecon);
+		trackCount+=1
 
 		# MC.residualsRecon = resData.residualsRecon;
 		# MC.slopeRecon = resData.slopeRecon;
