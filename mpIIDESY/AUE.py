@@ -14,6 +14,7 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.cbook import get_sample_data
 from matplotlib._png import read_png
 import subprocess
+import decimal
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument("-mis", "--mis")
@@ -25,7 +26,7 @@ moduleN = 8 #number of movable detectors/module [independent modules]
 strawN = 8 #number of measurement elements in x direction  [number of straws per layer]
 viewN = 2 #There are two views per module (U and V) 
 layerN = 2 #there are 2 layers per view [4 layers per module]
-layerTotalN = layerN * viewN * moduleN # total number of layers
+toalLayerN= layerN * viewN * moduleN # total number of layers
 strawRadius = 2.535 # take as the outerRadiusOfTheGas
 startingZDistanceStraw0 = 0.0 # distance of the very first layer [the first straw] relative to the "beam" in z [cm]
 startingXDistanceStraw0 = strawN/2*6.06-strawRadius # distance of the very first layer [the first straw] in x [cm]
@@ -36,13 +37,19 @@ moduleSpacing = 133.14 # z distance between modules' first layers [first layer o
 layerDisplacement = 3.03 # relative x distance between first straws in adjacent layers in a view [upstream layer is +x shifted]
 
 ### Beam and Physics Parameters 
+MeanDecayPointZ = -1000 # mm 
+print "MeanDecayPointZ= ",MeanDecayPointZ, "mm"
+
 beamPositionLength = 20.0 # x spread 
-beamStop = (moduleSpacing + viewSpacing + layerSpacing*float(layerN)) * float(moduleN) # z 
+beamStart = MeanDecayPointZ 
+beamStop = 1300 # z 
 mX = 0.015  # uniform slope between -0.015 and 0.015 provides nice coverage for 8 straws
 trackCut = 0.5 # 500 um
+layerCut = 5
 
 resolution = 0.150 #150 um  
 useTruthLR = True
+pValCut = 0.0
 
 #Define some helper functions 
 
@@ -102,9 +109,18 @@ np.set_printoptions(precision=3) #to nearest um
 print "Misalignments:", misXSmeared, "[mm]"
 print "Misalignments:", misXSmeared*1e3, "[um]"
 
-MeanDecayPointZ = 1000 # mm 
+####### ROOT Histos ##########
+Tf = TFile('Extrapolation.root', 'RECREATE')
+h_residualRecon = TH1F("h_residualRecon", "Recon Residual (Track - Hit DCA); Residual [mm]",  99, -1.0, 1.0) 
+h_residualTruth = TH1F("h_residualTruth", "Truth Track DCA - Hit DCA; Residual [mm]",  99, -1.0, 1.0)
+h_hitDCA = TH1F("h_hitDCA", "Hit DCA; DCA [mm]",  90,  -0.5, 4.0) 
+h_trackDCA = TH1F("h_trackDCA", "Track DCA; DCA [mm]",  90,  -0.5, 4.0)
+h_trackTruthDCA = TH1F("h_trackTruthDCA", "Truth Track DCA; DCA [mm]",  90,  -0.5, 4.0) 
 
-print "MeanDecayPointZ= ",MeanDecayPointZ, "mm"
+h_pValue = TH1F("h_pValue", "p-value", 100, 0.0, 1.0)
+h_vertexTruth = TH1F("h_vertexTruth", "Vertex: Truth; [mm]", 100, -20.0, 20.0)
+h_vertexReco = TH1F("h_vertexReco", "Vertex: Reco; [mm]", 100, -20.0, 20.0)
+h_vertexResidual = TH1F("h_vertexResidual", "Vertex: #Delta (Recon - Truth)", 100, -20.0, 20.0)
 
 
 ########Construct Geometry [mm]####################
@@ -150,12 +166,19 @@ for i_module in range(0, moduleN):
 
 hitCount=0
 trackCount=0
+trackCutCount=0
+
+gen=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
+fit=[[0 for number in xrange(4)] for i_track in xrange(trackN)]
+hitList=[[0 for number in xrange(toalLayerN)] for i_track in xrange(trackN)]
 
 for i_track in range(0, trackN):
-	hitsPerTrack=0
+	#print ""
+	#print "i_track=", i_track
 	#Track parameters for rand-generated line MC [start and end positions outside of detectors]
-	x0 = beamPositionLength *np.random.uniform(0,1) - beamPositionLength/2.0; 
+	x0 = beamPositionLength *np.random.uniform(0,1) - beamPositionLength/2.0;
 	xIntercept = x0 
+	h_vertexTruth.Fill(xIntercept)
 	x1 = x0 # for parallel lines only
 	signXSlope = 0.0 # for parallel lines only
 	generalLines = True  # XXX quick hack
@@ -171,14 +194,19 @@ for i_track in range(0, trackN):
 	xRecon = []
 	zRecon = []
 	radRecon = []
+	DCAs = []
+	LRTruth = []
 
+	hitsPerTrack=0
+	i_hit=0
+	cutTriggered = False
 	for i_module in range(0, moduleN):
 		for i_view in range(0, viewN):
 			for i_layer in range(0, layerN):
 				# true track position in-line with the layer [from line x=ym+c]
 				xTrack = xSlope * MisX[i_module][i_view][i_layer][int(strawN / 2)] + xIntercept
 				# position on the detector [from dca]
-
+				#print "i_hit=", i_hit
 				#Find the two closest x straw coordinates given x on the line - with same z [the vector of straw x is naturally in an ascending order]
 				# xTrack is the point of the line "in-line with the layers"
 				lower=0 
@@ -194,6 +222,7 @@ for i_track in range(0, trackN):
 				if (xTrack > xLayer[0]):
 					#hit distance is then the dca from the L of the straw with highest x coordinate
 					hitDistance = pointToLineDCA(zLayer[0], xLayer[0], xSlope, xIntercept)
+					# print "hitDistance in above", hitDistance
 					LR = +1 # assign truth L
 					index = 0 #
 					
@@ -201,6 +230,7 @@ for i_track in range(0, trackN):
 				elif (xTrack < xLayer[lastID]):
 					# hit distance is the dca from the R of the last straw
 					hitDistance = pointToLineDCA(zLayer[0], xLayer[lastID], xSlope, xIntercept)
+					# print "hitDistance in below", hitDistance
 					LR = -1
 					index = lastID
 
@@ -214,13 +244,15 @@ for i_track in range(0, trackN):
 						if (xLayer[i_counter] < xTrack):
 							lower = xLayer[i_counter];
 							upper = xLayer[i_counter - 1];
+							#print "xLayer[i_counter], xTrack, lower, upper, z_counter, i_counter", xLayer[i_counter], xTrack, lower, upper, z_counter, i_counter
 							z_counter+=1
 							break
-							#goto jmp;
-					#jmp:
+							
 
 					hit_distance_low = pointToLineDCA(zLayer[z_counter], lower, xSlope, xIntercept);
 					hit_distance_up = pointToLineDCA(zLayer[z_counter - 1], upper, xSlope, xIntercept);
+					#print "hit_distance_low ", hit_distance_low
+					#print "hit_distance_up ", hit_distance_up
 
 					if (hit_distance_low < strawRadius and hit_distance_up < strawRadius):
 						sys.stderr.write("Multiple Layers Hit")
@@ -247,45 +279,51 @@ for i_track in range(0, trackN):
 				dcaUnsmeared = hitDistance;
 				hitDistanceSmeared = hitDistance ### TODO 
 				#hitDistanceSmeared = hitDistance + resolution * randomFacility->Gaus(0.0, 1.0);
-				#//Apply a 500 um cut on the WHOLE track
-				cutTriggered = False
-				if (abs(hitDistanceSmeared) < trackCut ):
-					cutTriggered = True # // will be checked in the MC_Launch on DCA return
-					print "Track Cut"
+				
 				dca = hitDistanceSmeared
+				DCAs.append(dca)
+				LRTruth.append(LR)
 				residualTruth = dca - hitDistance;
+	
+				#proceed only if hit is valid
+				if (dca < strawRadius):
+					#Find the truth ID, and LR hit for a straw
+					xRecon.append(IdealX[i_module][i_view][i_layer][index[0]]); 
+					zRecon.append(IdealZ[i_module][i_view][i_layer][index[0]]); 
+					radRecon.append(dca);
+					h_hitDCA.Fill(dca)
+					#print "dca= ", dca
 
-				missedHit=False
-				if (cutTriggered == False):
-					if (dca > strawRadius):
-						print "Hit Rejected: outside of straw layer with dca =", dca 
-						z_counter+=1
-						missedHit==True
-					
-					#proceed only if hit is valid
-					if (missedHit == False):
-						#Find the truth ID, and LR hit for a straw
-						xRecon.append(IdealX[i_module][i_view][i_layer][index[0]]); 
-						zRecon.append(IdealZ[i_module][i_view][i_layer][index[0]]); 
-						radRecon.append(dca); 
-
-						hitCount+=1;
-						hitsPerTrack+=1
-						z_counter+=1;  # incrementing distance of planes
+					hitsPerTrack+=1
+					z_counter+=1;  # incrementing distance of planes
 					# missed hit check
 
 				# DCA cut if
+				i_hit+=1
 			#end of Layers loop
 	    # end of View loop
 	# end of looping over modules
 
+	#//Apply a 500 um cut on the WHOLE track
+	for i in range(0, len(DCAs)):
+		if (DCAs[i] < trackCut ):
+			cutTriggered = True
+			trackCutCount +=1
+			#print "Cut triggered"
+			break
+	#print DCAs
+	#print hitsPerTrack
 	#Now for the whole track, if not cut
-	if (cutTriggered == False):
+	if (cutTriggered == False and hitsPerTrack >= layerCut):
+		
+		hitCount+=len(radRecon);
+		trackCount+=1
+
 		#from James's code: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/repository/entry/teststand/StraightLineTracker_module.cc?utf8=%E2%9C%93&rev=feature%2FtrackDevelop
 		nHits = hitsPerTrack # same for no hit rejection
 
 		#These sums are parameters for the analytic results that don't change between LR combos (use U here but equally applicable to V coordinate)
-		S, Sz, Su, Szz, Suu, Suz =0 # // also good declaration style fur custom types
+		S, Sz, Su, Szz, Suu, Suz = (0,)*6 # // also good declaration style fur custom types
 		for i_hit in range(0, nHits): 
 			z = zRecon[i_hit];
 			u = xRecon[i_hit];
@@ -299,14 +337,14 @@ for i_track in range(0, trackN):
 		# // hits
 
 		# Number of LR combinations (2^N or 1 if using truth)
-		nLRCombos = np.pow(2, nHits);
+		nLRCombos = np.power(2, nHits);
 		if (useTruthLR):
 			nLRCombos = 1;
 
 		#Loop over all LR combinations and produce line fit for each one
 		for LRCombo  in range (0, nLRCombos):
 			#These sums are the other parameters for the analytic results
-			Sr, Sru, Srz = 0
+			Sr, Sru, Srz = (0,)*3
 			for i_hit in range (0, nHits):
 				z = zRecon[i_hit];
 				u = xRecon[i_hit];
@@ -340,7 +378,9 @@ for i_track in range(0, trackN):
 
 			#Loop over range and push back all roots to vectors
 			prevValue = dX2_dm.Eval(dX2_dm.GetXmin());
-			for mVal in range(dX2_dm.GetXmin() + stepSize, dX2_dm.GetXmax(), stepSize):
+			yValue = np.arange(dX2_dm.GetXmin() + stepSize,  dX2_dm.GetXmax(), stepSize)
+			for i in range(0, len(yValue)):
+				mVal=yValue[i]
 				newValue = dX2_dm.Eval(mVal);
 				if (np.signbit(prevValue) != np.signbit(newValue)):
 					m_tmp = dX2_dm.GetX(0, mVal - stepSize, mVal);
@@ -374,54 +414,60 @@ for i_track in range(0, trackN):
 					 	r = -r;
 
 					#Calculate distance of track from wire and use it for Chi2 calculation
-					d = (gradients[grad] * z + intercepts[grad] - u) / sqrt(gradients.at(grad) * gradients.at(grad) + 1);
+					d = (gradients[grad] * z + intercepts[grad] - u) / sqrt(gradients[grad] * gradients[grad] + 1);
 					#double d = Tracker::pointToLineDCA(z, u, gradient, intercept);
 					chi2Val += pow(d - r, 2) / err2;
 
-					if (debugBool && StrongDebugBool) {
-						cout << "grad= " << grad << " gradients.size()= " << gradients.size() << " chi2Val " << chi2Val
-						     << " z= " << z << " u= "  << u <<  " r= " << r << " LRTruth= " << LRTruth[i_hit] << " err2= " << err2
-						     << " d= " << d << " intercepts.at(grad)= " << intercepts.at(grad)
-						     << " gradients.at(grad)= " << gradients.at(grad) << endl;
-					}
+				# // hits
 
-				} // hits
-
-				// Store gradient/intercept for lowest chi2 val;
-				if (chi2Val < chi2ValMin) {
-					gradient  = gradients.at(grad);
-					intercept = intercepts.at(grad);
+				# Store gradient/intercept for lowest chi2 val;
+				if (chi2Val < chi2ValMin) :
+					gradient  = gradients[grad];
+					intercept = intercepts[grad];
 					chi2ValMin = chi2Val;
-				}
-			} // end of grad/inter.
+				
+			# // end of grad/inter.
 
-			// Convert to p-value and add track to vector if it passes p-value cut
-			double pVal = TMath::Prob(chi2ValMin, nHits - 2); //Two fit parameters
-			resData.pValue = pVal;
-			resData.chi2Circle = chi2ValMin;
+			#/ Convert to p-value and add track to vector if it passes p-value cut
+			pVal = TMath.Prob(chi2ValMin, nHits - 2); #Two fit parameters
+			pValue = pVal;
+			h_pValue.Fill(pValue)
+			chi2Circle = chi2ValMin;
 
-			if (debugBool && StrongDebugBool) {cout << "pVal=" << pVal << " chi2ValMin= " << chi2ValMin << endl << endl;}
-			if (pVal > pValCut) {
-				// We'll want to store left/right hits so set these
-				for (int i_hit = 0; i_hit < nHits; i_hit++) {
-					//XXX Now that we know the slope and the gradient of the best fit line through drift circles,
-					// we can calculate the residual for each drift circle, which is
-					// "DCA from that line to the straw centre" - "Radius of the drift circle"
-					float residualRecon = Tracker::pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
-					resData.residualsRecon.push_back(residualRecon);   // residual between the (centre of the straw and the fitted line [pointToLineDCA]) and radius of the fit circle;
-				} // hits
+			if (pVal > pValCut):
+				# We'll want to store left/right hits so set these
+				for i_hit in range(0, nHits):
+					#XXX Now that we know the slope and the gradient of the best fit line through drift circles,
+					# we can calculate the residual for each drift circle, which is
+					# "DCA from that line to the straw centre" - "Radius of the drift circle"
+					residualRecon = pointToLineDCA(zRecon[i_hit],  xRecon[i_hit], gradient, intercept) - radRecon[i_hit];
+					h_residualRecon.Fill(residualRecon)
+				# // hits
 
-				// Passing recon track parameters to MC
-				resData.slopeRecon = gradient;     // slope of the best fit line
-				resData.interceptRecon = intercept; // intercept
-				// Python plotting
-				if (debugBool && cutTriggered == false) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
-			} // p-value cut
-		} // LRCombinations [once for useTruthLR]
+				#TODO 
+				# // Passing recon track parameters to MC
+				# resData.slopeRecon = gradient;     // slope of the best fit line
+				# resData.interceptRecon = intercept; // intercept
+				# // Python plotting
+				# if (debugBool && cutTriggered == false) plot_fit <<  gradient*beamStart + intercept << " "  << gradient*beamStop + intercept  <<   " " <<  beamStart  << " " << beamStop << endl;
+				
+			# // p-value cut
+		# // LRCombinations [once for useTruthLR]
 
-		return resData;
+		gen[trackCount][0]=beamStart
+		gen[trackCount][1]= x0
+		gen[trackCount][2]=beamStop
+		gen[trackCount][3]=x1
 
-		trackCount+=1
+		fit[trackCount][0]=beamStart
+		x0Recon = gradient*beamStart + intercept
+		fit[trackCount][1]= x0Recon
+		fit[trackCount][2]=beamStop
+		fit[trackCount][3]= gradient*beamStop + intercept
+			
+		h_vertexReco.Fill(x0Recon)
+		h_vertexResidual.Fill(xIntercept-x0Recon)
+
 		# MC.residualsRecon = resData.residualsRecon;
 		# MC.slopeRecon = resData.slopeRecon;
 		# MC.interceptRecon = resData.interceptRecon;
@@ -430,10 +476,9 @@ for i_track in range(0, trackN):
 		# MC.pValue = resData.pValue;
 		# MC.chi2Circle = resData.chi2Circle;
 		# MC.driftRad = radRecon; // vector
-	if (cutTriggered == True):
-		break  
-			
 
+print "Total number of passed tracks ", trackCount, "with", hitCount, "hits"
+print "Tracks cut due to DCA", trackCutCount
 
 ##################PLOTING##############################
 fig = plt.figure(1)
@@ -443,8 +488,8 @@ getCentre(MisX, MisZ)
 plt.subplot(211)
 yMin=-50.0
 yMax=50.0
-xMin=-1200
-xMax=1300
+xMin=beamStart-100
+xMax=beamStop-10
 axes = plt.gca()
 
 #Centre of Module (Z,X)
@@ -459,6 +504,11 @@ for i_module in range(0, moduleN):
 				circle = plt.Circle((MisZ[i_module][i_view][i_layer][i_straw], MisX[i_module][i_view][i_layer][i_straw]), strawRadius, color='black', fill=False)
 				plt.plot(MisZ[i_module][i_view][i_layer][i_straw], MisX[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes.add_artist(circle)
+
+#Draw Truth tracks 
+for i_track in range(0, trackCount):
+	dataM = [[gen[i_track][0],gen[i_track][1]], [gen[i_track][2],gen[i_track][3]]]
+	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))), color = 'blue', marker = 'x')
 
 #Do some statistics 
 avgMean = ( sum(misXSmeared)/float(len(misXSmeared)) )
@@ -493,6 +543,11 @@ for i_module in range(0, moduleN):
 				plt.plot(IdealZ[i_module][i_view][i_layer][i_straw], IdealZ[i_module][i_view][i_layer][i_straw], color="black", marker = ",")
 				axes.add_artist(circle)
 
+#Draw Recon tracks 
+for i_track in range(0, trackCount):
+	dataM = [[fit[i_track][0],fit[i_track][1]], [fit[i_track][2],fit[i_track][3]]]
+	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))), color = 'red', marker = 'x')
+
 #Do some statistics 
 avgMean = ( sum(misXSmeared)/float(len(misXSmeared)) )
 SD = np.sqrt(np.mean(misXSmeared**2)) 
@@ -512,3 +567,7 @@ plt.title("Ideal Geometry with Reconstructed Tracks (Extrapolation: <X> = %s um 
 # plt.show()
 fig.set_size_inches(26,14)
 plt.savefig("AUE.png")
+
+
+Tf.Write()
+Tf.Close()
