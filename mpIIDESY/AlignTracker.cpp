@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
 	
 	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Decay Vertex: Recon; [mm]",  104,  -13, 13);
 	TH1F* h_truth_intercept = new TH1F("h_truth_intercept", "Decay Vertex: Truth; [mm]",  104,  -13, 13);
-	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Vertex; [um]",  519,  -260.0, 260.0);
+	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Vertex; [um]",  519,  -2000.0, 2000.0);
 	
 	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
 	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
@@ -556,6 +556,10 @@ int main(int argc, char* argv[]) {
 	msg4 << Logger::red() << "    /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/" << Logger::def();
 	Logger::Instance()->write(Logger::NOTE, msg4.str());
 	Logger::Instance()->setUseColor(true); // back to default colours
+	helper << "<d(vertex)>= " << h_reconMinusTrue_track_intercept->GetMean() << " +- " << h_reconMinusTrue_track_intercept->GetMeanError() << "\n";
+	helper << "d(vertex) SD = " << h_reconMinusTrue_track_intercept->GetRMS() << " +- " << h_reconMinusTrue_track_intercept->GetRMSError() << "\n";
+	helper << fixed << setprecision(4);
+	helper << "p-value= " << h_pval->GetMean() << " +- " << h_pval->GetMeanError() << "\n";
 	if (debugBool) {
 		Logger::Instance()->write(Logger::WARNING, "Text debug files were produced: ls Tracker_d_*.txt");
 	}

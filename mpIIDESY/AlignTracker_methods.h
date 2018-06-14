@@ -128,7 +128,7 @@ private:
 	bool hitCut = true; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {0.00,  0.01,   0.05,  0.04,  0.01,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] =     {-0.001,  0.006, -0.004,  0.002,  0.001,  0.002,  0.004, -0.001}; // manual misalignment [relative misalignment per module]
 	float dispZ[8] =     {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
 	float dispTheta[8] = {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
 

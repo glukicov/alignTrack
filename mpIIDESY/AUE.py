@@ -19,6 +19,7 @@ import decimal
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument("-mis", "--mis")
 parser.add_argument("-trackN", "--trackN")
+parser.add_argument('-misCM', '--misCM', nargs='+', help='misalignments')
 args = parser.parse_args()
 
 ########Geometrical Constants [mm]####################
@@ -97,17 +98,37 @@ print "Generating modules offsets with smeared Misalignment of", misXInput, "mm 
 print "With", trackN, "tracks"
 
 misXSmeared = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-
-#Convert X position to um and add misalignments
 #Smeared by:
 mu, sigma = 0, 1 # mean and standard deviation
-for i in range(0, len(misXSmeared)):
-	misXSmeared[i]=misXSmeared[i]+misXInput*np.random.normal(mu, sigma)
 
-np.set_printoptions(precision=3) #to nearest um 
+if (misXInput != -1):
+	
+	#Convert X position to um and add misalignments
+	
+	for i in range(0, len(misXSmeared)):
+		misXSmeared[i]=misXSmeared[i]+misXInput*np.random.normal(mu, sigma)
 
-print "Misalignments:", misXSmeared, "[mm]"
-print "Misalignments:", misXSmeared*1e3, "[um]"
+	np.set_printoptions(precision=3) #to nearest um 
+
+
+	print "Misalignments:", repr(misXSmeared*0.1), "[cm]"
+	print "Misalignments:", misXSmeared, "[mm]"
+	print "Misalignments:", misXSmeared*1e3, "[um]"
+	avgMean = ( sum(misXSmeared)/float(len(misXSmeared)) )
+	SD = np.sqrt(np.mean(misXSmeared**2)) 
+	print  "<Mis>", np.around(avgMean*1e3, decimals=3) ," [um] Mis SD:", np.around(SD*1e3, decimals=3) , " [um]"
+else:
+	for i in range(0, 8):
+		misXSmeared[i]=args.misCM[i]
+	
+	np.set_printoptions(precision=3) #to nearest um 
+	print "Misalignments:", misXSmeared, "[cm]"
+	print "Misalignments:", misXSmeared*10.0, "[mm]"
+	print "Misalignments:", misXSmeared*1e4, "[um]"
+	avgMean = ( sum(misXSmeared)/float(len(misXSmeared)) )
+	SD = np.sqrt(np.mean(misXSmeared**2)) 
+	print  "<Mis>", np.around(avgMean*1e4, decimals=1) ," [um] Mis SD:", np.around(SD*1e4, decimals=1) , " [um]"
+
 
 ####### ROOT Histos ##########
 Tf = TFile('Extrapolation.root', 'RECREATE')
@@ -451,8 +472,6 @@ for i_track in range(0, trackCount):
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(dataM, 2))), color = 'blue', marker = 'x')
 
 #Do some statistics 
-avgMean = ( sum(misXSmeared)/float(len(misXSmeared)) )
-SD = np.sqrt(np.mean(misXSmeared**2)) 
 #Plot the zeroth line
 line = [[xMin,0.0], [xMax, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'grey', linestyle=":")
