@@ -258,9 +258,13 @@ int main(int argc, char* argv[]) {
 	TH1I* h_id = new TH1I("h_id", "Straw IDs", Tracker::instance()->getStrawN(), 0, Tracker::instance()->getStrawN());
 	// Track-generation-based
 	TH1F* h_truth_slope = new TH1F("h_truth_slope", "Slope: Truth",  170,  -0.017, 0.017);
-	TH1F* h_truth_intercept = new TH1F("h_truth_intercept", "Intercept: Truth ",  104,  -1.3, 1.3);
+
 	TH1F* h_recon_slope = new TH1F("h_recon_slope", "Slope: Recon", 170,  -0.017, 0.017);
-	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Intercept: Recon",  104,  -1.3, 1.3);
+	
+	TH1F* h_recon_intercept = new TH1F("h_recon_intercept", "Decay Vertex: Recon; [mm]",  104,  -13, 13);
+	TH1F* h_truth_intercept = new TH1F("h_truth_intercept", "Decay Vertex: Truth; [mm]",  104,  -13, 13);
+	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Vertex; [um]",  519,  -260.0, 260.0);
+	
 	TH1F* h_x0 = new TH1F("h_x0", "Truth #x_{0}",  99,  -2, 2);
 	TH1F* h_x1 = new TH1F("h_x1", "Truth #x_{1}",  99,  -3, 3);
 	//Track/Hits-based
@@ -269,9 +273,9 @@ int main(int argc, char* argv[]) {
 	TH1F* h_chi2_true = new TH1F("h_chi2_true", "#Chi^{2}: Truth", 40, -1, 50);
 	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals: Recon", 199, -0.2, 0.2);
 	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "#Chi^{2}: Recon", 250, 0, 120);
-	TH1I* h_hitCount = new TH1I("h_hitCount", "Hit count", 32 , 0, 32);
+	TH1I* h_hitCount = new TH1I("h_hitCount", "Hit count", 33 , 0, 33);
 	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "#Delta (Recon - True) Slope",  119,  -0.002, 0.002);
-	TH1F* h_reconMinusTrue_track_intercept = new TH1F("h_reconMinusTrue_track_intercept", " #Delta (Recon - True) Intercept",  119,  -0.06, 0.06);
+
 	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
 	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 89, -0.1, 90);
 	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 89, -0.1, 10.0);
@@ -283,8 +287,8 @@ int main(int argc, char* argv[]) {
 	TH1F* h_DGL3 = new TH1F("h_DGL3", "DGL3: All Modules",  149,  -1.1, 1.1); h_DGL3->SetDirectory(cd_PEDE);
 
 	//Use array of pointer of type TH1x to set axis titles and directories
-	TH1F* cmTitle[] = {h_reconMinusTrue_track_intercept, h_sigma_MP2, h_res_MP2, h_dca,
-	                   h_truth_intercept, h_x0, h_x1, h_recon_intercept, h_residual_true, h_residual_recon,
+	TH1F* cmTitle[] = {h_sigma_MP2, h_res_MP2, h_dca,
+	                   h_truth_intercept, h_x0, h_x1, h_residual_true, h_residual_recon,
 	                   h_driftRad, h_dca_unsmeared
 	                  };
 	for (int i = 0; i < (int) sizeof( cmTitle ) / sizeof( cmTitle[0] ); i++) {
@@ -293,8 +297,8 @@ int main(int argc, char* argv[]) {
 	}
 	TH1F* cdAllHits_F[] = {h_sigma_MP2, h_res_MP2, h_dca, h_chi2_true, h_residual_recon, h_residual_true,
 	                       h_chi2_recon, h_driftRad, h_dca_unsmeared };
-	TH1F* cdTracks_F[] = {h_truth_intercept, h_truth_slope, h_x0, h_x1, h_reconMinusTrue_track_slope, h_reconMinusTrue_track_intercept,
-	                      h_recon_slope, h_recon_intercept, h_pval, h_chi2_circle, h_chi2_circle_ndf };
+	TH1F* cdTracks_F[] = {h_truth_slope, h_x0, h_x1, h_reconMinusTrue_track_slope,
+	                      h_recon_slope, h_pval, h_chi2_circle, h_chi2_circle_ndf };
 	TH1I* cdAllHits_I[] = {h_labels, h_hitCount, h_id};
 	for (int i = 0; i < (int) sizeof( cdAllHits_F ) / sizeof( cdAllHits_F[0] ); i++) {
 		cdAllHits_F[i]->SetDirectory(cd_All_Hits);
@@ -373,16 +377,19 @@ int main(int argc, char* argv[]) {
 		//float p=pow(10.0, 1+Tracker::instance()->generate_uniform()); // XXX
 		//scatterError=sqrt(Tracker::instance()->getWidth())*0.014/p; // XXX
 		scatterError = 0; // set no scatterError for now
-		if (debugBool && StrongDebugBool) { helper << "Track: " << trackCount << endl; }
+		//if (debugBool && StrongDebugBool) { helper << "Track: " << trackCount << endl; }
 		
 		//Generating tracks
 		MCData generatedMC = Tracker::instance()->MCLaunch(scatterError, debug_calc, debug_off, debug_mc, plot_fit, plot_gen, plot_hits_gen,
 		                     plot_hits_fit, debugBool);
 
+		int totalHitLayers = generatedMC.totalLayerHits;
+		//std::cout << "totalHitLayers= " <<totalHitLayers << "\n"; 
+
 		//First of all, check if track has not failed the cut
 		if (generatedMC.cut == false) {
 
-			for (int hitCount = 0; hitCount < generatedMC.hitCount; hitCount++) { //counting only hits going though detector
+			for (int hitCount = 0; hitCount < totalHitLayers; hitCount++) { //counting only hits going though detector
 
 				//******************PEDE INPUTS******************************
 				float resiudalRecon =  generatedMC.residualsRecon[hitCount]; //Reconstructed Residual
@@ -460,6 +467,7 @@ int main(int argc, char* argv[]) {
 				h13->Fill(resiudalRecon);
 
 				hitsN++; //count hits
+				//std::cout << "hitsN=" << hitsN << "\n";
 			} // end of hits loop
 
 			//***********************************Sanity Plots: Tracks******************************************/
@@ -472,20 +480,20 @@ int main(int argc, char* argv[]) {
 			//Resetting counters for next track
 			residualsTrueSum_2 = 0;
 			residualsReconSum_2 = 0;
-			h_hitCount->Fill(generatedMC.hitCount);
+			h_hitCount->Fill(totalHitLayers);
 
 			//Filling Track-based plots
 			h_truth_slope->Fill(generatedMC.slopeTruth);
-			h_truth_intercept->Fill(generatedMC.interceptTruth);
+			h_truth_intercept->Fill(generatedMC.interceptTruth*10);
 			h_x0->Fill(generatedMC.x0);
 			h_x1->Fill(generatedMC.x1);
-			h_reconMinusTrue_track_intercept->Fill(generatedMC.interceptTruth - generatedMC.interceptRecon);
+			h_reconMinusTrue_track_intercept->Fill((generatedMC.interceptTruth - generatedMC.interceptRecon)*10000.0); // um
 			h_reconMinusTrue_track_slope->Fill(generatedMC.slopeTruth - generatedMC.slopeRecon);
 			h_recon_slope->Fill(generatedMC.slopeRecon);
-			h_recon_intercept->Fill(generatedMC.interceptRecon);
+			h_recon_intercept->Fill(generatedMC.interceptRecon*10.0);
 			h_pval->Fill(generatedMC.pValue);
 			h_chi2_circle->Fill(generatedMC.chi2Circle);
-			h_chi2_circle_ndf->Fill(generatedMC.chi2Circle / (generatedMC.hitCount - 2));
+			h_chi2_circle_ndf->Fill(generatedMC.chi2Circle / (totalHitLayers - 2));
 
 			// XXX additional measurements from MS IF (imodel == 2) THEN
 			//IF (imodel >= 3) THEN
@@ -500,7 +508,9 @@ int main(int argc, char* argv[]) {
 	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
 	               << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
 	               << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()
-	               << "  " << Tracker::instance()->getBeamStop() <<  endl;
+	               << "  " << Tracker::instance()->getBeamStop() << " " 
+
+	               << endl;
 
 	helper << "Mille residual-accumulation routine completed! [see Tracker_data.bin]" << endl;
 

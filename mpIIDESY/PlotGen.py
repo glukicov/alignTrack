@@ -11,9 +11,18 @@
 
 #import numpy as np 
 import matplotlib.pyplot as plt #for plotting 
-import itertools
 import csv
 import pprint
+import numpy as np  # smart arrays 
+import itertools # smart lines 
+import argparse, sys
+from math import log10, floor
+from matplotlib.ticker import MaxNLocator
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from matplotlib.cbook import get_sample_data
+from matplotlib._png import read_png
+import subprocess
+import decimal
 
 
 # Getting constants from MC
@@ -39,7 +48,7 @@ with open("Tracker_p_centre.txt") as f:
 		for i_module in range(0, moduleN):
 			centresI[i_module][0]=float(number_str[2*i_module]) 
 			centresI[i_module][1] =float(number_str[2*i_module+1])
-			print 'i_module=', i_module
+			#print 'i_module=', i_module
 		nextLine = next(f)
 		number_str=nextLine.split()
 		for i_module in range(0, moduleN):
@@ -48,6 +57,8 @@ with open("Tracker_p_centre.txt") as f:
 
 #print centresI
 #print centresM
+
+####### ROOT Histos ##########
 
 toalLayerN=layerN*moduleN*viewN
 
@@ -94,6 +105,27 @@ with open("Tracker_d_mis.txt") as f:
 		nextLine = next(f)
 		number_str=nextLine.split()
 		layerMz.append(nextLine.split()) #z
+
+
+misXSmeared = []
+
+with open("Tracker_pede_mis.txt") as f:
+	for line in f:  #Line is a string
+		number_str=line.split()
+		for i in range(0, len(number_str)):
+			misXSmeared.append(float(number_str[i])) #z
+
+misXSmeared=np.array(misXSmeared)
+
+np.set_printoptions(precision=3) #to nearest um 
+
+print "Misalignments:", misXSmeared*1e2, "[mm]"
+misXSmeared = misXSmeared*1e4
+print "Misalignments:", misXSmeared, "[um]"
+
+MeanDecayPointZ = -1000 # mm 
+print "MeanDecayPointZ= ",MeanDecayPointZ, "mm"
+
 
 #Now for straws in X: 
 i_totalLayers=0
@@ -162,7 +194,16 @@ with open("Tracker_p_hits_fit.txt") as f:
 
 ##################PLOTING##############################
 #Misaligned Geometry and Generated tracks 
-plt.figure(1)
+fig=plt.figure(1)
+
+yMin=-5.0
+yMax=5.0
+# xMin=beamStart-100
+# xMax=beamStop-10
+
+xMin=-100
+xMax=+150
+
 plt.subplot(211)
 axes = plt.gca()
 
@@ -187,15 +228,22 @@ for i_module in range(0, moduleN):
 
 for i_hits in range(0, len(gen_hitX)):
 	circle3 = plt.Circle((gen_hitZ[i_hits], gen_hitX[i_hits]), gen_hitRad[i_hits], color='red', linestyle='--', fill=False)
-	axes.add_artist(circle3)		
+	axes.add_artist(circle3)
 
-#axes.set_ylim([0.4,1.6])
-axes.set_ylim([-3.6,3.3])
-#axes.set_xlim([54,60])
-axes.set_xlim([3,60])
+
+#Do some statistics 
+avgMean = ( sum(misXSmeared)/float(len(misXSmeared)) )
+SD = np.sqrt(np.mean(misXSmeared**2)) 
+#Plot the zeroth line
+line = [[xMin,0.0], [xMax, 0.0]]
+plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'grey', linestyle=":")		
+
+axes.set_ylim([yMin, yMax])
+axes.set_xlim([xMin, xMax])
 #plt.xlabel("z [cm]")
 plt.ylabel("x [cm]")
-plt.title("Misaligned Geometry with True Tracks")
+plt.title("Misaligned Geometry with Truth Tracks (Misalignment: <X> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=18)
+
 
 #Ideal Geometry and Fitted tracks 
 plt.subplot(212)
@@ -222,14 +270,19 @@ for i_module in range(0, moduleN):
 
 for i_hits in range(0, len(fit_hitX)):
 	circle = plt.Circle((fit_hitZ[i_hits], fit_hitX[i_hits]), fit_hitRad[i_hits], color='purple', linestyle='--', fill=False)
-	axes2.add_artist(circle)	
-	
-#axes2.set_ylim([0.4,1.6])
-axes2.set_ylim([-3.6,3.3])
-#axes2.set_xlim([54,60])
-axes2.set_xlim([3,60])
-plt.xlabel("z [cm]")
-plt.ylabel("x [cm]")
-plt.title("Ideal Geometry with Reconstructed Tracks")
+	axes2.add_artist(circle)
 
-plt.show()
+#Plot the zeroth line
+line = [[xMin,0.0], [xMax, 0.0]]
+plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'grey', linestyle=":")	
+	
+#And now some plot massaging
+axes2.set_ylim([yMin, yMax])
+axes2.set_xlim([xMin, xMax])
+plt.xlabel("z [cm]", fontsize=18)
+plt.ylabel("x [cm]", fontsize=18)
+plt.title("Ideal Geometry with Reconstructed Tracks", fontsize=18)
+
+# plt.show()
+fig.set_size_inches(26,14)
+plt.savefig("AUE.png")

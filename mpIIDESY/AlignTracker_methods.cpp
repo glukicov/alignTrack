@@ -268,7 +268,7 @@ jmp:
 	dcaData.dcaUnsmeared = hitDistance;
 	float hitDistanceSmeared = hitDistance + Tracker::instance()->getResolution() * randomFacility->Gaus(0.0, 1.0);
 	//Apply a 500 um cut on the WHOLE track
-	if (abs(hitDistanceSmeared) < trackCut && trackCutBool) {
+	if (abs(hitDistanceSmeared) < trackCut && trackCutBool==true) {
 		cutTriggered = true; // will be checked in the MC_Launch on DCA return
 	}
 
@@ -464,7 +464,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 	bool StrongDebugBool = false; // HACK XXX set by hand for now
 	// Set up new container for track data, with hit count set to zero
 	MCData MC;
-	MC.hitCount = 0; //count only counts through detector
+	int layerCount = 0; //count only counts through detector
 	cutTriggered = false; //set trigger to OFF until DCA is less than 500 um, then kill this track
 
 	//clearing containers for next track
@@ -501,7 +501,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 	MC.x1 = x1;
 	MC.slopeTruth = xSlope;
 	MC.interceptTruth = xIntercept;
-
+	//std::cout << " " << "\n";
 	//Now get the centres of the ideal modules (not truth) and pass to main
 	RotationCentres idealCentres = Tracker::getCentre(mod_lyr_strawIdealPositionX, mod_lyr_strawIdealPositionZ, debug_calc);
 
@@ -514,7 +514,8 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		for (int i_view = 0; i_view < viewN; i_view++) {
 			for (int i_layer = 0; i_layer < layerN; i_layer++) { //per layer
-				missedHit = false; // set flag to false until triggered
+				//missedHit = false; // set flag to false until triggered
+				//std::cout << "layerCount= " << layerCount << "\n";
 				// TRUTH PARAMETERS
 				//The registered hit position on the misaligned detector is smeared by its resolution
 				// zTrack is just the distance[z_counter] - in-line with the layer [chose the middle straw]
@@ -525,16 +526,9 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 				if (cutTriggered) {MC.cut = true;} // set cut to true for the main, and return MC.cut as true only.
 				if (cutTriggered == false) {
 					float dca =  MisDetector.dca;  //dca (smeared) of the hit straw
-					//Rejection of hits due to geometry (i.e. missed hits)
-					//No signal in a straw = no signal in the layer
-					if (dca > strawRadius && hitCut == true) { //[between (0,0.25]
-						incRejectedHitsDCA();
-						if (debugBool) {cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;}
-						z_counter++;  // incrementing distance of planes
-						missedHit = true;
-					}
 					// proceed only if hit is valid
-					if (missedHit == false) {
+					if (dca <= strawRadius) {
+						//std::cout << "DCA= " << dca << " strawRadius= " << strawRadius << "\n";
 						//Find the truth ID, and LR hit for a straw
 						float residualTruth = MisDetector.residualTruth;
 						int misID =  MisDetector.strawID; // ID of the hit straw [to identify the correct straw in the Fit function]
@@ -542,7 +536,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 						MC.dcaUnsmeared.push_back(MisDetector.dcaUnsmeared);
 						MC.strawID.push_back(misID);
 						MC.LR.push_back(misLRSign);
-						if (debugBool && StrongDebugBool) {cout << "DCA is= " << dca << " for straw ID= " << misID << " was hit from " << misLRSign << endl;}
+						//if (1 == 1) {cout << "DCA is= " << dca << " for straw ID= " << misID << " was hit from " << misLRSign << endl;}
 						// RECONSTRUCTED PARAMETERS
 						//Reconstructing the hit as seen from the ideal detector [shift circle x coordinate by misalignment]
 
@@ -576,22 +570,32 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 						MC.zCentreModule.push_back(idealCentres.zCentres[i_module]);
 						MC.xCentreModule.push_back(idealCentres.xCentres[i_module]);
 
-						MC.hitCount++;
+						layerCount++;
+						//std::cout << "layerCount2= " << layerCount << "\n";
 						z_counter++;  // incrementing distance of planes
 					} // missed hit check
-
+					//Rejection of hits due to geometry (i.e. missed hits)
+					//No signal in a straw = no signal in the layer
+					else { //[between (0,0.25]
+						incRejectedHitsDCA();
+						//cout << "Hit Rejected: outside of straw layer with dca =" << dca << endl;
+						z_counter++;  // incrementing distance of planes
+						//missedHit = true;
+					}
+					//std::cout << "layerCount3= " << layerCount << "\n";
 				}// DCA cut if
 			}//end of Layers loop
 		}// end of View loop
 	}// end of looping over modules
-
+	//std::cout << "layerCount4= " << layerCount << "\n";
 	// Now for the whole track, if not cut
 	if (cutTriggered == false) {
-
+		MC.totalLayerHits = layerCount;
+		//std::cout << "layerCount5= " << layerCount << "\n";
 		if (debugBool && StrongDebugBool) {cout << "Calculating residuals..." << endl;}
 		//This happens once per MC function call [as we now accumulated x coordinates of "ideal" points for all hits
 		// and need to do a simultaneous fit once - to return #hits worth of residuals]
-		ResidualData resData = GetResiduals(zRecon, xRecon, radRecon, MC.hitCount, plot_fit, debugBool, useTruthLR, MC.LR);
+		ResidualData resData = GetResiduals(zRecon, xRecon, radRecon, layerCount, plot_fit, debugBool, useTruthLR, MC.LR);
 
 		MC.residualsRecon = resData.residualsRecon;
 		MC.slopeRecon = resData.slopeRecon;
@@ -601,6 +605,7 @@ MCData Tracker::MCLaunch(float scatterError, ofstream& debug_calc, ofstream& deb
 		MC.pValue = resData.pValue;
 		MC.chi2Circle = resData.chi2Circle;
 		MC.driftRad = radRecon; // vector
+		//cout << "MC.residualsRecon.size()= " << MC.residualsRecon.size() << "\n";
 
 		//plotting files
 		if (debugBool) {
@@ -786,9 +791,9 @@ void Tracker::setGeometry(ofstream& debug_geom, ofstream& debug_mis, ofstream& p
 	cout << "Misalignment(M)" << endl;
 	for (int i_module = 0; i_module < moduleN; i_module++) {
 		cout << "M" << noshowpos << i_module + 1  << " x :: "  << showpos << dispX[i_module] << " cm. " << "z :: "  << showpos << dispZ[i_module] << " cm. " << "𝛉 :: " << showpos << dispTheta[i_module] << " rad. " << endl;
-		if (i_module == 1 || i_module == 2) { // TODO move to pre-sigma function
-			pede_mis << dispX[i_module] << " " << dispZ[i_module] << " " <<  dispTheta[i_module] << " ";
-		}
+		//if (i_module == 1 || i_module == 2) { // TODO move to pre-sigma function
+		pede_mis << dispX[i_module] << " ";
+		//}
 	} // modules
 	cout << noshowpos;
 

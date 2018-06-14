@@ -25,7 +25,7 @@
    Structure to contain data of a generated track, with the number of hits, their positions, the uncertainty in the positions, and the plane number hit.
 */
 struct MCData {
-	int hitCount; /** Number of hits in detector */
+	int totalLayerHits; /** Number of hits in detector */
 	// *** Hit Parameters *** // 
 	std::vector<float> residualsRecon; // Recon residuals between the fitted track and a drift circle 
 	std::vector<float> residualsTruth; // Truth residuals
@@ -113,8 +113,9 @@ private:
 
 	//initialising physics variables
 	// MF + inhomogeneity, E_loss, MS
-	static constexpr float resolution = 0.015; // 150um = 0.015 cm for hit smearing
+	static constexpr float resolution =0.015; // 150um = 0.015 cm for hit smearing
 	static constexpr float trackCut = 0.05; //500 um = 0.5 mm for dca cut on tracks
+	static constexpr int layerCut = 11;
 	static constexpr int nlc = 2; // dR/dc dR/dm
 	static constexpr int ngl = 1; //  dR/dx dR/dz  dR/d𝛉
 	//Matrix memory space
@@ -122,18 +123,18 @@ private:
 	int matNC = 0; // # number of constraints
 
 	float pValCut = 0.0; // from 0.0->1.0
-	bool trackCutBool = true; // if true, tracks will be rejected if DCA > trackCut
+	bool trackCutBool = true; // if true, tracks will be rejected if DCA < trackCut
 	bool useTruthLR = true; // use LR information from generated tracks [requires DCA cut!]
 	bool hitCut = true; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {0.00,  -0.03,  0.02,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
+	float dispX[8] =     {0.00,  0.01,   0.05,  0.04,  0.01,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
 	float dispZ[8] =     {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
 	float dispTheta[8] = {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
 
 	// **** GEOMETRIC CONSTANTS ****  // XXX will be taken from gm2geom in the future
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 4; //number of movable detectors/module [independent modules]
+	static const int moduleN = 8; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]
@@ -159,8 +160,8 @@ private:
 	//static constexpr float beamPositionLength = strawN*strawSpacing+strawSpacing; // max x coordinate = beamPositionLength - beamOffset; mix x = -dispX
 	static constexpr float beamPositionLength = 2.0;
 	static constexpr float beamOffset = 1.0; // offset from 0 in x
-	static constexpr float beamStart = startingZDistanceStraw0 - 5.0; // z
-	static constexpr float beamStop = (moduleSpacing + viewSpacing + layerSpacing*float(layerN)) * float(moduleN); // z
+	static constexpr float beamStart =-100.0; // z
+	static constexpr float beamStop = 160.0; // z
 
 	// **** MC CALCULATION CONTAINERS ****  //
 	// Hits-based
