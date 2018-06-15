@@ -39,17 +39,20 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
 #Truth Misalignment 
 
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case 1 (Initial)
-# raw_input("Truth Case 1?") 
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
-T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case 2 (Initial)
+#T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
 # T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
+
+# T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
+# expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
 
 
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
 print "Initial Truth Misalignment [mm]: ", mis_C
+print "With expected Parameters: ", expectPars
 raw_input("Truth Misalignment correct? [press enter]") 
 
 # # ----------------------------
@@ -271,10 +274,10 @@ hDMy = TH1F("hDMy", "PEDE - Truth Alignment in Y; Y Misalignment [um]", 49, minF
 for i in range(0, len(dMData)):
 	splitLabel = [int(x) for x in str(dMPar[i])]  # 0 = Module, 1= Parameter
 	if (splitLabel[1] == 1 and errors[i] !=0):
-		#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
+		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
 		hDMx.Fill(dMData[i])
 	if (splitLabel[1] == 2 and errors[i] !=0):
-		#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
+		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
 		hDMy.Fill(dMData[i])
 
 #Set function to fit

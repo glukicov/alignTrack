@@ -410,14 +410,14 @@ if (mode == "plot"):
 	cUniform.Print("pValFit.png")
 	cUniform.Print("pValFit.root")
 
-	for i_module in range(1, NModules+1):
-		name = "TrackerAlignment/Modules/h_MCyx_M" + str(i_module)
-		hist = f.Get(name)
-		c = TCanvas("c", "c", 700, 700)
-		c.Divide(1,1)
-		c.cd(1)
-   		hist.Draw("COLZ")
-   		c.Print("MC"+str(i_module)+".png")
+	# for i_module in range(1, NModules+1):
+	# 	name = "TrackerAlignment/Modules/h_MCyx_M" + str(i_module)
+	# 	hist = f.Get(name)
+	# 	c = TCanvas("c", "c", 700, 700)
+	# 	c.Divide(1,1)
+	# 	c.cd(1)
+ #   		hist.Draw("COLZ")
+ #   		c.Print("MC"+str(i_module)+".png")
 
    	subprocess.call(["convert" , "MC*.png", "MCHits_afterCuts.gif"])
 
@@ -426,6 +426,8 @@ if (mode == "plot"):
 	subprocess.call(["convert" , "-append", "M.png" , "M_Zoom.png", "Pulls_Res.png"])
 
 	subprocess.call(["convert" , "+append", "ResidualsSD_M.png" , "PullsSD_M.png", "SD.png"])
+
+	subprocess.call(["convert" , "-append", "SD.png", "Pulls_Res.png", "SD_Pulls_Res_Fom.png"])
 
 	print "ROOT File analysed!"
 
@@ -471,6 +473,8 @@ if (mode == "pVal"):
 if (mode == "mis"):
 	misXStr=args.mis[0:8]
 	misYStr=args.mis[8:16]
+	print "X Mis:: ", misXStr
+	print "Y Mis:: ",misYStr
 
 	#absolute misalignment
 	if (args.abs == "Y"):
