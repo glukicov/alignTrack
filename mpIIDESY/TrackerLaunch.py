@@ -245,7 +245,7 @@ for i_par in range(0, len(expectPars)):
 			misY[i_line][iModuleY]=(float(mis_C[i_par])*1e3)
 			recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3)
 			recoYError[i_line][iModuleY]=errorM
-			dMX[i_line][iModuleX]=dM
+			dMY[i_line][iModuleX]=dM
 			if (i_line == 1) :
 				iModuleY+=1
 				if (iModuleY==8):
@@ -271,16 +271,16 @@ spacing = [2, 3.5, 4.5, 5.5, 6.5]
 yMin = -300
 yMax = 300
 plt.subplot(211) # X 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 10})
 axes = plt.gca()
 axes.set_xlim(0.5, 8.5)
 axes.set_ylim(yMin, yMax)
-plt.title("Misalignment X", fontsize=12)
-plt.ylabel("Misalignment [um]", fontsize=12)
+plt.title("Misalignment X", fontsize=10)
+plt.ylabel("Misalignment [um]", fontsize=10)
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
-	plt.plot(i_module+1, misX[0][i_module], marker=".", color="red", markersize=12)
+	plt.plot(i_module+1, misX[0][i_module], marker=".", color="red")
 
 for i_line in range(0, lineN):
 	for i_module in range(0, 8):
@@ -303,19 +303,24 @@ plt.subplots_adjust(top=0.92)
 avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
 SDMis = np.std(np.array(misX[0]))
 textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-plt.text(8.7, 150, textstr, fontsize=10)
-plt.subplots_adjust(right=0.80)
+plt.text(8.7, 150, textstr, fontsize=10, color="red")
+for i_line in range(0, lineN):
+	avgMeandReconTruth = sum(np.array(dMX[i_line]))/float(len(np.array(dMX[i_line])))
+	SDdReconTruth = np.std(np.array(dMX[i_line]))
+	textstrReco = "<(It. "+str(i_line)+" - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (It. "+str(i_line)+" - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
+	plt.text(8.6, 50-100*i_line, textstrReco, fontsize=10, color=str(colours[i_line]))
+plt.subplots_adjust(right=0.78)
 
 plt.subplot(212) # Y 
 axes = plt.gca()
 axes.set_xlim(0.5, 8.5)
 axes.set_ylim(yMin, yMax)
-plt.title("Misalignment Y", fontsize=12)
-plt.ylabel("Misalignment [um]", fontsize=12)
+plt.title("Misalignment Y", fontsize=10)
+plt.ylabel("Misalignment [um]", fontsize=10)
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
-	plt.plot(i_module+1, misY[i_line][i_module], marker=".", color="red", markersize=12)
+	plt.plot(i_module+1, misY[i_line][i_module], marker=".", color="red")
 
 for i_line in range(0, lineN):
 	for i_module in range(0, 8):
@@ -329,10 +334,15 @@ for i_line in range(0, lineN):
 avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
 SDMis = np.std(np.array(misY[0]))
 textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-plt.text(8.7, 150, textstr, fontsize=10)
-plt.subplots_adjust(right=0.80)
+plt.text(8.7, 150, textstr, fontsize=10, color="red")
+for i_line in range(0, lineN):
+	avgMeandReconTruth = sum(np.array(dMY[i_line]))/float(len(np.array(dMY[i_line])))
+	SDdReconTruth = np.std(np.array(dMY[i_line]))
+	textstrReco = "<(It. "+str(i_line)+" - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (It. "+str(i_line)+" - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
+	plt.text(8.6, 50-100*i_line, textstrReco, fontsize=10, color=str(colours[i_line]))
+plt.subplots_adjust(right=0.78)
 
-plt.xlabel("Module", fontsize=16)
+plt.xlabel("Module", fontsize=12)
 plt.savefig("XY.png")
 
 
