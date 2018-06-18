@@ -23,7 +23,7 @@ def float_round(num, places = 0, direction = floor):
     return direction(num * (10**places)) / float(10**places)
 
 file = str(args.mode)
-
+from matplotlib.pyplot import *
 import matplotlib.pyplot as plt #for plotting 
 import matplotlib.ticker as ticker
 import numpy as np  # smart arrays 
@@ -39,11 +39,13 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
 #Truth Misalignment 
 
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
-T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
+# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
 # T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
+
+#T_mis_C=(0.103, 0.195, 0.080, 0.150, 0.060, 0.148, 0.035, 0.121, 0.016,0.106, -0.006, 0.082, -0.028, 0.068, -0.060, 0.060 ) # Case D : Residual Mis. 
 
 # T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
 # expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
@@ -63,7 +65,7 @@ raw_input("Truth Misalignment correct? [press enter]")
 
 # #offsets = (-0.261, -0.06, 0.0, 0.0, 0.096, -0.231, -0.374, 0.175, 0.0, 0.089, -0.075, -0.338, 0.0, 0.0, -0.277, 0.011) # Case B  (Run 1)
 
-# #offsets = (0.0, -0.131, -0.105, 0.053, 0.17, 0.132, 0.0, 0.054) # Case C (Run 1)
+# offsets = (0.0, -0.131, -0.105, 0.053, 0.17, 0.132, 0.0, 0.054) # Case C (Run 1)
 
 # print "Offsets Run 1 [mm]: ", offsets
 # raw_input("Offsets :: Run 1 correct? [press enter]") 
@@ -71,7 +73,7 @@ raw_input("Truth Misalignment correct? [press enter]")
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 # #----------------------------
 
-#----------------------------
+# ##----------------------------
 # # Run 2
 # T_mis_C=mis_C #set truth as the previous misalignment
 # mis_C = [] 
@@ -83,7 +85,7 @@ raw_input("Truth Misalignment correct? [press enter]")
 # raw_input("Offsets :: Run 2 correct? [press enter]") 
 # for i in range(0, len(T_mis_C)):
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
-#----------------------------
+# ##----------------------------
 
 
 # #----------------------------
@@ -91,7 +93,6 @@ raw_input("Truth Misalignment correct? [press enter]")
 # T_mis_C=mis_C #set truth as the previous misalignment
 # mis_C = [] 
 
-# offsets = (0.024, 0.001, 0.0, 0.0, -0.017, 0.0022, -0.025, 0.0024, -0.025, 0.00075, -0.017, 0.00026, 0.0, 0.0, 0.026, -0.0016)
 
 
 # print "Offsets Run 3 [mm]: ", offsets
@@ -154,13 +155,24 @@ dMData=[] # store all dM
 dMPar=[] # store corresponding par
 errors=[]
 
+misX= [[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+recoX=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+recoXError=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+misY=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+recoY=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+recoYError=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+dMY=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+dMX=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+
 plt.rcParams.update({'font.size': 14})
 #Plot difference for all modules
-plt.figure(1)
+plt.figure(1) # FoM vs Tracks
 
 #Loop over expected parameters
+iModuleX=0
+iModuleY=0
+iLine=-1
 for i_par in range(0, len(expectPars)):
-
 	splitLabel = [int(x) for x in str(expectPars[i_par])]  # 0 = Module, 1= Parameter
 
 	#put a line at  0 on a plot
@@ -171,13 +183,13 @@ for i_par in range(0, len(expectPars)):
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'green')
 	#Loop over data lines 
-
 	for i_line in range(0, lineN):
 		
+
 		dM=(data[i_par][i_line][1]-mis_C[i_par])*1e3  # mm to um rad to mrad
 		dMData.append(dM)
 		dMPar.append(expectPars[i_par])
-		print "i_par:", expectPars[i_par], "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
+		#print "i_par:", expectPars[i_par], "data[i_par][i_line][1]=", data[i_par][i_line][1], "mis_C[i_par]=", mis_C[i_par], "dM= ", (data[i_par][i_line][1]-mis_C[i_par])*1e3
 		errorM=data[i_par][i_line][2]*1e3
 		errors.append(errorM)
 		plt.errorbar(trackN[i_line], dM, yerr=errorM, color="red") # converting 1 cm = 10'000 um
@@ -209,18 +221,35 @@ for i_par in range(0, len(expectPars)):
 			plt.ylabel("$\Delta$ Misalignment [um]", fontsize=16)
 			tick_spacing = 20
 			axes.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
-
+			
 		if(splitLabel[1] == 3 or splitLabel[1]==4 or splitLabel[1] == 5):
 			axes.set_ylim(-10, 10)
 			plt.ylabel("$\Delta$ Misalignment [urad]", fontsize=16)
 			tick_spacing = 2
 			axes.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
-
+			
 		if (splitLabel[1] == 1):
 			plt.title('FoM M%s X'  %(int(splitLabel[0])) , fontsize=18)
+			misX[i_line][iModuleX]=(float(mis_C[i_par])*1e3)
+			#print "misX[i_line][iModuleX]= ", misX[i_line][iModuleX], "iModuleX=", iModuleX, "i_line=", i_line
+			recoX[i_line][iModuleX]=(float(data[i_par][i_line][1])*1e3)
+			recoXError[i_line][iModuleX]=errorM
+			dMX[i_line][iModuleX]=dM
+			if (i_line == 1) :
+				iModuleX+=1
+				if (iModuleX==8):
+					iModuleX=0
 			
 		if(splitLabel[1]==2):
 			plt.title('FoM M%s Y'  %(int(splitLabel[0])) , fontsize=18)
+			misY[i_line][iModuleY]=(float(mis_C[i_par])*1e3)
+			recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3)
+			recoYError[i_line][iModuleY]=errorM
+			dMX[i_line][iModuleX]=dM
+			if (i_line == 1) :
+				iModuleY+=1
+				if (iModuleY==8):
+					iModuleY=0
 		
 		if(splitLabel[1]==3):
 			plt.title('FoM M%s $\Phi$'  %(int(splitLabel[0])) , fontsize=18)
@@ -236,6 +265,76 @@ for i_par in range(0, len(expectPars)):
 
 	plt.savefig(str(expectPars[i_par])+".png")
 	plt.clf()
+
+colours = ["green", "blue", "black", "orange", "purple"]
+spacing = [2, 3.5, 4.5, 5.5, 6.5]
+yMin = -300
+yMax = 300
+plt.subplot(211) # X 
+plt.rcParams.update({'font.size': 14})
+axes = plt.gca()
+axes.set_xlim(0.5, 8.5)
+axes.set_ylim(yMin, yMax)
+plt.title("Misalignment X", fontsize=12)
+plt.ylabel("Misalignment [um]", fontsize=12)
+line = [[0.5,0.0], [8.5, 0.0]]
+plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+for i_module in range(0, 8):
+	plt.plot(i_module+1, misX[0][i_module], marker=".", color="red", markersize=12)
+
+for i_line in range(0, lineN):
+	for i_module in range(0, 8):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+		
+		plt.errorbar(i_module+1, recoX[i_line][i_module], yerr=recoXError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
+		if (recoXError[i_line][i_module] == 0.0):
+			plt.plot(i_module+1, recoX[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
+
+#Legend (top legend)
+textstr = "Truth"
+plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
+for i_line in range(0, lineN):
+	textstr = "Iteration " + str(i_line)
+	plt.text(spacing[i_line], 400, textstr, color=str(colours[i_line]), fontsize=10, fontweight='bold')
+plt.subplots_adjust(top=0.92)
+
+#Legend (stats X)
+avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
+SDMis = np.std(np.array(misX[0]))
+textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
+plt.text(8.7, 150, textstr, fontsize=10)
+plt.subplots_adjust(right=0.80)
+
+plt.subplot(212) # Y 
+axes = plt.gca()
+axes.set_xlim(0.5, 8.5)
+axes.set_ylim(yMin, yMax)
+plt.title("Misalignment Y", fontsize=12)
+plt.ylabel("Misalignment [um]", fontsize=12)
+line = [[0.5,0.0], [8.5, 0.0]]
+plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+for i_module in range(0, 8):
+	plt.plot(i_module+1, misY[i_line][i_module], marker=".", color="red", markersize=12)
+
+for i_line in range(0, lineN):
+	for i_module in range(0, 8):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+		plt.errorbar(i_module+1, recoY[i_line][i_module], yerr=recoYError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
+		if (recoYError[i_line][i_module] == 0.0):
+			plt.plot(i_module+1, recoY[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
+
+#Legend (stats Y)
+avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
+SDMis = np.std(np.array(misY[0]))
+textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
+plt.text(8.7, 150, textstr, fontsize=10)
+plt.subplots_adjust(right=0.80)
+
+plt.xlabel("Module", fontsize=16)
+plt.savefig("XY.png")
+
 
 #Now combine produced plots into a single file:
 #convert -append 11.png 12.png 1.png
@@ -264,6 +363,7 @@ newEven=[]
 #------DM Histo---------
 #
 
+
 cDM = TCanvas("cDM", "cDM", 700, 700)
 cDM.Divide(2,1)
 minF=min(dMData)-0.1
@@ -272,14 +372,16 @@ hDMx = TH1F("hDMx", "PEDE - Truth Alignment in X; X Misalignment [um]", 49, minF
 hDMy = TH1F("hDMy", "PEDE - Truth Alignment in Y; Y Misalignment [um]", 49, minF, maxF )
 
 # Fill histos for align-able modules (error =0 == fixed module)
-for i in range(0, len(dMData)):
-	splitLabel = [int(x) for x in str(dMPar[i])]  # 0 = Module, 1= Parameter
-	if (splitLabel[1] == 1 and errors[i] !=0):
-		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
-		hDMx.Fill(dMData[i])
-	if (splitLabel[1] == 2 and errors[i] !=0):
-		print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
-		hDMy.Fill(dMData[i])
+for i_line in range(0, lineN):
+	for i in range(0, len(dMData)):
+		splitLabel = [int(x) for x in str(dMPar[i])]  # 0 = Module, 1= Parameter
+		if (splitLabel[1] == 1 and errors[i] !=0):
+			#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
+			hDMx.Fill(dMData[i])
+		if (splitLabel[1] == 2 and errors[i] !=0):
+			#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
+			hDMy.Fill(dMData[i])
+		  	
 
 #Set function to fit
 # func = TF1("fu#c", "gaus(0)", minF, maxF)
@@ -326,28 +428,28 @@ for i in range(0, len(offsests)):
 print "New suggested Offsets from PEDE [mm]: ", offsest
 
 
-offsests_um=[]
-mis_C_um=[]
-for i in range(0, len(offsests)):
-	#print offsests[i]
-	#print int(round(offsests[i]*1e3))
-	offsests_um.append(round(offsests[i]*1e3))
-	mis_C_um.append(round(T_mis_C[i]*1e3))
+# offsests_um=[]
+# mis_C_um=[]
+# for i in range(0, len(offsests)):
+# 	#print offsests[i]
+# 	#print int(round(offsests[i]*1e3))
+# 	offsests_um.append(round(offsests[i]*1e3))
+# 	mis_C_um.append(round(T_mis_C[i]*1e3))
 
-trace = go.Table(
-    header=dict(values=['Labels', 'Truth [um]', 'Iteration 0 [um]'],
-                line = dict(color='#7D7F80'),
-                fill = dict(color='#a1c3d1'),
-                align = ['left'] * 5),
-    cells=dict(values=[expectPars, mis_C_um, offsests_um],
-               line = dict(color='#7D7F80'),
-               fill = dict(color='#EDFAFF'),
-               align = ['left'] * 5))
+# trace = go.Table(
+#     header=dict(values=['Labels', 'Truth [um]', 'Iteration 0 [um]'],
+#                 line = dict(color='#7D7F80'),
+#                 fill = dict(color='#a1c3d1'),
+#                 align = ['left'] * 5),
+#     cells=dict(values=[expectPars, mis_C_um, offsests_um],
+#                line = dict(color='#7D7F80'),
+#                fill = dict(color='#EDFAFF'),
+#                align = ['left'] * 5))
 
-layout = dict(width=500, height=600)
-data = [trace]
-fig = dict(data=data, layout=layout)
-plotly.plotly.iplot(fig, filename = 'styled_table')
+# layout = dict(width=500, height=600)
+# data = [trace]
+# fig = dict(data=data, layout=layout)
+# plotly.plotly.iplot(fig, filename = 'styled_table')
 
 
 print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")

@@ -511,7 +511,7 @@ if (mode == "mis"):
 		axes.annotate(misX[i_module-1], (i_module-0.3, float(misX[i_module-1])+20))
 	
 	avgMean = sum(misX)/float(len(misX))
-	SD = np.sqrt(np.mean(misX**2))
+	SD = np.std(np.array(misX))
 	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
@@ -545,7 +545,7 @@ if (mode == "mis"):
 		axes2.annotate(misY[i_module-1], (i_module-0.3, float(misY[i_module-1])+20))
 
 	avgMean = sum(misY)/float(len(misY))
-	SD = np.sqrt(np.mean(misY**2))
+	SD = np.std(np.array(misY))
 	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
