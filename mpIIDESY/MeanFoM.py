@@ -5,20 +5,21 @@ import subprocess
 import argparse, sys
 
 #Create combinations
-combinations = np.array([''.join(x) for x in itertools.combinations('12345678',2)])
+# combinations = np.array([''.join(x) for x in itertools.combinations('12345678',2)])
 
-print "Total combinations:", len(combinations)
+# print "Total combinations:", len(combinations)
 
 
-firstModuleX=[]
-firstModuleY=[]
-secondModuleX=[]
-secondModuleY=[]
-for i in range(0, len(combinations)):
-	firstModuleX.append(str(combinations[i])[:1]+"1")
-	firstModuleY.append(str(combinations[i])[:1]+"2")
-	secondModuleX.append(str(combinations[i])[1:2]+"1")
-	secondModuleY.append(str(combinations[i])[1:2]+"2")
+firstModuleX=[11, 11, 21, 21]
+firstModuleY=[21, 21, 22, 22]
+secondModuleX=[71, 71, 81, 81]
+secondModuleY=[72, 72, 82, 82]
+
+# for i in range(0, len(combinations)):
+# 	firstModuleX.append(str(combinations[i])[:1]+"1")
+# 	firstModuleY.append(str(combinations[i])[:1]+"2")
+# 	secondModuleX.append(str(combinations[i])[1:2]+"1")
+# 	secondModuleY.append(str(combinations[i])[1:2]+"2")
 
 firstModuleX=np.array(firstModuleX)
 firstModuleY=np.array(firstModuleY)
@@ -28,9 +29,10 @@ secondModuleY=np.array(secondModuleY)
 # print firstModule
 # print secondModule
 
+subprocess.call(["mv" , "PEDE_Mis_art.txt", "BK_PEDE_Mis_art.txt"])
 
 #Now Loop over the combinations and produce FoM
-for i in range (0, len(combinations)):
+for i in range (0, len(firstModuleX)):
 # for i in range (0, 8):
 
 	#Write new steering file
@@ -43,19 +45,17 @@ for i in range (0, len(combinations)):
 	f.write("\n")
 	f.close()  
 
-
 	#Run PEDE
 	subprocess.call(["/Users/gleb/software/alignTrack/PEDE/pede", "SteeringFile.txt"])
 
 	#Read new alignments
-	subprocess.call(["python" , "ConcatenatePEDE.py", "-m", "w"])
+	subprocess.call(["python" , "ConcatenatePEDE.py", "-m", "a"])
 
-	#Produce FoM
-	label = "Fixed: " + str(firstModuleX[i]) + " " + str(firstModuleY[i]) + " " + str(secondModuleX[i]) + " " + str(secondModuleY[i])
-	subprocess.call(["python" , "../TrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label)])
-
-	#Keep a copy of the file
+	#Keep a copy of the files
 	subprocess.call(["cp" , "PEDE_Mis_art.txt", str(label)+"PEDE_Mis_art.txt"])
 	subprocess.call(["cp" , "ParameterFile.txt", str(label)+"ParameterFile.txt"])
 
+#Produce FoM
+label = "Mean effect of Fixed M: 1-7, 1-8, 2-7, 2-8"
+subprocess.call(["python" , "../MeanTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label)])
 
