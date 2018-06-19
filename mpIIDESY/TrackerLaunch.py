@@ -13,6 +13,7 @@ from ROOT import *
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
+parser.add_argument('-eL', '--eL', help='mode')
 args = parser.parse_args()
 from math import log10, floor, ceil
 
@@ -21,6 +22,9 @@ def round_sig(x, sig=2):
 
 def float_round(num, places = 0, direction = floor):
     return direction(num * (10**places)) / float(10**places)
+
+extraLabel =-1
+extraLabel=str(args.eL)
 
 file = str(args.mode)
 from matplotlib.pyplot import *
@@ -35,11 +39,17 @@ import plotly.graph_objs as go
 import pandas as pd
 plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC7v7')
 
-expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
+
+T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
+expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
+globalN=1
+
+# expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
+# globalN=2
 
 #Truth Misalignment 
 
-T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
 # T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
@@ -47,25 +57,23 @@ T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0
 
 #T_mis_C=(0.103, 0.195, 0.080, 0.150, 0.060, 0.148, 0.035, 0.121, 0.016,0.106, -0.006, 0.082, -0.028, 0.068, -0.060, 0.060 ) # Case D : Residual Mis. 
 
-# T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
-# expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
-
-
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
 print "Initial Truth Misalignment [mm]: ", mis_C
 print "With expected Parameters: ", expectPars
-raw_input("Truth Misalignment correct? [press enter]") 
+#raw_input("Truth Misalignment correct? [press enter]") 
 
 # # ----------------------------
 # #Run 1
 # mis_C=[] # set temp to 0 
 
+# # offsets = (0.0, 0.0, 0.0, 0.0, 0.2, -0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2,  0.07, 0.0, 0.0)
+
 # # offsets = (0.053, 0.226, 0.027, 0.101, -0.106, -0.115, 0.0, 0.0, -0.075, 0.084, -0.021, -0.042, 0.0, 0.0, -0.089, -0.091) # Case A  (Run 1)
 
 # #offsets = (-0.261, -0.06, 0.0, 0.0, 0.096, -0.231, -0.374, 0.175, 0.0, 0.089, -0.075, -0.338, 0.0, 0.0, -0.277, 0.011) # Case B  (Run 1)
 
-# offsets = (0.0, -0.131, -0.105, 0.053, 0.17, 0.132, 0.0, 0.054) # Case C (Run 1)
+# #offsets = (0.0, -0.131, -0.105, 0.053, 0.17, 0.132, 0.0, 0.054) # Case C (Run 1)
 
 # print "Offsets Run 1 [mm]: ", offsets
 # raw_input("Offsets :: Run 1 correct? [press enter]") 
@@ -155,14 +163,14 @@ dMData=[] # store all dM
 dMPar=[] # store corresponding par
 errors=[]
 
-misX= [[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
-recoX=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
-recoXError=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
-misY=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
-recoY=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
-recoYError=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
-dMY=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
-dMX=[[0 for i_par in xrange(len(expectPars)/int(2))] for i_lin in xrange(lineN)]
+misX= [[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+recoX=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+recoXError=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+misY=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+recoY=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+recoYError=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+dMY=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+dMX=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
 
 plt.rcParams.update({'font.size': 14})
 #Plot difference for all modules
@@ -232,10 +240,14 @@ for i_par in range(0, len(expectPars)):
 			plt.title('FoM M%s X'  %(int(splitLabel[0])) , fontsize=18)
 			misX[i_line][iModuleX]=(float(mis_C[i_par])*1e3)
 			#print "misX[i_line][iModuleX]= ", misX[i_line][iModuleX], "iModuleX=", iModuleX, "i_line=", i_line
-			recoX[i_line][iModuleX]=(float(data[i_par][i_line][1])*1e3)
+			if (i_line != 0):
+				recoX[i_line][iModuleX]=(float(data[i_par][i_line][1])*1e3+recoX[i_line-1][iModuleX])
+			else:
+				recoX[i_line][iModuleX]=(float(data[i_par][i_line][1])*1e3)
 			recoXError[i_line][iModuleX]=errorM
+			#print "recoXError[i_line][iModuleX]=", recoXError[i_line][iModuleX]
 			dMX[i_line][iModuleX]=dM
-			if (i_line == 1) :
+			if (i_line == lineN-1) :
 				iModuleX+=1
 				if (iModuleX==8):
 					iModuleX=0
@@ -243,10 +255,13 @@ for i_par in range(0, len(expectPars)):
 		if(splitLabel[1]==2):
 			plt.title('FoM M%s Y'  %(int(splitLabel[0])) , fontsize=18)
 			misY[i_line][iModuleY]=(float(mis_C[i_par])*1e3)
-			recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3)
+			if (i_line != 0):
+				recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3+recoY[i_line-1][iModuleY])
+			else:
+				recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3)
 			recoYError[i_line][iModuleY]=errorM
 			dMY[i_line][iModuleX]=dM
-			if (i_line == 1) :
+			if (i_line == lineN-1) :
 				iModuleY+=1
 				if (iModuleY==8):
 					iModuleY=0
@@ -263,14 +278,16 @@ for i_par in range(0, len(expectPars)):
 		
 		
 
-	plt.savefig(str(expectPars[i_par])+".png")
+	#plt.savefig(str(expectPars[i_par])+".png")
 	plt.clf()
+
+#print recoXError
 
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
 yMin = -300
 yMax = 300
-plt.subplot(211) # X 
+# plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 10})
 axes = plt.gca()
 axes.set_xlim(0.5, 8.5)
@@ -286,7 +303,7 @@ for i_line in range(0, lineN):
 	for i_module in range(0, 8):
 		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-		
+		#print "recoXError[i_line][i_module]=", recoXError[i_line][i_module]
 		plt.errorbar(i_module+1, recoX[i_line][i_module], yerr=recoXError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
 		if (recoXError[i_line][i_module] == 0.0):
 			plt.plot(i_module+1, recoX[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
@@ -294,10 +311,12 @@ for i_line in range(0, lineN):
 #Legend (top legend)
 textstr = "Truth"
 plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
+if (extraLabel != -1):
+	plt.text(8, 350, extraLabel, color="purple", fontsize=12, fontweight='bold')
 for i_line in range(0, lineN):
 	textstr = "Iteration " + str(i_line)
 	plt.text(spacing[i_line], 400, textstr, color=str(colours[i_line]), fontsize=10, fontweight='bold')
-plt.subplots_adjust(top=0.92)
+plt.subplots_adjust(top=0.85)
 
 #Legend (stats X)
 avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
@@ -311,39 +330,42 @@ for i_line in range(0, lineN):
 	plt.text(8.6, 50-100*i_line, textstrReco, fontsize=10, color=str(colours[i_line]))
 plt.subplots_adjust(right=0.78)
 
-plt.subplot(212) # Y 
-axes = plt.gca()
-axes.set_xlim(0.5, 8.5)
-axes.set_ylim(yMin, yMax)
-plt.title("Misalignment Y", fontsize=10)
-plt.ylabel("Misalignment [um]", fontsize=10)
-line = [[0.5,0.0], [8.5, 0.0]]
-plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
-for i_module in range(0, 8):
-	plt.plot(i_module+1, misY[i_line][i_module], marker=".", color="red")
+# plt.subplot(212) # Y 
+# axes = plt.gca()
+# axes.set_xlim(0.5, 8.5)
+# axes.set_ylim(yMin, yMax)
+# plt.title("Misalignment Y", fontsize=10)
+# plt.ylabel("Misalignment [um]", fontsize=10)
+# line = [[0.5,0.0], [8.5, 0.0]]
+# plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+# for i_module in range(0, 8):
+# 	plt.plot(i_module+1, misY[i_line][i_module], marker=".", color="red")
 
-for i_line in range(0, lineN):
-	for i_module in range(0, 8):
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-		plt.errorbar(i_module+1, recoY[i_line][i_module], yerr=recoYError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
-		if (recoYError[i_line][i_module] == 0.0):
-			plt.plot(i_module+1, recoY[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
+# for i_line in range(0, lineN):
+# 	for i_module in range(0, 8):
+# 		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+# 		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+# 		plt.errorbar(i_module+1, recoY[i_line][i_module], yerr=recoYError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
+# 		if (recoYError[i_line][i_module] == 0.0):
+# 			plt.plot(i_module+1, recoY[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
 
-#Legend (stats Y)
-avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
-SDMis = np.std(np.array(misY[0]))
-textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-plt.text(8.7, 150, textstr, fontsize=10, color="red")
-for i_line in range(0, lineN):
-	avgMeandReconTruth = sum(np.array(dMY[i_line]))/float(len(np.array(dMY[i_line])))
-	SDdReconTruth = np.std(np.array(dMY[i_line]))
-	textstrReco = "<(It. "+str(i_line)+" - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (It. "+str(i_line)+" - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-	plt.text(8.6, 50-100*i_line, textstrReco, fontsize=10, color=str(colours[i_line]))
-plt.subplots_adjust(right=0.78)
+# #Legend (stats Y)
+# avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
+# SDMis = np.std(np.array(misY[0]))
+# textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
+# plt.text(8.7, 150, textstr, fontsize=10, color="red")
+# for i_line in range(0, lineN):
+# 	avgMeandReconTruth = sum(np.array(dMY[i_line]))/float(len(np.array(dMY[i_line])))
+# 	SDdReconTruth = np.std(np.array(dMY[i_line]))
+# 	textstrReco = "<(It. "+str(i_line)+" - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (It. "+str(i_line)+" - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
+# 	plt.text(8.6, 50-100*i_line, textstrReco, fontsize=10, color=str(colours[i_line]))
+# plt.subplots_adjust(right=0.78)
 
 plt.xlabel("Module", fontsize=12)
-plt.savefig("XY.png")
+if (extraLabel == -1):
+	plt.savefig("XY.png")
+else:
+	plt.savefig(str(extraLabel)+".png")
 
 
 #Now combine produced plots into a single file:
