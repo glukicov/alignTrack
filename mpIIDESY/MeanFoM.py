@@ -11,9 +11,9 @@ import argparse, sys
 
 
 firstModuleX=[11, 11, 21, 21]
-firstModuleY=[12, 12, 22, 22]
+# firstModuleY=[12, 12, 22, 22]
 secondModuleX=[71, 81, 71, 81]
-secondModuleY=[72, 82, 72, 82]
+# secondModuleY=[72, 82, 72, 82]
 label = "Mean effect of Fixed M: 1-7, 1-8, 2-7, 2-8"
 
 # for i in range(0, len(combinations)):
@@ -23,9 +23,9 @@ label = "Mean effect of Fixed M: 1-7, 1-8, 2-7, 2-8"
 # 	secondModuleY.append(str(combinations[i])[1:2]+"2")
 
 firstModuleX=np.array(firstModuleX)
-firstModuleY=np.array(firstModuleY)
+# firstModuleY=np.array(firstModuleY)
 secondModuleX=np.array(secondModuleX)
-secondModuleY=np.array(secondModuleY)
+# secondModuleY=np.array(secondModuleY)
 
 # print firstModule
 # print secondModule
@@ -40,9 +40,9 @@ for i in range (0, len(firstModuleX)):
 	f = open('ParameterFile.txt', "w")
 	f.write("PARAMETERS\n")
 	f.write(str(firstModuleX[i]) + " 0.0 " + "-1\n")
-	f.write(str(firstModuleY[i]) + " 0.0 " + "-1\n")
+	# f.write(str(firstModuleY[i]) + " 0.0 " + "-1\n")
 	f.write(str(secondModuleX[i]) + " 0.0 " + "-1\n")
-	f.write(str(secondModuleY[i]) + " 0.0 " + "-1\n")
+	# f.write(str(secondModuleY[i]) + " 0.0 " + "-1\n")
 	f.write("\n")
 	f.close()  
 
