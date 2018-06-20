@@ -48,9 +48,9 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
 #Truth Misalignment 
 
-T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
-# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
+T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
 # T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
 
@@ -62,7 +62,7 @@ globalN=int(len(expectPars))/int(8)
 mis_C=T_mis_C  # the truth is the only misalignment 
 print "Initial Truth Misalignment [mm]: ", mis_C
 print "With expected Parameters: ", expectPars
-#raw_input("Truth Misalignment correct? [press enter]") 
+raw_input("Truth Misalignment correct? [press enter]") 
 
 # # ----------------------------
 # #Run 1
@@ -299,8 +299,8 @@ for i_module in range(0, 8):
 	recoYMean.append(meanY/lineN)
 	recoXMeanError.append(stats.sem(meanXError))
 	recoYMeanError.append(stats.sem(meanYError))
-	dMXMean.append(misX[0][i_module])
-	dMYMean.append(misY[0][i_module])
+	dMXMean.append(meanX/lineN-misX[0][i_module])
+	dMYMean.append(meanY/lineN-misY[0][i_module])
 
 
 colours = ["green", "blue", "black", "orange", "purple"]
