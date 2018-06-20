@@ -10,6 +10,7 @@
 import argparse, sys
 import ROOT as r
 from ROOT import *
+from scipy import stats
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
@@ -47,9 +48,9 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
 #Truth Misalignment 
 
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
-T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
+# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
 # T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
 
@@ -240,10 +241,7 @@ for i_par in range(0, len(expectPars)):
 			plt.title('FoM M%s X'  %(int(splitLabel[0])) , fontsize=18)
 			misX[i_line][iModuleX]=(float(mis_C[i_par])*1e3)
 			#print "misX[i_line][iModuleX]= ", misX[i_line][iModuleX], "iModuleX=", iModuleX, "i_line=", i_line
-			if (i_line != 0):
-				recoX[i_line][iModuleX]=(float(data[i_par][i_line][1])*1e3+recoX[i_line-1][iModuleX])
-			else:
-				recoX[i_line][iModuleX]=(float(data[i_par][i_line][1])*1e3)
+			recoX[i_line][iModuleX]=(float(data[i_par][i_line][1])*1e3)
 			recoXError[i_line][iModuleX]=errorM
 			#print "recoXError[i_line][iModuleX]=", recoXError[i_line][iModuleX]
 			dMX[i_line][iModuleX]=dM
@@ -255,10 +253,7 @@ for i_par in range(0, len(expectPars)):
 		if(splitLabel[1]==2):
 			plt.title('FoM M%s Y'  %(int(splitLabel[0])) , fontsize=18)
 			misY[i_line][iModuleY]=(float(mis_C[i_par])*1e3)
-			if (i_line != 0):
-				recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3+recoY[i_line-1][iModuleY])
-			else:
-				recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3)
+			recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3)
 			recoYError[i_line][iModuleY]=errorM
 			dMY[i_line][iModuleX]=dM
 			if (i_line == lineN-1) :
@@ -281,7 +276,32 @@ for i_par in range(0, len(expectPars)):
 	#plt.savefig(str(expectPars[i_par])+".png")
 	plt.clf()
 
-#print recoXError
+recoXMean=[]
+recoXMeanError=[]
+recoYMean=[]
+recoYMeanError=[]
+dMXMean=[]
+dMYMean=[]
+
+for i_module in range(0, 8):
+	meanX=0
+	meanXError=[]
+	meanY=0
+	meanYError=[]
+	for i_line in range(0, lineN):
+		meanX+=recoX[i_line][i_module]
+		meanY+=recoY[i_line][i_module]
+		meanXError.append(recoX[i_line][i_module])
+		meanYError.append(recoY[i_line][i_module])
+
+	
+	recoXMean.append(meanX/lineN)
+	recoYMean.append(meanY/lineN)
+	recoXMeanError.append(stats.sem(meanXError))
+	recoYMeanError.append(stats.sem(meanYError))
+	dMXMean.append(misX[0][i_module])
+	dMYMean.append(misY[0][i_module])
+
 
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
@@ -299,23 +319,19 @@ plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), 
 for i_module in range(0, 8):
 	plt.plot(i_module+1, misX[0][i_module], marker=".", color="red")
 
-for i_line in range(0, lineN):
-	for i_module in range(0, 8):
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-		#print "recoXError[i_line][i_module]=", recoXError[i_line][i_module]
-		plt.errorbar(i_module+1, recoX[i_line][i_module], yerr=recoXError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
-		if (recoXError[i_line][i_module] == 0.0):
-			plt.plot(i_module+1, recoX[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
+for i_module in range(0, 8):
+	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+	plt.errorbar(i_module+1, recoXMean[i_module], yerr=recoXMeanError[i_module],  color=str(colours[4]), markersize=12, elinewidth=2)
+	#print "recoXMean[i_module]=", recoXMean[i_module]
+	if (recoXMeanError[i_module] == 0.0):
+		plt.plot(i_module+1, recoXMean[i_module], marker="*", color=str(colours[4]), markersize=12)
 
 #Legend (top legend)
 textstr = "Truth"
 plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
 if (extraLabel != -1):
-	plt.text(8, 350, extraLabel, color="purple", fontsize=12, fontweight='bold')
-for i_line in range(0, lineN):
-	textstr = "Iteration " + str(i_line)
-	plt.text(spacing[i_line], 400, textstr, color=str(colours[i_line]), fontsize=10, fontweight='bold')
+	plt.text(2.5, 420, extraLabel, color="purple", fontsize=12, fontweight='bold')
 plt.subplots_adjust(top=0.85)
 
 #Legend (stats X)
@@ -323,11 +339,10 @@ avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
 SDMis = np.std(np.array(misX[0]))
 textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
 plt.text(8.7, 150, textstr, fontsize=10, color="red")
-for i_line in range(0, lineN):
-	avgMeandReconTruth = sum(np.array(dMX[i_line]))/float(len(np.array(dMX[i_line])))
-	SDdReconTruth = np.std(np.array(dMX[i_line]))
-	textstrReco = "<(It. "+str(i_line)+" - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (It. "+str(i_line)+" - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-	plt.text(8.6, 50-100*i_line, textstrReco, fontsize=10, color=str(colours[i_line]))
+avgMeandReconTruth = sum(np.array(dMXMean))/float(len(np.array(dMXMean)))
+SDdReconTruth = np.std(np.array(dMXMean))
+textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
+plt.text(8.6, 50-100, textstrReco, fontsize=10, color=str(colours[4]))
 plt.subplots_adjust(right=0.85)
 
 plt.subplot(212) # Y 
@@ -339,26 +354,24 @@ plt.ylabel("Misalignment [um]", fontsize=10)
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
-	plt.plot(i_module+1, misY[i_line][i_module], marker=".", color="red")
+	plt.plot(i_module+1, misY[0][i_module], marker=".", color="red")
 
-for i_line in range(0, lineN):
-	for i_module in range(0, 8):
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-		plt.errorbar(i_module+1, recoY[i_line][i_module], yerr=recoYError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
-		if (recoYError[i_line][i_module] == 0.0):
-			plt.plot(i_module+1, recoY[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
+for i_module in range(0, 8):
+	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+	plt.errorbar(i_module+1, recoYMean[i_module], yerr=recoYMeanError[i_module],  color=str(colours[4]), markersize=12, elinewidth=2)
+	if (recoYMeanError[i_module] == 0.0):
+		plt.plot(i_module+1, recoYMean[i_module], marker="*", color=str(colours[4]), markersize=12)
 
 #Legend (stats Y)
 avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
 SDMis = np.std(np.array(misY[0]))
 textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
 plt.text(8.7, 150, textstr, fontsize=10, color="red")
-for i_line in range(0, lineN):
-	avgMeandReconTruth = sum(np.array(dMY[i_line]))/float(len(np.array(dMY[i_line])))
-	SDdReconTruth = np.std(np.array(dMY[i_line]))
-	textstrReco = "<(It. "+str(i_line)+" - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (It. "+str(i_line)+" - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-	plt.text(8.6, 50-100*i_line, textstrReco, fontsize=10, color=str(colours[i_line]))
+avgMeandReconTruth = sum(np.array(dMYMean))/float(len(np.array(dMYMean)))
+SDdReconTruth = np.std(np.array(dMYMean))
+textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
+plt.text(8.6, 50-100, textstrReco, fontsize=10, color=str(colours[4]))
 plt.subplots_adjust(right=0.78)
 
 plt.xlabel("Module", fontsize=12)
@@ -368,120 +381,21 @@ else:
 	plt.savefig(str(extraLabel)+".png")
 
 
-#Now combine produced plots into a single file:
-#convert -append 11.png 12.png 1.png
-even=expectPars[1::2]
-odd=expectPars[0::2]
+print "Mean X:", np.array(recoXMean)*1e-3, "[mm]"
+print "Mean Y:", np.array(recoYMean)*1e-3, "[mm]"
 
-newOdd=[]
-newEven=[]
-
-# for i_par in range(0, int(len(expectPars)/2)):
-
-# 	f1=str(odd[i_par])+".png" 
-# 	f2=str(even[i_par])+".png"
-# 	f3=str(i_par)+".png"
-# 	subprocess.call(["convert" , "-append", str(f1), str(f2), str(f3)])
-# 	if (i_par % 2 == 0):
-# 		newEven.append(f3)
-# 	if (i_par %2 != 0):
-# 		newOdd.append(f3)
-
-# subprocess.call(["convert" , "+append", str(newEven[0]), str(newOdd[0]), str(newEven[1]), str(newOdd[1]),  "Row1.png"])
-# subprocess.call(["convert" , "+append", str(newEven[2]), str(newOdd[2]), str(newEven[3]), str(newOdd[3]),   "Row2.png"])
-# subprocess.call(["convert" , "-append", "Row1.png", "Row2.png", "FoM.png"])
-
-
-#------DM Histo---------
-#
-
-
-cDM = TCanvas("cDM", "cDM", 700, 700)
-cDM.Divide(2,1)
-minF=min(dMData)-0.1
-maxF=max(dMData)+0.1
-hDMx = TH1F("hDMx", "PEDE - Truth Alignment in X; X Misalignment [um]", 49, minF, maxF )
-hDMy = TH1F("hDMy", "PEDE - Truth Alignment in Y; Y Misalignment [um]", 49, minF, maxF )
-
-# Fill histos for align-able modules (error =0 == fixed module)
-for i_line in range(0, lineN):
-	for i in range(0, len(dMData)):
-		splitLabel = [int(x) for x in str(dMPar[i])]  # 0 = Module, 1= Parameter
-		if (splitLabel[1] == 1 and errors[i] !=0):
-			#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
-			hDMx.Fill(dMData[i])
-		if (splitLabel[1] == 2 and errors[i] !=0):
-			#print "dMPar[i]=", dMPar[i], "dMData[i]=", dMData[i]
-			hDMy.Fill(dMData[i])
-		  	
-
-#Set function to fit
-# func = TF1("fu#c", "gaus(0)", minF, maxF)
-#func->SetParameters(0.0, hMean);
-
-#Fit function
-cDM.cd(1)
-hDMx.Draw() #Set errors on all bins
-cDM.cd(2)
-hDMy.Draw() #Set errors on all bins
-#hDM.Draw("E1") #Set errors on all bins
-#hDM.Fit("func")
-gStyle.SetOptStat("ourRmMe"); #over/under -flows, Rms and Means with errors, number of entries
-gStyle.SetOptFit(1111);  #probability, Chi2, errors, name/values of parameters
-gStyle.SetStatFormat("11.4f");  # 4 sig.fig, f=float
-
-#Save canvas as .png file
-cDM.Modified()
-cDM.Update()
-cDM.Print("dM.png")
-cDM.Print("dM.root")
-
-xSD=hDMx.GetRMS()
-xSDError=hDMx.GetRMSError()
-xMean=hDMx.GetMean()
-xMeanError=hDMx.GetMeanError()
-ySD=hDMy.GetRMS()
-ySDError=hDMy.GetRMSError()
-yMean=hDMy.GetMean()
-yMeanError=hDMy.GetMeanError()
-
-print "xSD=",round(xSD),"+/-",round(xSDError), "xMean=",round(xMean),"+/-",round(xMeanError)
-print "ySD=",round(ySD),"+/-",round(ySDError), "yMean=",round(yMean),"+/-",round(yMeanError)
-
+sugMean  = []
+for i in range(0, len(recoXMean)):
+	sugMean.append(recoXMean[i])
+	sugMean.append(recoYMean[i])
 
 offsest = " "
-for i in range(0, len(offsests)):
-	if (errors[i] != 0.0):
-		offsest += str(round(offsests[i]*1e3)/1e3) + " "
-	else:
-		offsest += str(offsests[i]) + " "
-
+for i in range(0, len(sugMean)):
+	offsest += str(round(sugMean[i]*1e3)/1e3) + " "
+	
 
 print "New suggested Offsets from PEDE [mm]: ", offsest
 
-
-# offsests_um=[]
-# mis_C_um=[]
-# for i in range(0, len(offsests)):
-# 	#print offsests[i]
-# 	#print int(round(offsests[i]*1e3))
-# 	offsests_um.append(round(offsests[i]*1e3))
-# 	mis_C_um.append(round(T_mis_C[i]*1e3))
-
-# trace = go.Table(
-#     header=dict(values=['Labels', 'Truth [um]', 'Iteration 0 [um]'],
-#                 line = dict(color='#7D7F80'),
-#                 fill = dict(color='#a1c3d1'),
-#                 align = ['left'] * 5),
-#     cells=dict(values=[expectPars, mis_C_um, offsests_um],
-#                line = dict(color='#7D7F80'),
-#                fill = dict(color='#EDFAFF'),
-#                align = ['left'] * 5))
-
-# layout = dict(width=500, height=600)
-# data = [trace]
-# fig = dict(data=data, layout=layout)
-# plotly.plotly.iplot(fig, filename = 'styled_table')
 
 
 print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")

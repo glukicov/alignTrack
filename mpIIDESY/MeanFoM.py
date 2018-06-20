@@ -11,9 +11,10 @@ import argparse, sys
 
 
 firstModuleX=[11, 11, 21, 21]
-firstModuleY=[21, 21, 22, 22]
-secondModuleX=[71, 71, 81, 81]
-secondModuleY=[72, 72, 82, 82]
+firstModuleY=[12, 12, 22, 22]
+secondModuleX=[71, 81, 71, 81]
+secondModuleY=[72, 82, 72, 82]
+label = "Mean effect of Fixed M: 1-7, 1-8, 2-7, 2-8"
 
 # for i in range(0, len(combinations)):
 # 	firstModuleX.append(str(combinations[i])[:1]+"1")
@@ -56,6 +57,5 @@ for i in range (0, len(firstModuleX)):
 	subprocess.call(["cp" , "ParameterFile.txt", str(label)+"ParameterFile.txt"])
 
 #Produce FoM
-label = "Mean effect of Fixed M: 1-7, 1-8, 2-7, 2-8"
 subprocess.call(["python" , "../MeanTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label)])
 
