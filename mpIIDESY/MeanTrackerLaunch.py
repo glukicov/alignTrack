@@ -45,13 +45,16 @@ plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC
 
 expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)  # XY
 
-T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
-# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
+T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
 # T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
 # expectPars = (11, 21, 31, 41, 51, 61, 71, 81) # X Only 
 
+##::::: X only::::
+# T_mis_C = (0.1, 0.05, -0.1, 0.0, -0.07, 0.0, 0.05, 0.0) # Case A (X only)
+# T_mis_C=(-0.2, 0.08, 0.2, -0.25, 0.15, 0.1, 0.2, -0.06) # Case B (X only)
 
 globalN=int(len(expectPars))/int(8)
 
@@ -61,34 +64,33 @@ print "Initial Truth Misalignment [mm]: ", mis_C
 print "With expected Parameters: ", expectPars
 raw_input("Truth Misalignment correct? [press enter]") 
 
-# # ----------------------------
-#Run 1
-#mis_C=[] # set temp to 0 
+# # # ----------------------------
+# #Run 1
+# #mis_C=[] # set temp to 0 
 
-offsets = (0.028, 0.049, -0.033, -0.041, -0.184, -0.224, -0.08, -0.075, -0.139, 0.043, -0.053, -0.05, 0.016, 0.026, -0.008, -0.031) # Mean M82F Case A (Run 1)
+# # offsets = (0.028, 0.049, -0.033, -0.041, -0.184, -0.224, -0.08, -0.075, -0.139, 0.043, -0.053, -0.05, 0.016, 0.026, -0.008, -0.031) # Mean M82F Case A (Run 1)
 
-# offsets = (-0.146, -0.029, 0.112, 0.025, 0.207, -0.212, -0.261, 0.189, 0.116, 0.098, 0.047, -0.335, 0.129, -0.002, -0.138, 0.003) # Mean M8A Case B (Run 1)
+# # offsets = (-0.146, -0.029, 0.112, 0.025, 0.207, -0.212, -0.261, 0.189, 0.116, 0.098, 0.047, -0.335, 0.129, -0.002, -0.138, 0.003) # Mean M8A Case B (Run 1)
 
-# offsets = (0.06, -0.062, -0.035, 0.117, 0.22, 0.159, -0.002, 0.015) # Mean XY  Case C (Run 1)
+# # offsets = (0.06, -0.062, -0.035, 0.117, 0.22, 0.159, -0.002, 0.015) # Mean XY  Case C (Run 1)
 
-print "Offsets Run 1 [mm]: ", offsets
-raw_input("Offsets :: Run 1 correct? [press enter]") 
-# for i in range(0, len(T_mis_C)):
-# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
-#----------------------------
+
+# #::::: X only::::
+# # offsets = (0.028, -0.033, -0.184, -0.08, -0.139, -0.053, 0.016, -0.008) # Mean M82F Case A (Run 1)
+
+
+# print "Offsets Run 1 [mm]: ", offsets
+# raw_input("Offsets :: Run 1 correct? [press enter]") 
+# #----------------------------
 
 # ##----------------------------
 # # Run 2
-# T_mis_C=mis_C #set truth as the previous misalignment
-# mis_C = [] 
+##offsets = (0.065, -0.076, -0.064, 0.082, 0.188, 0.138, -0.006, 0.031) # Mean XY  Case C (Run 2)
+#offsets = (0.018, 0.052, -0.034, -0.044, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) 
+offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)
 
-# offsets = (0.055, 0.005, 0.0, 0.0, -0.037, -0.002, -0.048, -0.0, -0.036, -0.007, 0.0, 0.0, 0.061, 0.005, 0.146, 0.007) # Case A (Run 2)
-
-
-# print "Offsets Run 2 [mm]: ", offsets
-# raw_input("Offsets :: Run 2 correct? [press enter]") 
-# for i in range(0, len(T_mis_C)):
-# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
+print "Offsets Run 2 [mm]: ", offsets
+raw_input("Offsets :: Run 2 correct? [press enter]") 
 # ##----------------------------
 
 
@@ -101,8 +103,6 @@ raw_input("Offsets :: Run 1 correct? [press enter]")
 
 # print "Offsets Run 3 [mm]: ", offsets
 # raw_input("Offsets :: Run 2 correct? [press enter]") 
-# for i in range(0, len(T_mis_C)):
-# 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 # #----------------------------
 
 print "Truth Misalignments after offsets [mm]: "
