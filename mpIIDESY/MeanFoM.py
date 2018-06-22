@@ -40,9 +40,9 @@ for i in range (0, len(firstModuleX)):
 	f = open('ParameterFile.txt', "w")
 	f.write("PARAMETERS\n")
 	f.write(str(firstModuleX[i]) + " 0.0 " + "-1\n")
-	f.write(str(firstModuleY[i]) + " 0.0 " + "-1\n")
+	# f.write(str(firstModuleY[i]) + " 0.0 " + "-1\n")
 	f.write(str(secondModuleX[i]) + " 0.0 " + "-1\n")
-	f.write(str(secondModuleY[i]) + " 0.0 " + "-1\n")
+	# f.write(str(secondModuleY[i]) + " 0.0 " + "-1\n")
 	f.write("\n")
 	f.close()  
 
