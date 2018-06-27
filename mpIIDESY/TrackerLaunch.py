@@ -40,14 +40,14 @@ import pandas as pd
 plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC7v7')
 
 
-T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
-expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
+# T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
+# expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
 
-# expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
+expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
 #Truth Misalignment 
 
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
 # T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
@@ -56,12 +56,13 @@ expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
 #T_mis_C=(0.103, 0.195, 0.080, 0.150, 0.060, 0.148, 0.035, 0.121, 0.016,0.106, -0.006, 0.082, -0.028, 0.068, -0.060, 0.060 ) # Case D : Residual Mis. 
 
 globalN=int(len(expectPars))/int(8)
+offsets = [0 for i in xrange(8*globalN)]
 
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
 print "Initial Truth Misalignment [mm]: ", mis_C
 print "With expected Parameters: ", expectPars
-raw_input("Truth Misalignment correct? [press enter]") 
+# raw_input("Truth Misalignment correct? [press enter]") 
 
 # # ----------------------------
 #Run 1
@@ -71,10 +72,10 @@ raw_input("Truth Misalignment correct? [press enter]")
 
 # offsets = (-0.146, -0.029, 0.112, 0.025, 0.207, -0.212, -0.261, 0.189, 0.116, 0.098, 0.047, -0.335, 0.129, -0.002, -0.138, 0.003) # Mean M8A Case B (Run 1)
 
-offsets = (0.06, -0.062, -0.035, 0.117, 0.22, 0.159, -0.002, 0.015) # Mean XY  Case C (Run 1)
+# offsets = (0.06, -0.062, -0.035, 0.117, 0.22, 0.159, -0.002, 0.015) # Mean XY  Case C (Run 1)
 
 print "Offsets Run 1 [mm]: ", offsets
-raw_input("Offsets :: Run 1 correct? [press enter]") 
+#raw_input("Offsets :: Run 1 correct? [press enter]") 
 # for i in range(0, len(T_mis_C)):
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
 #----------------------------

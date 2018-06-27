@@ -53,7 +53,7 @@ T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0
 # expectPars = (11, 21, 31, 41, 51, 61, 71, 81) # X Only 
 
 globalN=int(len(expectPars))/int(8)
-offsets = [0 for i in xrange(8*globalN)]
+offsets = [0 for i in xrange(8*globalN)] # first set to 0 unless doing iterations
 
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
@@ -72,7 +72,7 @@ raw_input("Truth Misalignment correct? [press enter]")
 ##----------------------------
 # Run 2
 
-offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) # M82F Mean Run 2
+# offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) # M82F Mean Run 2
 
 
 # offsets = (0.038, 0.052, -0.014, -0.034, -0.163, -0.23, -0.057, -0.09, -0.116, 0.03, -0.03, -0.064, 0.041, 0.024, 0.017, -0.029) #M82f +20 X
