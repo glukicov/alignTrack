@@ -74,6 +74,7 @@ raw_input("Truth Misalignment correct? [press enter]")
 
 # offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) # M82F Mean Run 2
 
+# offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)  # M8A Mean Run 2
 
 # offsets = (0.038, 0.052, -0.014, -0.034, -0.163, -0.23, -0.057, -0.09, -0.116, 0.03, -0.03, -0.064, 0.041, 0.024, 0.017, -0.029) #M82f +20 X
 # offsets = (-0.002, 0.052, -0.054, -0.034, -0.203, -0.23, -0.097, -0.09, -0.156, 0.03, -0.07, -0.064, 0.001, 0.024, -0.023, -0.029) #M82f -20 X
@@ -96,16 +97,18 @@ raw_input("Truth Misalignment correct? [press enter]")
 # offsets = ( 0.118, 0.152, 0.066, 0.066, -0.083, -0.13, 0.023, 0.01, -0.036, 0.13, 0.05, 0.036, 0.121, 0.124, 0.097, 0.071) #M82f +100 XY
 # offsets = ( -0.082, -0.048, -0.134, -0.134, -0.283, -0.33, -0.177, -0.19, -0.236, -0.07, -0.15, -0.164, -0.079, -0.076, -0.103, -0.129) #M82f -100 XY
 
-print "Offsets Run 2 [mm]: ", offsets
-raw_input("Offsets :: Run 2 correct? [press enter]") 
-##----------------------------
-
-
-print "Truth Misalignments after offsets [mm]: "
-print ["{0:0.3f}".format(i) for i in mis_C]
+# print "Offsets Run 2 [mm]: ", offsets
+# raw_input("Offsets :: Run 2 correct? [press enter]") 
+# ##----------------------------
 
 if ( len(mis_C) != len(expectPars) ):
 	print "Enter Truth data in the right format!"
+
+print "Truth Misalignments and offsets [mm]: "
+print ["{0:0.3f}".format(i) for i in mis_C]
+
+print "Offsets [mm]: "
+print ["{0:0.3f}".format(i) for i in offsets]
 
 
 # Quickly open the PEDe file and count lines only:
@@ -337,7 +340,7 @@ for i_module in range(0, 8):
 textstr = "Truth"
 plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
 if (extraLabel != -1):
-	plt.text(2.0, 420, extraLabel, color="purple", fontsize=10, fontweight='bold')
+	plt.text(2.0, 420, extraLabel, color="purple", fontsize=8, fontweight='bold')
 plt.subplots_adjust(top=0.85)
 
 #Legend (stats X)
