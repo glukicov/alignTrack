@@ -25,13 +25,13 @@ import argparse, sys
 
 
 #####3 Modules######
-firstModuleX=[11, 11, 31, 21]
-firstModuleY=[12, 12, 32, 22]
-secondModuleX=[71, 61, 61, 61]
-secondModuleY=[72, 62, 62, 62]
-thirdModuleX=[81, 71, 81, 71]
-thirdModuleY=[82, 72, 82, 72]
-label = "Mean effect of Fixed M: 1-7-8, 1-6-7, 3-6-8, 2-6-7"
+firstModuleX=  [11, 11, 11, 11, 11, 11, 21, 21, 21, 21]
+firstModuleY=  [12, 12, 12, 12, 12, 12, 22, 22, 22, 22]
+secondModuleX= [31, 31, 51, 51, 61, 61, 51, 61, 61, 71]
+secondModuleY= [32, 32, 51, 52, 62, 62, 52, 62, 62, 71]
+thirdModuleX=  [51, 71, 61, 81, 71, 81, 71, 71, 81, 81]
+thirdModuleY=  [52, 72, 62, 82, 72, 82, 72, 72, 82, 82]
+label = "Mean effect of Fixed M: 135, 137, 156, 158, 167, 168, 257, 267, 268, 278"
 ################
 
 # #####4 Modules######
@@ -55,6 +55,8 @@ firstModuleX=np.array(firstModuleX)
 firstModuleY=np.array(firstModuleY)
 secondModuleX=np.array(secondModuleX)
 secondModuleY=np.array(secondModuleY)
+thirdModuleX=np.array(thirdModuleX)
+thirdModuleY=np.array(thirdModuleY)
 
 # print firstModule
 # print secondModule

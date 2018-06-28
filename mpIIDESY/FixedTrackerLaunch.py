@@ -45,9 +45,9 @@ plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC
 
 expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)  # XY
 
-T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
-# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
+T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
 # T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
 # expectPars = (11, 21, 31, 41, 51, 61, 71, 81) # X Only 
@@ -337,7 +337,7 @@ for i_module in range(0, 8):
 textstr = "Truth"
 plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
 if (extraLabel != -1):
-	plt.text(2.5, 420, extraLabel, color="purple", fontsize=12, fontweight='bold')
+	plt.text(2.0, 420, extraLabel, color="purple", fontsize=10, fontweight='bold')
 plt.subplots_adjust(top=0.85)
 
 #Legend (stats X)

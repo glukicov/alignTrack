@@ -74,7 +74,7 @@ print "With expected Parameters: ", expectPars
 
 # offsets = (0.06, -0.062, -0.035, 0.117, 0.22, 0.159, -0.002, 0.015) # Mean XY  Case C (Run 1)
 
-print "Offsets Run 1 [mm]: ", offsets
+#print "Offsets Run 1 [mm]: ", offsets
 #raw_input("Offsets :: Run 1 correct? [press enter]") 
 # for i in range(0, len(T_mis_C)):
 # 	mis_C.append(float(T_mis_C[i] - offsets[i]))
@@ -321,7 +321,7 @@ for i_line in range(0, lineN):
 textstr = "Truth"
 plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
 if (extraLabel != -1):
-	plt.text(8, 350, extraLabel, color="purple", fontsize=12, fontweight='bold')
+	plt.text(6, 350, extraLabel, color="purple", fontsize=12, fontweight='bold')
 for i_line in range(0, lineN):
 	textstr = "Iteration " + str(i_line)
 	plt.text(spacing[i_line], 400, textstr, color=str(colours[i_line]), fontsize=10, fontweight='bold')
