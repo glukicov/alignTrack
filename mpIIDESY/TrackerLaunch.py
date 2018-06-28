@@ -47,9 +47,9 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
 #Truth Misalignment 
 
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
-T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
+# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
 # T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
 
@@ -85,7 +85,9 @@ print "With expected Parameters: ", expectPars
 # T_mis_C=mis_C #set truth as the previous misalignment
 # mis_C = [] 
 
-# offsets = (0.055, 0.005, 0.0, 0.0, -0.037, -0.002, -0.048, -0.0, -0.036, -0.007, 0.0, 0.0, 0.061, 0.005, 0.146, 0.007) # Case A (Run 2)
+offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) # M82F Mean Run 2
+
+# offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)  # M8A Mean Run 2
 
 
 # print "Offsets Run 2 [mm]: ", offsets
@@ -307,13 +309,14 @@ line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
 	plt.plot(i_module+1, misX[0][i_module], marker=".", color="red")
+	plt.plot(i_module+1, offsetsX[i_module]*1e3, marker="+", color="black")
 
 for i_line in range(0, lineN):
 	for i_module in range(0, 8):
 		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 		#print "recoXError[i_line][i_module]=", recoXError[i_line][i_module]
-		plt.errorbar(i_module+1, recoX[i_line][i_module]+offsetsX[i_module]*1e3, yerr=recoXError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
+		plt.errorbar(i_module+1, recoX[i_line][i_module]+offsetsX[i_module]*1e3, yerr=recoXError[i_line][i_module],  color="purple", markersize=12, elinewidth=2)
 		if (recoXError[i_line][i_module] == 0.0):
 			plt.plot(i_module+1, recoX[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
 
@@ -349,12 +352,13 @@ line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
 	plt.plot(i_module+1, misY[i_line][i_module], marker=".", color="red")
+	plt.plot(i_module+1, offsetsY[i_module]*1e3, marker="+", color="black")
 
 for i_line in range(0, lineN):
 	for i_module in range(0, 8):
 		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-		plt.errorbar(i_module+1, recoY[i_line][i_module]+offsetsY[i_module]*1e3, yerr=recoYError[i_line][i_module],  color=str(colours[i_line]), markersize=12, elinewidth=2)
+		plt.errorbar(i_module+1, recoY[i_line][i_module]+offsetsY[i_module]*1e3, yerr=recoYError[i_line][i_module],  color="purple", markersize=12, elinewidth=2)
 		if (recoYError[i_line][i_module] == 0.0):
 			plt.plot(i_module+1, recoY[i_line][i_module], marker="*", color=str(colours[i_line]), markersize=12)
 

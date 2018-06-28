@@ -5,7 +5,7 @@ import subprocess
 import argparse, sys
 
 #Create combinations
-combinations = np.array([''.join(x) for x in itertools.combinations('12345678',4)])
+combinations = np.array([''.join(x) for x in itertools.combinations('12345678',3)])
 
 print "Total combinations:", len(combinations)
 
@@ -16,8 +16,6 @@ secondModuleX=[]
 secondModuleY=[]
 thirdModuleX=[]
 thirdModuleY=[]
-fourthModuleX=[]
-fourthModuleY=[]
 for i in range(0, len(combinations)):
 	firstModuleX.append(str(combinations[i])[:1]+"1")
 	firstModuleY.append(str(combinations[i])[:1]+"2")
@@ -25,8 +23,7 @@ for i in range(0, len(combinations)):
 	secondModuleY.append(str(combinations[i])[1:2]+"2")
 	thirdModuleX.append(str(combinations[i])[2:3]+"1")
 	thirdModuleY.append(str(combinations[i])[2:3]+"2")
-	fourthModuleX.append(str(combinations[i])[3:4]+"1")
-	fourthModuleY.append(str(combinations[i])[3:4]+"2")
+	
 
 firstModuleX=np.array(firstModuleX)
 firstModuleY=np.array(firstModuleY)
@@ -34,8 +31,6 @@ secondModuleX=np.array(secondModuleX)
 secondModuleY=np.array(secondModuleY)
 thirdModuleX=np.array(thirdModuleX)
 thirdModuleY=np.array(thirdModuleY)
-fourthModuleX=np.array(fourthModuleX)
-fourthModuleY=np.array(fourthModuleY)
 
 # print firstModule
 # print secondModule
@@ -54,8 +49,6 @@ for i in range (0, len(combinations)):
 	f.write(str(secondModuleY[i]) + " 0.0 " + "-1\n")
 	f.write(str(thirdModuleX[i]) + " 0.0 " + "-1\n")
 	f.write(str(thirdModuleY[i]) + " 0.0 " + "-1\n")
-	f.write(str(fourthModuleX[i]) + " 0.0 " + "-1\n")
-	f.write(str(fourthModuleY[i]) + " 0.0 " + "-1\n")
 	f.write("\n")
 	f.close()  
 
@@ -67,7 +60,7 @@ for i in range (0, len(combinations)):
 	subprocess.call(["python" , "ConcatenatePEDE.py", "-m", "w"])
 
 	#Produce FoM
-	label = "Fixed: " + str(firstModuleX[i]) + " " + str(firstModuleY[i]) + " " + str(secondModuleX[i]) + " " + str(secondModuleY[i]) + " " + str(thirdModuleX[i]) + " " + str(thirdModuleY[i])+ " " + str(fourthModuleX[i]) + " " + str(fourthModuleY[i])
+	label = "Fixed: " + str(firstModuleX[i]) + " " + str(firstModuleY[i]) + " " + str(secondModuleX[i]) + " " + str(secondModuleY[i]) + " " + str(thirdModuleX[i]) + " " + str(thirdModuleY[i])
 	subprocess.call(["python" , "../TrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label)])
 
 	#Keep a copy of the file
