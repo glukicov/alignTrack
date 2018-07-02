@@ -179,7 +179,7 @@ if (mode == "plot"):
 	plt.savefig("Pulls_L.png")
 
 
-	#-------modulePulls_Zoom----------
+	#-------LayerPulls_Zoom----------
 	#
 	i_totalLayer=0
 	yMin = -0.1
@@ -200,16 +200,16 @@ if (mode == "plot"):
 			meanError=t.GetMeanError()
 			means.append(mean)
 			MeanErrors.append(meanError)
-			plt.plot(i_module, mean)
-			plt.errorbar(i_module, mean, yerr=meanError, color="red") 
-			axes.annotate(round_sig(mean), (i_module, mean))
+			plt.plot(i_layer, mean)
+			plt.errorbar(i_layer, mean, yerr=meanError, color="red") 
+			#axes.annotate(round_sig(mean), (i_module, mean))
 			i_totalLayer+=1
-	line = [[0.5,0.0], [NModules+1, 0.0]]
+	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'grey')
 	avgMean = sum(means)/float(len(means))
-	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+	#plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 
 	for i in range(0, len(means)):
 		number = (means[i]-avgMean)/MeanErrors[i]
@@ -218,7 +218,7 @@ if (mode == "plot"):
 			number = number
 		else:
 			number = 0.0
-		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.09))
+		#axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.09))
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pull Mean [error = Error on the Mean]", fontsize=20)
@@ -226,7 +226,7 @@ if (mode == "plot"):
 	plt.title("Mean pull ( 'z-value' )", fontsize=18)
 	plt.savefig("Pulls_L_Zoom.png")
 
-	#-------moduleResiudals----------
+	#-------LayerResiudals----------
 	#
 	i_totalLayer=0
 	ResidualRMS=[]
@@ -237,7 +237,7 @@ if (mode == "plot"):
 	axes = plt.gca()
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
 		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
@@ -250,10 +250,10 @@ if (mode == "plot"):
 			ResidualRMSError.append(SDError*1e3)
 			#print "mean= ", mean , "SD= ", SD
 			# mm to um *1e3 
-			plt.errorbar(i_module, mean*1e3, yerr=SD*1e3, color="red") 
-			plt.plot(i_module, mean*1e3, marker="_", color="red")
-			axes.annotate(round_sig(mean*1e3, 3), (i_module, mean))
-			axes.annotate( "("+str(round_sig(SD*1e3, 3))+")", (i_module-0.43, yMin+0.05*1e3))
+			plt.errorbar(i_layer, mean*1e3, yerr=SD*1e3, color="red") 
+			plt.plot(i_layer, mean*1e3, marker="_", color="red")
+			#axes.annotate(round_sig(mean*1e3, 3), (i_module, mean))
+			#axes.annotate( "("+str(round_sig(SD*1e3, 3))+")", (i_module-0.43, yMin+0.05*1e3))
 			i_totalLayer+=1
 
 	line = [[0.5,0.0], [i_totalLayer+1, 0.0]]
@@ -265,7 +265,7 @@ if (mode == "plot"):
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("Residuals_L.png")
 
-	#-------moduleResiudals_Zoom----------
+	#-------LayerResiudals_Zoom----------
 	#
 	i_totalLayer=0
 	means=[]
@@ -276,7 +276,7 @@ if (mode == "plot"):
 	axes = plt.gca()
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
 		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
@@ -286,13 +286,13 @@ if (mode == "plot"):
 			means.append(mean*1e3)
 			meanError = t.GetMeanError()
 			MeanErrors.append(meanError)
-			plt.errorbar(i_module, mean*1e3, yerr=meanError*1e3, color="red") 
-			plt.plot(i_module, mean*1e3, marker="_", color="red")
-			axes.annotate(round_sig(mean*1e3), (i_module, mean*1e3))
+			plt.errorbar(i_layer, mean*1e3, yerr=meanError*1e3, color="red") 
+			plt.plot(i_layer, mean*1e3, marker="_", color="red")
+			#axes.annotate(round_sig(mean*1e3), (i_module, mean*1e3))
 			i_totalLayer+=1
 
 	avgMean = sum(means)/float(len(means))
-	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
 	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 	for i in range(0, len(means)):
@@ -301,18 +301,18 @@ if (mode == "plot"):
 			number = number
 		else:
 			number = 0.0
-		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.014*1e3))
+		#axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.014*1e3))
 
 	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
-	axes.set_xlim(0.5, i_totalLayer+1)
+	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
 	plt.title("Residual Means ( 'z-value' )", fontsize=20)
 	plt.ylabel("Residual Mean /um [error = Error on the Mean]", fontsize=18)
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("Residuals_L_Zoom.png")
 
-	#----Residual SD 
+	#----Layer Residual SD 
 	i_totalLayer=0
 	yMin = 100
 	yMax = 260
@@ -321,20 +321,21 @@ if (mode == "plot"):
 	axes = plt.gca()
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		for i_layer in range(0, NLayers):
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
+		for n in range(0, NLayers):
+			i_layer=layerNames[i_totalLayer]
 			plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-			plt.errorbar(i_module, ResidualRMS[i_totalLayer], yerr=ResidualRMSError[i_totalLayer], color="red") 
-			plt.plot(i_module, ResidualRMS[i_totalLayer], marker="_", color="red")
-			axes.annotate(int(round_sig( ResidualRMS[i_totalLayer], 3)), (i_module,  ResidualRMS[i_totalLayer]))
+			plt.errorbar(i_layer, ResidualRMS[i_totalLayer], yerr=ResidualRMSError[i_totalLayer], color="red") 
+			plt.plot(i_layer, ResidualRMS[i_totalLayer], marker="_", color="red")
+			#axes.annotate(int(round_sig( ResidualRMS[i_totalLayer], 3)), (i_module,  ResidualRMS[i_totalLayer]))
 			means.append(ResidualRMS[i_totalLayer])
 			i_totalLayer+=1
 
 	avgMean = sum(means)/float(len(means))
-	line = [[0.5,avgMean], [i_totalLayer+1.5, avgMean]]
+	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
 	plt.text(9.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
-	line = [[0.5,0.0], [i_totalLayer+1, 0.0]]
+	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
@@ -343,7 +344,7 @@ if (mode == "plot"):
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("ResidualsSD_L.png")
 
-	#----Pull SD 
+	#----Layer Pull SD 
 	i_totalLayer=0
 	yMin = 0.6
 	yMax = 1.8
@@ -352,21 +353,22 @@ if (mode == "plot"):
 	axes = plt.gca()
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'green')
-		for i_layer in range(0, NLayers):
-			plt.errorbar(i_module, PullsSD[i_totalLayer], yerr=PullsSDError[i_totalLayer], color="red") 
-			plt.plot(i_module, PullsSD[i_totalLayer], marker="_", color="red")
-			axes.annotate(round_sig( PullsSD[i_totalLayer], 2), (i_module,  PullsSD[i_totalLayer]))
+		for n in range(0, NLayers):
+			i_layer=layerNames[i_totalLayer]
+			plt.errorbar(i_layer, PullsSD[i_totalLayer], yerr=PullsSDError[i_totalLayer], color="red") 
+			plt.plot(i_layer, PullsSD[i_totalLayer], marker="_", color="red")
+			#axes.annotate(round_sig( PullsSD[i_totalLayer], 2), (i_module,  PullsSD[i_totalLayer]))
 			means.append(PullsSD[i_totalLayer])
 			i_totalLayer=+1
 
 	avgMean = sum(means)/float(len(means))
-	line = [[0.5,avgMean], [i_totalLayer+1.5, avgMean]]
+	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linestyle="-")
 	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 
-	line = [[0.5,0.0], [i_totalLayer+1, 0.0]]
+	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
@@ -727,7 +729,8 @@ if (mode == "pVal"):
 	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("p-value mean [error = SD]", fontsize=20)
-	plt.xlabel("Iteration", fontsize=20)
+	plt.xlabel("Module Removed", fontsize=20)
+	# plt.xlabel("Iteration", fontsize=20)
 	plt.savefig("pFoM.png")
 
 	print "pVal FoM produced!"
