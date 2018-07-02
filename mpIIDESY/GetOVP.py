@@ -182,8 +182,8 @@ if (mode == "plot"):
 	#-------LayerPulls_Zoom----------
 	#
 	i_totalLayer=0
-	yMin = -0.1
-	yMax = 0.1
+	yMin = -0.5
+	yMax = 0.5
 	plt.figure(51)
 	axes = plt.gca()
 	means = []
@@ -209,7 +209,7 @@ if (mode == "plot"):
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-	#plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+	plt.text(33.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 
 	for i in range(0, len(means)):
 		number = (means[i]-avgMean)/MeanErrors[i]
@@ -270,8 +270,8 @@ if (mode == "plot"):
 	i_totalLayer=0
 	means=[]
 	MeanErrors=[]
-	yMin = -15
-	yMax = 15
+	yMin = -50
+	yMax = 50
 	plt.figure(71)
 	axes = plt.gca()
 	for i in range(0, len(moduleNames)):
@@ -294,7 +294,7 @@ if (mode == "plot"):
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+	plt.text(33.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 	for i in range(0, len(means)):
 		number = (means[i]-avgMean)/(MeanErrors[i]*1e3)
 		if (number != 0):
@@ -334,7 +334,7 @@ if (mode == "plot"):
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-	plt.text(9.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
+	plt.text(34.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
 	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
@@ -359,14 +359,13 @@ if (mode == "plot"):
 			i_layer=layerNames[i_totalLayer]
 			plt.errorbar(i_layer, PullsSD[i_totalLayer], yerr=PullsSDError[i_totalLayer], color="red") 
 			plt.plot(i_layer, PullsSD[i_totalLayer], marker="_", color="red")
-			#axes.annotate(round_sig( PullsSD[i_totalLayer], 2), (i_module,  PullsSD[i_totalLayer]))
 			means.append(PullsSD[i_totalLayer])
 			i_totalLayer=+1
 
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linestyle="-")
-	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+	plt.text(33.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 
 	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
