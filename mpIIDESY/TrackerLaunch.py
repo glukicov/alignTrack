@@ -47,7 +47,7 @@ expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
 
 #Truth Misalignment 
 
-T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
+T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0,	 0.0, 0.0) # Case A (Initial)
 
 # T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
@@ -85,9 +85,9 @@ print "With expected Parameters: ", expectPars
 # T_mis_C=mis_C #set truth as the previous misalignment
 # mis_C = [] 
 
-offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) # M82F Mean Run 2
+# offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) # M82F Mean Run 2
 
-# offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)  # M8A Mean Run 2
+offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)  # M8A Mean Run 2
 
 
 # print "Offsets Run 2 [mm]: ", offsets
@@ -111,7 +111,8 @@ offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.
 # #----------------------------
 
 print "Truth Misalignments after offsets [mm]: "
-print ["{0:0.3f}".format(i) for i in mis_C]
+print "Mis: ", ["{0:0.3f}".format(i) for i in mis_C]
+print "offsets: ",["{0:0.3f}".format(i) for i in offsets]
 
 if ( len(mis_C) != len(expectPars) ):
 	print "Enter Truth data in the right format!"
