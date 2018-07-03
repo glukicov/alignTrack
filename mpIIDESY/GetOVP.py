@@ -153,10 +153,11 @@ if (mode == "plot"):
 	yMax = 1.1
 	plt.figure(41)
 	axes = plt.gca()
-	for i in range(0, len(moduleNames)):
-		i_module=moduleNames[i]
+	for i_module in range(0, NModules):
 		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+	for i in range(0, len(moduleNames)):
+		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
 			name = "TrackerAlignment/UV/h_Pulls_Module_" + str(i_module) + "_" + str(LayerNames[n])
@@ -188,10 +189,11 @@ if (mode == "plot"):
 	axes = plt.gca()
 	means = []
 	MeanErrors=[]
+	for i_module in range(0, NModules):
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
-		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
 			name = "TrackerAlignment/UV/h_Pulls_Module_" + str(i_module) + "_" + str(LayerNames[n])
@@ -209,7 +211,7 @@ if (mode == "plot"):
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-	plt.text(33.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+	plt.text(32.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 
 	for i in range(0, len(means)):
 		number = (means[i]-avgMean)/MeanErrors[i]
@@ -235,10 +237,11 @@ if (mode == "plot"):
 	yMax = 0.2*1e3
 	plt.figure(61)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
-		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
 			name = "TrackerAlignment/UV/h_Residuals_Module_" + str(i_module) + "_" + str(LayerNames[n])
@@ -274,10 +277,11 @@ if (mode == "plot"):
 	yMax = 50
 	plt.figure(71)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
-		plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
 			name = "TrackerAlignment/UV/h_Residuals_Module_" + str(i_module) + "_" + str(LayerNames[n])
@@ -294,7 +298,7 @@ if (mode == "plot"):
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-	plt.text(33.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+	plt.text(32.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 	for i in range(0, len(means)):
 		number = (means[i]-avgMean)/(MeanErrors[i]*1e3)
 		if (number != 0):
@@ -319,12 +323,13 @@ if (mode == "plot"):
 	means=[]
 	plt.figure(81)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 			plt.errorbar(i_layer, ResidualRMS[i_totalLayer], yerr=ResidualRMSError[i_totalLayer], color="red") 
 			plt.plot(i_layer, ResidualRMS[i_totalLayer], marker="_", color="red")
 			#axes.annotate(int(round_sig( ResidualRMS[i_totalLayer], 3)), (i_module,  ResidualRMS[i_totalLayer]))
@@ -334,7 +339,7 @@ if (mode == "plot"):
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-	plt.text(34.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
+	plt.text(32.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
 	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
@@ -346,27 +351,28 @@ if (mode == "plot"):
 
 	#----Layer Pull SD 
 	i_totalLayer=0
+	i_totalLayer=0
 	yMin = 0.6
 	yMax = 1.8
 	means=[]
 	plt.figure(91)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
-		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'green')
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
 			plt.errorbar(i_layer, PullsSD[i_totalLayer], yerr=PullsSDError[i_totalLayer], color="red") 
 			plt.plot(i_layer, PullsSD[i_totalLayer], marker="_", color="red")
 			means.append(PullsSD[i_totalLayer])
-			i_totalLayer=+1
+			i_totalLayer+=1
 
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
-	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linestyle="-")
-	plt.text(33.1, avgMean, str(round_sig(avgMean)), fontsize=9)
-
+	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
+	plt.text(32.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
 	line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
@@ -394,12 +400,11 @@ if (mode == "plot"):
 	yMax = 1.1
 	plt.figure(4)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot(
-		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-		    color = 'green')
 		name = "TrackerAlignment/Modules/h_Pulls_Module_" + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
@@ -416,7 +421,7 @@ if (mode == "plot"):
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
-	axes.set_xlim(0.5, NModules+1)
+	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pulls Mean [error = SD]", fontsize=20)
 	plt.xlabel("Module", fontsize=20)
@@ -432,12 +437,11 @@ if (mode == "plot"):
 	axes = plt.gca()
 	means = []
 	MeanErrors=[]
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot(
-		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-		    color = 'green')
 		name = "TrackerAlignment/Modules/h_Pulls_Module_" + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
@@ -459,14 +463,15 @@ if (mode == "plot"):
 	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 
 	for i in range(0, len(means)):
+		i_module=moduleNames[i]
 		number = (means[i]-avgMean)/MeanErrors[i]
 		if (number != 0):
 			#number=int(number*10000)/10000
 			number = number
 		else:
 			number = 0.0
-		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.09))
-	axes.set_xlim(0.5, NModules+1)
+		axes.annotate( "("+str(round_sig(number,2))+")", (i_module-0.4, -0.09))
+	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pull Mean [error = Error on the Mean]", fontsize=20)
 	plt.xlabel("Module", fontsize=20)
@@ -481,12 +486,11 @@ if (mode == "plot"):
 	yMax = 0.2*1e3
 	plt.figure(6)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot(
-		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-		    color = 'green')
 		name = "TrackerAlignment/Modules/h_Residuals_Module_" + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
@@ -505,7 +509,7 @@ if (mode == "plot"):
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
-	axes.set_xlim(0.5, NModules+1)
+	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
 	plt.title("Residual Means /um (SD)", fontsize=20)
 	plt.ylabel("Residual mean /um [error = SD]", fontsize=20)
@@ -520,12 +524,11 @@ if (mode == "plot"):
 	yMax = 15
 	plt.figure(7)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot(
-		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-		    color = 'green')
 		name = "TrackerAlignment/Modules/h_Residuals_Module_" + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
@@ -543,18 +546,19 @@ if (mode == "plot"):
 	    color = 'black', linestyle="-")
 	plt.text(9.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 	for i in range(0, len(means)):
+		i_module=moduleNames[i]
 		number = (means[i]-avgMean)/(MeanErrors[i]*1e3)
 		if (number != 0):
 			number = number
 		else:
 			number = 0.0
-		axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.014*1e3))
+		axes.annotate( "("+str(round_sig(number,2))+")", (i_module-0.4, -0.014*1e3))
 
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
-	axes.set_xlim(0.5, NModules+1)
+	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
 	plt.title("Residual Means ( 'z-value' )", fontsize=20)
 	plt.ylabel("Residual Mean /um [error = Error on the Mean]", fontsize=18)
@@ -567,16 +571,15 @@ if (mode == "plot"):
 	means=[]
 	plt.figure(8)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot(
-		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-		    color = 'green')
-		plt.errorbar(i_module, ResidualRMS[i_module-1], yerr=ResidualRMSError[i_module-1], color="red") 
-		plt.plot(i_module, ResidualRMS[i_module-1], marker="_", color="red")
-		axes.annotate(int(round_sig( ResidualRMS[i_module-1], 3)), (i_module,  ResidualRMS[i_module-1]))
-		means.append(ResidualRMS[i_module-1])
+		plt.errorbar(i_module, ResidualRMS[i], yerr=ResidualRMSError[i], color="red") 
+		plt.plot(i_module, ResidualRMS[i], marker="_", color="red")
+		axes.annotate(int(round_sig( ResidualRMS[i], 3)), (i_module,  ResidualRMS[i]))
+		means.append(ResidualRMS[i])
 
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
@@ -589,7 +592,7 @@ if (mode == "plot"):
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
-	axes.set_xlim(0.5, NModules+1)
+	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
 	plt.title("Residual SD", fontsize=20)
 	plt.ylabel("Residual SD /um [error = SD Error]", fontsize=18)
@@ -602,16 +605,15 @@ if (mode == "plot"):
 	means=[]
 	plt.figure(9)
 	axes = plt.gca()
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-		plt.plot(
-		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-		    color = 'green')
-		plt.errorbar(i_module, PullsSD[i_module-1], yerr=PullsSDError[i_module-1], color="red") 
-		plt.plot(i_module, PullsSD[i_module-1], marker="_", color="red")
-		axes.annotate(round_sig( PullsSD[i_module-1], 2), (i_module,  PullsSD[i_module-1]))
-		means.append(PullsSD[i_module-1])
+		plt.errorbar(i_module, PullsSD[i], yerr=PullsSDError[i], color="red") 
+		plt.plot(i_module, PullsSD[i], marker="_", color="red")
+		axes.annotate(round_sig( PullsSD[i], 2), (i_module,  PullsSD[i]))
+		means.append(PullsSD[i])
 
 	avgMean = sum(means)/float(len(means))
 	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
@@ -624,7 +626,7 @@ if (mode == "plot"):
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
-	axes.set_xlim(0.5, NModules+1)
+	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
 	plt.title("Pulls SD", fontsize=20)
 	plt.ylabel("Pulls SD [error = SD Error]", fontsize=18)
