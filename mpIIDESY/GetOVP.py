@@ -31,21 +31,22 @@ NTotalLayers=32
 mode = str(args.mode)
 LayerNames = ["U0", "U1", "V0", "V1"]
 moduleNamesInitial=np.arange(1,NModules+1) #1-8
-layerNamesInitial=np.arange(1, NTotalLayers+1) #1-33
+layerNamesInitial=np.arange(1, NTotalLayers+1) #1-32
 
 if (int(args.moduleN) != -1):
 	removedModule=int(args.moduleN)
-	moduleNames=np.delete(moduleNamesInitial, removedModule-1)
-	removedLayers= np.arange(removedModule*4-4,removedModule*4)
-	print "removedLayers ", removedLayers
-	layerNames=np.delete(layerNamesInitial, removedLayers)
+	moduleNames=np.delete(moduleNamesInitial, removedModule-1) # indexing so -1
+	removedLayers= np.arange(removedModule*4-3,removedModule*4+1)
+	print "removedPlanes ", removedLayers  # Layers: 0, 1... Planes: 1, 2...
+	print "layerNamesInitial", layerNamesInitial
+	layerNames=np.delete(layerNamesInitial, removedLayers-1) # indexing so -1
 else:
 	removedModule=-1
 	moduleNames=moduleNamesInitial
 	layerNames=layerNamesInitial
 
 print "Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and"
-print len(layerNames), "layers: ", layerNames
+print len(layerNames), "planes: ", layerNames
 
 if (mode == "plot"):
 
@@ -161,6 +162,7 @@ if (mode == "plot"):
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
 			name = "TrackerAlignment/UV/h_Pulls_Module_" + str(i_module) + "_" + str(LayerNames[n])
+			print name
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			SD = t.GetRMS()
@@ -713,18 +715,16 @@ if (mode == "pVal"):
 	# 	errors.append(args.pvals[i*2+1])
 	trialN = len(pVals)
 
-	yMin = 0.28
-	yMax = 0.51
+	yMin = -5
+	yMax = 1500
 	plt.figure(1)
 	axes = plt.gca()
 	line = [[0.5,0.5], [trialN+0.2, 0.5]]
-	plt.plot(
-	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	    color = 'green')
+	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 
 	for i in range(0, trialN):
 		plt.errorbar(int(i), float(pVals[i]), yerr=float(errors[i]), color="red") 
-		plt.plot(int(i), float(pVals[i]), marker="_", color="red")
+		plt.plot(int(i), float(pVals[i]), marker="*", color="red")
 
 	axes.set_xlim(-0.2, trialN+0.2)
 	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
