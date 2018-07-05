@@ -162,7 +162,7 @@ if (mode == "plot"):
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
 			name = "TrackerAlignment/UV/h_Pulls_Module_" + str(i_module) + "_" + str(LayerNames[n])
-			print name
+			#print name
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			SD = t.GetRMS()
