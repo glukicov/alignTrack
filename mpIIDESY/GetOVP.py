@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--moduleN', help='mode')
 parser.add_argument("-mode", "--mode")
 parser.add_argument("-pvals", "--pvals", nargs='+')
+parser.add_argument("-p0", "--p0", nargs='+')
 parser.add_argument("-mis", "--mis", nargs='+')
 parser.add_argument("-abs", "--abs")
 args = parser.parse_args()
@@ -143,6 +144,7 @@ if (mode == "plot"):
 	# plt.xlabel("Layer", fontsize=10)
 	# plt.savefig("layersPzP_Reduced.png")
 
+	'''
 	####### LAYERS ##############
 
 	#-------LayerPulls----------
@@ -389,6 +391,7 @@ if (mode == "plot"):
 	subprocess.call(["convert" , "-append", "L.png" , "L_Zoom.png", "Pulls_Res_L.png"])
 	subprocess.call(["convert" , "+append", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
 	subprocess.call(["convert" , "-append", "SD_L.png", "Pulls_Res_L.png", "L_SD_Pulls_Res_Fom.png"])
+	subprocess.call(["trash" , "Residuals_L.png" , "Pulls_L.png", "L.png", "Residuals_L_Zoom.png" , "Pulls_L_Zoom.png", "L_Zoom.png", "L.png" , "L_Zoom.png", "Pulls_Res_L.png", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
 
 	########################################################
 
@@ -640,7 +643,22 @@ if (mode == "plot"):
 	subprocess.call(["convert" , "-append", "M.png" , "M_Zoom.png", "Pulls_Res_M.png"])
 	subprocess.call(["convert" , "+append", "ResidualsSD_M.png" , "PullsSD_M.png", "SD_M.png"])
 	subprocess.call(["convert" , "-append", "SD_M.png", "Pulls_Res_M.png", "M_SD_Pulls_Res_Fom.png"])
+	subprocess.call(["trash" , "Residuals_M.png" , "Pulls_M.png", "M.png", "Residuals_M_Zoom.png" , "Pulls_M_Zoom.png", "M_Zoom.png", "M.png" , "M_Zoom.png", "Pulls_Res_M.png", "ResidualsSD_M.png" , "PullsSD_M.png", "SD_M.png"])
 
+
+	#------PEDE Labels-----
+	#
+	myStyle  =  TStyle("MyStyle", "My Root Styles")
+	cUniform = TCanvas("cLabels", "cLabels", 700, 700)
+	cUniform.Divide(1,1)
+	name = "TrackerAlignment/Hits/h_labels"
+	hUniform = f.Get(str(name))
+	cUniform.cd(1)
+	hUniform.Draw() 
+	gStyle.SetOptStat() #over/under -flows, Rms and Means with errors, number of entries
+	cUniform.Print("hLabels.png")
+
+	'''
 
 	#------pValFit---------
 	#
@@ -672,13 +690,42 @@ if (mode == "plot"):
 	#lineF->SetParameters(0.0, hMean);
 	#Fit function
 	cUniform.cd(1)
-	hUniform.Draw("E1") #Set errors on all bins
-	hUniform.Fit("lineF", "Q") # quite fit 
+
+	#Normalise the histogram
+	norm = 1/float(hUniform.GetEntries())
+	hUniformNorm = norm * hUniform
+	hUniformNorm.SetMinimum(0.004)
+	hUniformNorm.SetMaximum(0.018)
+	hUniformNorm.Draw("E1") #Set errors on all bins
+	hUniformNorm.Fit("lineF", "Q") # quite fit 
 	pValF = lineF.GetChisquare()/lineF.GetNDF()
-	hUniform.SetTitle("p-value fit with Chi^{2}/ndf = " + str(round_sig(pValF,3)))
+	p0=lineF.GetParameter(0) #p0 of the fit 
+	pMean=hUniformNorm.GetMean() #mean 
+	#Largest bin
+	binmax = hUniformNorm.GetMaximumBin() 
+	largestValue = hUniformNorm.GetXaxis().GetBinCenter(binmax)
+	#Bin dist. vs fit
+	aboveFitCounter = 0
+	for i_bin in range(0, hUniformNorm.GetSize()):
+		currentBinValue = hUniformNorm.GetBinContent(i_bin)
+		#print "currentBinValue= ", currentBinValue, "p0= ", p0
+
+		if (currentBinValue > p0):
+			aboveFitCounter=aboveFitCounter+1
+			#print "aboveFitCounter= ", aboveFitCounter
+
+	aboveFitRatio = float(aboveFitCounter)/(hUniformNorm.GetSize()-2)  #divide by the #bin without OF and UF 
+
+	hUniformNorm.SetTitle("Chi^{2}/ndf = " + str(round_sig(pValF,3)) + " p0= " + str(round_sig(p0,3)) + " mean=" + str(round_sig(pMean,3)) + " L.V.= " + str(largestValue) + " >P0= " + str(aboveFitRatio) + " #bins= " +  str(hUniformNorm.GetSize()-2) )
 	gStyle.SetOptStat("ourRmMe") #over/under -flows, Rms and Means with errors, number of entries
 	gStyle.SetOptFit(1111)  #probability, Chi2, errors, name/values of parameters
 	gStyle.SetStatFormat("11.4f")  # 4 sig.fig, f=float
+
+	#Print data to a text file
+	f = open("metric.txt", "w")
+	f.write(str(round_sig(pValF,3))) # hi^{2}/ndf [no error]
+	f.write()
+
 
 	#Save canvas as .png file
 	#cUniform.Modified()
@@ -706,35 +753,71 @@ pvals=[]
 if (mode == "pVal"):
 	pvals=args.pvals
 	pVals=[]
-	errors=[]
-	pVals=args.pvals[0::2]
-	errors=args.pvals[1::2]
-	print pVals, errors
+	#errors=[]
+	pVals=args.pvals
+	#errors=args.pvals[1::2]
+	print pVals
 	# for i in range (0, trialN):
 	# 	pVals.append(args.pvals[i*2])	
 	# 	errors.append(args.pvals[i*2+1])
 	trialN = len(pVals)
 
-	yMin = -5
-	yMax = 1500
+	yMin = 0.001
+	yMax = 0.01
 	plt.figure(1)
 	axes = plt.gca()
-	line = [[0.5,0.5], [trialN+0.2, 0.5]]
-	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 
 	for i in range(0, trialN):
-		plt.errorbar(int(i), float(pVals[i]), yerr=float(errors[i]), color="red") 
+		#plt.errorbar(int(i), float(pVals[i]), yerr=float(errors[i]), color="red") 
 		plt.plot(int(i), float(pVals[i]), marker="*", color="red")
 
-	axes.set_xlim(-0.2, trialN+0.2)
+	axes.set_xlim(-0.5, trialN-0.5)
 	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
 	axes.set_ylim(yMin, yMax)
-	plt.ylabel("p-value mean [error = SD]", fontsize=20)
+	plt.ylabel(r'$\chi^{2}/ndf$ of the fit to p-value dist.', fontsize=20)
 	plt.xlabel("Module Removed", fontsize=20)
 	# plt.xlabel("Iteration", fontsize=20)
 	plt.savefig("pFoM.png")
 
 	print "pVal FoM produced!"
+
+p0=[]
+#-----p0 vs iteration----
+#
+if (mode == "p0"):
+	p0=args.p0
+	print p0
+	# for i in range (0, trialN):
+	# 	pVals.append(args.pvals[i*2])	
+	# 	errors.append(args.pvals[i*2+1])
+	trialN = len(p0)
+
+	yMin = 0.003
+	yMax = 0.01
+	plt.figure(1)
+	axes = plt.gca()
+
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+
+	for i in range(0, trialN):
+		#plt.errorbar(int(i), float(pVals[i]), yerr=float(errors[i]), color="red") 
+		plt.plot(int(i), float(p0[i]), marker="*", color="red")
+
+	axes.set_xlim(-0.5, trialN-0.5)
+	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+	axes.set_ylim(yMin, yMax)
+	plt.ylabel("p0 of the fit", fontsize=20)
+	plt.xlabel("Module Removed", fontsize=20)
+	# plt.xlabel("Iteration", fontsize=20)
+	plt.savefig("p0FoM.png")
+
+	print "p0 FoM produced!"
 
 #-----Truth Misalignment----
 #
