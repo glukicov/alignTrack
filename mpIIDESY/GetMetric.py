@@ -19,7 +19,6 @@ def round_sig(x, sig=2):
 
 NModules=8
 
-'''
 
 print "Getting Metric Plots"
 f = open("metric.txt", "w") # overwrite old file, if exists 
@@ -66,8 +65,8 @@ for i_module in range(0, NModules+1):
 	#Normalise the histogram
 	norm = 1/float(hUniform.GetEntries())
 	hUniformNorm = norm * hUniform
-	hUniformNorm.SetMinimum(0.004)
-	hUniformNorm.SetMaximum(0.018)
+	# hUniformNorm.SetMinimum(0.004)
+	# hUniformNorm.SetMaximum(0.018)
 	hUniformNorm.Draw("E1") #Set errors on all bins
 	hUniformNorm.Fit("lineF", "Q") # quite fit 
 	pValF = lineF.GetChisquare()/lineF.GetNDF()
@@ -112,7 +111,6 @@ for i_module in range(0, NModules+1):
 	f.write(str(aboveFitRatio) + " ")
 	f.write("\n")
 
-'''
 
 #Now run over the metric text file
 f=open("metric.txt","r")
@@ -132,6 +130,8 @@ for i in range(0, 5):
 	    #if there is an error - grab it 
 	    if (i_type==1 or i_type==3):
 	    	error.append(x.split(' ')[i_type+1])
+	    else:
+	    	error.append(0.0) 
 	   	
 	f.close() 	
 
@@ -145,48 +145,64 @@ for i in range(0, 5):
 	
 	#do plots 
 	print data, error
+
+
+	#-----vals vs iteration----
+	trialN = len(data)
+
+	yMin = 1.1*float(max(data))
+	yMax = 0.9*float(min(data))
+	plt.figure(i_type+1)
+	axes = plt.gca()
+
+	for i_module in range(0, NModules):
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+
+	for i in range(0, trialN):
+		plt.errorbar(int(i), float(data[i]), yerr=float(error[i]), color="red") 
+		plt.plot(int(i), float(data[i]), marker=".", color="red")
+
+	axes.set_xlim(-0.5, trialN-0.5)
+	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+	axes.set_ylim(yMax, yMin)
 	
+	plt.xlabel("Module Removed", fontsize=20)
+
+	if (i_type==1):
+		nameStr=r'$\chi^{2}/ndf$ of the fit to p-value dist.'
+	if (i_type==3):
+		nameStr="p0 of the fit"
+		line = [[-0.5,0.01], [8.5, 0.01]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'purple')
+		#axes.set_ylim(yMin, 0.012)
+	if (i_type==5):
+		nameStr="Mean Pvalue"
+		line = [[-0.5,0.5], [8.5, 0.5]]
+		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'purple')
+	if (i_type==6):
+		nameStr="Largest Value"
+	if (i_type==7):
+		nameStr="Fraction above the fit"
+
+	plt.ylabel(str(nameStr), fontsize=20)
+
+	if (i_type==1):
+		nameStr="Chi2"
+	if (i_type==3):
+		nameStr="p0"
+	if (i_type==5):
+		nameStr="mean"
+	if (i_type==6):
+		nameStr="LV"
+	if (i_type==7):
+		nameStr="AF"
+
+	plt.savefig("fig_FoM" + str(nameStr) + ".png")
+
 
 	#reset for next read 
 	data=[]
 	error=[]
 
-
-
-'''
-
-#-----vals vs iteration----
-pVals=args.pvals
-
-print pVals
-# for i in range (0, trialN):
-# 	pVals.append(args.pvals[i*2])	
-# 	errors.append(args.pvals[i*2+1])
-trialN = len(pVals)
-
-yMin = 0.001
-yMax = 0.01
-plt.figure(1)
-axes = plt.gca()
-
-for i_module in range(0, NModules):
-	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-
-for i in range(0, trialN):
-	#plt.errorbar(int(i), float(pVals[i]), yerr=float(errors[i]), color="red") 
-	plt.plot(int(i), float(pVals[i]), marker="*", color="red")
-
-axes.set_xlim(-0.5, trialN-0.5)
-axes.xaxis.set_major_locator(MaxNLocator(integer=True))
-axes.set_ylim(yMin, yMax)
-plt.ylabel(r'$\chi^{2}/ndf$ of the fit to p-value dist.', fontsize=20)
-plt.xlabel("Module Removed", fontsize=20)
-# plt.xlabel("Iteration", fontsize=20)
-plt.savefig("pFoM.png")
-
-print "pVal FoM produced!"
-
-
-
-'''
+print "Finished!"

@@ -700,7 +700,9 @@ if (mode == "plot"):
 	hUniformNorm.Fit("lineF", "Q") # quite fit 
 	pValF = lineF.GetChisquare()/lineF.GetNDF()
 	p0=lineF.GetParameter(0) #p0 of the fit 
+	p0Error=lineF.GetParError(0) #p0 of the fit
 	pMean=hUniformNorm.GetMean() #mean 
+	pMeanError=hUniformNorm.GetMeanError() #mean 
 	#Largest bin
 	binmax = hUniformNorm.GetMaximumBin() 
 	largestValue = hUniformNorm.GetXaxis().GetBinCenter(binmax)
@@ -723,8 +725,13 @@ if (mode == "plot"):
 
 	#Print data to a text file
 	f = open("metric.txt", "w")
-	f.write(str(round_sig(pValF,3))) # hi^{2}/ndf [no error]
-	f.write()
+	f.write(str(pValF) + " ") # hi^{2}/ndf [no error]
+	f.write(str(p0) + " ")
+	f.write(str(p0Error) + " ")
+	f.write(str(pMean) + " ")
+	f.write(str(pMeanError) + " ")
+	f.write(str(largestValue) + " ")
+	f.write(str(aboveFitRatio) + " ")
 
 
 	#Save canvas as .png file
