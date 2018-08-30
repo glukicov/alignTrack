@@ -144,7 +144,7 @@ if (mode == "plot"):
 	# plt.xlabel("Layer", fontsize=10)
 	# plt.savefig("layersPzP_Reduced.png")
 
-	'''
+	
 	####### LAYERS ##############
 
 	#-------LayerPulls----------
@@ -658,7 +658,6 @@ if (mode == "plot"):
 	gStyle.SetOptStat() #over/under -flows, Rms and Means with errors, number of entries
 	cUniform.Print("hLabels.png")
 
-	'''
 
 	#------pValFit---------
 	#
@@ -694,8 +693,8 @@ if (mode == "plot"):
 	#Normalise the histogram
 	norm = 1/float(hUniform.GetEntries())
 	hUniformNorm = norm * hUniform
-	hUniformNorm.SetMinimum(0.004)
-	hUniformNorm.SetMaximum(0.018)
+	# hUniformNorm.SetMinimum(0.004)
+	# hUniformNorm.SetMaximum(0.018)
 	hUniformNorm.Draw("E1") #Set errors on all bins
 	hUniformNorm.Fit("lineF", "Q") # quite fit 
 	pValF = lineF.GetChisquare()/lineF.GetNDF()
@@ -784,10 +783,13 @@ if (mode == "pVal"):
 
 	axes.set_xlim(-0.5, trialN-0.5)
 	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
-	axes.set_ylim(yMin, yMax)
-	plt.ylabel(r'$\chi^{2}/ndf$ of the fit to p-value dist.', fontsize=20)
-	plt.xlabel("Module Removed", fontsize=20)
-	# plt.xlabel("Iteration", fontsize=20)
+	axes.set_ylim(0.2, 0.6)
+	line = [[-0.5,0.5], [8+0.5, 0.5]]
+	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'purple')
+	#plt.ylabel(r'$\chi^{2}/ndf$ of the fit to p-value dist.', fontsize=20)
+	plt.ylabel("Mean p-value", fontsize=20)
+	#plt.xlabel("Module Removed", fontsize=20)
+	plt.xlabel("Iteration", fontsize=20)
 	plt.savefig("pFoM.png")
 
 	print "pVal FoM produced!"
