@@ -43,15 +43,17 @@ plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC
 # T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
 # expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
 
-expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)
+# expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY  [Station 0]
+expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
+# expectPars = (1111, 1112, 1121, 1122, 1131, 1132, 1141, 1142, 1151, 1152, 1161, 1162, 1171, 1172, 1181, 1182)  # XY
 
 #Truth Misalignment 
 
-T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0,	 0.0, 0.0) # Case A (Initial)
+# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.0, 0.0) # Case A (Initial)
 
 # T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
 
-# T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
+T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
 
 #T_mis_C=(0.103, 0.195, 0.080, 0.150, 0.060, 0.148, 0.035, 0.121, 0.016,0.106, -0.006, 0.082, -0.028, 0.068, -0.060, 0.060 ) # Case D : Residual Mis. 
 
@@ -87,7 +89,7 @@ print "With expected Parameters: ", expectPars
 
 # offsets =(0.018, 0.052, -0.034, -0.034, -0.183, -0.23, -0.077, -0.09, -0.136, 0.03, -0.05, -0.064, 0.021, 0.024, -0.003, -0.029) # M82F Mean Run 2
 
-offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)  # M8A Mean Run 2
+# offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)  # M8A Mean Run 2
 
 
 # print "Offsets Run 2 [mm]: ", offsets
@@ -226,19 +228,19 @@ for i_par in range(0, len(expectPars)):
 		
 		plt.xlabel("Number of Tracks", fontsize=16)
 		
-		if(splitLabel[1] == 1 or splitLabel[1]==2):
+		if(splitLabel[3] == 1 or splitLabel[1]==2):
 			axes.set_ylim(-100, 100)
 			plt.ylabel("$\Delta$ Misalignment [um]", fontsize=16)
 			tick_spacing = 20
 			axes.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 			
-		if(splitLabel[1] == 3 or splitLabel[1]==4 or splitLabel[1] == 5):
+		if(splitLabel[3] == 3 or splitLabel[1]==4 or splitLabel[1] == 5):
 			axes.set_ylim(-10, 10)
 			plt.ylabel("$\Delta$ Misalignment [urad]", fontsize=16)
 			tick_spacing = 2
 			axes.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 			
-		if (splitLabel[1] == 1):
+		if (splitLabel[3] == 1):
 			plt.title('FoM M%s X'  %(int(splitLabel[0])) , fontsize=18)
 			misX[i_line][iModuleX]=(float(mis_C[i_par])*1e3)
 			#print "misX[i_line][iModuleX]= ", misX[i_line][iModuleX], "iModuleX=", iModuleX, "i_line=", i_line
@@ -254,7 +256,7 @@ for i_par in range(0, len(expectPars)):
 				if (iModuleX==8):
 					iModuleX=0
 			
-		if(splitLabel[1]==2):
+		if(splitLabel[3]==2):
 			plt.title('FoM M%s Y'  %(int(splitLabel[0])) , fontsize=18)
 			misY[i_line][iModuleY]=(float(mis_C[i_par])*1e3)
 			if (i_line != 0):
@@ -268,13 +270,13 @@ for i_par in range(0, len(expectPars)):
 				if (iModuleY==8):
 					iModuleY=0
 		
-		if(splitLabel[1]==3):
+		if(splitLabel[3]==3):
 			plt.title('FoM M%s $\Phi$'  %(int(splitLabel[0])) , fontsize=18)
 
-		if(splitLabel[1]==4):
+		if(splitLabel[3]==4):
 			plt.title('FoM M%s $\Psi$'   %(int(splitLabel[0])) , fontsize=18)
 		
-		if(splitLabel[1]==5):
+		if(splitLabel[3]==5):
 			plt.title('FoM M%s $\Theta$'   %(int(splitLabel[0])) , fontsize=18)
 
 		
@@ -297,8 +299,8 @@ if (globalN==2):
 
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
-yMin = -300
-yMax = 300
+yMin = -3000
+yMax = 3000
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 10})
 axes = plt.gca()

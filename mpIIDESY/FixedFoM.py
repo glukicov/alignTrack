@@ -4,16 +4,27 @@ import numpy as np  # smart arrays
 import subprocess
 import argparse, sys
 
-label = "Mean effect of Fixed M2: 17; 18; 27; 28; M3:135, 137, 156, 158, 167, 168, 257, 257, 268"
+label = "Mean_fixed_M1278(4)"
 subprocess.call(["mv" , "PEDE_Mis_art.txt", "BK_PEDE_Mis_art.txt"])
 
 #####2 Modules######
-firstModuleX=[11, 11, 21, 21]
-firstModuleY=[12, 12, 22, 22]
-secondModuleX=[71, 81, 71, 81]
-secondModuleY=[72, 82, 72, 82]
-fileLabel="M2"
+firstModuleX=[1011,  1011, 1021, 1021]
+firstModuleY=[1012,  1012, 1022, 1022]
+secondModuleX=[1071, 1081, 1071, 1081]
+secondModuleY=[1072, 1082, 1072, 1082]
+fileLabel="2MFixed"
 ################
+
+FixedPositionX1 = [0.0, 0.0, 0.0, 0.0]
+FixedPositionY1 = [0.0, 0.0, 0.0, 0.0]
+FixedPositionX2 = [0.0, 0.0, 0.0, 0.0]
+FixedPositionY2 = [0.0, 0.0, 0.0, 0.0]
+
+# FixedPositionX1 = [-0.2, -0.2, 0.08, 0.08]
+# FixedPositionY1 = [0.1, 0.1, 0.15, 0.15]
+# FixedPositionX2 = [0.2, 0.2, -0.06, -0.06]
+# FixedPositionY2 = [0.07, 0.07, 0.06, 0.06]
+
 
 firstModuleX=np.array(firstModuleX)
 firstModuleY=np.array(firstModuleY)
@@ -21,13 +32,15 @@ firstModuleY=np.array(firstModuleY)
 #Now Loop over the combinations and produce FoM
 for i in range (0, len(firstModuleX)):
 
+	#set new 
+
 	#Write new steering file
 	f = open('ParameterFile.txt', "w")
 	f.write("PARAMETERS\n")
-	f.write(str(firstModuleX[i]) + " 0.0 " + "-1\n")
-	f.write(str(firstModuleY[i]) + " 0.0 " + "-1\n")
-	f.write(str(secondModuleX[i]) + " 0.0 " + "-1\n")
-	f.write(str(secondModuleY[i]) + " 0.0 " + "-1\n")
+	f.write(str(firstModuleX[i]) + " " + str(FixedPositionX1[i]) + " -1\n")
+	f.write(str(firstModuleY[i]) + " " + str(FixedPositionY1[i]) + " -1\n")
+	f.write(str(secondModuleX[i]) +  " " + str(FixedPositionX2[i]) + " -1\n")
+	f.write(str(secondModuleY[i]) +  " " + str(FixedPositionY2[i]) + " -1\n")
 	f.write("\n")
 	f.close()  
 

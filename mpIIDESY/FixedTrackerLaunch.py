@@ -43,7 +43,7 @@ plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC
 
 #Truth Misalignment 
 
-expectPars = (11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 61, 62, 71, 72, 81, 82)  # XY
+expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY
 
 # T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
 
@@ -76,7 +76,9 @@ raw_input("Truth Misalignment correct? [press enter]")
 
 # offsets = (-0.165, -0.031, 0.118, 0.026, 0.235, -0.208, -0.226, 0.198, 0.154, 0.105, 0.08, -0.331, 0.148, -0.0, -0.148, 0.001)  # M8A Mean Run 2
 
-offsets = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.25, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # M8A M4 Truth
+# offsets = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.25, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # M8A M4 Truth
+
+offsets=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.0, 0.0, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)  # All truth 
 
 # offsets = (0.038, 0.052, -0.014, -0.034, -0.163, -0.23, -0.057, -0.09, -0.116, 0.03, -0.03, -0.064, 0.041, 0.024, 0.017, -0.029) #M82f +20 X
 # offsets = (-0.002, 0.052, -0.054, -0.034, -0.203, -0.23, -0.097, -0.09, -0.156, 0.03, -0.07, -0.064, 0.001, 0.024, -0.023, -0.029) #M82f -20 X
@@ -221,19 +223,19 @@ for i_par in range(0, len(expectPars)):
 		
 		plt.xlabel("Number of Tracks", fontsize=16)
 		
-		if(splitLabel[1] == 1 or splitLabel[1]==2):
+		if(splitLabel[3] == 1 or splitLabel[3]==2):
 			axes.set_ylim(-100, 100)
 			plt.ylabel("$\Delta$ Misalignment [um]", fontsize=16)
 			tick_spacing = 20
 			axes.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 			
-		if(splitLabel[1] == 3 or splitLabel[1]==4 or splitLabel[1] == 5):
+		if(splitLabel[3] == 3 or splitLabel[3]==4 or splitLabel[3] == 5):
 			axes.set_ylim(-10, 10)
 			plt.ylabel("$\Delta$ Misalignment [urad]", fontsize=16)
 			tick_spacing = 2
 			axes.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 			
-		if (splitLabel[1] == 1):
+		if (splitLabel[3] == 1):
 			plt.title('FoM M%s X'  %(int(splitLabel[0])) , fontsize=18)
 			misX[i_line][iModuleX]=(float(mis_C[i_par])*1e3)
 			#print "misX[i_line][iModuleX]= ", misX[i_line][iModuleX], "iModuleX=", iModuleX, "i_line=", i_line
@@ -246,7 +248,7 @@ for i_par in range(0, len(expectPars)):
 				if (iModuleX==8):
 					iModuleX=0
 			
-		if(splitLabel[1]==2):
+		if(splitLabel[3]==2):
 			plt.title('FoM M%s Y'  %(int(splitLabel[0])) , fontsize=18)
 			misY[i_line][iModuleY]=(float(mis_C[i_par])*1e3)
 			recoY[i_line][iModuleY]=(float(data[i_par][i_line][1])*1e3)
@@ -257,13 +259,13 @@ for i_par in range(0, len(expectPars)):
 				if (iModuleY==8):
 					iModuleY=0
 		
-		if(splitLabel[1]==3):
+		if(splitLabel[3]==3):
 			plt.title('FoM M%s $\Phi$'  %(int(splitLabel[0])) , fontsize=18)
 
-		if(splitLabel[1]==4):
+		if(splitLabel[3]==4):
 			plt.title('FoM M%s $\Psi$'   %(int(splitLabel[0])) , fontsize=18)
 		
-		if(splitLabel[1]==5):
+		if(splitLabel[3]==5):
 			plt.title('FoM M%s $\Theta$'   %(int(splitLabel[0])) , fontsize=18)
 
 		
