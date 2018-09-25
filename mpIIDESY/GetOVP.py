@@ -152,8 +152,8 @@ if (mode == "plot"):
 	i_totalLayer=0
 	PullsSD=[]
 	PullsSDError=[]
-	yMin = -1.1
-	yMax = 1.1
+	yMin = -1.3
+	yMax = 1.3
 	plt.figure(41)
 	axes = plt.gca()
 	for i_module in range(0, NModules):
@@ -163,7 +163,7 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/h_Pulls_Module_" + str(i_module) + "_" + str(LayerNames[n])
+			name = "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
 			#print name
 			t = f.Get(str(name))
 			mean = t.GetMean()
@@ -200,7 +200,7 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/h_Pulls_Module_" + str(i_module) + "_" + str(LayerNames[n])
+			name = "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			meanError=t.GetMeanError()
@@ -237,8 +237,8 @@ if (mode == "plot"):
 	i_totalLayer=0
 	ResidualRMS=[]
 	ResidualRMSError=[]
-	yMin = -0.2*1e3
-	yMax = 0.2*1e3
+	yMin =-200
+	yMax = 200
 	plt.figure(61)
 	axes = plt.gca()
 	for i_module in range(0, NModules):
@@ -248,7 +248,7 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/h_Residuals_Module_" + str(i_module) + "_" + str(LayerNames[n])
+			name = "TrackerAlignment/UV/Residuals Module " + str(i_module) + " " + str(LayerNames[n])
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			SD = t.GetRMS()
@@ -267,7 +267,7 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("Residual Means /um (SD)", fontsize=20)
+	plt.title("Residual Means (SD)", fontsize=20)
 	plt.ylabel("Residual mean /um [error = SD]", fontsize=20)
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("Residuals_L.png")
@@ -277,8 +277,8 @@ if (mode == "plot"):
 	i_totalLayer=0
 	means=[]
 	MeanErrors=[]
-	yMin = -50
-	yMax = 50
+	yMin = -65
+	yMax = 60
 	plt.figure(71)
 	axes = plt.gca()
 	for i_module in range(0, NModules):
@@ -288,7 +288,7 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/h_Residuals_Module_" + str(i_module) + "_" + str(LayerNames[n])
+			name = "TrackerAlignment/UV/Residuals Module " + str(i_module) + " " + str(LayerNames[n])
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			means.append(mean*1e3)
@@ -322,8 +322,8 @@ if (mode == "plot"):
 
 	#----Layer Residual SD 
 	i_totalLayer=0
-	yMin = 100
-	yMax = 260
+	yMin = 80
+	yMax = 160
 	means=[]
 	plt.figure(81)
 	axes = plt.gca()
@@ -357,7 +357,7 @@ if (mode == "plot"):
 	i_totalLayer=0
 	i_totalLayer=0
 	yMin = 0.6
-	yMax = 1.8
+	yMax = 1.4
 	means=[]
 	plt.figure(91)
 	axes = plt.gca()
@@ -410,7 +410,7 @@ if (mode == "plot"):
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		name = "TrackerAlignment/Modules/h_Pulls_Module_" + str(i_module)
+		name = "TrackerAlignment/Modules/Pulls Module " + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		SD = t.GetRMS()
@@ -447,7 +447,7 @@ if (mode == "plot"):
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		name = "TrackerAlignment/Modules/h_Pulls_Module_" + str(i_module)
+		name = "TrackerAlignment/Modules/Pulls Module " + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		meanError=t.GetMeanError()
@@ -496,7 +496,7 @@ if (mode == "plot"):
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		name = "TrackerAlignment/Modules/h_Residuals_Module_" + str(i_module)
+		name = "TrackerAlignment/Modules/Residuals Module " + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		SD = t.GetRMS()
@@ -534,7 +534,7 @@ if (mode == "plot"):
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		name = "TrackerAlignment/Modules/h_Residuals_Module_" + str(i_module)
+		name = "TrackerAlignment/Modules/Residuals Module " + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		means.append(mean*1e3)
@@ -651,7 +651,7 @@ if (mode == "plot"):
 	myStyle  =  TStyle("MyStyle", "My Root Styles")
 	cUniform = TCanvas("cLabels", "cLabels", 700, 700)
 	cUniform.Divide(1,1)
-	name = "TrackerAlignment/Hits/h_labels"
+	name = "TrackerAlignment/Hits/Labels"
 	hUniform = f.Get(str(name))
 	cUniform.cd(1)
 	hUniform.Draw() 
@@ -664,7 +664,7 @@ if (mode == "plot"):
 	myStyle  =  TStyle("MyStyle", "My Root Styles")
 	cUniform = TCanvas("cUnifrom", "cUnifrom", 700, 700)
 	cUniform.Divide(1,1)
-	name = "TrackerAlignment/Tracks/h_pValue"
+	name = "TrackerAlignment/Tracks/pValue"
 	hUniform = f.Get(str(name))
 	#Get parameters from the histogram
 	hBinMin = hUniform.FindFirstBinAbove(0, 1)

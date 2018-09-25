@@ -216,8 +216,8 @@ if (mode == "plot"):
 	plt.savefig("Residuals_L_Zoom.png")
 
 	#----Layer Residual SD 
-	yMin = 260
-	yMax = 400
+	yMin = 120
+	yMax = 200
 	means=[]
 	plt.figure(81)
 	axes = plt.gca()
