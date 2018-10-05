@@ -4,14 +4,34 @@ import numpy as np  # smart arrays
 import subprocess
 import argparse, sys
 
-label = "Mean_fixed_M1278(4)"
+parser = argparse.ArgumentParser(description='mode')
+parser.add_argument('-s', '--stationN', help='station number')
+args = parser.parse_args()
+
+stationN = str(args.stationN)
+
+label = "S"+str(stationN) +":9day_Dataset_2348_fills::Mean_fixed_M1278(4)"
 subprocess.call(["mv" , "PEDE_Mis_art.txt", "BK_PEDE_Mis_art.txt"])
 
 #####2 Modules######
-firstModuleX=[1011,  1011, 1021, 1021]
-firstModuleY=[1012,  1012, 1022, 1022]
-secondModuleX=[1071, 1081, 1071, 1081]
-secondModuleY=[1072, 1082, 1072, 1082]
+if (stationN == "10"):
+	firstModuleX=[1011,  1011, 1021, 1021]
+	firstModuleY=[1012,  1012, 1022, 1022]
+	secondModuleX=[1071, 1081, 1071, 1081]
+	secondModuleY=[1072, 1082, 1072, 1082]
+
+if (stationN == "18"):
+	firstModuleX= [1811,  1811, 1821, 1821]
+	firstModuleY= [1812,  1812, 1822, 1822]
+	secondModuleX=[1871,  1881, 1871, 1881]
+	secondModuleY=[1872,  1882, 1872, 1882]
+
+if (stationN == "12"):
+	firstModuleX= [1211,  1211, 1221, 1221]
+	firstModuleY= [1212,  1212, 1222, 1222]
+	secondModuleX=[1271,  1281, 1271, 1281]
+	secondModuleY=[1272,  1282, 1272, 1282]
+
 fileLabel="2MFixed"
 ################
 
@@ -48,7 +68,7 @@ for i in range (0, len(firstModuleX)):
 	subprocess.call(["/Users/gleb/software/alignTrack/PEDE/pede", "SteeringFile.txt"])
 
 	#Read new alignments and append
-	subprocess.call(["python" , "../ConcatenatePEDE.py", "-m", "a"])
+	subprocess.call(["python" , "../../ConcatenatePEDE.py", "-m", "a"])
 
 	#Keep a copy of the files
 	subprocess.call(["cp" , "ParameterFile.txt", str(fileLabel)+str(i)+"ParameterFile.txt"])
@@ -107,7 +127,5 @@ for i in range (0, len(firstModuleX)):
 # ################
 
 
-
-
 #Produce FoM
-subprocess.call(["python" , "../FixedTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label)])
+subprocess.call(["../../FixedTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN)])

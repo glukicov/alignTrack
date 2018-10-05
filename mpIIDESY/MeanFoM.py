@@ -15,10 +15,16 @@ firstModuleY=[12, 12, 22, 22]
 secondModuleX=[71, 81, 71, 81]
 secondModuleY=[72, 82, 72, 82]
 
+# firstModuleXOffsets=[-0.2, -0.2, 0.08, 0.08]
+# firstModuleYOffsets=[0.1, 0.1, 0.15, 0.15]
+# secondModuleXOffsets=[0.2, -0.06, 0.2, -0.06]
+# secondModuleYOffsets=[0.07, 0.06, 0.07, 0.06]
+
 firstModuleXOffsets=[-0.2, -0.2, 0.08, 0.08]
 firstModuleYOffsets=[0.1, 0.1, 0.15, 0.15]
 secondModuleXOffsets=[0.2, -0.06, 0.2, -0.06]
 secondModuleYOffsets=[0.07, 0.06, 0.07, 0.06]
+
 
 label = "Mean effect of Fixed M: 1-7, 1-8, 2-7, 2-8"
 

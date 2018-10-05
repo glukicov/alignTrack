@@ -44,8 +44,8 @@ plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC
 # expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
 
 # expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY  [Station 0]
-expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
-# expectPars = (1111, 1112, 1121, 1122, 1131, 1132, 1141, 1142, 1151, 1152, 1161, 1162, 1171, 1172, 1181, 1182)  # XY
+# expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
+expectPars = (1211, 1212, 1221, 1222, 1231, 1232, 1241, 1242, 1251, 1252, 1261, 1262, 1271, 1272, 1281, 1282)  # XY  [Station 12]
 
 #Truth Misalignment 
 
@@ -299,8 +299,8 @@ if (globalN==2):
 
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
-yMin = -3000
-yMax = 3000
+yMin = -200
+yMax = 200
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 10})
 axes = plt.gca()

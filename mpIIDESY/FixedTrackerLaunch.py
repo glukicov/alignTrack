@@ -14,7 +14,9 @@ from scipy import stats
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
-parser.add_argument('-eL', '--eL', help='mode')
+parser.add_argument('-eL', '--eL', help='label')
+parser.add_argument('-s', '--stationN', help='station number')
+
 args = parser.parse_args()
 from math import log10, floor, ceil
 
@@ -26,6 +28,7 @@ def float_round(num, places = 0, direction = floor):
 
 extraLabel =-1
 extraLabel=str(args.eL)
+stationN = str(args.stationN)
 
 file = str(args.mode)
 from matplotlib.pyplot import *
@@ -43,14 +46,27 @@ plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC
 
 #Truth Misalignment 
 
-expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY
-
-# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.05, 0.07, 0.0, 0.0) # Case A (Initial)
-
-T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
-
 # T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
-# expectPars = (11, 21, 31, 41, 51, 61, 71, 81) # X Only 
+# expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
+if (stationN == "10"):
+	expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY  [Station 0]
+
+if (stationN == "18"):
+	expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
+
+if (stationN == "12"):
+	expectPars = (1211, 1212, 1221, 1222, 1231, 1232, 1241, 1242, 1251, 1252, 1261, 1262, 1271, 1272, 1281, 1282)  # XY  [Station 12]
+
+#Truth Misalignment 
+
+# T_mis_C = (0.1, 0.15, 0.05, 0.05, -0.1, -0.15, 0.0, 0.0, -0.07, 0.1, 0.0, 0.0, 0.0, 0.0) # Case A (Initial)
+
+# T_mis_C=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.15, 0.2, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06) # Case B (Initial)
+
+T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
+
+#T_mis_C=(0.103, 0.195, 0.080, 0.150, 0.060, 0.148, 0.035, 0.121, 0.016,0.106, -0.006, 0.082, -0.028, 0.068, -0.060, 0.060 ) # Case D : Residual Mis. 
+
 
 globalN=int(len(expectPars))/int(8)
 offsets = [0 for i in xrange(8*globalN)] # first set to 0 unless doing iterations
@@ -78,7 +94,7 @@ raw_input("Truth Misalignment correct? [press enter]")
 
 # offsets = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.25, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # M8A M4 Truth
 
-offsets=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.0, 0.0, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)  # All truth 
+# offsets=(-0.2, 0.1, 0.08, 0.15, 0.2, -0.1, -0.25, 0.3, 0.0, 0.0, 0.1, -0.25, 0.2, 0.07, -0.06, 0.06)  # All truth 
 
 # offsets = (0.038, 0.052, -0.014, -0.034, -0.163, -0.23, -0.057, -0.09, -0.116, 0.03, -0.03, -0.064, 0.041, 0.024, 0.017, -0.029) #M82f +20 X
 # offsets = (-0.002, 0.052, -0.054, -0.034, -0.203, -0.23, -0.097, -0.09, -0.156, 0.03, -0.07, -0.064, 0.001, 0.024, -0.023, -0.029) #M82f -20 X
@@ -389,6 +405,10 @@ plt.text(8.6, 50-100, textstrReco, fontsize=10, color=str(colours[4]))
 plt.subplots_adjust(right=0.78)
 
 plt.xlabel("Module", fontsize=12)
+
+
+# plt.show()
+
 if (extraLabel == -1):
 	plt.savefig("XY.png")
 else:
@@ -409,7 +429,6 @@ for i in range(0, len(sugMean)):
 	
 
 print "New suggested Offsets from PEDE [mm]: ", offsest
-
 
 
 print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")

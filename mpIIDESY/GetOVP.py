@@ -188,7 +188,7 @@ if (mode == "plot"):
 	#
 	i_totalLayer=0
 	yMin = -0.5
-	yMax = 0.5
+	yMax = 0.8
 	plt.figure(51)
 	axes = plt.gca()
 	means = []
@@ -278,7 +278,7 @@ if (mode == "plot"):
 	means=[]
 	MeanErrors=[]
 	yMin = -65
-	yMax = 60
+	yMax = 80
 	plt.figure(71)
 	axes = plt.gca()
 	for i_module in range(0, NModules):

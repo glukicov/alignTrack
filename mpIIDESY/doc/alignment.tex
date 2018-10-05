@@ -777,6 +777,18 @@ Mean alignment parametrisation with variable fixing of two out of eight detector
 
 Removing module from fit 1 by 1: for a badly misaligned module, its absence would improve the overall fir (w.r.t p-value). 
 
+Transitioning between global (station) coordinates system in XY and local (straw) coordinates systems is done via 
+
+\begin{equation}
+\begin{bmatrix}u\\v\\\end{bmatrix}=\begin{bmatrix}\cos \theta &-\sin \theta \\\sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}x\\y\\\end{bmatrix},
+\end{equation}
+and 
+\begin{equation}
+\begin{bmatrix}x\\y\\\end{bmatrix}=\begin{bmatrix}\cos \theta &\sin \theta \\\ -sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}u\\v\\\end{bmatrix},
+\end{equation}
+
+
+
 \subsubsection{Preventive methods to avoid the alignment convergence on local minima}
 
 
