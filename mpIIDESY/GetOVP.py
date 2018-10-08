@@ -677,6 +677,20 @@ if (mode == "plot"):
 	hsum = 0.0
 	for i_bin in range(hBinMin, hBinMax):
 		hsum += hUniform.GetBinContent(i_bin)
+
+	cutValue= 0.05	
+	aboveFractionCounter = 0
+	for i_bin in range(11, hBinMax):
+		
+		currentBinValue = hUniform.GetBinContent(i_bin)
+		#print "currentBinValue= ", currentBinValue
+		aboveFractionCounter=aboveFractionCounter+currentBinValue
+
+	#print "aboveFractionCounter= ", aboveFractionCounter , "hUniform.GetEntries()= ", hUniform.GetEntries()
+	aboveFraction = float(aboveFractionCounter)/(hUniform.GetEntries()) 
+
+	print "Fraction of p-values above ", cutValue,": ", str(aboveFraction), aboveFractionCounter
+
 	hMean = hsum/hBinNumber
 	#print "hMean= ", hMean
 	xaxis = hUniform.GetXaxis()
@@ -707,6 +721,7 @@ if (mode == "plot"):
 	largestValue = hUniformNorm.GetXaxis().GetBinCenter(binmax)
 	#Bin dist. vs fit
 	aboveFitCounter = 0
+	
 	for i_bin in range(0, hUniformNorm.GetSize()):
 		currentBinValue = hUniformNorm.GetBinContent(i_bin)
 		#print "currentBinValue= ", currentBinValue, "p0= ", p0
@@ -715,7 +730,9 @@ if (mode == "plot"):
 			aboveFitCounter=aboveFitCounter+1
 			#print "aboveFitCounter= ", aboveFitCounter
 
-	aboveFitRatio = float(aboveFitCounter)/(hUniformNorm.GetSize()-2)  #divide by the #bin without OF and UF 
+		
+
+	aboveFitRatio = float(aboveFitCounter)/(hUniformNorm.GetSize()-2)  #divide by the #bin without OF and UF  
 
 	hUniformNorm.SetTitle("Chi^{2}/ndf = " + str(round_sig(pValF,3)) + " p0= " + str(round_sig(p0,3)) + " mean=" + str(round_sig(pMean,3)) + " L.V.= " + str(largestValue) + " >P0= " + str(aboveFitRatio) + " #bins= " +  str(hUniformNorm.GetSize()-2) )
 	gStyle.SetOptStat("ourRmMe") #over/under -flows, Rms and Means with errors, number of entries
@@ -731,7 +748,7 @@ if (mode == "plot"):
 	f.write(str(pMeanError) + " ")
 	f.write(str(largestValue) + " ")
 	f.write(str(aboveFitRatio) + " ")
-
+	
 
 	#Save canvas as .png file
 	#cUniform.Modified()
