@@ -10,7 +10,7 @@ args = parser.parse_args()
 
 stationN = str(args.stationN)
 
-label = "S"+str(stationN) +":9day_Dataset_2348_fills::Mean_fixed_M1278(4)"
+label = "S"+str(stationN)
 subprocess.call(["mv" , "PEDE_Mis_art.txt", "BK_PEDE_Mis_art.txt"])
 
 #####2 Modules######

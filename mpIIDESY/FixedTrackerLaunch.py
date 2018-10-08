@@ -352,13 +352,14 @@ for i_module in range(0, 8):
 	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	plt.errorbar(i_module+1, recoXMean[i_module], yerr=recoXMeanError[i_module],  color=str(colours[4]), markersize=12, elinewidth=2)
+	plt.plot(i_module+1, recoXMean[i_module], marker="+", color=str(colours[4]), markersize=8)
 	#print "recoXMean[i_module]=", recoXMean[i_module]
 	if (recoXMeanError[i_module] == 0.0):
 		plt.plot(i_module+1, recoXMean[i_module], marker="*", color=str(colours[4]), markersize=12)
 
 #Legend (top legend)
-textstr = "Truth"
-plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
+#textstr = "Truth"
+#plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
 if (extraLabel != -1):
 	plt.text(2.0, 420, extraLabel, color="purple", fontsize=8, fontweight='bold')
 plt.subplots_adjust(top=0.85)
@@ -366,12 +367,12 @@ plt.subplots_adjust(top=0.85)
 #Legend (stats X)
 avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
 SDMis = np.std(np.array(misX[0]))
-textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-plt.text(8.7, 150, textstr, fontsize=10, color="red")
+#textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
+#plt.text(8.7, 150, textstr, fontsize=10, color="red")
 avgMeandReconTruth = sum(np.array(dMXMean))/float(len(np.array(dMXMean)))
 SDdReconTruth = np.std(np.array(dMXMean))
 textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-plt.text(8.6, 50-100, textstrReco, fontsize=10, color=str(colours[4]))
+plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
 plt.subplots_adjust(right=0.85)
 
 plt.subplot(212) # Y 
@@ -390,18 +391,19 @@ for i_module in range(0, 8):
 	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	plt.errorbar(i_module+1, recoYMean[i_module], yerr=recoYMeanError[i_module],  color=str(colours[4]), markersize=12, elinewidth=2)
+	plt.plot(i_module+1, recoYMean[i_module],  marker="+", color=str(colours[4]), markersize=8)
 	if (recoYMeanError[i_module] == 0.0):
 		plt.plot(i_module+1, recoYMean[i_module], marker="*", color=str(colours[4]), markersize=12)
 
 #Legend (stats Y)
 avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
 SDMis = np.std(np.array(misY[0]))
-textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-plt.text(8.7, 150, textstr, fontsize=10, color="red")
+#textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
+#plt.text(8.7, 150, textstr, fontsize=10, color="red")
 avgMeandReconTruth = sum(np.array(dMYMean))/float(len(np.array(dMYMean)))
 SDdReconTruth = np.std(np.array(dMYMean))
 textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-plt.text(8.6, 50-100, textstrReco, fontsize=10, color=str(colours[4]))
+plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
 plt.subplots_adjust(right=0.78)
 
 plt.xlabel("Module", fontsize=12)
