@@ -335,7 +335,7 @@ line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
 	plt.plot(i_module+1, misX[0][i_module], marker=".", color="red")
-	plt.plot(i_module+1, offsetsX[i_module]*1e3, marker="+", color="black")
+	#plt.plot(i_module+1, offsetsX[i_module]*1e3, marker="+", color="black")
 
 for i_module in range(0, 8):
 	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
@@ -373,7 +373,7 @@ line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
 	plt.plot(i_module+1, misY[0][i_module], marker=".", color="red")
-	plt.plot(i_module+1, offsetsY[i_module]*1e3, marker="+", color="black")
+	#plt.plot(i_module+1, offsetsY[i_module]*1e3, marker="+", color="black")
 
 for i_module in range(0, 8):
 	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]

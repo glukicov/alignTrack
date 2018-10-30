@@ -57,36 +57,7 @@ if (mode == "plot"):
 	else:
 	    print("Not found")
 
-	# -------layersPz----------
-	
-	# totalLayer=0
-	# yMin = 0.92
-	# yMax = 1.02
-	# plt.figure(1)
-	# axes = plt.gca()
-	# for i in range(0, len(moduleNames)):
-	# 	i_module=moduleNames[i]
-	# 	line = [[i_module*4+0.5, yMin], [i_module*4+0.5, yMax]]
-	# 	plt.plot(
-	# 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	# 	    color = 'green')
-	# 	for i_layer in range(0, NLayers):
-	# 		name = "TrackerAlignment/UV/Pz/P reduced Module " + str(i_module) + " " + str(LayerNames[i_layer])
-	# 		print name
-	# 		t = f.Get(str(name))
-	# 		#print name
-	# 		mean = t.GetMean()
-	# 		SD = t.GetRMS()
-	# 		#print "mean= ", mean , "SD= ", SD
-	# 		totalLayer=totalLayer+1
-	# 		plt.errorbar(totalLayer, mean, yerr=SD, color="red") 
-	# 		plt.plot(totalLayer, mean, marker="_", color="red")
-	# axes.set_xlim(0, totalLayer+1)
-	# axes.set_ylim(yMin, yMax)
-	# plt.ylabel("<Pz/P> [error = SD]")
-	# plt.xlabel("Layer", fontsize=10)
-	# plt.savefig("layersPz.png")
-
+	#-------layersPz----------
 	i_totalLayer=0
 	yMin = 0.92
 	yMax = 1.02
@@ -277,7 +248,7 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/Residuals Module " + str(i_module) + " " + str(LayerNames[n])
+			name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			SD = t.GetRMS()
@@ -296,7 +267,7 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("XY Residual Means (SD)", fontsize=20)
+	plt.title("UV Residual Means (SD)", fontsize=20)
 	plt.ylabel("Residual mean /um [error = SD]", fontsize=20)
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("Residuals_L.png")
@@ -317,7 +288,7 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/Residuals Module " + str(i_module) + " " + str(LayerNames[n])
+			name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			means.append(mean*1e3)
@@ -344,8 +315,8 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("XY Residual Means", fontsize=20)
-	plt.ylabel("Residual Mean /um", fontsize=18)
+	plt.title("UV Residual Means ( 'z-value' )", fontsize=20)
+	plt.ylabel("Residual Mean /um [error = Error on the Mean]", fontsize=18)
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("Residuals_L_Zoom.png")
 
@@ -377,7 +348,7 @@ if (mode == "plot"):
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("XY Residual SD", fontsize=20)
+	plt.title("UV Residual SD", fontsize=20)
 	plt.ylabel("Residual SD /um [error = SD Error]", fontsize=18)
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("ResidualsSD_L.png")
@@ -525,7 +496,7 @@ if (mode == "plot"):
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		name = "TrackerAlignment/Modules/Residuals Module " + str(i_module)
+		name = "TrackerAlignment/Modules/Residuals UV Module " + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		SD = t.GetRMS()
@@ -545,7 +516,7 @@ if (mode == "plot"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
-	plt.title("XY Residual Means /um (SD)", fontsize=20)
+	plt.title("UV Residual Means /um (SD)", fontsize=20)
 	plt.ylabel("Residual mean /um [error = SD]", fontsize=20)
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("Residuals_M.png")
@@ -563,7 +534,7 @@ if (mode == "plot"):
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	for i in range(0, len(moduleNames)):
 		i_module=moduleNames[i]
-		name = "TrackerAlignment/Modules/Residuals Module " + str(i_module)
+		name = "TrackerAlignment/Modules/Residuals UV Module " + str(i_module)
 		t = f.Get(str(name))
 		mean = t.GetMean()
 		means.append(mean*1e3)
@@ -594,7 +565,7 @@ if (mode == "plot"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
-	plt.title("XY Residual Means ( 'z-value' )", fontsize=20)
+	plt.title("UV Residual Means ( 'z-value' )", fontsize=20)
 	plt.ylabel("Residual Mean /um [error = Error on the Mean]", fontsize=18)
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("Residuals_M_Zoom.png")
@@ -628,7 +599,7 @@ if (mode == "plot"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
-	plt.title("XY Residual SD", fontsize=20)
+	plt.title("UV Residual SD", fontsize=20)
 	plt.ylabel("Residual SD /um [error = SD Error]", fontsize=18)
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("ResidualsSD_M.png")
@@ -908,7 +879,7 @@ if (mode == "mis"):
 		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 		    color = 'green')
 		plt.plot(i_module, float(misX[i_module-1]), marker="+", color="red")
-		#mod = read_png('mod.png')
+		mod = read_png('mod.png')
 		
 		#Add tracker image 
 		# imagebox = OffsetImage(mod, zoom=0.15)
@@ -919,54 +890,54 @@ if (mode == "mis"):
 	
 	avgMean = sum(misX)/float(len(misX))
 	SD = np.std(np.array(misX))
-	#line = [[0.5,avgMean], [NModules+1.5, avgMean]]
-	#plt.plot(
-	  #  *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	  #  color = 'black', linestyle="-")
-	#plt.text(9.1, avgMean, str(int(round(avgMean))), fontsize=9)
+	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'black', linestyle="-")
+	plt.text(9.1, avgMean, str(int(round(avgMean))), fontsize=9)
 
 	line = [[0.5,0.0], [NModules+1, 0.0]]
 	plt.plot(
 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 	    color = 'grey')
-	axes.set_xlim(0.5, 4.5)
+	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
-	#plt.title("Misalignment X (<X> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
+	plt.title("Misalignment X (<X> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
 	plt.ylabel("Misalignment [um]", fontsize=16)
 
-	# plt.subplot(212)
-	# axes2 = plt.gca()
-	# for i in range(0, len(moduleNames)):
-	# 	i_module=moduleNames[i]
-	# 	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-	# 	plt.plot(
-	# 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	# 	    color = 'green')
-	# 	plt.plot(i_module, float(misY[i_module-1]), marker="+", color="red")
-	# 	#mod = read_png('mod.png')
+	plt.subplot(212)
+	axes2 = plt.gca()
+	for i in range(0, len(moduleNames)):
+		i_module=moduleNames[i]
+		line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
+		plt.plot(
+		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+		    color = 'green')
+		plt.plot(i_module, float(misY[i_module-1]), marker="+", color="red")
+		mod = read_png('mod.png')
 		
-	# 	#Add tracker image 
-	# 	# imagebox = OffsetImage(mod, zoom=0.15)
-	# 	# xy = (i_module-0.5, float(misY[i_module-1])+120) # coordinates to position this image
-	# 	# ab = AnnotationBbox(imagebox, xy, xybox=(30., -30.),  xycoords='data', boxcoords="offset points", frameon=False)                                  
-	# 	# axes2.add_artist(ab)
-	# 	axes2.annotate(misY[i_module-1], (i_module-0.3, float(misY[i_module-1])+20))
+		#Add tracker image 
+		# imagebox = OffsetImage(mod, zoom=0.15)
+		# xy = (i_module-0.5, float(misY[i_module-1])+120) # coordinates to position this image
+		# ab = AnnotationBbox(imagebox, xy, xybox=(30., -30.),  xycoords='data', boxcoords="offset points", frameon=False)                                  
+		# axes2.add_artist(ab)
+		axes2.annotate(misY[i_module-1], (i_module-0.3, float(misY[i_module-1])+20))
 
-	# avgMean = sum(misY)/float(len(misY))
-	# SD = np.std(np.array(misY))
-	# line = [[0.5,avgMean], [NModules+1.5, avgMean]]
-	# plt.plot(
-	#     *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	#     color = 'black', linestyle="-")
-	# plt.text(9.1, avgMean, str(int(round(avgMean))), fontsize=9)
-	# line = [[0.5,0.0], [NModules+1, 0.0]]
-	# plt.plot(
-	#     *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	#     color = 'grey')
-	# axes2.set_xlim(0.5, NModules+1)
-	# axes2.set_ylim(yMin, yMax)
-	# plt.title("Misalignment Y (<Y> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
-	# plt.ylabel("Misalignment [um]", fontsize=16)
+	avgMean = sum(misY)/float(len(misY))
+	SD = np.std(np.array(misY))
+	line = [[0.5,avgMean], [NModules+1.5, avgMean]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'black', linestyle="-")
+	plt.text(9.1, avgMean, str(int(round(avgMean))), fontsize=9)
+	line = [[0.5,0.0], [NModules+1, 0.0]]
+	plt.plot(
+	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
+	    color = 'grey')
+	axes2.set_xlim(0.5, NModules+1)
+	axes2.set_ylim(yMin, yMax)
+	plt.title("Misalignment Y (<Y> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
+	plt.ylabel("Misalignment [um]", fontsize=16)
 	plt.xlabel("Module", fontsize=16)
 
 	#plt.show()
