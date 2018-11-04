@@ -96,7 +96,9 @@ useOffsets = True
 # 	offsets = (  -0.02, -0.017, 0.017, 0.015, -0.093, -0.047, 0.025, -0.002, 0.029, 0.005, -0.029, -0.022, -0.001, 0.003, 0.001, -0.004 ) # S18 Run 1
 
 # offsets = (0.053, 0.01, -0.026, -0.009, -0.216, -0.051, -0.008, 0.008, 0.025, -0.001, -0.071, -0.033, -0.027, 0.002, 0.018, -0.002)
-offsets = (0.055, 0.014, -0.01, -0.012, -0.238, -0.092, 0.028, -0.011, 0.072, -0.014, -0.059, -0.049, -0.028, -0.005, 0.006, 0.007)
+# offsets = (0.055, 0.014, -0.01, -0.012, -0.238, -0.092, 0.028, -0.011, 0.072, -0.014, -0.059, -0.049, -0.028, -0.005, 0.006, 0.007)
+
+offsets = (0.062, -0.001, 0.003, 0.001, -0.233, -0.074, 0.045, -0.0, 0.09, -0.003, -0.051, -0.034, -0.029, -0.001, -0.007, 0.003)
 
 print "Offsets Run 1 [mm]: ", offsets
 raw_input("Offsets :: Run 1 correct? [press enter]") 
@@ -331,12 +333,12 @@ spacing = [2, 3.5, 4.5, 5.5, 6.5]
 yMin = -300
 yMax = 300
 plt.subplot(211) # X 
-plt.rcParams.update({'font.size': 10})
+plt.rcParams.update({'font.size': 8})
 axes = plt.gca()
 axes.set_xlim(0.5, 8.5)
 axes.set_ylim(yMin, yMax)
-plt.title("Misalignment X", fontsize=10)
-plt.ylabel("Misalignment [um]", fontsize=10)
+plt.title("Misalignment X", fontsize=8)
+plt.ylabel("Misalignment [um]", fontsize=8)
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
@@ -360,6 +362,7 @@ if (extraLabel != -1):
 	plt.text(2.0, 420, extraLabel, color="purple", fontsize=8, fontweight='bold')
 plt.subplots_adjust(top=0.85)
 
+
 #Legend (stats X)
 avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
 SDMis = np.std(np.array(misX[0]))
@@ -369,14 +372,21 @@ avgMeandReconTruth = sum(np.array(dMXMean))/float(len(np.array(dMXMean)))
 SDdReconTruth = np.std(np.array(dMXMean))
 textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
 plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
-plt.subplots_adjust(right=0.85)
+plt.subplots_adjust(right=0.77)
+
+plt.xticks(fontsize=8, rotation=0)
+plt.yticks(fontsize=8, rotation=0)
+plt.xlabel("Module", fontsize=8)
+
+plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
 
 plt.subplot(212) # Y 
-axes = plt.gca()
-axes.set_xlim(0.5, 8.5)
-axes.set_ylim(yMin, yMax)
-plt.title("Misalignment Y", fontsize=10)
-plt.ylabel("Misalignment [um]", fontsize=10)
+plt.rcParams.update({'font.size': 8})
+axes2 = plt.gca()
+axes2.set_xlim(0.5, 8.5)
+axes2.set_ylim(yMin, yMax)
+plt.title("Misalignment Y", fontsize=8)
+plt.ylabel("Misalignment [um]", fontsize=8)
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 for i_module in range(0, 8):
@@ -401,9 +411,10 @@ avgMeandReconTruth = sum(np.array(dMYMean))/float(len(np.array(dMYMean)))
 SDdReconTruth = np.std(np.array(dMYMean))
 textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
 plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
-plt.subplots_adjust(right=0.78)
-
-plt.xlabel("Module", fontsize=12)
+plt.subplots_adjust(right=0.77)
+plt.subplots_adjust(bottom=0.1)
+plt.subplots_adjust(hspace=0.35)
+plt.xlabel("Module", fontsize=8)
 
 
 # plt.show()
