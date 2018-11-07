@@ -2,7 +2,7 @@
 
 #Plotter
 
-from ROOT import *
+from ROOT import TFile, TStyle, TCanvas, gStyle, TF1
 import matplotlib.pyplot as plt #for plotting 
 import numpy as np  # smart arrays 
 import itertools # smart lines 
@@ -38,16 +38,16 @@ if (int(args.moduleN) != -1):
 	removedModule=int(args.moduleN)
 	moduleNames=np.delete(moduleNamesInitial, removedModule-1) # indexing so -1
 	removedLayers= np.arange(removedModule*4-3,removedModule*4+1)
-	print "removedPlanes ", removedLayers  # Layers: 0, 1... Planes: 1, 2...
-	print "layerNamesInitial", layerNamesInitial
+	print("removedPlanes ", removedLayers) # Layers: 0, 1... Planes: 1, 2...
+	print("layerNamesInitial", layerNamesInitial)
 	layerNames=np.delete(layerNamesInitial, removedLayers-1) # indexing so -1
 else:
 	removedModule=-1
 	moduleNames=moduleNamesInitial
 	layerNames=layerNamesInitial
 
-print "Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and"
-print len(layerNames), "planes: ", layerNames
+print("Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and")
+print(len(layerNames), "planes: ", layerNames)
 
 if (mode == "plot"):
 
@@ -689,7 +689,7 @@ if (mode == "plot"):
 	#print "aboveFractionCounter= ", aboveFractionCounter , "hUniform.GetEntries()= ", hUniform.GetEntries()
 	aboveFraction = float(aboveFractionCounter)/(hUniform.GetEntries()) 
 
-	print "Fraction of p-values above ", cutValue,": ", str(aboveFraction), aboveFractionCounter
+	print("Fraction of p-values above ", cutValue,": ", str(aboveFraction), aboveFractionCounter)
 
 	hMean = hsum/hBinNumber
 	#print "hMean= ", hMean
@@ -706,7 +706,11 @@ if (mode == "plot"):
 
 	#Normalise the histogram
 	norm = 1/float(hUniform.GetEntries())
-	hUniformNorm = norm * hUniform
+	
+	# hUniformNorm = norm * hUniform
+	hUniformNorm=hUniform # TODO normalise 
+
+
 	# hUniformNorm.SetMinimum(0.004)
 	# hUniformNorm.SetMaximum(0.018)
 	hUniformNorm.Draw("E1") #Set errors on all bins
@@ -768,7 +772,7 @@ if (mode == "plot"):
 	# subprocess.call(["convert" , "MC*.png", "MCHits_afterCuts.gif"])
 
 	
-	print "ROOT File analysed!"
+	print("ROOT File analysed!")
 
 pvals=[]
 #-----pVal vs iteration----
@@ -779,7 +783,7 @@ if (mode == "pVal"):
 	#errors=[]
 	pVals=args.pvals
 	#errors=args.pvals[1::2]
-	print pVals
+	print(pVals)
 	# for i in range (0, trialN):
 	# 	pVals.append(args.pvals[i*2])	
 	# 	errors.append(args.pvals[i*2+1])
@@ -809,14 +813,14 @@ if (mode == "pVal"):
 	plt.xlabel("Iteration", fontsize=20)
 	plt.savefig("pFoM.png")
 
-	print "pVal FoM produced!"
+	print("pVal FoM produced!")
 
 p0=[]
 #-----p0 vs iteration----
 #
 if (mode == "p0"):
 	p0=args.p0
-	print p0
+	print(p0)
 	# for i in range (0, trialN):
 	# 	pVals.append(args.pvals[i*2])	
 	# 	errors.append(args.pvals[i*2+1])
@@ -843,15 +847,15 @@ if (mode == "p0"):
 	# plt.xlabel("Iteration", fontsize=20)
 	plt.savefig("p0FoM.png")
 
-	print "p0 FoM produced!"
+	print("p0 FoM produced!")
 
 #-----Truth Misalignment----
 #
 if (mode == "mis"):
 	misXStr=args.mis[0:8]
 	misYStr=args.mis[8:16]
-	print "X Mis:: ", misXStr
-	print "Y Mis:: ",misYStr
+	print("X Mis:: ", misXStr)
+	print("Y Mis:: ",misYStr)
 
 	#absolute misalignment
 	if (args.abs == "Y"):
@@ -943,6 +947,6 @@ if (mode == "mis"):
 	#plt.show()
 	plt.savefig("Misalignment.png")
 
-	print "Misalignment FoM produced!"
+	print("Misalignment FoM produced!")
 
 

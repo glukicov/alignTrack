@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 ####################################################################
 # Sanity plots for Tracker Alignment.  
 # FoM Plots for comparison of actual misalignment vs PEDE results 
@@ -8,8 +6,6 @@
 # Modified: 8 May 2018 by Gleb
 #####################################################################
 import argparse, sys
-import ROOT as r
-from ROOT import *
 from scipy import stats
 
 parser = argparse.ArgumentParser(description='mode')
@@ -38,10 +34,10 @@ import numpy as np  # smart arrays
 import itertools # smart lines
 from time import gmtime, strftime 
 import subprocess
-import plotly.plotly
-import plotly.graph_objs as go
-import pandas as pd
-plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC7v7')
+# import plotly.plotly
+# import plotly.graph_objs as go
+# import pandas as pd
+# plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC7v7')
 
 
 #Truth Misalignment 
@@ -63,53 +59,53 @@ if (stationN == "12"):
 
 # T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
 
-# MUSE 
-if (stationN == "12"):
-	T_mis_C = (0.0, 0.0, 0.0, 0.0, -0.2, 0.0, 0.1, 0.0, 0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ) #S12 MUSE 
-if (stationN == "18"):
-	T_mis_C = (0.0, 0.0, 0.0, 0.0, -0.2, -0.1, 0.1, 0.0, 0.15, 0.0, 0.0, -0.05, 0.0, 0.0, 0.0, 0.0 ) #S18 MUSE 
-
-# #DATA 
+# # MUSE 
 # if (stationN == "12"):
-# 	T_mis_C = (0.063, -0.012, -0.125, 0.015, -0.219, 0.091, -0.207, 0.053, -0.22, 0.013, -0.152, -0.03, -0.029, -0.041, 0.09, 0.044 ) #S12 16367 
+# 	T_mis_C = (0.0, 0.0, 0.0, 0.0, -0.2, 0.0, 0.1, 0.0, 0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ) #S12 MUSE 
 # if (stationN == "18"):
-# 	T_mis_C = (-0.069, 0.013, -0.02, -0.006, 0.052, 0.157, 0.143, 0.154, 0.08, 0.156, 0.099, 0.212, 0.095, 0.094, -0.052, -0.115) #S18 16367 
+# 	T_mis_C = (0.0, 0.0, 0.0, 0.0, -0.2, -0.1, 0.1, 0.0, 0.15, 0.0, 0.0, -0.05, 0.0, 0.0, 0.0, 0.0 ) #S18 MUSE 
+
+#DATA 
+if (stationN == "12"):
+	T_mis_C = (0.063, -0.012, -0.125, 0.015, -0.219, 0.091, -0.207, 0.053, -0.22, 0.013, -0.152, -0.03, -0.029, -0.041, 0.09, 0.044 ) #S12 16367 
+if (stationN == "18"):
+	T_mis_C = (-0.069, 0.013, -0.02, -0.006, 0.052, 0.157, 0.143, 0.154, 0.08, 0.156, 0.099, 0.212, 0.095, 0.094, -0.052, -0.115) #S18 16367 
 
 
 globalN=int(len(expectPars))/int(8)
-offsets = [0 for i in xrange(8*globalN)] # first set to 0 unless doing iterations
+offsets = [0 for i in list(range(int(8*globalN)))] # first set to 0 unless doing iterations
 useOffsets = False 
 
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
-print "Initial Truth Misalignment [mm]: ", mis_C
-print "With expected Parameters: ", expectPars
-raw_input("Truth Misalignment correct? [press enter]") 
+print("Initial Truth Misalignment [mm]: ", mis_C)
+print("With expected Parameters: ", expectPars)
+input("Truth Misalignment correct? [press enter]") 
 
-# ----------------------------
-#Run 1
-useOffsets = True
-##MUSE 
-# if (stationN == "12"):
-# 	offsets = ( 0.03, 0.009, -0.007, -0.007, -0.158, -0.002, 0.026, -0.006, 0.055, -0.006, -0.033, -0.001, -0.014, -0.003, 0.001, 0.004 ) # S12 Run 1
-# if (stationN == "18"):
-# 	offsets = ( 0.031, 0.005, -0.007, -0.004, -0.159, -0.055, 0.025, -0.004, 0.055, -0.008, -0.033, -0.036, -0.014, -0.003, 0.001, 0.004 ) # S18 Run 1
+# # ----------------------------
+# #Run 1
+# useOffsets = True
+# ##MUSE 
+# # if (stationN == "12"):
+# # 	offsets = ( 0.03, 0.009, -0.007, -0.007, -0.158, -0.002, 0.026, -0.006, 0.055, -0.006, -0.033, -0.001, -0.014, -0.003, 0.001, 0.004 ) # S12 Run 1
+# # if (stationN == "18"):
+# # 	offsets = ( 0.031, 0.005, -0.007, -0.004, -0.159, -0.055, 0.025, -0.004, 0.055, -0.008, -0.033, -0.036, -0.014, -0.003, 0.001, 0.004 ) # S18 Run 1
 
-# if (stationN == "12"):
-# 	offsets = (  -0.02, -0.003, 0.018, 0.003, -0.093, -0.002, 0.025, -0.005, 0.03, 0.003, -0.029, -0.0, -0.001, 0.001, 0.001, -0.002 ) # S12 Run 1
-# if (stationN == "18"):
-# 	offsets = (  -0.02, -0.017, 0.017, 0.015, -0.093, -0.047, 0.025, -0.002, 0.029, 0.005, -0.029, -0.022, -0.001, 0.003, 0.001, -0.004 ) # S18 Run 1
+# # if (stationN == "12"):
+# # 	offsets = (  -0.02, -0.003, 0.018, 0.003, -0.093, -0.002, 0.025, -0.005, 0.03, 0.003, -0.029, -0.0, -0.001, 0.001, 0.001, -0.002 ) # S12 Run 1
+# # if (stationN == "18"):
+# # 	offsets = (  -0.02, -0.017, 0.017, 0.015, -0.093, -0.047, 0.025, -0.002, 0.029, 0.005, -0.029, -0.022, -0.001, 0.003, 0.001, -0.004 ) # S18 Run 1
 
-# offsets = (0.053, 0.01, -0.026, -0.009, -0.216, -0.051, -0.008, 0.008, 0.025, -0.001, -0.071, -0.033, -0.027, 0.002, 0.018, -0.002) # S18 Run 1
-# offsets = (0.055, 0.014, -0.01, -0.012, -0.238, -0.092, 0.028, -0.011, 0.072, -0.014, -0.059, -0.049, -0.028, -0.005, 0.006, 0.007) # S18 Run 2
-# offsets = (0.062, -0.001, 0.003, 0.001, -0.233, -0.074, 0.045, -0.0, 0.09, -0.003, -0.051, -0.034, -0.029, -0.001, -0.007, 0.003) # S18 Run 3
-# offsets = (0.065, 0.003, 0.019, -0.002, -0.213, -0.081, 0.068, 0.005, 0.112, 0.002, -0.036, -0.035, -0.027, 0.001, -0.022, 0.001) # S18 Run 4
-offsets = (0.072, 0.005, 0.032, -0.004, -0.196, -0.082, 0.089, -0.004, 0.13, -0.004, -0.025, -0.037, -0.027, -0.003, -0.037, 0.006) # S18 Run 5
-#          0.083 -0.005 0.039 0.005 -0.193 -0.084 0.089 0.0 0.128 -0.003 -0.028 -0.034 -0.033 -0.001 -0.042 0.005 # S18 Run 6 
+# # offsets = (0.053, 0.01, -0.026, -0.009, -0.216, -0.051, -0.008, 0.008, 0.025, -0.001, -0.071, -0.033, -0.027, 0.002, 0.018, -0.002) # S18 Run 1
+# # offsets = (0.055, 0.014, -0.01, -0.012, -0.238, -0.092, 0.028, -0.011, 0.072, -0.014, -0.059, -0.049, -0.028, -0.005, 0.006, 0.007) # S18 Run 2
+# # offsets = (0.062, -0.001, 0.003, 0.001, -0.233, -0.074, 0.045, -0.0, 0.09, -0.003, -0.051, -0.034, -0.029, -0.001, -0.007, 0.003) # S18 Run 3
+# # offsets = (0.065, 0.003, 0.019, -0.002, -0.213, -0.081, 0.068, 0.005, 0.112, 0.002, -0.036, -0.035, -0.027, 0.001, -0.022, 0.001) # S18 Run 4
+# #offsets = (0.072, 0.005, 0.032, -0.004, -0.196, -0.082, 0.089, -0.004, 0.13, -0.004, -0.025, -0.037, -0.027, -0.003, -0.037, 0.006) # S18 Run 5
+# #          0.083 -0.005 0.039 0.005 -0.193 -0.084 0.089 0.0 0.128 -0.003 -0.028 -0.034 -0.033 -0.001 -0.042 0.005 # S18 Run 6 
 
-print "Offsets Run 1 [mm]: ", offsets
-raw_input("Offsets :: Run 1 correct? [press enter]") 
-# ----------------------------
+# print "Offsets Run 1 [mm]: ", offsets
+# raw_input("Offsets :: Run 1 correct? [press enter]") 
+# # ----------------------------
 
 
 # # # ----------------------------
@@ -126,26 +122,26 @@ raw_input("Offsets :: Run 1 correct? [press enter]")
 # # # ----------------------------
 
 if ( len(mis_C) != len(expectPars) ):
-	print "Enter Truth data in the right format!"
+	print("Enter Truth data in the right format!")
 
-print "Truth Misalignments and offsets [mm]: "
-print ["{0:0.3f}".format(i) for i in mis_C]
+print("Truth Misalignments and offsets [mm]: ")
+print(["{0:0.3f}".format(i) for i in mis_C])
 
-print "Offsets [mm]: "
-print ["{0:0.3f}".format(i) for i in offsets]
+print("Offsets [mm]: ")
+print(["{0:0.3f}".format(i) for i in offsets])
 
 
 # Quickly open the PEDe file and count lines only:
 lineN= sum(1 for line in open(file))          
 
-print "Parameters from Simulation and PEDE:"
-print "PEDE Trials ",lineN  
-print "Total number of variable parameters", len(expectPars)
-print " "
+print("Parameters from Simulation and PEDE:")
+print("PEDE Trials ",lineN  )
+print("Total number of variable parameters", len(expectPars))
+print(" ")
 
 trackN = [] # track count correspond to line number 
 
-data = [[[0 for i_data in xrange(3)] for i_lin in xrange(lineN)] for i_par in xrange(len(expectPars))]
+data = [[[0 for i_data in range(3)] for i_lin in range(lineN)] for i_par in range(len(expectPars))]
 
 #Open FoM file 
 with open(file) as f:
@@ -156,7 +152,7 @@ with open(file) as f:
 		number_str = line.split()
 		#Loop over expected parameters and store
 		#Always 3 element spacing (hence hard-coded 3)
-		for i_par in range(0, (len(number_str)-1)/3 ):
+		for i_par in range(0, int((len(number_str)-1)/3)  ):
 			label=int(number_str[0+i_par*3])
 			#print "label", label
 			misal=float(number_str[1+i_par*3])
@@ -182,14 +178,14 @@ dMData=[] # store all dM
 dMPar=[] # store corresponding par
 errors=[]
 
-misX= [[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
-recoX=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
-recoXError=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
-misY=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
-recoY=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
-recoYError=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
-dMY=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
-dMX=[[0 for i_par in xrange(len(expectPars)/int(globalN))] for i_lin in xrange(lineN)]
+misX= [[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
+recoX=[[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
+recoXError=[[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
+misY=[[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
+recoY=[[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
+recoYError=[[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
+dMY=[[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
+dMX=[[0 for i_par in range(int(len(expectPars)/int(globalN)))] for i_lin in range(lineN)]
 
 plt.rcParams.update({'font.size': 14})
 #Plot difference for all modules
@@ -301,8 +297,8 @@ recoYMeanError=[]
 dMXMean=[]
 dMYMean=[]
 
-offsetsX = [0 for i in xrange(0,8)]
-offsetsY = [0 for i in xrange(0,8)]
+offsetsX = [0 for i in list(range(0,8))]
+offsetsY = [0 for i in list(range(0,8))]
 
 
 if (globalN == 1):
@@ -325,10 +321,10 @@ for i_module in range(0, 8):
 
 	newMeanX = meanX/lineN+(offsetsX[i_module]*1e3)
 	recoXMean.append(newMeanX)
-	print "newMeanX= ", newMeanX, " meanX/lineN",  meanX/lineN, "offsetsX[i_module]=", offsetsX[i_module]*1e3
+	print("newMeanX= ", newMeanX, " meanX/lineN",  meanX/lineN, "offsetsX[i_module]=", offsetsX[i_module]*1e3)
 	newMeanY = meanY/lineN+(offsetsY[i_module])*1e3
 	recoYMean.append(newMeanY)
-	print "newMeanY= ", newMeanY, " meanY/lineN=", meanY/lineN, "offsetsY[i_module]=", offsetsY[i_module]*1e3
+	print("newMeanY= ", newMeanY, " meanY/lineN=", meanY/lineN, "offsetsY[i_module]=", offsetsY[i_module]*1e3)
 	recoXMeanError.append(stats.sem(meanXError))
 	recoYMeanError.append(stats.sem(meanYError))
 	dMXMean.append(meanX/lineN-misX[0][i_module])
@@ -432,8 +428,8 @@ else:
 	plt.savefig(str(extraLabel)+".png")
 
 
-print "Mean X:", np.array(recoXMean)*1e-3, "[mm]"
-print "Mean Y:", np.array(recoYMean)*1e-3, "[mm]"
+print("Mean X:", np.array(recoXMean)*1e-3, "[mm]")
+print("Mean Y:", np.array(recoYMean)*1e-3, "[mm]")
 
 sugMean  = []
 for i in range(0, len(recoXMean)):
@@ -445,7 +441,7 @@ for i in range(0, len(sugMean)):
 	offsest += str(round(sugMean[i])/1e3) + " "
 	
 
-print "New suggested Offsets from PEDE [mm]: ", offsest
+print("New suggested Offsets from PEDE [mm]: ", offsest)
 
 
-print "Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S")
+print("Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S"))
