@@ -21,7 +21,7 @@ GCC=gcc
 endif
 ifeq ($(UNAME), Darwin)
 #GCC=/usr/local/bin/gcc-7  #OPENMP gcc Compiler on Gleb's Mac
-GCC=/usr/local/bin/gfortran-4.9  #OPENMP gcc Compiler on Gleb's Mac
+GCC=/usr/local/bin/gfortran  #OPENMP gcc Compiler on Gleb's Mac
 endif
 
 #
