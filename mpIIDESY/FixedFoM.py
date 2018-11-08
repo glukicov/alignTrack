@@ -128,4 +128,4 @@ for i in range (0, len(firstModuleX)):
 
 
 #Produce FoM
-subprocess.call(["../../FixedTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN)])
+subprocess.call(["python3", "../../FixedTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN)])

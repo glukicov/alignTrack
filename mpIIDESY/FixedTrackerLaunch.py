@@ -55,8 +55,6 @@ if (stationN == "12"):
 
 #Truth Misalignment 
 
-
-
 # T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
 
 # # MUSE 
@@ -82,44 +80,45 @@ print("Initial Truth Misalignment [mm]: ", mis_C)
 print("With expected Parameters: ", expectPars)
 input("Truth Misalignment correct? [press enter]") 
 
-# # ----------------------------
-# #Run 1
-# useOffsets = True
-# ##MUSE 
-# # if (stationN == "12"):
-# # 	offsets = ( 0.03, 0.009, -0.007, -0.007, -0.158, -0.002, 0.026, -0.006, 0.055, -0.006, -0.033, -0.001, -0.014, -0.003, 0.001, 0.004 ) # S12 Run 1
-# # if (stationN == "18"):
-# # 	offsets = ( 0.031, 0.005, -0.007, -0.004, -0.159, -0.055, 0.025, -0.004, 0.055, -0.008, -0.033, -0.036, -0.014, -0.003, 0.001, 0.004 ) # S18 Run 1
+# ----------------------------
+#Run 1
+useOffsets = True
 
-# # if (stationN == "12"):
-# # 	offsets = (  -0.02, -0.003, 0.018, 0.003, -0.093, -0.002, 0.025, -0.005, 0.03, 0.003, -0.029, -0.0, -0.001, 0.001, 0.001, -0.002 ) # S12 Run 1
-# # if (stationN == "18"):
-# # 	offsets = (  -0.02, -0.017, 0.017, 0.015, -0.093, -0.047, 0.025, -0.002, 0.029, 0.005, -0.029, -0.022, -0.001, 0.003, 0.001, -0.004 ) # S18 Run 1
+#DATA  
+if (stationN == "12"):
+	offsets = (0.063, -0.007, -0.037, 0.007, -0.076, 0.073, -0.051, 0.046, -0.068, 0.012, -0.044, -0.025, -0.005, -0.032, -0.006, 0.038) # S12 Run 1 :: 16367 
+if (stationN == "18"):
+	offsets = (0.023,  0.014,  0.0,  -0.012,  0.015, 0.116,  0.063, 0.116,  0.004, 0.114,  0.024,  0.158,  0.034,  0.069, -0.055, -0.08) # S18 Run 1 :: 16367 
 
-# # offsets = (0.053, 0.01, -0.026, -0.009, -0.216, -0.051, -0.008, 0.008, 0.025, -0.001, -0.071, -0.033, -0.027, 0.002, 0.018, -0.002) # S18 Run 1
-# # offsets = (0.055, 0.014, -0.01, -0.012, -0.238, -0.092, 0.028, -0.011, 0.072, -0.014, -0.059, -0.049, -0.028, -0.005, 0.006, 0.007) # S18 Run 2
-# # offsets = (0.062, -0.001, 0.003, 0.001, -0.233, -0.074, 0.045, -0.0, 0.09, -0.003, -0.051, -0.034, -0.029, -0.001, -0.007, 0.003) # S18 Run 3
-# # offsets = (0.065, 0.003, 0.019, -0.002, -0.213, -0.081, 0.068, 0.005, 0.112, 0.002, -0.036, -0.035, -0.027, 0.001, -0.022, 0.001) # S18 Run 4
-# #offsets = (0.072, 0.005, 0.032, -0.004, -0.196, -0.082, 0.089, -0.004, 0.13, -0.004, -0.025, -0.037, -0.027, -0.003, -0.037, 0.006) # S18 Run 5
-# #          0.083 -0.005 0.039 0.005 -0.193 -0.084 0.089 0.0 0.128 -0.003 -0.028 -0.034 -0.033 -0.001 -0.042 0.005 # S18 Run 6 
-
-# print "Offsets Run 1 [mm]: ", offsets
-# raw_input("Offsets :: Run 1 correct? [press enter]") 
-# # ----------------------------
-
-
-# # # ----------------------------
-# #Run 2
-# useOffsets = True
-# ##MUSE 
+# #DATA  
 # if (stationN == "12"):
-# 	offsets = (  0.031, -0.003, 0.012, 0.004, -0.179, -0.006, 0.081, 0.002, 0.121, -0.003, -0.012, 0.006, -0.01, 0.004, -0.019, -0.003 ) # S12 Run 1
+# 	offsets = (0.089, -0.006, -0.041, 0.006, -0.098, 0.071, -0.074, 0.035, -0.099, 0.011, -0.069, -0.024, -0.015, -0.036, -0.008, 0.043) # S12 Run 2 :: 16367 
 # if (stationN == "18"):
-# 	offsets = (  0.023, 0.009, 0.018, -0.007, -0.16, -0.058, 0.108, -0.003, 0.145, -0.004, 0.008, -0.045, -0.003, -0.004, -0.027, 0.006 ) # S18 Run 1
+# 	offsets = (0.04, 0.021, 0.005, -0.018, 0.018, 0.105, 0.075, 0.1, 0.001, 0.106, 0.024, 0.154, 0.039, 0.06, -0.075, -0.069) # S18 Run 2 :: 16367 
 
-# print "Offsets Run 2 [mm]: ", offsets
-# raw_input("Offsets :: Run 2 correct? [press enter]") 
-# # # ----------------------------
+
+##MUSE 
+# if (stationN == "12"):
+# 	offsets = ( 0.03, 0.009, -0.007, -0.007, -0.158, -0.002, 0.026, -0.006, 0.055, -0.006, -0.033, -0.001, -0.014, -0.003, 0.001, 0.004 ) # S12 Run 1
+# if (stationN == "18"):
+# 	offsets = ( 0.031, 0.005, -0.007, -0.004, -0.159, -0.055, 0.025, -0.004, 0.055, -0.008, -0.033, -0.036, -0.014, -0.003, 0.001, 0.004 ) # S18 Run 1
+
+# if (stationN == "12"):
+# 	offsets = (  -0.02, -0.003, 0.018, 0.003, -0.093, -0.002, 0.025, -0.005, 0.03, 0.003, -0.029, -0.0, -0.001, 0.001, 0.001, -0.002 ) # S12 Run 1
+# if (stationN == "18"):
+# 	offsets = (  -0.02, -0.017, 0.017, 0.015, -0.093, -0.047, 0.025, -0.002, 0.029, 0.005, -0.029, -0.022, -0.001, 0.003, 0.001, -0.004 ) # S18 Run 1
+
+# offsets = (0.053, 0.01, -0.026, -0.009, -0.216, -0.051, -0.008, 0.008, 0.025, -0.001, -0.071, -0.033, -0.027, 0.002, 0.018, -0.002) # S18 Run 1
+# offsets = (0.055, 0.014, -0.01, -0.012, -0.238, -0.092, 0.028, -0.011, 0.072, -0.014, -0.059, -0.049, -0.028, -0.005, 0.006, 0.007) # S18 Run 2
+# offsets = (0.062, -0.001, 0.003, 0.001, -0.233, -0.074, 0.045, -0.0, 0.09, -0.003, -0.051, -0.034, -0.029, -0.001, -0.007, 0.003) # S18 Run 3
+# offsets = (0.065, 0.003, 0.019, -0.002, -0.213, -0.081, 0.068, 0.005, 0.112, 0.002, -0.036, -0.035, -0.027, 0.001, -0.022, 0.001) # S18 Run 4
+# offsets = (0.072, 0.005, 0.032, -0.004, -0.196, -0.082, 0.089, -0.004, 0.13, -0.004, -0.025, -0.037, -0.027, -0.003, -0.037, 0.006) # S18 Run 5
+#          0.083 -0.005 0.039 0.005 -0.193 -0.084 0.089 0.0 0.128 -0.003 -0.028 -0.034 -0.033 -0.001 -0.042 0.005 # S18 Run 6 
+
+print("Offsets Run x [mm]: ", offsets)
+input("Offsets :: Run x correct? [press enter]") 
+# ----------------------------
+
 
 if ( len(mis_C) != len(expectPars) ):
 	print("Enter Truth data in the right format!")
@@ -367,14 +366,23 @@ plt.subplots_adjust(top=0.85)
 
 
 #Legend (stats X)
-avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
-SDMis = np.std(np.array(misX[0]))
+# avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
+# SDMis = np.std(np.array(misX[0]))
 #textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
 #plt.text(8.7, 150, textstr, fontsize=10, color="red")
-avgMeandReconTruth = sum(np.array(dMXMean))/float(len(np.array(dMXMean)))
-SDdReconTruth = np.std(np.array(dMXMean))
-textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
+# avgMeandReconTruth = sum(np.array(dMXMean))/float(len(np.array(dMXMean)))
+# SDdReconTruth = np.std(np.array(dMXMean))
+# textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
+# plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
+
+
+#Absolute mean Reco Mis 
+absMeanRecoMisX = sum( np.absolute(recoXMean) ) / float( len(recoXMean) ) 
+absMeanTruthMisX = sum( np.absolute( misX[0] ) ) / float( len(misX[0]) ) 
+dAbsMeanX = absMeanTruthMisX - absMeanRecoMisX
+textStrX = "<|RecoX|>={0}".format(int(round(absMeanRecoMisX)))+ "um\n<|TruthX|>={0}".format(int(round(absMeanTruthMisX)))+" um \n<|d(R-T)|>={0}".format(int(round(dAbsMeanX)))+ "um\n" 
+plt.text(8.6, 50-100, textStrX, fontsize=8, color=str(colours[4]))
+
 plt.subplots_adjust(right=0.77)
 
 plt.xticks(fontsize=8, rotation=0)
@@ -406,14 +414,24 @@ for i_module in range(0, 8):
 		plt.plot(i_module+1, recoYMean[i_module], marker="*", color=str(colours[4]), markersize=12)
 
 #Legend (stats Y)
-avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
-SDMis = np.std(np.array(misY[0]))
+# avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
+# SDMis = np.std(np.array(misY[0]))
 #textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
 #plt.text(8.7, 150, textstr, fontsize=10, color="red")
-avgMeandReconTruth = sum(np.array(dMYMean))/float(len(np.array(dMYMean)))
-SDdReconTruth = np.std(np.array(dMYMean))
-textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
+# avgMeandReconTruth = sum(np.array(dMYMean))/float(len(np.array(dMYMean)))
+# SDdReconTruth = np.std(np.array(dMYMean))
+# textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
+# plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
+
+
+#Absolute mean Reco Mis 
+absMeanRecoMisY = sum( np.absolute(recoYMean) ) / float( len(recoYMean) ) 
+absMeanTruthMisY = sum( np.absolute( misY[0] ) ) / float( len(misY[0]) ) 
+dAbsMeanY = absMeanTruthMisY - absMeanRecoMisY
+textStrY = "<|RecoY|>={0}".format(int(round(absMeanRecoMisY)))+ "um\n<|TruthY|>={0}".format(int(round(absMeanTruthMisY)))+" um \n<|d(R-T)|>={0}".format(int(round(dAbsMeanY)))+ "um\n" 
+plt.text(8.6, 50-100, textStrY, fontsize=8, color=str(colours[4]))
+
+
 plt.subplots_adjust(right=0.77)
 plt.subplots_adjust(bottom=0.1)
 plt.subplots_adjust(hspace=0.35)
