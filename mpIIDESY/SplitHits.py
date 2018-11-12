@@ -13,18 +13,16 @@ import os
 import string
 import time
 import decimal
-import ROOT
 import argparse, sys
-ROOT.gROOT.Macro('~/rootlogon.C')
-from ROOT import *
-
+from ROOT import TH1, TFile
 
 parser = argparse.ArgumentParser(description='arguments')
 parser.add_argument('-f', '--fileN', help='input ROOT file')
 parser.add_argument('-n', '--sliceN', help='slice number')
 args = parser.parse_args()
 
-name = "TrackerAlignment/Tracks/Pz"
+# name = "TrackerAlignment/Tracks/Pz"
+name = "TrackerAlignment/Tracks/pValue"
 n = int(args.sliceN)
 
 f = TFile.Open(str(args.fileN))
@@ -38,20 +36,20 @@ t = f.Get(str(name))
 totalN= int(t.GetEntries())
 optimalN=totalN/n
 
-print "Slicing", name ,"with",totalN, "entries into slices", n, "of", optimalN
+print("Slicing", name ,"with",totalN, "entries into slices", n, "of", optimalN)
 
 hBinMin = t.FindFirstBinAbove(0, 1)
 hBinMax = t.FindLastBinAbove(0, 1)
 
-print "hBinMin= ", hBinMin, " hBinMax ", hBinMax
+print("hBinMin= ", hBinMin, " hBinMax ", hBinMax)
 hBinNumber = hBinMax - hBinMin # number of non-zero bins
-print " hBinNumber= ", hBinNumber
+print(" hBinNumber= ", hBinNumber)
 
 valueRange=[]
 
 xaxis = t.GetXaxis()
 
-valueRange.append( int( xaxis.GetBinCenter(hBinMin) ) )  # known starting point 
+valueRange.append( float( xaxis.GetBinCenter(hBinMin) ) )  # known starting point 
 
 actionFlag = False
 
@@ -62,15 +60,19 @@ for i_bin in range(hBinMin, hBinMax):
     binCentre = xaxis.GetBinCenter(i_bin)
     
     if (int(hsum/optimalN) > slidingN):
-        valueRange.append( int( xaxis.GetBinCenter(i_bin) ) )
+        valueRange.append( float( xaxis.GetBinCenter(i_bin) ) )
         slidingN+=1
 
-valueRange.append( int( xaxis.GetBinCenter(hBinMax) ) )  # known ending point 
+valueRange.append( float( xaxis.GetBinCenter(hBinMax) ) )  # known ending point 
 
-
-print "The equally filled Pz ranges are [MeV]:"
+print("The equally filled p-val ranges are:")
 for i in range(0, n):
-    print valueRange[i], "< Pz <", valueRange[i+1]
+    print(valueRange[i], "< p-val <", valueRange[i+1])
+
+
+# print("The equally filled Pz ranges are [MeV]:")
+# for i in range(0, n):
+#     print(valueRange[i], "< Pz <", valueRange[i+1])
 
 
 

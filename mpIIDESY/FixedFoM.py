@@ -20,17 +20,26 @@ if (stationN == "10"):
 	secondModuleX=[1071, 1081, 1071, 1081]
 	secondModuleY=[1072, 1082, 1072, 1082]
 
+if (stationN == "12"):
+	firstModuleX= [1211,  1211, 1221, 1221]
+	firstModuleY= [1212,  1212, 1222, 1222]
+	secondModuleX=[1271,  1281, 1271, 1281]
+	secondModuleY=[1272,  1282, 1272, 1282]
+
+# if (stationN == "12"):
+# 	firstModuleX= [1221,  1221, 1231, 1231]
+# 	firstModuleY= [1222,  1222, 1232, 1232]
+# 	secondModuleX=[1261,  1271, 1261, 1271]
+# 	secondModuleY=[1262,  1272, 1262, 1272]
+
+
 if (stationN == "18"):
 	firstModuleX= [1811,  1811, 1821, 1821]
 	firstModuleY= [1812,  1812, 1822, 1822]
 	secondModuleX=[1871,  1881, 1871, 1881]
 	secondModuleY=[1872,  1882, 1872, 1882]
 
-if (stationN == "12"):
-	firstModuleX= [1211,  1211, 1221, 1221]
-	firstModuleY= [1212,  1212, 1222, 1222]
-	secondModuleX=[1271,  1281, 1271, 1281]
-	secondModuleY=[1272,  1282, 1272, 1282]
+
 
 fileLabel="2MFixed"
 ################
