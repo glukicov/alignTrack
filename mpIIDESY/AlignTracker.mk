@@ -10,11 +10,11 @@ ROOTGLIBS    := $(shell root-config --glibs)
 ROOTLIBS     := $(shell root-config --nonew --libs)
 
 CPP = g++
-//CPP=/usr/local/bin/g++-7
+#CPP=/usr/local/bin/g++-7
 CPPFLAGS = -std=c++11
 CPPFLAGS += $(ROOTCFLAGS)
-//CPPFLAGS +=-static-libtsan
-//CPPFLAGS += -Wstatic-float-init
+#CPPFLAGS +=-static-libtsan
+#CPPFLAGS += -Wstatic-float-init
 CPPFLAGS += -fstack-protector-all
 CPPFLAGS += -pedantic-errors
 CPPFLAGS += -O3
@@ -26,9 +26,9 @@ LIBS += $(ROOTLIBS)
 LIBS         += -lMinuit
 # LDFLAGS       = -O
 
-//CFLAGS += $(shell root-config --cflags)
-//LDFLAGS += -g $(shell $(ROOTSYS)/bin/root-config --ldflags)
-//LIBS += $(shell root-config --glibs)
+CFLAGS += $(shell root-config --cflags)
+LDFLAGS += -g $(shell $(ROOTSYS)/bin/root-config --ldflags)
+LIBS += $(shell root-config --glibs)
 
 all : $(PROGNAME)
 

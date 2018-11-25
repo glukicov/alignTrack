@@ -34,6 +34,11 @@ LayerNames = ["U0", "U1", "V0", "V1"]
 moduleNamesInitial=np.arange(1,NModules+1) #1-8
 layerNamesInitial=np.arange(1, NTotalLayers+1) #1-32
 
+
+#Metric
+
+
+
 if (int(args.moduleN) != -1):
 	removedModule=int(args.moduleN)
 	moduleNames=np.delete(moduleNamesInitial, removedModule-1) # indexing so -1
@@ -267,9 +272,9 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual Means (SD)", fontsize=20)
-	plt.ylabel("Residual mean /um [error = SD]", fontsize=20)
-	plt.xlabel("Layer", fontsize=20)
+	plt.title("UV Residual Means (SD)", fontsize=18)
+	plt.ylabel("Residual mean [um] (error = SD)", fontsize=18)
+	plt.xlabel("Layer", fontsize=18)
 	plt.savefig("Residuals_L.png")
 
 	#-------LayerResiudals_Zoom----------
@@ -315,9 +320,9 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual Means ( 'z-value' )", fontsize=20)
-	plt.ylabel("Residual Mean /um [error = Error on the Mean]", fontsize=18)
-	plt.xlabel("Layer", fontsize=20)
+	plt.title("UV Residual Means ( 'z-value' )", fontsize=18)
+	plt.ylabel("Residual Mean [um]", fontsize=18)
+	plt.xlabel("Layer", fontsize=18)
 	plt.savefig("Residuals_L_Zoom.png")
 
 	#----Layer Residual SD 

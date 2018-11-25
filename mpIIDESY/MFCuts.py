@@ -2,7 +2,7 @@
 
 #Plotter
 
-from ROOT import *
+from ROOT import TF1, TFile
 import matplotlib.pyplot as plt #for plotting 
 import numpy as np  # smart arrays 
 import itertools # smart lines 
@@ -30,8 +30,8 @@ else:
 
 ticks=[]
 
-yMin = -0.02
-yMax = 0.02
+yMin = -1
+yMax = 3
 plt.figure(1)
 axes = plt.gca()
 for i_wireGroup in range(0, len(wireGroups)):
@@ -40,7 +40,7 @@ for i_wireGroup in range(0, len(wireGroups)):
 	for i_dirNames in range(0, len(selectDirNames)):
 		dirName = selectDirNames[i_dirNames]
 		name = "TrackerAlignment/"+str(dirName)+"/Residual "+str(wireGroupName)+" "+str(dirName)
-		print name
+		print(name)
 		t = f.Get(str(name))
 		mean=t.GetMean()
 		meanError=t.GetMeanError()
@@ -48,8 +48,8 @@ for i_wireGroup in range(0, len(wireGroups)):
 		if (i_wireGroup==0):
 			ticks.append(tick)
 		
-		plt.plot(tick, mean, marker="*", color=str(colourDirs))
-		plt.errorbar(tick, mean, yerr=meanError, color=str(colourDirs))	
+		plt.plot(tick, mean*1e3, marker="*", color=str(colourDirs))
+		plt.errorbar(tick, mean*1e3, yerr=meanError*1e3, color=str(colourDirs))	
 
 		line = [[i_dirNames+0.5,yMin], [i_dirNames+0.5, yMax]]
 		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black')
@@ -60,7 +60,7 @@ for i_wireGroup in range(0, len(wireGroups)):
 axes.set_xlim(0.5, 4.5)
 axes.set_ylim(yMin, yMax)
 plt.xticks(ticks, selectDirNames)
-plt.ylabel("Residual Mean [error = Error on the Mean]", fontsize=10)
+plt.ylabel("Residual Mean (error = Error on the Mean) [um]", fontsize=10)
 plt.xlabel("Vertical Group [mm]", fontsize=10)
 plt.savefig("Vertical_Group.png")
 
