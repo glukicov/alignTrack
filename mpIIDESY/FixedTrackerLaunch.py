@@ -1,15 +1,17 @@
 ####################################################################
 # Sanity plots for Tracker Alignment.  
 # FoM Plots for comparison of actual misalignment vs PEDE results 
+# Used as a final step of FixedFoM.py script 
 #
 # Created: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
-# Modified: 8 May 2018 by Gleb
+# Modified: 26 November 2018 by Gleb
 #####################################################################
 import argparse, sys
 from scipy import stats
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
+parser.add_argument('-rp', '--removedPars', nargs='+',  help='pars removed')
 parser.add_argument('-eL', '--eL', help='label')
 parser.add_argument('-s', '--stationN', help='station number')
 args = parser.parse_args()
@@ -34,42 +36,30 @@ import numpy as np  # smart arrays
 import itertools # smart lines
 from time import gmtime, strftime 
 import subprocess
-# import plotly.plotly
-# import plotly.graph_objs as go
-# import pandas as pd
-# plotly.tools.set_credentials_file(username='glebluk', api_key='FK1MEM1aDROhONaqC7v7')
 
 
 #Truth Misalignment 
-
-# T_mis_C=(0.1, -0.07, -0.08, 0.05, 0.15, 0.1, -0.04, 0.01) # Case C (Initial)
-# expectPars = (11, 21, 31, 41, 51, 61, 71, 81)
 if (stationN == "10"):
 	expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY  [Station 0]
-
-if (stationN == "18"):
-	expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
-	locationStation="lower left"
 
 if (stationN == "12"):
 	expectPars = (1211, 1212, 1221, 1222, 1231, 1232, 1241, 1242, 1251, 1252, 1261, 1262, 1271, 1272, 1281, 1282)  # XY  [Station 12]
 	locationStation="upper left"
 
+if (stationN == "18"):
+	expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
+	locationStation="lower left"
+
+
+#Deal with removed modules 
+# removedPars=np.array(args.removedPars)
+# removedParsInt = removedPars.astype(int)
+# print(removedParsInt[0])
+# # print removedPars 
+
 #Truth Misalignment 
+T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
 
-T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Misalignment
-
-# MUSE 
-# if (stationN == "12"):
-# 	T_mis_C = (0.0, 0.0, 0.0, 0.0, -0.2, 0.0, 0.1, 0.0, 0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ) #S12 MUSE 
-# if (stationN == "18"):
-# 	T_mis_C = (0.0, 0.0, 0.0, 0.0, -0.2, -0.1, 0.1, 0.0, 0.15, 0.0, 0.0, -0.05, 0.0, 0.0, 0.0, 0.0 ) #S18 MUSE 
-
-# #DATA 
-# if (stationN == "12"):
-# 	T_mis_C = (0.063, -0.012, -0.125, 0.015, -0.219, 0.091, -0.207, 0.053, -0.22, 0.013, -0.152, -0.03, -0.029, -0.041, 0.09, 0.044 ) #S12 16367 
-# if (stationN == "18"):
-# 	T_mis_C = (-0.069, 0.013, -0.02, -0.006, 0.052, 0.157, 0.143, 0.154, 0.08, 0.156, 0.099, 0.212, 0.095, 0.094, -0.052, -0.115) #S18 16367 
 
 moduleN=8
 moduleArray=np.arange(1, moduleN+1) #(1, 2,...,8)
@@ -80,85 +70,50 @@ useOffsets = False
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
 print("Initial Truth Misalignment [mm]: ", mis_C)
-print("With expected Parameters: ", expectPars)
-input("Truth Misalignment correct? [press enter]") 
+print("Expected Parameters: ", expectPars)
+input("Correct? [press enter]") 
 
-# ----------------------------
+## ----------------------------
 #Run 1+
 useOffsets = True
 
-# #Run 16367   
+# # #Run 16367  :: Run 2
+# if (stationN == "12"):
+# 	offsets = (0.106, 0.012, -0.122, -0.009, -0.244, 0.062, -0.249, 0.034, -0.267, 0.021, -0.19, -0.006, -0.052, -0.029, 0.09, 0.032) # S12 Run 2 :: 16367 
+# if (stationN == "18"):
+# 	offsets = (0.024, 0.013, 0.024, -0.019, 0.049, 0.113, 0.114, 0.12, 0.03, 0.1, 0.039, 0.167, 0.034, 0.079, -0.101, -0.079) # S18 Run 2 :: 16367 
+
+# # #Run 16367 :: Run 3 
+# if (stationN == "12"):
+# 	offsets = (0.149, 0.013, -0.19, -0.009, -0.382, 0.059, -0.413, 0.032, -0.429, 0.02, -0.309, -0.006, -0.09, -0.029, 0.163, 0.031) # S12 Run 3 :: 16367 
+# if (stationN == "18"):
+# 	offsets = (-0.008, 0.014, 0.013, -0.019, 0.058, 0.123, 0.148, 0.131, 0.058, 0.112, 0.071, 0.179, 0.064, 0.086, -0.103, -0.088) # S18 Run 3 :: 16367 
+
+# # #Run 16367 :: Run 4
+# if (stationN == "12"):
+# 	offsets = (0.167, 0.014, -0.237, -0.009, -0.47, 0.06, -0.52, 0.032, -0.531, 0.02, -0.383, -0.007, -0.112, -0.03, 0.217, 0.031) # S12 Run 4 :: 16367 
+# if (stationN == "18"):
+# 	offsets = (-0.039, 0.016, 0.001, -0.02, 0.061, 0.123, 0.163, 0.132, 0.077, 0.112, 0.093, 0.18, 0.084, 0.085, -0.093, -0.088) # S18 Run 4 :: 16367 
+
+# #Run 16367 :: Run 5
 if (stationN == "12"):
-	offsets = (0.106, 0.012, -0.122, -0.009, -0.244, 0.062, -0.249, 0.034, -0.267, 0.021, -0.19, -0.006, -0.052, -0.029, 0.09, 0.032) # S12 Run 2 :: 16367 
+  offsets = (0.171, 0.014, -0.271, -0.008, -0.529, 0.059, -0.588, 0.032, -0.595, 0.02, -0.427, -0.006, -0.122, -0.03, 0.256, 0.03) # S12 Run 5 :: 16367 
 if (stationN == "18"):
-	offsets = (0.024, 0.013, 0.024, -0.019, 0.049, 0.113, 0.114, 0.12, 0.03, 0.1, 0.039, 0.167, 0.034, 0.079, -0.101, -0.079) # S18 Run 2 :: 16367 
+  offsets = (-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 Run 5 :: 16367 
 
 
-# #DATA  
-# if (stationN == "12"):
-# 	offsets = (0.063, -0.007, -0.037, 0.007, -0.076, 0.073, -0.051, 0.046, -0.068, 0.012, -0.044, -0.025, -0.005, -0.032, -0.006, 0.038) # S12 Run 2 :: 16367 
-# if (stationN == "18"):
-# 	offsets = (0.023,  0.014,  0.0,  -0.012,  0.015, 0.116,  0.063, 0.116,  0.004, 0.114,  0.024,  0.158,  0.034,  0.069, -0.055, -0.08) # S18 Run 2 :: 16367 
-
-# #DATA  
-# if (stationN == "12"):
-# 	offsets = (0.089, -0.006, -0.041, 0.006, -0.098, 0.071, -0.074, 0.035, -0.099, 0.011, -0.069, -0.024, -0.015, -0.036, -0.008, 0.043) # S12 Run 3 :: 16367 
-# if (stationN == "18"):
-# 	offsets = (0.04, 0.021, 0.005, -0.018, 0.018, 0.105, 0.075, 0.1, 0.001, 0.106, 0.024, 0.154, 0.039, 0.06, -0.075, -0.069) # S18 Run 3 :: 16367 
-
-# #DATA  
-# if (stationN == "12"):
-# 	offsets = (0.101, -0.018, -0.035, 0.017, -0.098, 0.08, -0.074, 0.041, -0.104, 0.012, -0.075, -0.022, -0.022, -0.031, -0.012, 0.037) # S12 Run 4 :: 16367 
-# if (stationN == "18"):
-# 	offsets = (0.037, 0.018, 0.025, -0.015, 0.058, 0.115, 0.122, 0.114, 0.041, 0.128, 0.052, 0.164, 0.048, 0.072, -0.099, -0.083) # S18 Run 4 :: 16367 
-
-# #DATA  
-# if (stationN == "12"):
-# 	offsets = (0.135, -0.021, -0.044, 0.019, -0.133, 0.059, -0.127, 0.015, -0.157, 0.003, -0.122, -0.018, -0.043, -0.03, -0.002, 0.036) # S12 Run 5 :: 16367 
-# if (stationN == "18"):
-# 	offsets = (0.052, 0.022, 0.03, -0.018, 0.056, 0.102, 0.118, 0.102, 0.037, 0.104, 0.048, 0.146, 0.043, 0.069, -0.107, -0.079) # S18 Run 5 :: 16367 
-
-# #DATA  
-# if (stationN == "12"):
-# 	offsets = (0.159, -0.008, -0.048, 0.008, -0.155, 0.072, -0.158, 0.039, -0.191, 0.007, -0.149, -0.018, -0.059, -0.03, 0.005, 0.036) # S12 Run 6 :: 16367 
-# if (stationN == "18"):
-# 	offsets = (0.056, 0.021, 0.043, -0.017, 0.071, 0.106, 0.13, 0.11, 0.046, 0.109, 0.051, 0.156, 0.04, 0.068, -0.116, -0.077) # S18 Run 6 :: 16367 
+print("Offsets Run 5 [mm]: ", offsets)
+input("Offsets :: Run 5 correct? [press enter]") 
+# ##----------------------------
 
 
-# #MUSE 
-# if (stationN == "12"):
-# 	offsets = ( 0.03, 0.009, -0.007, -0.007, -0.158, -0.002, 0.026, -0.006, 0.055, -0.006, -0.033, -0.001, -0.014, -0.003, 0.001, 0.004 ) # S12 Run 1
-# if (stationN == "18"):
-# 	offsets = ( 0.031, 0.005, -0.007, -0.004, -0.159, -0.055, 0.025, -0.004, 0.055, -0.008, -0.033, -0.036, -0.014, -0.003, 0.001, 0.004 ) # S18 Run 1
+if ( len(offsets) != len(expectPars) ):
+	print("Enter parameter data in the right format!")
 
-# if (stationN == "12"):
-# 	offsets = (  -0.02, -0.003, 0.018, 0.003, -0.093, -0.002, 0.025, -0.005, 0.03, 0.003, -0.029, -0.0, -0.001, 0.001, 0.001, -0.002 ) # S12 Run 1
-# if (stationN == "18"):
-# 	offsets = (  -0.02, -0.017, 0.017, 0.015, -0.093, -0.047, 0.025, -0.002, 0.029, 0.005, -0.029, -0.022, -0.001, 0.003, 0.001, -0.004 ) # S18 Run 1
+# print("Truth Misalignments and offsets [mm]: ")
+# print(["{0:0.3f}".format(i) for i in mis_C])
 
-# offsets = (0.053, 0.01, -0.026, -0.009, -0.216, -0.051, -0.008, 0.008, 0.025, -0.001, -0.071, -0.033, -0.027, 0.002, 0.018, -0.002) # S18 Run 1
-# offsets = (0.055, 0.014, -0.01, -0.012, -0.238, -0.092, 0.028, -0.011, 0.072, -0.014, -0.059, -0.049, -0.028, -0.005, 0.006, 0.007) # S18 Run 2
-# offsets = (0.062, -0.001, 0.003, 0.001, -0.233, -0.074, 0.045, -0.0, 0.09, -0.003, -0.051, -0.034, -0.029, -0.001, -0.007, 0.003) # S18 Run 3
-# offsets = (0.065, 0.003, 0.019, -0.002, -0.213, -0.081, 0.068, 0.005, 0.112, 0.002, -0.036, -0.035, -0.027, 0.001, -0.022, 0.001) # S18 Run 4
-# offsets = (0.072, 0.005, 0.032, -0.004, -0.196, -0.082, 0.089, -0.004, 0.13, -0.004, -0.025, -0.037, -0.027, -0.003, -0.037, 0.006) # S18 Run 5
-#          0.083 -0.005 0.039 0.005 -0.193 -0.084 0.089 0.0 0.128 -0.003 -0.028 -0.034 -0.033 -0.001 -0.042 0.005 # S18 Run 6 
-
-print("Offsets Run x [mm]: ", offsets)
-input("Offsets :: Run x correct? [press enter]") 
-# ----------------------------
-
-
-if ( len(mis_C) != len(expectPars) ):
-	print("Enter Truth data in the right format!")
-
-print("Truth Misalignments and offsets [mm]: ")
-print(["{0:0.3f}".format(i) for i in mis_C])
-
-print("Offsets [mm]: ")
-print(["{0:0.3f}".format(i) for i in offsets])
-
-
-# Quickly open the PEDe file and count lines only:
+# Quickly open the PEDE file and count lines only:
 lineN= sum(1 for line in open(file))          
 
 print("Parameters from Simulation and PEDE:")
@@ -311,9 +266,6 @@ for i_par in range(0, len(expectPars)):
 		if(splitLabel[3]==5):
 			plt.title('FoM M%s $\Theta$'   %(int(splitLabel[0])) , fontsize=18)
 
-		
-		
-
 	#plt.savefig(str(expectPars[i_par])+".png")
 	plt.clf()
 
@@ -374,7 +326,7 @@ xTitle = extraLabel + " Misalignment X"
 plt.title(str(xTitle), fontsize=8)
 plt.ylabel("Misalignment [um]", fontsize=8)
 plt.minorticks_on()
-axes.tick_params(axis='x',which='minor',bottom='off')
+axes.tick_params(axis='x',which='minor',bottom=False)
 axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
@@ -389,7 +341,8 @@ for i_module in range(0, 8):
 	#print "recoXMean[i_module]=", recoXMean[i_module]
 	if (recoXMeanError[i_module] == 0.0):
 		plt.plot(i_module+1, recoXMean[i_module], marker="*", color=str(colours[4]), markersize=12) # if module was fixed - plot a star 
-
+print(moduleArray)
+print(recoXMean)
 plt.errorbar(moduleArray, np.array(recoXMean), yerr=recoXMeanError,  color=str(colours[4]), markersize=12, elinewidth=2, label="Reco. Mis. (this iteration)")
 plt.plot(moduleArray, np.array(recoXMean), marker="+", color=str(colours[4]))
 
@@ -440,8 +393,8 @@ axes2.set_ylim(yMinY, yMaxY)
 yTitle = extraLabel + " Misalignment Y"
 plt.title(str(yTitle), fontsize=8)
 plt.ylabel("Misalignment [um]", fontsize=8)
-pplt.minorticks_on()
-axes2.tick_params(axis='x',which='minor',bottom='off')
+plt.minorticks_on()
+axes2.tick_params(axis='x',which='minor',bottom=False)
 axes2.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')

@@ -61,9 +61,9 @@
 \end{center}
 \begin{center}
 	\vspace{1cm}
-	{\huge \textbf{Tracker Alignment for the g-2 experiment:} \\ \textit{Survey Independent Global Alignment Approach with Inhomogeneous Magnetic Field} }\\
+	{\huge \textbf{Tracker Alignment for the g-2 experiment:} \\ \textit{Global Alignment Approach with Inhomogeneous Magnetic Field} }\\
 	\vspace{1.5cm}
-
+	{\Huge \textbf{ DRAFT }}\\
 	\vspace{6cm}
 	{\LARGE\bf Gleb Lukicov}\\
 	{\Large University College London}
@@ -112,7 +112,7 @@ The user can write a Monte Carlo (MC) programme to: (1) fully describe the detec
 \end{figure}
 \vspace{-0.2cm}
 
-To understand the \texttt{Millepede II} algorithm a translation (into \texttt{C++}) of the provided (\texttt{Fortran}) toy-model was implemented. The difference in results was consistent with within the precision of C++} floating-point numbers ($10^{-7}$).
+To understand the \texttt{Millepede II} algorithm a translation (into \texttt{C++}) of the provided (\texttt{Fortran}) toy-model was implemented. The difference in results was consistent with within the precision of \texttt{C++} floating-point numbers ($10^{-7}$).
 \vspace{-0.1cm}
 \subsection{User MC Algorithm}
 \vspace{-0.1cm}
@@ -518,17 +518,17 @@ DLC_1 = \frac{\partial R}{\partial x_T} =   \frac{\pm}{\sqrt{\left(m_W m_y-m_x\r
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.4\linewidth]{fig/AlignPath.png}
+\includegraphics[width=0.8\linewidth]{fig/AlignPath.png}
 \caption{Full Alignment path.}
 \label{fig:AlignPath}
 \end{figure}
 
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=0.4\linewidth]{fig/AlignPath2.png}
-\caption{Full Alignment path.}
-\label{fig:AlignPath}
-\end{figure}
+% \begin{figure}[!ht]
+% \centering
+% \includegraphics[width=0.4\linewidth]{fig/AlignPath2.png}
+% \caption{Full Alignment path.}
+% \label{fig:AlignPath}
+% \end{figure}
 
 \clearpage
 \subsection{Considering Rotations}
@@ -562,14 +562,14 @@ DGL = \frac{ \partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W
 
 Due to the wire angle the DCA now becomes (with trigonometric re-parametrisation of the wire due to a rotation)
 
-\begin{equation}
-\begin{split}
-DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W) = \frac{|\begin{pmatrix} m_W \cos \phi \\ 1\\   m_W \sin \phi\\\end{pmatrix} \times \begin{pmatrix} m_x\\ m_y \\  1\\\end{pmatrix} \cdot (\begin{pmatrix}x_W  \\0 \\  z_W\\\end{pmatrix} - \begin{pmatrix}x_T \\y_T  \\  0\\\end{pmatrix}) |}{||\begin{pmatrix} m_W \cos \phi \\ 1\\  m_W \sin \phi\\\end{pmatrix} \times \begin{pmatrix}m_x\\ m_y \\  1\\\end{pmatrix}||} = 
-\\ = \frac{z_W (m_W m_y \cos (\phi)-m_x)-y_T (m_W m_x \sin (\phi)-m_W \cos (\phi))+(x_W-x_T) (1-m_W m_y \sin (\phi))}{\sqrt{\left| \cos (\phi) m_W m_y-m_x\right| {}^2+\left| m_W m_x \sin (\phi)-\cos (\phi) m_W\right| {}^2+\left| 1-m_W m_y \sin (\phi)\right| {}^2}} =
-\\ = \frac{z_W m_W m_y \cos (\phi)- z_W m_x- y_T m_W m_x \sin (\phi) + y_T m_W \cos (\phi))+ x_W-x_W m_W m_y \sin (\phi) - x_T +x_T m_W m_y \sin (\phi)}{\sqrt{ \cos (\phi) m_W m_y-m_x {}^2+ m_W m_x \sin (\phi)-\cos (\phi) m_W {}^2+ 1-m_W m_y \sin (\phi){}^2}}
-\label{eq:DCARot}
-\end{split}
-\end{equation}
+% \begin{equation}
+% \begin{split}
+% DCA(x_T, y_T, m_x, m_y, x_W, z_W, m_W) = \frac{|\begin{pmatrix} m_W \cos \phi \\ 1\\   m_W \sin \phi\\\end{pmatrix} \times \begin{pmatrix} m_x\\ m_y \\  1\\\end{pmatrix} \cdot (\begin{pmatrix}x_W  \\0 \\  z_W\\\end{pmatrix} - \begin{pmatrix}x_T \\y_T  \\  0\\\end{pmatrix}) |}{||\begin{pmatrix} m_W \cos \phi \\ 1\\  m_W \sin \phi\\\end{pmatrix} \times \begin{pmatrix}m_x\\ m_y \\  1\\\end{pmatrix}||} = 
+% \\ = \frac{z_W (m_W m_y \cos (\phi)-m_x)-y_T (m_W m_x \sin (\phi)-m_W \cos (\phi))+(x_W-x_T) (1-m_W m_y \sin (\phi))}{\sqrt{\left| \cos (\phi) m_W m_y-m_x\right| {}^2+\left| m_W m_x \sin (\phi)-\cos (\phi) m_W\right| {}^2+\left| 1-m_W m_y \sin (\phi)\right| {}^2}} =
+% \\ = \frac{z_W m_W m_y \cos (\phi)- z_W m_x- y_T m_W m_x \sin (\phi) + y_T m_W \cos (\phi))+ x_W-x_W m_W m_y \sin (\phi) - x_T +x_T m_W m_y \sin (\phi)}{\sqrt{ \cos (\phi) m_W m_y-m_x {}^2+ m_W m_x \sin (\phi)-\cos (\phi) m_W {}^2+ 1-m_W m_y \sin (\phi){}^2}}
+% \label{eq:DCARot}
+% \end{split}
+% \end{equation}
 
 The rotation is pictorially represented in Fig.\ref{fig:phi}.
 \begin{figure}[!ht]
@@ -713,8 +713,6 @@ DLC_4 = \frac{ \partial R}{\partial m_y}
 \end{equation}
 
 
-\clearpage
-
 \begin{equation}
 DGL_1 = \frac{\partial R}{\partial x_W} = DLC_1
 \end{equation}
@@ -723,19 +721,20 @@ DGL_1 = \frac{\partial R}{\partial x_W} = DLC_1
 DGL_2 = \frac{\partial R}{\partial y_W} = DLC_2
 \end{equation}
 
-\begin{equation}
-DGL_3 = \frac{\partial R}{\partial \phi} 
-\end{equation}
+% \begin{equation}
+% DGL_3 = \frac{\partial R}{\partial \phi} 
+% \end{equation}
 
 \begin{equation}
-DGL_3 = \frac{\partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre}) = DLC_1 (m_W * m_y - m_x) (-x_W + x_{centre}) + DLC_1 (z_W - z_{centre})
+DGL_3 = \frac{\partial R}{\partial \phi} = \frac{ \partial R}{\partial z_W} (-x_W + x_{centre}) + \frac{ \partial R}{\partial x_W} (z_W - z_{centre}) 
+% = DLC_1 (m_W * m_y - m_x) (-x_W + x_{centre}) + DLC_1 (z_W - z_{centre})
 \end{equation}
 
-\subsection{Adding Uniform Magnetic Field}
+\subsection{Uniform Magnetic Field}
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.4\linewidth]{fig/G4.png}
+\includegraphics[width=0.5\linewidth]{fig/G4.png}
 \caption{MF.}
 \label{fig:AlignPath}
 \end{figure}
@@ -756,46 +755,46 @@ DLC_5 = \frac{ \partial R}{\partial \kappa} = \frac{ \partial R}{\partial \left(
 \end{equation}
 
 
-Using \say{reduced} $p_z/p$ cut:
-\begin{equation}
-p_z/p_{red} = \frac{p_z}{\sqrt{p_z^2+p_x^2}}
-\end{equation}
+% Using \say{reduced} $p_z/p$ cut:
+% \begin{equation}
+% p_z/p_{red} = \frac{p_z}{\sqrt{p_z^2+p_x^2}}
+% \end{equation}
 
 
-z-value is 
-\begin{equation}
-z-value = \frac{\langle pull_M \rangle - \langle pull \rangle}{\sigma}
-\end{equation}
+% z-value is 
+% \begin{equation}
+% z-value = \frac{\langle pull_M \rangle - \langle pull \rangle}{\sigma}
+% \end{equation}
 
-\begin{equation}
-z-value = \frac{\langle pull_M \rangle - \langle pull \rangle}{\Delta <pull_M>}
-\end{equation}
-
-
-\subsubsection{Advanced Alignment Methods}
-Mean alignment parametrisation with variable fixing of two out of eight detectors (1,2 - 7,8).
-
-Removing module from fit 1 by 1: for a badly misaligned module, its absence would improve the overall fir (w.r.t p-value). 
-
-Transitioning between global (station) coordinates system in XY and local (straw) coordinates systems is done via 
-
-\begin{equation}
-\begin{bmatrix}u\\v\\\end{bmatrix}=\begin{bmatrix}\cos \theta &-\sin \theta \\\sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}x\\y\\\end{bmatrix},
-\end{equation}
-and 
-\begin{equation}
-\begin{bmatrix}x\\y\\\end{bmatrix}=\begin{bmatrix}\cos \theta &\sin \theta \\\ -sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}u\\v\\\end{bmatrix},
-\end{equation}
+% \begin{equation}
+% z-value = \frac{\langle pull_M \rangle - \langle pull \rangle}{\Delta <pull_M>}
+% \end{equation}
 
 
+% \subsubsection{Advanced Alignment Methods}
+% Mean alignment parametrisation with variable fixing of two out of eight detectors (1,2 - 7,8).
 
-\subsubsection{Preventive methods to avoid the alignment convergence on local minima}
+% Removing module from fit 1 by 1: for a badly misaligned module, its absence would improve the overall fir (w.r.t p-value). 
+
+% Transitioning between global (station) coordinates system in XY and local (straw) coordinates systems is done via 
+
+% \begin{equation}
+% \begin{bmatrix}u\\v\\\end{bmatrix}=\begin{bmatrix}\cos \theta &-\sin \theta \\\sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}x\\y\\\end{bmatrix},
+% \end{equation}
+% and 
+% \begin{equation}
+% \begin{bmatrix}x\\y\\\end{bmatrix}=\begin{bmatrix}\cos \theta &\sin \theta \\\ -sin \theta &\cos \theta \\\end{bmatrix} \begin{bmatrix}u\\v\\\end{bmatrix},
+% \end{equation}
 
 
-\subsubsection{Moving to the Inhomogeneous Magnetic Field}
-Official offline full ring simulation...
 
-Staircase
+% \subsubsection{Preventive methods to avoid the alignment convergence on local minima}
+
+
+% \subsubsection{Moving to the Inhomogeneous Magnetic Field}
+% Official offline full ring simulation...
+
+% Staircase
 
 
 \subsection{Alignment Parameters with 6 DoF}
@@ -859,20 +858,21 @@ where $(x_0, y_0, z_0)$ is the reference point (i.e. beginning point of the trac
 
 
 
-\section{Future work}\label{sec:future}
-\vspace{-0.2cm}
-\vspace{-0.2cm}
-\begin{enumerate}
-	\setlength\itemsep{-0.5em}
-	\item Tracker Alignment with 3D geometry (multiple scattering (MS), efficiency effects, no magnetic field (MF)).
-	\item Tracker Alignment with 3D geometry and MF (misalignment in 3D, MF with curved tracks, using General Broken Line package~\cite{GBL}).
-	\item Testing of the alignment algorithms on cosmic muon data.
-	\item Fully integrating alignment MC algorithms into \art.
-	\item Performing high-precision ($<$\SI{50}{\micro\metre}) track-based alignment of the tracker station using reconstructed tracks from Run 0.
-\end{enumerate}
-\vspace{-0.2cm}
-%\vspace{-1cm}
-\textit{I would like to acknowledge support and guidance received by Prof. Mark Lancaster, Dr Rebecca Chislett and Dr James Mott with understanding methods and procedures of detector alignment.}
+% \section{Future work}\label{sec:future}
+% \vspace{-0.2cm}
+% \vspace{-0.2cm}
+% \begin{enumerate}
+% 	\setlength\itemsep{-0.5em}
+% 	\item Tracker Alignment with 3D geometry (multiple scattering (MS), efficiency effects, no magnetic field (MF)).
+% 	\item Tracker Alignment with 3D geometry and MF (misalignment in 3D, MF with curved tracks, using General Broken Line package~\cite{GBL}).
+% 	\item Testing of the alignment algorithms on cosmic muon data.
+% 	\item Fully integrating alignment MC algorithms into \art.
+% 	\item Performing high-precision ($<$\SI{50}{\micro\metre}) track-based alignment of the tracker station using reconstructed tracks from Run 0.
+% \end{enumerate}
+% \vspace{-0.2cm}
+% %\vspace{-1cm}
+% \textit{I would like to acknowledge support and guidance received by Prof. Mark Lancaster, Dr Rebecca Chislett and Dr James Mott with understanding methods and procedures of detector alignment.}
+
 \clearpage
 
 

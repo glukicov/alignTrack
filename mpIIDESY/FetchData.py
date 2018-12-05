@@ -15,5 +15,5 @@ files = ( "*.txt", "T*.root", "*.fcl", "*.log", "*.bin")
 
 for i in range(0, len(files)):
 
-	command = "gm2gpvm01:"+str(path)+"/"+str(files[i])
+	command = "gm2gpvm03:"+str(path)+"/"+str(files[i])
 	subprocess.call(["scp", str(command), "." ] )

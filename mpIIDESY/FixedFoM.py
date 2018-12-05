@@ -1,4 +1,17 @@
-#!/usr/bin/python
+####################################################################
+# Run 4 runs of PEDE with M1/M2 - M7/M8 fixed at (0.0, 0.0) 
+# Need to be run from a dir with Data.bin and SteeringFile.txt 
+# from alignment 
+#
+# python3 FixedFoM.py -s 12 
+#
+# or -s 18 for Station 18. FixedTrackerLaunch.py will then
+# produce the plots. 
+#
+# Created: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
+# Modified: 26 November 2018 by Gleb
+#####################################################################
+
 import itertools
 import numpy as np  # smart arrays 
 import subprocess
@@ -6,9 +19,11 @@ import argparse, sys
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-s', '--stationN', help='station number')
+parser.add_argument('-moduleN', '--moduleN', default=8)
 args = parser.parse_args()
 
 stationN = str(args.stationN)
+moduleN = int(args.moduleN) 
 
 label = "S"+str(stationN)
 subprocess.call(["mv" , "PEDE_Mis_art.txt", "BK_PEDE_Mis_art.txt"])
@@ -77,7 +92,7 @@ for i in range (0, len(firstModuleX)):
 	subprocess.call(["/Users/gleb/software/alignTrack/PEDE/pede", "SteeringFile.txt"])
 
 	#Read new alignments and append
-	subprocess.call(["python" , "../../ConcatenatePEDE.py", "-m", "a"])
+	subprocess.call(["python" , "../../ConcatenatePEDE.py", "-m", "a", "-moduleN", str(moduleN)])
 
 	#Keep a copy of the files
 	subprocess.call(["cp" , "ParameterFile.txt", str(fileLabel)+str(i)+"ParameterFile.txt"])
@@ -138,3 +153,5 @@ for i in range (0, len(firstModuleX)):
 
 #Produce FoM
 subprocess.call(["python3", "../../FixedTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN)])
+
+# subprocess.call(["python3", "../../RobustTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN), "-moduleN", str(moduleN)])

@@ -1,6 +1,14 @@
-#!/usr/bin/env python
-
-#Plotter
+####################################################################
+# Input: TrackerAlignment.root analysis-level TFile after alignment
+# Output: Steerable by args 
+#s 
+# e.g. python3 ../../GetOVPUV.py -m -1 -mode plot 
+# Will produce UV Residuals and Residual SD plots 
+# with no (-1) modules removed 
+# 
+# Created: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
+# Modified: 26 November 2018 by Gleb
+#####################################################################
 
 from ROOT import TFile, TStyle, TCanvas, gStyle, TF1
 import matplotlib.pyplot as plt #for plotting 
@@ -234,7 +242,7 @@ if (mode == "plot"):
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pull Mean [error = Error on the Mean]", fontsize=20)
 	plt.xlabel("Layer", fontsize=20)
-	plt.title("Mean pull ( 'z-value' )", fontsize=18)
+	plt.title("Mean pull", fontsize=18)
 	plt.savefig("Pulls_L_Zoom.png")
 
 	#-------LayerResiudals----------
@@ -320,7 +328,7 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual Means ( 'z-value' )", fontsize=18)
+	plt.title("UV Residual Means", fontsize=18)
 	plt.ylabel("Residual Mean [um]", fontsize=18)
 	plt.xlabel("Layer", fontsize=18)
 	plt.savefig("Residuals_L_Zoom.png")
@@ -485,7 +493,7 @@ if (mode == "plot"):
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pull Mean [error = Error on the Mean]", fontsize=20)
 	plt.xlabel("Module", fontsize=20)
-	plt.title("Mean pull ( 'z-value' )", fontsize=18)
+	plt.title("Mean pull", fontsize=18)
 	plt.savefig("Pulls_M_Zoom.png")
 
 	#-------moduleResiudals----------
@@ -570,7 +578,7 @@ if (mode == "plot"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+0.5)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual Means ( 'z-value' )", fontsize=20)
+	plt.title("UV Residual Means", fontsize=20)
 	plt.ylabel("Residual Mean /um [error = Error on the Mean]", fontsize=18)
 	plt.xlabel("Module", fontsize=20)
 	plt.savefig("Residuals_M_Zoom.png")

@@ -2,7 +2,7 @@
 
 #Plotter for tracker data 
 
-from ROOT import *
+from ROOT import TFile, TStyle, TCanvas, gStyle, TF1
 import matplotlib.pyplot as plt #for plotting 
 import numpy as np  # smart arrays 
 import itertools # smart lines 
@@ -44,8 +44,8 @@ layerNamesInitial=np.arange(1, NTotalLayers+1) #1-32
 moduleNames=moduleNamesInitial
 layerNames=layerNamesInitial
 
-print "Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and"
-print len(layerNames), "planes: ", layerNames
+print("Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and")
+print(len(layerNames), "planes: ", layerNames)
 
 if (mode == "plot"):
 
@@ -216,8 +216,8 @@ if (mode == "plot"):
 	plt.savefig("Residuals_L_Zoom.png")
 
 	#----Layer Residual SD 
-	yMin = 120
-	yMax = 200
+	yMin = 80
+	yMax = 180
 	means=[]
 	plt.figure(81)
 	axes = plt.gca()
@@ -283,4 +283,4 @@ if (mode == "plot"):
 
 
 	
-	print "ROOT File analysed!"
+	print("ROOT File analysed!")
