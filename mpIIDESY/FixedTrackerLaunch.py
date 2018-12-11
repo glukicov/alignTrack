@@ -41,6 +41,7 @@ import subprocess
 #Truth Misalignment 
 if (stationN == "10"):
 	expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY  [Station 0]
+	locationStation="lower left"
 
 if (stationN == "12"):
 	expectPars = (1211, 1212, 1221, 1222, 1231, 1232, 1241, 1242, 1251, 1252, 1261, 1262, 1271, 1272, 1281, 1282)  # XY  [Station 12]
@@ -58,8 +59,11 @@ if (stationN == "18"):
 # # print removedPars 
 
 #Truth Misalignment 
-T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
+# T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
 
+# T_mis_C=(0.171, 0.014, -0.271, -0.008, -0.529, 0.059, -0.588, 0.032, -0.595, 0.02, -0.427, -0.006, -0.122, -0.03, 0.256, 0.03) # S12 data run 5 (16367)
+
+T_mis_C=(-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 data run 5 (16367)
 
 moduleN=8
 moduleArray=np.arange(1, moduleN+1) #(1, 2,...,8)
@@ -73,38 +77,38 @@ print("Initial Truth Misalignment [mm]: ", mis_C)
 print("Expected Parameters: ", expectPars)
 input("Correct? [press enter]") 
 
-## ----------------------------
-#Run 1+
-useOffsets = True
+# ## ----------------------------
+# #Run 1+
+# useOffsets = True
 
-# # #Run 16367  :: Run 2
+# # # #Run 16367  :: Run 2
+# # if (stationN == "12"):
+# # 	offsets = (0.106, 0.012, -0.122, -0.009, -0.244, 0.062, -0.249, 0.034, -0.267, 0.021, -0.19, -0.006, -0.052, -0.029, 0.09, 0.032) # S12 Run 2 :: 16367 
+# # if (stationN == "18"):
+# # 	offsets = (0.024, 0.013, 0.024, -0.019, 0.049, 0.113, 0.114, 0.12, 0.03, 0.1, 0.039, 0.167, 0.034, 0.079, -0.101, -0.079) # S18 Run 2 :: 16367 
+
+# # # #Run 16367 :: Run 3 
+# # if (stationN == "12"):
+# # 	offsets = (0.149, 0.013, -0.19, -0.009, -0.382, 0.059, -0.413, 0.032, -0.429, 0.02, -0.309, -0.006, -0.09, -0.029, 0.163, 0.031) # S12 Run 3 :: 16367 
+# # if (stationN == "18"):
+# # 	offsets = (-0.008, 0.014, 0.013, -0.019, 0.058, 0.123, 0.148, 0.131, 0.058, 0.112, 0.071, 0.179, 0.064, 0.086, -0.103, -0.088) # S18 Run 3 :: 16367 
+
+# # # #Run 16367 :: Run 4
+# # if (stationN == "12"):
+# # 	offsets = (0.167, 0.014, -0.237, -0.009, -0.47, 0.06, -0.52, 0.032, -0.531, 0.02, -0.383, -0.007, -0.112, -0.03, 0.217, 0.031) # S12 Run 4 :: 16367 
+# # if (stationN == "18"):
+# # 	offsets = (-0.039, 0.016, 0.001, -0.02, 0.061, 0.123, 0.163, 0.132, 0.077, 0.112, 0.093, 0.18, 0.084, 0.085, -0.093, -0.088) # S18 Run 4 :: 16367 
+
+# # #Run 16367 :: Run 5
 # if (stationN == "12"):
-# 	offsets = (0.106, 0.012, -0.122, -0.009, -0.244, 0.062, -0.249, 0.034, -0.267, 0.021, -0.19, -0.006, -0.052, -0.029, 0.09, 0.032) # S12 Run 2 :: 16367 
+#   offsets = (0.171, 0.014, -0.271, -0.008, -0.529, 0.059, -0.588, 0.032, -0.595, 0.02, -0.427, -0.006, -0.122, -0.03, 0.256, 0.03) # S12 Run 5 :: 16367 
 # if (stationN == "18"):
-# 	offsets = (0.024, 0.013, 0.024, -0.019, 0.049, 0.113, 0.114, 0.12, 0.03, 0.1, 0.039, 0.167, 0.034, 0.079, -0.101, -0.079) # S18 Run 2 :: 16367 
-
-# # #Run 16367 :: Run 3 
-# if (stationN == "12"):
-# 	offsets = (0.149, 0.013, -0.19, -0.009, -0.382, 0.059, -0.413, 0.032, -0.429, 0.02, -0.309, -0.006, -0.09, -0.029, 0.163, 0.031) # S12 Run 3 :: 16367 
-# if (stationN == "18"):
-# 	offsets = (-0.008, 0.014, 0.013, -0.019, 0.058, 0.123, 0.148, 0.131, 0.058, 0.112, 0.071, 0.179, 0.064, 0.086, -0.103, -0.088) # S18 Run 3 :: 16367 
-
-# # #Run 16367 :: Run 4
-# if (stationN == "12"):
-# 	offsets = (0.167, 0.014, -0.237, -0.009, -0.47, 0.06, -0.52, 0.032, -0.531, 0.02, -0.383, -0.007, -0.112, -0.03, 0.217, 0.031) # S12 Run 4 :: 16367 
-# if (stationN == "18"):
-# 	offsets = (-0.039, 0.016, 0.001, -0.02, 0.061, 0.123, 0.163, 0.132, 0.077, 0.112, 0.093, 0.18, 0.084, 0.085, -0.093, -0.088) # S18 Run 4 :: 16367 
-
-# #Run 16367 :: Run 5
-if (stationN == "12"):
-  offsets = (0.171, 0.014, -0.271, -0.008, -0.529, 0.059, -0.588, 0.032, -0.595, 0.02, -0.427, -0.006, -0.122, -0.03, 0.256, 0.03) # S12 Run 5 :: 16367 
-if (stationN == "18"):
-  offsets = (-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 Run 5 :: 16367 
+#   offsets = (-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 Run 5 :: 16367 
 
 
-print("Offsets Run 5 [mm]: ", offsets)
-input("Offsets :: Run 5 correct? [press enter]") 
-# ##----------------------------
+# print("Offsets Run 5 [mm]: ", offsets)
+# input("Offsets :: Run 5 correct? [press enter]") 
+# # ##----------------------------
 
 
 if ( len(offsets) != len(expectPars) ):
@@ -312,10 +316,9 @@ for i_module in range(0, 8):
 
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
-if(stationN=="18"):
-	yMinX = -300
+yMinX = -300
 if(stationN=="12"):
-	yMinX = -500
+	yMinX = -600
 yMaxX = 300
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 8})
@@ -331,16 +334,16 @@ axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 
-#plt.plot(moduleArray, np.array(misX[0]), marker=".", color="red", label="Truth Mis.")
+plt.plot(moduleArray, np.array(misX[0]), marker=".", color="red", label="Truth Mis.")
 if(useOffsets):
 	plt.plot(moduleArray, np.array(offsetsX)*1e3, marker="+", color="black", label="Reco. Mis. (previous iteration)")
 
 for i_module in range(0, 8):
 	line = [[i_module+0.5,yMinX], [i_module+0.5, yMaxX]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-	#print "recoXMean[i_module]=", recoXMean[i_module]
-	if (recoXMeanError[i_module] == 0.0):
-		plt.plot(i_module+1, recoXMean[i_module], marker="*", color=str(colours[4]), markersize=12) # if module was fixed - plot a star 
+	print("recoXMean[i_module]", recoXMean[i_module], "recoXMeanError[i_module]", recoXMeanError[i_module])
+	if (recoXMean[i_module] == 0.0):
+		plt.plot(i_module+1, 0.0, marker="*", color=str(colours[4]), markersize=12) # if module was fixed - plot a star 
 print(moduleArray)
 print(recoXMean)
 plt.errorbar(moduleArray, np.array(recoXMean), yerr=recoXMeanError,  color=str(colours[4]), markersize=12, elinewidth=2, label="Reco. Mis. (this iteration)")
@@ -371,8 +374,9 @@ absMeanRecoMisX_Error = stats.sem(recoXMeanError)
 absMeanTruthMisX = sum( np.absolute( misX[0] ) ) / float( len(misX[0]) ) 
 dAbsMeanX = absMeanTruthMisX - absMeanRecoMisX
 # textStrX = "<|RecoX|>={0}".format(int(round(absMeanRecoMisX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  +" um\n<|TruthX|>={0}".format(int(round(absMeanTruthMisX)))+" um \n<|d(R-T)|>={0}".format(int(round(dAbsMeanX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  + " um\n" 
-textStrX = "<|RecoX|>={0}".format(int(round(absMeanRecoMisX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  +" um"
-plt.text(8.6, 50-100, textStrX, fontsize=8, color=str(colours[4]))
+
+#textStrX = "<|RecoX|>={0}".format(int(round(absMeanRecoMisX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  +" um"
+#plt.text(8.6, 50-100, textStrX, fontsize=8, color=str(colours[4]))
 
 plt.subplots_adjust(right=0.77)
 
@@ -399,15 +403,16 @@ axes2.tick_params(axis='y', which='both', left=True, right=True, direction='inou
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 
-#plt.plot(moduleArray, np.array(misY[0]), marker=".", color="red", label="Truth Mis.")
+plt.plot(moduleArray, np.array(misY[0]), marker=".", color="red", label="Truth Mis.")
 if(useOffsets):
 	plt.plot(moduleArray, np.array(offsetsY)*1e3, marker="+", color="black", label="Reco. Mis. (previous iteration)")
 
 for i_module in range(0, 8):
 	line = [[i_module+0.5,yMinY], [i_module+0.5, yMaxY]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-	if (recoYMeanError[i_module] == 0.0):
-		plt.plot(i_module+1, recoYMean[i_module], marker="*", color=str(colours[4]), markersize=12)
+	print("recoYMean[i_module]", recoYMean[i_module], "recoYMeanError[i_module]", recoYMeanError[i_module])
+	if (recoYMean[i_module] == 0.0):
+		plt.plot(i_module+1, 0.0, marker="*", color=str(colours[4]), markersize=12)
 
 plt.errorbar(moduleArray, np.array(recoYMean), yerr=recoYMeanError[i_module],  color=str(colours[4]), markersize=12, elinewidth=2, label="Reco. Mis. (this iteration)")
 plt.plot(moduleArray, np.array(recoYMean),  marker="+", color=str(colours[4]), markersize=8)
@@ -429,8 +434,9 @@ absMeanRecoMisY_Error = stats.sem(recoYMeanError)
 absMeanTruthMisY = sum( np.absolute( misY[0] ) ) / float( len(misY[0]) ) 
 dAbsMeanY = absMeanTruthMisY - absMeanRecoMisY
 # textStrY = "<|RecoY|>={0}".format(int(round(absMeanRecoMisY)))+ r"$\pm$" + str(int(absMeanRecoMisY_Error))  + " um\n<|TruthY|>={0}".format(int(round(absMeanTruthMisY)))+" um \n<|d(R-T)|>={0}".format(int(round(dAbsMeanY)))+ r"$\pm$" + str(int(absMeanRecoMisY_Error))  + " um\n" 
-textStrY = "<|RecoY|>={0}".format(int(round(absMeanRecoMisY)))+ r"$\pm$" + str(int(absMeanRecoMisY_Error))  + " um"
-plt.text(8.6, 50-100, textStrY, fontsize=8, color=str(colours[4]))
+
+#textStrY = "<|RecoY|>={0}".format(int(round(absMeanRecoMisY)))+ r"$\pm$" + str(int(absMeanRecoMisY_Error))  + " um"
+#plt.text(8.6, 50-100, textStrY, fontsize=8, color=str(colours[4]))
 
 plt.legend(loc=locationStation)
 plt.subplots_adjust(right=0.77)

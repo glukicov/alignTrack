@@ -24,10 +24,10 @@ with open('trackN.txt') as f:
         number_str = line.split()
         trackN = int(number_str[0])
 
-print "Parameters from Simulation:"
-print "moduleN= ",moduleN
-print "trackN= ",trackN
-print "parN= ", parN
+print("Parameters from Simulation:")
+print("moduleN= ",moduleN)
+print("trackN= ",trackN)
+print("parN= ", parN)
 
 label = []
 mis = []
@@ -62,4 +62,4 @@ f.write(str(trackN))
 f.write("\n")
 f.close()  
 
-print "Misalignments, errors, labels and track # appended to PEDE_Mis_art.txt"
+print("Misalignments, errors, labels and track # appended to PEDE_Mis_art.txt")

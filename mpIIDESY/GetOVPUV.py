@@ -896,7 +896,7 @@ if (mode == "mis"):
 		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 		    color = 'green')
 		plt.plot(i_module, float(misX[i_module-1]), marker="+", color="red")
-		mod = read_png('mod.png')
+		#mod = read_png('mod.png')
 		
 		#Add tracker image 
 		# imagebox = OffsetImage(mod, zoom=0.15)
@@ -931,7 +931,7 @@ if (mode == "mis"):
 		    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
 		    color = 'green')
 		plt.plot(i_module, float(misY[i_module-1]), marker="+", color="red")
-		mod = read_png('mod.png')
+		#mod = read_png('mod.png')
 		
 		#Add tracker image 
 		# imagebox = OffsetImage(mod, zoom=0.15)

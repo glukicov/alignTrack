@@ -139,8 +139,8 @@ if (mode == "plot"):
 	#
 	ResidualRMS=[]
 	ResidualRMSError=[]
-	yMin = -350
-	yMax = 350
+	yMin =-200
+	yMax = 200
 	plt.figure(61)
 	axes = plt.gca()
 	for i_module in range(0, NModules):
@@ -175,8 +175,8 @@ if (mode == "plot"):
 	#
 	means=[]
 	MeanErrors=[]
-	yMin = -60
-	yMax = 60
+	yMin = -80
+	yMax = 80
 	plt.figure(71)
 	axes = plt.gca()
 	for i_module in range(0, NModules):
