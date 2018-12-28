@@ -29,7 +29,7 @@ label = "S"+str(stationN)
 subprocess.call(["mv" , "PEDE_Mis_art.txt", "BK_PEDE_Mis_art.txt"])
 
 #####2 Modules######
-if (stationN == "10"):
+if (stationN == "0"):
 	firstModuleX=[1011,  1011, 1021, 1021]
 	firstModuleY=[1012,  1012, 1022, 1022]
 	secondModuleX=[1071, 1081, 1071, 1081]

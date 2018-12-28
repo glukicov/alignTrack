@@ -39,7 +39,7 @@ import subprocess
 
 
 #Truth Misalignment 
-if (stationN == "10"):
+if (stationN == "0"):
 	expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY  [Station 0]
 	locationStation="lower left"
 
@@ -63,7 +63,11 @@ if (stationN == "18"):
 
 # T_mis_C=(0.171, 0.014, -0.271, -0.008, -0.529, 0.059, -0.588, 0.032, -0.595, 0.02, -0.427, -0.006, -0.122, -0.03, 0.256, 0.03) # S12 data run 5 (16367)
 
-T_mis_C=(-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 data run 5 (16367)
+# T_mis_C=(-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 data run 5 (16367)
+
+ # T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.5, -0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S12: MDC1 large 
+T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S18: MDC1 large 
+
 
 moduleN=8
 moduleArray=np.arange(1, moduleN+1) #(1, 2,...,8)
@@ -319,7 +323,7 @@ spacing = [2, 3.5, 4.5, 5.5, 6.5]
 yMinX = -300
 if(stationN=="12"):
 	yMinX = -600
-yMaxX = 300
+yMaxX = 1100
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 8})
 axes = plt.gca()
@@ -385,7 +389,7 @@ plt.xticks(fontsize=8, rotation=0)
 plt.yticks(fontsize=8, rotation=0)
 plt.xlabel("Module", fontsize=8)
 
-plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
+# plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
 
 plt.subplot(212) # Y 
 yMaxY = 300
