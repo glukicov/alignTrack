@@ -23,7 +23,7 @@ for i_trial in range(0, trialN):
     fhiclPath = "/gm2/app/users/glukicov/TrackerAlignment/gm2Dev_v9_14_00/srcs/gm2tracker/align/Systematics/"+str(misalignment)+"/"+str(i_trial+1)+"/RunTrackingDAQ.fcl"
     outDir = "/pnfs/GM2/scratch/users/glukicov/Systematics/"+str(misalignment)+"/"+str(i_trial+1)
 
-    subprocess.call(["./gridSetupAndSubmitGM2Data.sh", "--daq", "--reco", "--fhiclFile="+str(fhiclPath), "--localArea", "--output-dir="+outDir, "--sam-dataset=Align_15922_unpacked", "--njobs=490", "--offsite" ])    
+    subprocess.call(["./gridSetupAndSubmitGM2Data.sh", "--daq", "--reco", "--fhiclFile="+str(fhiclPath), "--localArea", "--output-dir="+str(outDir), "--sam-dataset=Align_15922_unpacked", "--njobs=490", "--offsite" ])    
 
 
 print(str(trialN)+" jobs submitted to the grid!")
