@@ -78,6 +78,7 @@ for i_trial in range(0, trialN):
     # print("rad", radialOffsetPerModule)
     # print("ver", verticalOffsetPerModule)
 
+    '''
     #for each trial: (1) create new dir and (2) copy the FHICL file there 
     subprocess.call(["mkdir" , str(i_trial+1)])
     subprocess.call(["cp" , str(outFile), str(i_trial+1)+"/"])
@@ -97,6 +98,7 @@ for i_trial in range(0, trialN):
     f.write( str( round(verticalOffsetPerModule[-1]*1e-3, 3) ) )
     f.write(" ]\n")
     f.close()
+    '''
 
 ## plot for all trials
 plt.subplot(211) 
@@ -104,19 +106,25 @@ bins = np.linspace(-200, 200, 50)
 plt.hist(MeanMisX, bins, alpha=0.5, label='<X>')
 plt.hist(MeanMisY, bins, alpha=0.5, label='<Y>')
 plt.legend(loc='upper right', title="<Misalignment>")
+plt.text(120, 1, "Entries X: "+str(len(MeanMisX))+"\nMean X: "+str(round(np.mean(MeanMisX),3))+"\nSD X: "+str(round(np.std(MeanMisX),3)), bbox=dict(facecolor='green', alpha=0.5))
+plt.text(20, 1, "Entries Y: "+str(len(MeanMisY))+"\nMean Y: "+str(round(np.mean(MeanMisY),3))+"\nSD Y: "+str(round(np.std(MeanMisY),3)), bbox=dict(facecolor='red', alpha=0.5))
 plt.xlabel("Mean [um]", fontsize=10)
 plt.subplots_adjust(bottom=0.1)
 
-plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
+plt.tight_layout(pad=0.4, w_pad=0.4, h_pad=1.0)
 
 plt.subplot(212) 
 bins = np.linspace(0, 300, 50)
 plt.hist(SDMisX, bins, alpha=0.5, label='SD(X)')
 plt.hist(SDMisY, bins, alpha=0.5, label='SD(Y)')
 plt.legend(loc='upper right', title="Misalignment SD")
+plt.text(240, 2, "Entries X: "+str(len(SDMisX))+"\nMean X: "+str(round(np.mean(SDMisX),3))+"\nSD X: "+str(round(np.std(SDMisX),3)), bbox=dict(facecolor='green', alpha=0.5))
+plt.text(165, 2, "Entries Y: "+str(len(SDMisY))+"\nMean Y: "+str(round(np.mean(SDMisY),3))+"\nSD Y: "+str(round(np.std(SDMisY),3)), bbox=dict(facecolor='red', alpha=0.5))
 plt.xlabel("Standard Deviation [um]", fontsize=10)
 
 plt.subplots_adjust(bottom=0.1)
+plt.subplots_adjust(left=0.1)
+plt.subplots_adjust(hspace=0.35)
 plt.savefig(str(misalignment)+"_stats.png", dpi=600)
 # plt.show()
 
