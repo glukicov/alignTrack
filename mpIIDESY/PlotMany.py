@@ -24,7 +24,7 @@ for i_trial in range(0, trialN):
     scrDir = "/pnfs/GM2/scratch/users/glukicov/Systematics/"+str(misalignment)+"/"+str(i_trial+1)+"/*/data/gm2tracker*.root"
     outDir = "/pnfs/GM2/scratch/users/glukicov/Systematics_Plots/"+str(misalignment)+"/"+str(i_trial+1)+"/"
 
-    subprocess.call(["./gridSetupAndSubmitGM2Data.sh", "--daq", "--ana", "--fhiclFile="+str(fhiclPath), "--localArea", "--output-dir="+str(outDir), "--sam-dataset=Align_"+str(misalignment)+"_"+str(i_trial+1)", "--njobs=1", "--offsite" ])    
+    subprocess.call(["./gridSetupAndSubmitGM2Data.sh", "--daq", "--ana", "--fhiclFile="+str(fhiclPath), "--localArea", "--output-dir="+str(outDir), "--sam-dataset=Align_"+str(misalignment)+"_"+str(i_trial+1), "--njobs=100", "--offsite" ])    
 
 
 print(str(trialN)+" jobs submitted to the grid!")

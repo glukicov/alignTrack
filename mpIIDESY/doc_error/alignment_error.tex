@@ -1,0 +1,103 @@
+\documentclass[a4paper,11pt]{article}  
+\pagestyle{plain}
+\usepackage{siunitx, dirtytalk, hyperref, nicefrac, mathtools} 
+\usepackage{graphicx,sectsty,longtable,tocloft,color,pdfpages,sidecap,subfig,array,eurosym}
+ \captionsetup[figure]{labelfont={bf},name={Fig.},labelsep=period}
+
+%\usepackage{refcheck} % places ??? for unused references in the PDF
+
+\usepackage[english]{babel}
+% smaller vertical spacing between references in bibliography
+\let\OLDthebibliography\thebibliography
+\renewcommand\thebibliography[1]{
+  \OLDthebibliography{#1}
+  \setlength{\parskip}{0pt}
+  \setlength{\itemsep}{0pt plus 0.3ex}
+}\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+%
+% 2cm page margins (for A4)
+%
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\tolerance = 1000
+\parindent 0cm
+\parskip 2mm
+%
+% Section headings in Arial
+%
+\allsectionsfont{\sffamily}
+%% Customise table of contents behaviour
+\tocloftpagestyle{empty}
+\renewcommand{\contentsname}{Table of Contents}
+\renewcommand{\cfttoctitlefont}{\LARGE\bf\sffamily} 
+% Add some width so section label A1.2.3.4 doesn't overlap with section title
+\addtolength{\cftsecnumwidth}{3em}
+\addtolength{\cftsubsecnumwidth}{3em}
+\addtolength{\cftsubsubsecnumwidth}{3em}
+%
+% Some commonly used definitions
+%
+\def\urltilda{\kern -.15em\lower .7ex\hbox{\~{}}\kern .04em}
+\def\urldot{\kern -.10em.\kern -.10em}
+\def\urlhttp{http\kern -.10em\lower -.1ex\hbox{:}\kern -.12em\lower 0ex\hbox{/}\kern -.18em\lower 0ex\hbox{/}}
+\def\xilinx{{\small\tt XILINX}}
+\def\quarter{{$\frac{1}{4}$}}
+\def\half{{$\frac{1}{2}$}}
+\def\gm2{{\tt g-2}}
+\def\geant{{\tt GEANT}}
+\def\art{{\it art}}
+\newcommand{\mue[1]}{{\tt Mu{#1}e}}
+\newcommand{\gbp[1]}{\pounds\kern 0.08333em{#1}}
+\newcommand{\eu[1]}{\euro\kern 0.08333em{#1}}
+\newcommand{\usd[1]}{\$\kern 0.08333em{#1}}
+%
+\begin{document}
+\pagenumbering{roman}
+\thispagestyle{empty}
+\begin{titlepage}
+\begin{center}
+    %\includegraphics[width=\textwidth]{fig/logo.png}
+\end{center}
+\begin{center}
+    \vspace{1cm}
+    {\huge \textbf{Alignment Uncertainty:} \\ \textit{Estimating the Contribution of the Alignment to the Beam Extrapolation and the CBO} }\\
+    \vspace{1.5cm}
+    {\Huge \textbf{ DRAFT }}\\
+    \vspace{6cm}
+    {\LARGE\bf Gleb Lukicov}\\
+    {\Large University College London}
+    \vspace{4cm}
+    \vfill
+    \vspace{0.9cm}
+    {\large January 18, 2019}
+\end{center}
+\end{titlepage}
+\clearpage
+
+\pagenumbering{arabic}
+\thispagestyle{plain}
+
+\clearpage
+\section{Introduction}
+
+In order for the tracking detector to reduce the systematic uncertainty on the $a_{\mu}$ measurement and improve the sensitivity to a muon EDM, the absolute position of the tracking modules must be known to a high level of precision. Individual straw effects such as reduced wire tension, can affect different straws in a different way. Therefore, a physics-level (i.e.~track-based) alignment, that considers such effects, is required. Track-based alignment is implemented with data from Run 1 using the \texttt{Millepede II} framework~\cite{mp2}. A Monte Carlo (MC) simulation was developed to understand the detector geometry and how this affects how well the alignment can be determined, as well as to test the alignment procedure itself. The beam extrapolation (as shown in Fig.~\ref{fig:beamSpot}.b) will also greatly benefit from the internal alignment of the tracker.
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[height=6 cm]{fig/beamSpot}
+    \vspace{-8pt}
+    \caption{Reconstructed radial and vertical beam position from tracks that have been extrapolated back to their decay position.}
+    \label{fig:beamSpot}
+\end{figure}
+
+
+
+
+\clearpage
+
+
+\nocite{*}
+\thispagestyle{plain}
+\input{ref.tex}
+\addcontentsline{toc}{chapter}{\numberline{}\sf\bfseries{References}}
+\end{document}
