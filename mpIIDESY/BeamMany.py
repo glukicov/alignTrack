@@ -11,33 +11,99 @@ from ROOT import TFile, TStyle, TCanvas, gStyle, TF1, TPaveStats, gPad
 from scipy import stats
 import matplotlib.pyplot as plt 
 from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import FormatStrFormatter
 import matplotlib.ticker as ticker
 import numpy as np
 from scipy import stats
 import itertools
+import re
+import pandas as pd
+from ROOT import TH1F, TH2F, TF1, TCanvas, TStyle, gROOT, gStyle, TColor 
 
+def SetMyStyle():
+  print("\n ~/rootlogon.C loaded with !!4 sig.fig.!! for custom Opt Fit and Stat!\n")
+  MyStyle = myStyle()
+  gROOT.SetStyle("MyStyle")
+  gROOT.ForceStyle()
+
+
+def myStyle():
+  myStyle  = TStyle("MyStyle", "My Root Styles")
+  #Canvas
+  myStyle.SetCanvasBorderMode(0)  # Transparent
+  myStyle.SetCanvasColor(0) # Transparent 
+  #Paper, Pad, Palette, Frame
+  myStyle.SetPadBorderMode(0) # Transparent 
+  myStyle.SetPadColor(0) # Transparent 
+  myStyle.SetPalette(1) # Default 
+  myStyle.SetFrameBorderMode(1) # Border
+   # Axis 
+  myStyle.SetLabelSize(0.04, "xyz") # size of axis values
+  myStyle.SetTitleSize(0.04, "xyz")
+  myStyle.SetPadTickX(1)
+  myStyle.SetPadTickY(1)
+  # Title 
+  myStyle.SetTitleColor(1) # Black 
+  myStyle.SetTitleStyle(0) # Transparent 
+  myStyle.SetTitleBorderSize(0) # Transparent
+  myStyle.SetTitleY(0.97) # Set y-position (fraction of pad size)
+  myStyle.SetTitleX(0.4) # Set x-position (fraction of pad size)
+  # #Stat box dimensions, position and style 
+  myStyle.SetStatY(0.89) # Set y-position (fraction of pad size)
+  myStyle.SetStatX(0.89) # Set x-position (fraction of pad size)
+  myStyle.SetStatW(0.36) # Set width of stat-box (fraction of pad size)
+  myStyle.SetStatH(0.12) # Set height of stat-box (fraction of pad size)
+  myStyle.SetStatStyle(0) # Transparent 
+  myStyle.SetStatColor(0)  # Transparent
+  myStyle.SetStatBorderSize(1) # Transparent
+  # Histo Filling (visual)
+  myStyle.SetHistFillColor(8)
+  myStyle.SetHistFillStyle(3014)      
+  # Stats display options 
+  #myStyle.SetOptStat("ourRmMe") #over/under -flows, Rms and Means with errors, number of entries
+  myStyle.SetOptStat("neouRM") #over/under -flows, Rms and Means with errors, number of entries
+  myStyle.SetOptFit(1111)  #probability, Chi2, errors, name/values of parameters
+  myStyle.SetStatFormat("11.4f")  # 4 sig.fig, f=float
+
+  return myStyle
+
+
+def getOffsets(f, name):
+    offsets = [] #tmp storage buffer 
+    for line in f:
+        if re.match(name, line):
+            copy = True
+            offsets=line 
+
+        else:
+            copy = False
+
+    return offsets   
+
+SetMyStyle()
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument("-mis", "--mis") # offset scale (SD) [um]
-parser.add_argument("-trialN", "--trialN") # number of iterations
-parser.add_argument("-mode", "--mode") # offset scale (SD) [um]
-parser.add_argument("-dof", "--dof") # radial, vertical or both 
-parser.add_argument("-shift", "--shift") # offset scale (mean) [um]
+parser.add_argument("-shift", "--shift") # offset mean shift (mean) [um]
+parser.add_argument("-sign", "--sign") # offset sign
+parser.add_argument("-trialN", "--trialN", nargs='?', type=int, default=25) # number of iterations
+parser.add_argument("-mode", "--mode", nargs='?', type=str, default="U") # offset scale (SD) [um]
+parser.add_argument("-dof", "--dof", nargs='?', type=str, default="B") # radial, vertical or both 
 args = parser.parse_args()
 
 # CONSTANTS 
 trialN = int(args.trialN) 
-misalignment = int(args.mis)
-shift = int(args.shift) 
 mode = str(args.mode)
 dof=str(args.dof)
+misalignment = int(args.mis)
+shift = int(args.shift) 
+sign=str(args.sign)
 
-
-dirName=str(shift)+"_Off_"+str(misalignment)+"_Mis_"+str(mode)+"_"+str(dof)
+dirName=str(sign)+str(shift)+"_Off_"+str(misalignment)+"_Mis_"+str(mode)+"_"+str(dof)
 
 
 station12Path = "Extrapolation/vertices/station12/pValue>0.005_and_noVolumesHit/"
 station18Path = "Extrapolation/vertices/station18/pValue>0.005_and_noVolumesHit/"
-plotNames=["h_radialPos", "h_verticalPos"]
+plotNames=["h_radialPos_vs_time", "h_verticalPos_vs_time"]
 
 
 #Global containers
@@ -60,45 +126,99 @@ RMS_S18_ver_error=[]
 cases=[]
 
 #First take the reference nominal point "0"
-scr = "trackRecoPlots.root"
-# scr = "/gm2/app/users/glukicov/TrackerAlignment/gm2Dev_v9_14_00/srcs/gm2tracker/align/Systematics/nominalAlign/trackRecoPlots.root"
+scr = "/Users/gleb/software/alignTrack/mpIIDESY/Systematics_ana/nominal/trackRecoPlots.root"
+# scr = str(os.environ['MRB_SOURCE'])+"/gm2tracker/align/Systematics/nominalAlign/trackRecoPlots.root"
 scrFile = TFile.Open(scr)
 
-#open the histos
-s12_rad = scrFile.Get(str(station12Path)+plotNames[0])
-s18_rad = scrFile.Get(str(station18Path)+plotNames[0])
-s12_ver = scrFile.Get(str(station12Path)+plotNames[1])
-s18_ver = scrFile.Get(str(station18Path)+plotNames[1])
+#open the TH2F histos
+s12_rad_2D = scrFile.Get(str(station12Path)+plotNames[0])
+s18_rad_2D = scrFile.Get(str(station18Path)+plotNames[0])
+s12_ver_2D = scrFile.Get(str(station12Path)+plotNames[1]) 
+s18_ver_2D = scrFile.Get(str(station18Path)+plotNames[1])
 
+# Apply 30 us time cut 
+
+first_bin = s12_rad_2D.FindBin(30.0, 0, 0) 
+s12_rad = s12_rad_2D.ProjectionY("", 200, -1)
+
+first_bin = s18_rad_2D.FindFirstBinAbove(30.0 ,2) 
+s18_rad = s18_rad_2D.ProjectionY("", 200, -1)
+
+first_bin = s12_ver_2D.FindFirstBinAbove(30.0 ,2) 
+s12_ver = s12_ver_2D.ProjectionY("", 200, -1)
+
+first_bin = s18_ver_2D.FindFirstBinAbove(30.0 ,2) 
+s18_ver = s18_ver_2D.ProjectionY("", 200, -1)
+
+####### FITTING ###########
+
+
+# Vertical 
+s12_ver.GetXaxis().SetRangeUser(-30, 30)
+s18_ver.GetXaxis().SetRangeUser(-30, 30)
+
+gF = TF1("gF", "gaus", -30, 30)
+
+s12_ver.Fit(gF, "Q")
+S12_ver.append(gF.GetParameter(1))
+S12_ver_error.append(gF.GetParError(1))
+RMS_S12_ver.append(gF.GetParameter(2))
+RMS_S12_ver_error.append(gF.GetParError(2))
+
+s18_ver.Fit(gF, "Q")
+S18_ver.append(gF.GetParameter(1))
+S18_ver_error.append(gF.GetParError(1))
+RMS_S18_ver.append(gF.GetParameter(2))
+RMS_S18_ver_error.append(gF.GetParError(2))
+
+
+#Radial
 s12_rad.GetXaxis().SetRangeUser(-70, 70) # cutting out tails 
 s18_rad.GetXaxis().SetRangeUser(-70, 70)
-s12_ver.GetXaxis().SetRangeUser(-70, 70)
-s18_ver.GetXaxis().SetRangeUser(-70, 70)
-
 S12_rad.append(s12_rad.GetMean())
-S12_ver.append(s12_ver.GetMean())
 S18_rad.append(s18_rad.GetMean())
-S18_ver.append(s18_ver.GetMean())
 S12_rad_error.append(s12_rad.GetMeanError())
-S12_ver_error.append(s12_ver.GetMeanError())
 S18_rad_error.append(s18_rad.GetMeanError())
-S18_ver_error.append(s18_ver.GetMeanError())
 RMS_S12_rad.append(s12_rad.GetRMS())
-RMS_S12_ver.append(s12_ver.GetRMS())
 RMS_S18_rad.append(s18_rad.GetRMS())
-RMS_S18_ver.append(s18_ver.GetRMS())
 RMS_S12_rad_error.append(s12_rad.GetRMSError())
-RMS_S12_ver_error.append(s12_ver.GetRMSError())
 RMS_S18_rad_error.append(s18_rad.GetRMSError())
-RMS_S18_ver_error.append(s18_ver.GetRMSError())
+
+
+####### FITTING ###########
+# s12_ver.GetXaxis().SetRangeUser(-70, 70)
+# s18_ver.GetXaxis().SetRangeUser(-70, 70)
+#S12_ver.append(s12_ver.GetMean())
+#S18_ver.append(s18_ver.GetMean())
+#S12_ver_error.append(s12_ver.GetMeanError())
+#S18_ver_error.append(s18_ver.GetMeanError())
+# RMS_S12_ver.append(s12_ver.GetRMS())
+# RMS_S18_ver.append(s18_ver.GetRMS())
+# RMS_S12_ver_error.append(s12_ver.GetRMSError())
+# RMS_S18_ver_error.append(s18_ver.GetRMSError())
+
+
 cases.append(int(0))
 
+
+Mis_SD_rad=[]
+Mis_Mean_rad=[]
+dS_all_rad=[]
+dM_all_rad=[]
+dS_all_ver=[]
+dM_all_ver=[]
 
 #Fil containers in a loop 
 for i_trial in range(0, trialN):
 
-    #scr = str(i_trial+1)+"/trackRecoPlots.root"
-    scr = "/pnfs/GM2/scratch/users/glukicov/Systematics_Plots_new/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
+    print("i_trial=", i_trial)
+    # if (i_trial==5 or i_trial==11 or i_trial==12):
+    #     continue
+
+    # scr = "Systematics_ana/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
+    scr = "/Users/gleb/software/alignTrack/mpIIDESY/Systematics_ana/Global/trackRecoPlots.root"
+    #scr = "/pnfs/GM2/scratch/users/glukicov/Systematics_ana/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
+    # scr = "/pnfs/GM2/scratch/users/glukicov/Global/trackRecoPlots.root"
 
     #Check file exists
     scrFilePresent=os.path.isfile(str(scr))
@@ -106,36 +226,89 @@ for i_trial in range(0, trialN):
       
     if(scrFilePresent):
         scrFile = TFile.Open(scr)
-        #open the histos
-        s12_rad = scrFile.Get(str(station12Path)+plotNames[0])
-        s18_rad = scrFile.Get(str(station18Path)+plotNames[0])
-        s12_ver = scrFile.Get(str(station12Path)+plotNames[1])
-        s18_ver = scrFile.Get(str(station18Path)+plotNames[1])
+            #open the TH2F histos
+        s12_rad_2D = scrFile.Get(str(station12Path)+plotNames[0])
+        s18_rad_2D = scrFile.Get(str(station18Path)+plotNames[0])
+        s12_ver_2D = scrFile.Get(str(station12Path)+plotNames[1]) 
+        s18_ver_2D = scrFile.Get(str(station18Path)+plotNames[1])
 
+
+        ####### FITTING ###########
+
+        first_bin = s12_rad_2D.FindFirstBinAbove(30.0 ,2) 
+        s12_rad = s12_rad_2D.ProjectionY("", first_bin, -1)
+
+        first_bin = s18_rad_2D.FindFirstBinAbove(30.0 ,2) 
+        s18_rad = s18_rad_2D.ProjectionY("", first_bin, -1)
+
+        first_bin = s12_ver_2D.FindFirstBinAbove(30.0 ,2) 
+        s12_ver = s12_ver_2D.ProjectionY("", first_bin, -1)
+
+        first_bin = s18_ver_2D.FindFirstBinAbove(30.0 ,2) 
+        s18_ver = s18_ver_2D.ProjectionY("", first_bin, -1)
+
+
+        # Vertical 
+        s12_ver.GetXaxis().SetRangeUser(-30, 30)
+        s18_ver.GetXaxis().SetRangeUser(-30, 30)
+
+        gF = TF1("gF", "gaus", -30, 30)
+
+        s12_ver.Fit(gF, "Q")
+        S12_ver.append(gF.GetParameter(1))
+        S12_ver_error.append(gF.GetParError(1))
+        RMS_S12_ver.append(gF.GetParameter(2))
+        RMS_S12_ver_error.append(gF.GetParError(2))
+
+        s18_ver.Fit(gF, "Q")
+        S18_ver.append(gF.GetParameter(1))
+        S18_ver_error.append(gF.GetParError(1))
+        RMS_S18_ver.append(gF.GetParameter(2))
+        RMS_S18_ver_error.append(gF.GetParError(2))
+
+        #Radial
         s12_rad.GetXaxis().SetRangeUser(-70, 70) # cutting out tails 
         s18_rad.GetXaxis().SetRangeUser(-70, 70)
-        s12_ver.GetXaxis().SetRangeUser(-70, 70)
-        s18_ver.GetXaxis().SetRangeUser(-70, 70) 
-
         S12_rad.append(s12_rad.GetMean())
-        S12_ver.append(s12_ver.GetMean())
         S18_rad.append(s18_rad.GetMean())
-        S18_ver.append(s18_ver.GetMean())
         S12_rad_error.append(s12_rad.GetMeanError())
-        S12_ver_error.append(s12_ver.GetMeanError())
         S18_rad_error.append(s18_rad.GetMeanError())
-        S18_ver_error.append(s18_ver.GetMeanError())
         RMS_S12_rad.append(s12_rad.GetRMS())
-        RMS_S12_ver.append(s12_ver.GetRMS())
         RMS_S18_rad.append(s18_rad.GetRMS())
-        RMS_S18_ver.append(s18_ver.GetRMS())
         RMS_S12_rad_error.append(s12_rad.GetRMSError())
-        RMS_S12_ver_error.append(s12_ver.GetRMSError())
         RMS_S18_rad_error.append(s18_rad.GetRMSError())
-        RMS_S18_ver_error.append(s18_ver.GetRMSError())
-        cases.append(int(i_trial+1)) #already have the 1st element from nominal 
-    
-    #if doesn't exist, move on to the next case 
+
+
+        ####### FITTING ###########
+        # s12_ver.GetXaxis().SetRangeUser(-70, 70)
+        # s18_ver.GetXaxis().SetRangeUser(-70, 70)
+        #S12_ver.append(s12_ver.GetMean())
+        #S18_ver.append(s18_ver.GetMean())
+        #S12_ver_error.append(s12_ver.GetMeanError())
+        #S18_ver_error.append(s18_ver.GetMeanError())
+        # RMS_S12_ver.append(s12_ver.GetRMS())
+        # RMS_S18_ver.append(s18_ver.GetRMS())
+        # RMS_S12_ver_error.append(s12_ver.GetRMSError())
+        # RMS_S18_ver_error.append(s18_ver.GetRMSError())
+
+        cases.append(int(i_trial+1)) #already have the 1st element from nominal
+
+        
+        # #file = "Systematics_reco/"+str(dirName)+"/"+str(i_trial+1)+"/RunTrackingDAQ.fcl"
+        # file = str(os.environ['MRB_SOURCE'])+"/gm2tracker/align/Systematics_reco/"+str(dirName)+"/"+str(i_trial+1)+"/RunTrackingDAQ.fcl"
+
+        # f=open(file, "r")
+        # radial = (getOffsets(f, "services.Geometry.strawtracker.radialOffsetPerModule:"))
+        # radial = radial.replace("services.Geometry.strawtracker.radialOffsetPerModule: [", " ") 
+        # radial = radial.replace("]", "") 
+        # radialOff = np.array([float(r) for r in radial.split(',')])
+        # radialOff=radialOff[8:16] 
+        # radialOff=radialOff*1e3 # mm -> um 
+
+        # Mis_SD_rad.append(int(np.std(radialOff))) # to the nearest um 
+        # Mis_Mean_rad.append(int(np.mean(radialOff)))
+
+        #if doesn't exist, move on to the next case 
     else:
         continue
 
@@ -154,8 +327,14 @@ color=("purple", "orange")
 #New containers for the mean values 
 S_rad_mean = []
 S_rad_error_mean = []
+S_rad_max = []
+S_rad_error_max = []
+
 S_ver_mean = []
 S_ver_error_mean = []
+S_ver_max = []
+S_ver_error_max = []
+
 
 #Fill Plots MEAN 
 plt.figure(1) 
@@ -163,19 +342,14 @@ plt.figure(1)
 plt.subplot(211) # RADIAL 
 axes=plt.gca()
 axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
 axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
 
 for i in range(0, 2):
-    avgMean=np.mean(S_rad[i][1:]) # compute mean for offset cases only
-    avgMeanError=stats.sem(S_rad[i][1:])
-    S_rad_mean.append(avgMean)
-    S_rad_error_mean.append(avgMeanError)
     line = [[0,S_rad[i][0]], [trialN+1, S_rad[i][0]]]  # put line at mean position 
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = str(color[i]), linestyle="--") # plot the line 
-    # line = [[1,avgMean], [trialN+1, avgMean]]  # put line at mean position 
-    # plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="--") # plot the line 
-    # plt.text(trialN-3, avgMean+0.02, str(round(avgMean, 3))+r" $\pm$ "+ str(round(avgMeanError,3)), fontsize=9) # plot the mean value above line 
-    plt.text(trialN-2, S_rad[i][0]+0.02, str(round(S_rad[i][0], 3))+r" $\pm$ "+str(round(S_rad_error[i][0],3)), fontsize=9) # plot the reference value 
+    plt.text(0, S_rad[i][0]+0.02, str(round(S_rad[i][0], 3))+r" $\pm$ "+str(round(S_rad_error[i][0],3)), fontsize=9) # plot the reference value 
+    plt.text(trialN, S_rad[i][trialN]+0.02, str(round(S_rad[i][trialN], 3))+r" $\pm$ "+str(round(S_rad_error[i][trialN],3)), fontsize=9) # plot the reference value 
     plt.scatter(cases, S_rad[i],  marker="+", color=str(color[i])) # plot all cases and reference points 
     plt.errorbar(cases, S_rad[i], yerr=S_rad_error[i],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i])) # add error bar
 
@@ -191,19 +365,14 @@ plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
 plt.subplot(212) # VERTICAL 
 axes=plt.gca()
 axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
 axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
 
 for i in range(0, 2):
-    avgMean=np.mean(S_ver[i][1:]) # compute mean for offset cases only 
-    avgMeanError=stats.sem(S_ver[i][1:])
-    S_ver_mean.append(avgMean)
-    S_ver_error_mean.append(avgMeanError)
     line = [[0,S_ver[i][0]], [trialN+1, S_ver[i][0]]]
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--")
-    # line = [[1,avgMean], [trialN+1, avgMean]]
-    # plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="--")
-    #plt.text(trialN-3, avgMean+0.02, str(round(avgMean,3))+r" $\pm$ "+str(round(avgMeanError,3)), fontsize=9)
-    plt.text(trialN-2, S_ver[i][0]+0.02, str(round(S_ver[i][0], 3))+r" $\pm$ "+str(round(S_ver_error[i][0],3)), fontsize=9)
+    plt.text(0, S_ver[i][0]+0.02, str(round(S_ver[i][0], 3))+r" $\pm$ "+str(round(S_ver_error[i][0],3)), fontsize=9)
+    plt.text(trialN, S_ver[i][trialN]+0.02, str(round(S_ver[i][trialN], 3))+r" $\pm$ "+str(round(S_ver_error[i][trialN],3)), fontsize=9)
     plt.scatter(cases, S_ver[i],  marker="+", color=str(color[i]))
     plt.errorbar(cases, S_ver[i], yerr=S_ver_error[i],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i]))
 
@@ -218,33 +387,20 @@ plt.subplots_adjust(right=0.9)
 
 plt.savefig("Mean_"+str(dirName)+".png", dpi=600)
 
-print(str(trialN)+" cases analysed!")
 
-print("For the case of misalignment with SD of "+str(misalignment)+" um.")
-#Print final results
-print("Radial Shifts:")
-for i in range(0, 2):
-    # print("Mean Radial Position [mm] "+str(label[i])+ ": ", str(round(S_rad_mean[i], 3))+r" $\pm$ "+ str(round(S_rad_error_mean[i],3)) )
-    # print("Reference Radial Position [mm] "+str(label[i])+ ": ", str(round(S_rad[i][0], 3))+r" $\pm$ "+str(round(S_rad_error[i][0],3)) )
-    value = S_rad_mean[i] - S_rad[i][0] 
-    error = np.sqrt( S_rad_error_mean[i]**2 +  S_rad_error[i][0]**2 )
-    # print(r"$\Delta$ Radial Position [mm] "+str(label[i])+ ": ", str(round(value, 3))+r" $\pm$ "+str(round(error,3)) )
-    print(r"$\Delta$ Radial Position [um] "+str(label[i])+ ": ", str(round(value*1e3, 3))+" +/- "+str(round(error*1e3,3)) )
-
-    print("Vertical Shifts:")
-for i in range(0, 2):
-    # print("Mean Vertical Position [mm] "+str(label[i])+ ": ", str(round(S_ver_mean[i], 3))+r" $\pm$ "+ str(round(S_ver_error_mean[i],3)) )
-    # print("Reference Vertical Position [mm] "+str(label[i])+ ": ", str(round(S_ver[i][0], 3))+r" $\pm$ "+str(round(S_ver_error[i][0],3)) )
-    value = S_ver_mean[i] - S_ver[i][0] 
-    error = np.sqrt( S_ver_error_mean[i]**2 +  S_ver_error[i][0]**2 )
-    # print(r"$\Delta$ Vertical Position [mm] "+str(label[i])+ ": ", str(round(value, 3))+r" $\pm$ "+str(round(error,3)) )
-    print(r"$\Delta$ Vertical Position [um] "+str(label[i])+ ": ", str(round(value*1e3, 3))+" +/- "+str(round(error*1e3,3)) )
 
 #New containers for the mean values 
 RMS_S_rad_mean = []
 RMS_S_rad_error_mean = []
+RMS_S_rad_max = []
+RMS_S_rad_error_max = []
+
 RMS_S_ver_mean = []
 RMS_S_ver_error_mean = []
+RMS_S_ver_max = []
+RMS_S_ver_error_max = []
+
+
 
 #Fill Plots SD 
 plt.figure(2) 
@@ -252,24 +408,19 @@ plt.figure(2)
 plt.subplot(211) # RADIAL 
 axes=plt.gca()
 axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
 axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
 
 for i in range(0, 2):
-    avgMean=np.mean(RMS_S_rad[i][1:]) # compute mean for offset cases only
-    avgMeanError=stats.sem(RMS_S_rad[i][1:])
-    RMS_S_rad_mean.append(avgMean)
-    RMS_S_rad_error_mean.append(avgMeanError)
-    line = [[1,RMS_S_rad[i][0]], [trialN+1, RMS_S_rad[i][0]]]  # put line at mean position 
-    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-") # plot the line 
-    #line = [[1,avgMean], [trialN+1, avgMean]]  # put line at mean position 
-    #plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="--") # plot the line 
-    #plt.text(trialN-3, avgMean+0.02, str(round(avgMean, 3))+r" $\pm$ "+ str(round(avgMeanError,3)), fontsize=9) # plot the mean value above line 
+    line = [[0,RMS_S_rad[i][0]], [trialN+1, RMS_S_rad[i][0]]]  # put line at mean position 
+    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--") 
     plt.text(0, RMS_S_rad[i][0]+0.02, str(round(RMS_S_rad[i][0], 3))+r" $\pm$ "+str(round(RMS_S_rad_error[i][0],3)), fontsize=9) # plot the reference value 
+    plt.text(trialN, RMS_S_rad[i][trialN]+0.02, str(round(RMS_S_rad[i][trialN], 3))+r" $\pm$ "+str(round(RMS_S_rad_error[i][trialN],3)), fontsize=9) # plot the reference value 
     plt.scatter(cases, RMS_S_rad[i],  marker="+", color=str(color[i])) # plot all cases and reference points 
-    plt.errorbar(cases, RMS_S_rad[i], yerr=RMS_S_rad_error[i],  color=str(color[i]), markersize=12, elinewidth=2, label=str(label[i])) # add error bar
+    plt.errorbar(cases, RMS_S_rad[i], yerr=RMS_S_rad_error[i],  color=str(color[i]), markersize=12, elinewidth=2, linewidth=0, label=str(label[i])) # add error bar
 
 plt.legend(loc='center')
-plt.title("Radial Position misalignment SD of "+str(misalignment), fontsize=10)
+plt.title("Radial Position case " + str(dirName) , fontsize=10)
 plt.xlabel("Sample #", fontsize=10)
 plt.ylabel("SD Radial Position [mm]", fontsize=10)
 
@@ -278,24 +429,19 @@ plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
 plt.subplot(212) # VERTICAL 
 axes=plt.gca()
 axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
 axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
 
 for i in range(0, 2):
-    avgMean=np.mean(RMS_S_ver[i][1:]) # compute mean for offset cases only 
-    avgMeanError=stats.sem(RMS_S_ver[i][1:])
-    RMS_S_ver_mean.append(avgMean)
-    RMS_S_ver_error_mean.append(avgMeanError)
-    line = [[1,RMS_S_ver[i][0]], [trialN+1, RMS_S_ver[i][0]]]
-    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-    #line = [[1,avgMean], [trialN+1, avgMean]]
-    #plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="--")
-    #plt.text(trialN-3, avgMean+0.02, str(round(avgMean,3))+r" $\pm$ "+str(round(avgMeanError,3)), fontsize=9)
+    line = [[0,RMS_S_ver[i][0]], [trialN+1, RMS_S_ver[i][0]]]
+    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--")
     plt.text(0, RMS_S_ver[i][0]+0.02, str(round(RMS_S_ver[i][0], 3))+r" $\pm$ "+str(round(RMS_S_ver_error[i][0],3)), fontsize=9)
+    plt.text(trialN, RMS_S_ver[i][trialN]+0.02, str(round(RMS_S_ver[i][trialN], 3))+r" $\pm$ "+str(round(RMS_S_ver_error[i][trialN],3)), fontsize=9)
     plt.scatter(cases, RMS_S_ver[i],  marker="+", color=str(color[i]))
-    plt.errorbar(cases, RMS_S_ver[i], yerr=RMS_S_ver_error[i],  color=str(color[i]), markersize=12, elinewidth=2, label=str(label[i]))
+    plt.errorbar(cases, RMS_S_ver[i], yerr=RMS_S_ver_error[i],  color=str(color[i]), markersize=12, elinewidth=2, linewidth=0, label=str(label[i]))
 
 plt.legend(loc='center')
-plt.title("Vertical Position misalignment SD of "+str(misalignment), fontsize=10)
+plt.title("Vertical Position case "+str(dirName), fontsize=10)
 plt.xlabel("Sample #", fontsize=10)
 plt.ylabel("SD Vertical Position [mm]", fontsize=10)
 
@@ -303,3 +449,213 @@ plt.subplots_adjust(bottom=0.1)
 plt.subplots_adjust(hspace=0.43)
 
 plt.savefig("SD_"+str(dirName)+".png", dpi=600)
+
+
+'''
+# Plot for covariance
+plt.figure(3) 
+plt.suptitle("Correlation plots for "+str(dirName) , fontsize=10)
+plt.subplot(221) # Mean Beam vs Mean Mis  
+axes=plt.gca()
+axes.set_xlim(min(Mis_Mean_rad)*0.9, max(Mis_Mean_rad)*1.1)
+# axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
+axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
+
+for i in range(0, 2):
+    dM = np.array(S_rad[i][1:])-S_rad[i][0] # take away the nominal per station 
+    dM_all_rad.append(dM)
+    dM_ver=np.array(S_ver[i][1:])-S_ver[i][0]
+    dM_all_ver.append(dM_ver)
+    avgMean=np.mean(abs(dM)) # compute mean for offset cases only
+    avgMeanError=stats.sem(abs(dM))
+    S_rad_mean.append(avgMean)
+    S_rad_error_mean.append(avgMeanError)
+    avgMax=np.max(abs(dM)) # compute mean for offset cases only
+    S_rad_max.append(avgMax)
+    S_rad_error_max.append(S_rad_error[i][np.argmax(dM)])
+    # print("dM=",dM, label[i])
+    plt.scatter(Mis_Mean_rad, dM,  marker="+", color=str(color[i])) # plot all cases and reference points 
+    plt.errorbar(Mis_Mean_rad, dM, yerr=S_rad_error[i][1:],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i])) # add error bar
+    cor = np.corrcoef(Mis_Mean_rad, dM)
+    plt.plot([], [], ' ', label=str(label[i])+" corr: "+str(round(cor[0][1],3)))
+    plt.plot(np.unique(Mis_Mean_rad), np.poly1d(np.polyfit(Mis_Mean_rad, dM, 1))(np.unique(Mis_Mean_rad)), color=str(color[i]))
+
+plt.legend(loc='center')
+#plt.title("d(Radial Position) vs. <Misalignment> " + str(dirName) , fontsize=10)
+plt.xlabel("<Misalignment> [um]", fontsize=10)
+plt.ylabel("d(Radial Position) [mm]", fontsize=10)
+
+# plt.subplot(222) # Mean Beam vs SD Mis  
+# axes=plt.gca()
+# axes.set_xlim(min(Mis_SD_rad)*0.9, max(Mis_SD_rad)*1.1)
+# # axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
+# axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
+# axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
+
+# for i in range(0, 2):
+#     dM = np.array(S_rad[i][1:])-S_rad[i][0] # take away the nominal per station 
+#     plt.scatter(Mis_SD_rad, dM,  marker="+", color=str(color[i])) # plot all cases and reference points 
+#     plt.errorbar(Mis_SD_rad, dM, yerr=S_rad_error[i][1:],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i])) # add error bar
+#     cor = np.corrcoef(Mis_SD_rad, dM)
+#     plt.plot([], [], ' ', label=str(label[i])+" corr: "+str(round(cor[0][1],3)))
+#     plt.plot(np.unique(Mis_SD_rad), np.poly1d(np.polyfit(Mis_SD_rad, dM, 1))(np.unique(Mis_SD_rad)), color=str(color[i]))
+
+# plt.legend(loc='center')
+# #plt.title("d(Radial Position) vs. SD(Misalignment) " + str(dirName) , fontsize=10)
+# plt.xlabel("SD(Misalignment) [um]", fontsize=10)
+# plt.ylabel("d(Radial Position) [mm]", fontsize=10)
+
+
+plt.subplot(223) # SD Beam vs Mean Mis  
+axes=plt.gca()
+axes.set_xlim(min(Mis_Mean_rad)*0.9, max(Mis_Mean_rad)*1.1)
+# axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
+axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
+
+for i in range(0, 2):
+    dS = np.array(RMS_S_rad[i][1:])-RMS_S_rad[i][0] # take away the nominal per station 
+    dS_all_rad.append(dS)
+    dS_ver = np.array(RMS_S_ver[i][1:])-RMS_S_ver[i][0] # take away the nominal per station 
+    dS_all_ver.append(dS_ver)
+    avgMean=np.mean(abs(dS)) # compute mean for offset cases only
+    avgMeanError=stats.sem(abs(dS))
+    RMS_S_rad_mean.append(avgMean)
+    RMS_S_rad_error_mean.append(avgMeanError)
+    avgMax=np.max(abs(dS)) # compute mean for offset cases only
+    RMS_S_rad_max.append(avgMax)
+    RMS_S_rad_error_max.append(RMS_S_rad_error[i][np.argmax(dS)])
+    plt.scatter(Mis_Mean_rad, dS,  marker="+", color=str(color[i])) # plot all cases and reference points 
+    plt.errorbar(Mis_Mean_rad, dS, yerr=RMS_S_rad_error[i][1:],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i])) # add error bar
+    cor = np.corrcoef(Mis_Mean_rad, dS)
+    plt.plot([], [], ' ', label=str(label[i])+" corr: "+str(round(cor[0][1],3)))
+    plt.plot(np.unique(Mis_Mean_rad), np.poly1d(np.polyfit(Mis_Mean_rad, dS, 1))(np.unique(Mis_Mean_rad)), color=str(color[i]))
+
+plt.legend(loc='center')
+#plt.title("d(Radial Position) vs. <Misalignment> " + str(dirName) , fontsize=10)
+plt.xlabel("<Misalignment> [um]", fontsize=10)
+plt.ylabel("d(SD(Radial Position)) [mm]", fontsize=10)
+
+
+# plt.subplot(224) # SD Beam vs SD Mis  
+# axes=plt.gca()
+# axes.set_xlim(min(Mis_SD_rad)*0.9, max(Mis_SD_rad)*1.1)
+# # axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
+# axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
+# axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
+
+# for i in range(0, 2):
+#     dS = np.array(RMS_S_rad[i][1:])-RMS_S_rad[i][0] # take away the nominal per statio
+#     plt.scatter(Mis_SD_rad, dS,  marker="+", color=str(color[i])) # plot all cases and reference points 
+#     plt.errorbar(Mis_SD_rad, dS, yerr=RMS_S_rad_error[i][1:],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i])) # add error bar
+#     cor = np.corrcoef(Mis_SD_rad, dS)
+#     plt.plot([], [], ' ', label=str(label[i])+" corr: "+str(round(cor[0][1],3)))
+#     plt.plot(np.unique(Mis_SD_rad), np.poly1d(np.polyfit(Mis_SD_rad, dS, 1))(np.unique(Mis_SD_rad)), color=str(color[i]))
+    
+# plt.legend(loc='center')
+# #plt.title("d(Radial Position) vs. <Misalignment> " + str(dirName) , fontsize=10)
+# plt.xlabel("SD(Misalignment) [um]", fontsize=10)
+# plt.ylabel("d(SD(Radial Position)) [mm]", fontsize=10)
+
+# plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
+# plt.subplots_adjust(top=0.9)
+# plt.subplots_adjust(bottom=0.1)
+# plt.subplots_adjust(hspace=0.43)
+# plt.subplots_adjust(right=0.9)
+
+plt.savefig("Corr_"+str(dirName)+".png", dpi=600)
+
+S12_dm_rad=dM_all_rad[::2]
+S12_ds_rad=dS_all_rad[::2]
+S18_dm_rad=dM_all_rad[1::2]
+S18_ds_rad=dS_all_rad[1::2]
+
+S12_dm_ver=dM_all_ver[::2]
+S12_ds_ver=dS_all_ver[::2]
+S18_dm_ver=dM_all_ver[1::2]
+S18_ds_ver=dS_all_ver[1::2]
+
+
+radVal = [S12_dm_rad, S18_dm_rad, S12_ds_rad,  S18_ds_rad]
+verVal = [S12_dm_ver, S18_dm_ver, S12_ds_ver,  S18_ds_ver]
+
+
+radBinsN = 10
+radBinMax = S_rad_max[0]*1e3*1.2
+c_rad = TCanvas("c_rad", "Radial Histograms", 6200, 6200)
+c_rad.Divide(2,2)
+h1r=TH1F("S12: d(Radial Mean)", str(dirName), radBinsN, -radBinMax, radBinMax)
+h2r=TH1F("S18: d(Radial Mean)", str(dirName), radBinsN, -radBinMax, radBinMax)
+h3r=TH1F("S12: d(Radial SD)", str(dirName), radBinsN, -radBinMax, radBinMax)
+h4r=TH1F("S18: d(Radial SD)", str(dirName), radBinsN, -radBinMax, radBinMax)
+
+histos = [h1r, h2r, h3r, h4r]
+
+for i, histo in enumerate(histos):
+    for value in radVal[i]:
+        for i_value in value:
+            histo.Fill(float(i_value*1e3))
+
+for i, histo in enumerate(histos):      
+    c_rad.cd(i+1)
+    histo.Draw()
+    hitso.GetXAxis().SetTitle("[um]")
+
+# c_rad.Draw()
+c_rad.SaveAs("radCan_"+str(dirName)+".png")
+
+verBinsN = 20
+verBinMax = 0.5*S_rad_max[0]*1e3*1.2
+c_ver = TCanvas("c_ver", "Vertical Histograms", 6200, 6200)
+c_ver.Divide(2,2)
+h1v=TH1F("S12: d(Ver Mean)", str(dirName), verBinsN, -verBinMax, verBinMax)
+h2v=TH1F("S18: d(Ver Mean)", str(dirName), verBinsN, -verBinMax, verBinMax)
+h3v=TH1F("S12: d(Ver SD)", str(dirName), verBinsN, -verBinMax, verBinMax)
+h4v=TH1F("S18: d(Ver SD)", str(dirName), verBinsN, -verBinMax, verBinMax)
+
+histos = [h1v, h2v, h3v, h4v]
+
+for i, histo in enumerate(histos):
+    for value in verVal[i]:
+        for i_value in value:
+            histo.Fill(float(i_value*1e3))
+
+for i, histo in enumerate(histos):      
+    c_rad.cd(i+1)
+    histo.Draw()
+    hitso.GetXAxis().SetTitle("[um]")
+
+# c_rad.Draw()
+c_rad.SaveAs("verCan_"+str(dirName)+".png")
+
+
+
+# #Write to the final metric file
+# np.savetxt('metric_'+str(dirName)+'.txt', (Mis_Mean_rad, Mis_SD_rad, S12_dm, S12_ds, S18_dm, S18_ds), delimiter=',' , fmt='%s')   
+# dataPDF = [Mis_Mean_rad, Mis_SD_rad, S12_dm, S12_ds, S18_dm, S18_ds]
+# pd.DataFrame(dataPDF).to_csv('metric_'+str(dirName)+'.csv')
+
+# f=open("fom_"+dirName+".txt", "w+")
+# f.write(str(misalignment)+"\n")
+# f.write(str(int(S_rad_mean[0]*1e3))+"\n")
+# f.write(str(int(S_rad_mean[1]*1e3))+"\n")
+# f.write(str(int(S_rad_error_mean[0]*1e3))+"\n")
+# f.write(str(int(S_rad_error_mean[1]*1e3))+"\n")
+# f.write(str(int(S_rad_max[0]*1e3))+"\n")
+# f.write(str(int(S_rad_max[1]*1e3))+"\n")
+# f.write(str(int(S_rad_error_max[0]*1e3))+"\n")
+# f.write(str(int(S_rad_error_max[1]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_mean[0]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_mean[1]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_error_mean[0]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_error_mean[1]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_max[0]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_max[1]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_error_max[0]*1e3))+"\n")
+# f.write(str(int(RMS_S_rad_error_max[1]*1e3))+"\n")
+# f.close()
+
+print(str(trialN)+" cases analysed!")
+
+'''
