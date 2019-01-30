@@ -80,7 +80,8 @@ def getOffsets(f, name):
 
     return offsets   
 
-SetMyStyle()
+SetMyStyle() 
+
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument("-mis", "--mis") # offset scale (SD) [um]
 parser.add_argument("-shift", "--shift") # offset mean shift (mean) [um]
@@ -136,6 +137,7 @@ s18_rad_2D = scrFile.Get(str(station18Path)+plotNames[0])
 s12_ver_2D = scrFile.Get(str(station12Path)+plotNames[1]) 
 s18_ver_2D = scrFile.Get(str(station18Path)+plotNames[1])
 
+
 # Apply 30 us time cut 
 
 first_bin = s12_rad_2D.FindBin(30.0, 0, 0) 
@@ -157,13 +159,7 @@ s18_ver = s18_ver_2D.ProjectionY("", 200, -1)
 s12_ver.GetXaxis().SetRangeUser(-30, 30)
 s18_ver.GetXaxis().SetRangeUser(-30, 30)
 
-gF = TF1("gF", "gaus", -30, 30)
-
-s12_ver.Fit(gF, "Q")
-S12_ver.append(gF.GetParameter(1))
-S12_ver_error.append(gF.GetParError(1))
-RMS_S12_ver.append(gF.GetParameter(2))
-RMS_S12_ver_error.append(gF.GetParError(2))
+ 
 
 s18_ver.Fit(gF, "Q")
 S18_ver.append(gF.GetParameter(1))
