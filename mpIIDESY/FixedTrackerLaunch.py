@@ -320,10 +320,10 @@ for i_module in range(0, 8):
 
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
-yMinX = -300
+yMinX = -np.max(np.array(recoXMean))*1.4
 if(stationN=="12"):
 	yMinX = -600
-yMaxX = 1100
+yMaxX = np.max(np.array(recoXMean))*1.4
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 8})
 axes = plt.gca()
