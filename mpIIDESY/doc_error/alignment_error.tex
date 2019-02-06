@@ -90,12 +90,21 @@ In order for the tracking detector to reduce the systematic uncertainty on the $
     \label{fig:beamSpot}
 \end{figure}
 
-It is also imperative to have an estimate of the systematic uncertainty that comes from an un-aligned detector. One way to produce such an estimate is to add sets of known misalignment offsets to the detector and reconstruct data with these offsets. After reconstruction is done, a comparison can be made between the nominal case and the case with the added offsets. It is important to note, that the nominal case itself has some real and unknown misalignment. Moreover, an analytical estimation of the misalignment contrition to the track extrapolation is performed. 
+It is also imperative to have an estimate of the systematic uncertainty that comes from an un-aligned detector. One way to produce such an estimate is to add sets of known misalignment offsets to the detector and reconstruct data with these offsets. After reconstruction is done, a comparison can be made between the nominal case and a case with the added offsets. It is important to note, that the nominal case itself has some real and unknown misalignment. Moreover, an analytical estimation of the misalignment contrition to the track extrapolation is performed. 
 
 
 \section{Methodology}  
 
-The focus will be on the contribution of the added offsets to the quality of the extrapolated beam, namely its RMS and the mean. Other physics measurements, such as the CBO, will also be used for the estimation of the alignment error. Here, four misalignment scales will be mapped out (\SI{25}{\micro\metre}, \SI{50}{\micro\metre}, \SI{100}{\micro\metre}, and \SI{200}{\micro\metre}), each additionally with 9 set points of the overall mean shift in the modules (\SI{0}{\micro\metre}, $\pm$\SI{25}{\micro\metre},  $\pm$\SI{50}{\micro\metre},  $\pm$\SI{100}{\micro\metre}, and $\pm$\SI{200}{\micro\metre}). These scales of misalignment are comparable to what have been seen with data (see next chapter). Each mapping set of offsets will have 25 cases of random offsets drawn from a uniform distribution. This corresponds to reconstruction (tracking only) of equivalent of 900 runs of the g-2 experiment worth of data (92 TB). Such a monumental task will be performed by most efficient utilisation of the distributed grid computing resources of the Open Science Grid \cite{OSG}.
+The focus will be on the contribution of the added offsets to the quality of the extrapolated beam, namely its RMS and the mean. Other physics measurements, such as the CBO, will also be used for the estimation of the alignment error. Here, four misalignment scales will be mapped out (\SI{25}{\micro\metre}, \SI{50}{\micro\metre}, \SI{100}{\micro\metre}, and \SI{200}{\micro\metre}), each additionally with 9 set points of the overall mean shift in the modules (\SI{0}{\micro\metre}, $\pm$\SI{25}{\micro\metre},  $\pm$\SI{50}{\micro\metre},  $\pm$\SI{100}{\micro\metre}, and $\pm$\SI{200}{\micro\metre}). These scales of misalignment are comparable to what have been seen with data (see next chapter). Each mapping set of offsets will have 25 cases of random offsets drawn from a uniform distribution, as shown in fig.~\ref{fig:P0_200}. This corresponds to reconstruction (tracking only) of equivalent of 900 runs of the g-2 experiment worth of data (92 TB). Such a monumental task will be performed by most efficient utilisation of the distributed grid computing resources of the Open Science Grid \cite{OSG}.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[height=7.0 cm]{fig/P0_200}
+    \vspace{-8pt}
+    \caption{The mean and the standard deviation of the extrapolated radial and vertical beam positions for a case of \SI{200}{\micro\meter} misalignment with no overall shift. The nominal value (shown as a dashed line) is compared with one of the 25 randomised samples. The station 12 is shown in purple, while station 18 is shown in orange.}
+    \label{fig:P0_200}
+\end{figure}
+
 
 A chosen run (nominal case) for this study was Run 15922 (22 April 2018) that contains 1 hour worth of physics-quality data, and the extrapolated radial and vertical beam position for both stations is shown in Fig.~\ref{fig:nominalBeam}. All extrapolation is done with p-value $>$ 0.005 and requiring that the tracks did not hit a volume (e.g. a vacuum chamber) before producing a track in the detector, to select the best quality tracks for the study. The plots have further been cut on tails between $\pm$\SI{70}{\milli\metre}, to only look at the tracks that have come from a uniform field region.
 
@@ -109,7 +118,12 @@ A chosen run (nominal case) for this study was Run 15922 (22 April 2018) that co
 \end{figure}
 
 
+\section{Results}
 
+
+
+\section{Analytical Estimations}
+TODO 
 
 
 \clearpage

@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1547827329 "alignment_error.tex" "alignment_error.pdf" "alignment_error" 1547830735
+["pdflatex"] 1549465320 "alignment_error.tex" "alignment_error.pdf" "alignment_error" 1549465321
   "/usr/local/texlive/2018/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1480098666 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/map/fontname/texfonts.map" 1511824771 3332 103109f5612ad95229751940c61aada0 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/jknappen/ec/tcrm0600.tfm" 1480098696 1536 12e8c510d3e158fdd0e9a42e75118bd9 ""
@@ -132,14 +132,15 @@
   "/usr/local/texlive/2018/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1523934492 2717033 f61a5287d9c22a39a74f1979fe3f905c ""
   "/usr/local/texlive/2018/texmf-var/web2c/pdftex/pdflatex.fmt" 1541649596 4220280 d2453d9f7edd928d24af905777c71c4a ""
   "/usr/local/texlive/2018/texmf.cnf" 1523934483 577 0b39adfd7c93507ff20c9c14c2f1a33f ""
-  "alignment_error.aux" 1547827331 1663 c9aa3494096f711fb5bcbf37533c3929 ""
-  "alignment_error.out" 1547827331 93 0b084f8eeae5e9d20150805203468955 ""
-  "alignment_error.tex" 1547827329 6269 099e57db2b19d4a0e8f877deaf4ab5c0 ""
+  "alignment_error.aux" 1549465321 2663 ac93c308f1b1ede6fe71c254d44a3f1a ""
+  "alignment_error.out" 1549465321 192 04a305ee17bae5dd8f5ae43f296faa5a ""
+  "alignment_error.tex" 1549465318 6844 fc24c0e9db54d0de08a2621c9bc3e191 ""
+  "fig/P0_200.png" 1549464781 371658 7153da63c08084197af1acbba8c5382f ""
   "fig/beamSpot.png" 1547821550 23526 4975cf59d467acfdc56c132e97c3d955 ""
   "fig/nominalBeam.png" 1547826373 1043722 7143dd25259a0d8b0bcd84d6a5487c9f ""
   "ref.tex" 1547824653 358 301f5224496b7c0b9a4b3426ec37fc5e ""
   (generated)
   "alignment_error.log"
+  "alignment_error.aux"
   "alignment_error.pdf"
   "alignment_error.out"
-  "alignment_error.aux"
