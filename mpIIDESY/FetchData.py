@@ -11,7 +11,7 @@ args = parser.parse_args()
 
 path = str(args.path)
 
-files = ( "*.txt", "T*.root", "*.fcl", "*.log", "*.bin")
+files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.bin")
 
 for i in range(0, len(files)):
 

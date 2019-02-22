@@ -61,10 +61,6 @@ if (stationN == "18"):
 #Truth Misalignment 
 T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
 
-# T_mis_C=(0.171, 0.014, -0.271, -0.008, -0.529, 0.059, -0.588, 0.032, -0.595, 0.02, -0.427, -0.006, -0.122, -0.03, 0.256, 0.03) # S12 data run 5 (16367)
-
-# T_mis_C=(-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 data run 5 (16367)
-
  # T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.5, -0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S12: MDC1 large 
 #T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S18: MDC1 large 
 
@@ -82,36 +78,16 @@ print("Expected Parameters: ", expectPars)
 input("Correct? [press enter]") 
 
 # ## ----------------------------
-# #Run 1+
 # useOffsets = True
 
-# # # #Run 16367  :: Run 2
-# # if (stationN == "12"):
-# # 	offsets = (0.106, 0.012, -0.122, -0.009, -0.244, 0.062, -0.249, 0.034, -0.267, 0.021, -0.19, -0.006, -0.052, -0.029, 0.09, 0.032) # S12 Run 2 :: 16367 
-# # if (stationN == "18"):
-# # 	offsets = (0.024, 0.013, 0.024, -0.019, 0.049, 0.113, 0.114, 0.12, 0.03, 0.1, 0.039, 0.167, 0.034, 0.079, -0.101, -0.079) # S18 Run 2 :: 16367 
-
-# # # #Run 16367 :: Run 3 
-# # if (stationN == "12"):
-# # 	offsets = (0.149, 0.013, -0.19, -0.009, -0.382, 0.059, -0.413, 0.032, -0.429, 0.02, -0.309, -0.006, -0.09, -0.029, 0.163, 0.031) # S12 Run 3 :: 16367 
-# # if (stationN == "18"):
-# # 	offsets = (-0.008, 0.014, 0.013, -0.019, 0.058, 0.123, 0.148, 0.131, 0.058, 0.112, 0.071, 0.179, 0.064, 0.086, -0.103, -0.088) # S18 Run 3 :: 16367 
-
-# # # #Run 16367 :: Run 4
-# # if (stationN == "12"):
-# # 	offsets = (0.167, 0.014, -0.237, -0.009, -0.47, 0.06, -0.52, 0.032, -0.531, 0.02, -0.383, -0.007, -0.112, -0.03, 0.217, 0.031) # S12 Run 4 :: 16367 
-# # if (stationN == "18"):
-# # 	offsets = (-0.039, 0.016, 0.001, -0.02, 0.061, 0.123, 0.163, 0.132, 0.077, 0.112, 0.093, 0.18, 0.084, 0.085, -0.093, -0.088) # S18 Run 4 :: 16367 
-
-# # #Run 16367 :: Run 5
+# # #Run 15922  :: Iteration 2
 # if (stationN == "12"):
-#   offsets = (0.171, 0.014, -0.271, -0.008, -0.529, 0.059, -0.588, 0.032, -0.595, 0.02, -0.427, -0.006, -0.122, -0.03, 0.256, 0.03) # S12 Run 5 :: 16367 
+# 	 offsets=( 0.158, 0.001, -0.162, 0.0, -0.34, 0.083, -0.389, 0.062, -0.401, 0.052, -0.289, 0.019, -0.072, -0.022, 0.11, 0.024) #S12 
 # if (stationN == "18"):
-#   offsets = (-0.068, 0.015, -0.011, -0.019, 0.062, 0.125, 0.173, 0.134, 0.093, 0.112, 0.112, 0.18, 0.102, 0.085, -0.081, -0.089) # S18 Run 5 :: 16367 
+# 	 offsets=( 0.082, 0.013, -0.102, -0.01, -0.192, 0.138, -0.192, 0.148, -0.264, 0.129, -0.168, 0.188, -0.002, 0.081, 0.03, -0.097) #S18 
 
-
-# print("Offsets Run 5 [mm]: ", offsets)
-# input("Offsets :: Run 5 correct? [press enter]") 
+# print("Offsets iteration 2 [mm]: ", offsets)
+# input("Offsets :: iteration 2 correct? [press enter]") 
 # # ##----------------------------
 
 
@@ -320,10 +296,12 @@ for i_module in range(0, 8):
 
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
-yMinX = -np.max(np.array(recoXMean))*1.4
-if(stationN=="12"):
-	yMinX = -600
-yMaxX = np.max(np.array(recoXMean))*1.4
+# yMinX = -np.max(np.array(recoXMean))*1.4
+yMaxX = 300
+yMinX = -600
+# if(stationN=="12"):
+# 	yMinX = -600
+# yMaxX = np.max(np.array(recoXMean))*1.4
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 8})
 axes = plt.gca()
@@ -358,7 +336,7 @@ plt.plot(moduleArray, np.array(recoXMean), marker="+", color=str(colours[4]))
 #plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
 # if (extraLabel != -1):
 	# plt.text(2.0, 420, extraLabel, color="purple", fontsize=8, fontweight='bold')
-plt.subplots_adjust(top=0.85)
+# plt.subplots_adjust(top=0.85)
 
 
 #Legend (stats X)
@@ -382,7 +360,7 @@ dAbsMeanX = absMeanTruthMisX - absMeanRecoMisX
 #textStrX = "<|RecoX|>={0}".format(int(round(absMeanRecoMisX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  +" um"
 #plt.text(8.6, 50-100, textStrX, fontsize=8, color=str(colours[4]))
 
-plt.subplots_adjust(right=0.77)
+# plt.subplots_adjust(right=0.77)
 
 plt.legend(loc=locationStation)
 plt.xticks(fontsize=8, rotation=0)
@@ -443,7 +421,7 @@ dAbsMeanY = absMeanTruthMisY - absMeanRecoMisY
 #plt.text(8.6, 50-100, textStrY, fontsize=8, color=str(colours[4]))
 
 plt.legend(loc=locationStation)
-plt.subplots_adjust(right=0.77)
+# plt.subplots_adjust(right=0.77)
 plt.subplots_adjust(bottom=0.1)
 plt.subplots_adjust(hspace=0.35)
 plt.xlabel("Module", fontsize=8)
@@ -456,21 +434,50 @@ if (extraLabel == -1):
 else:
 	plt.savefig(str(extraLabel)+".png", dpi=600)
 
-
-print("Mean X:", np.array(recoXMean)*1e-3, "[mm]")
-print("Mean Y:", np.array(recoYMean)*1e-3, "[mm]")
-
 sugMean  = []
 for i in range(0, len(recoXMean)):
 	sugMean.append(recoXMean[i])
 	sugMean.append(recoYMean[i])
 
-offsest = " "
-for i in range(0, len(sugMean)):
-	offsest += str(round(sugMean[i])/1e3) + " "
+offset = " "
+for i in range(0, (len(sugMean)-1) ):
+	offset += str(round(sugMean[i])/1e3) + ", "
+offset += str(round(sugMean[-1])/1e3)
 	
 
-print("New suggested Offsets from PEDE [mm]: ", offsest)
+print("New suggested Offsets from PEDE [mm]: ", offset)
+
+#Arrange offsets from X1, Y1, X2....X8, Y8 into strawModuleRShift12, etc. 
+
+recoXMean = np.array(recoXMean)*1e-3
+recoYMean = np.array(recoYMean)*1e-3
+ 
+radialOffsetPerModule=np.round_(recoXMean, 3) #X per station
+verticalOffsetPerModule=np.round_(recoYMean, 3) #Y per station
+
+print("radialOffsetPerModule", radialOffsetPerModule)
+print("verticalOffsetPerModule", verticalOffsetPerModule)
+
+f=open("OffsetsPerModule"+str(stationN)+".fcl", "w+")
+
+f.write("//StrawOffsets S"+str(stationN)+"\n")
+f.write("//(X, Y):\n")
+f.write("// offsets=("+str(offset)+") #S"+str(stationN)+"\n")
 
 
+f.write("services.Geometry.strawtracker.strawModuleRShift"+str(stationN)+": [ ")
+for item in radialOffsetPerModule[:-1]:
+	f.write( str(item) + ", ")  # um -> mm 
+f.write( str( radialOffsetPerModule[-1] ) )
+f.write(" ]\n")
+
+f.write("services.Geometry.strawtracker.strawModuleHShift"+str(stationN)+": [ ")
+for item in verticalOffsetPerModule[:-1]:
+    f.write( str( item) + ", " ) 
+f.write( str( verticalOffsetPerModule[-1] ) ) 
+f.write(" ]\n")
+
+f.close()
+
+print("Offsets written to file OffsetsPerModule"+str(stationN)+".fcl")
 print("Plots saved from:" , str(file) , "on", strftime("%Y-%m-%d %H:%M:%S"))

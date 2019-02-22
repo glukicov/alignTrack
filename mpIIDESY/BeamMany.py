@@ -18,55 +18,11 @@ from scipy import stats
 import itertools
 import re
 import pandas as pd
-from ROOT import TH1F, TH2F, TF1, TCanvas, TStyle, gROOT, gStyle, TColor 
-
-def SetMyStyle():
-  print("\n ~/rootlogon.C loaded with !!4 sig.fig.!! for custom Opt Fit and Stat!\n")
-  MyStyle = myStyle()
-  gROOT.SetStyle("MyStyle")
-  gROOT.ForceStyle()
-
-
-def myStyle():
-  myStyle  = TStyle("MyStyle", "My Root Styles")
-  #Canvas
-  myStyle.SetCanvasBorderMode(0)  # Transparent
-  myStyle.SetCanvasColor(0) # Transparent 
-  #Paper, Pad, Palette, Frame
-  myStyle.SetPadBorderMode(0) # Transparent 
-  myStyle.SetPadColor(0) # Transparent 
-  myStyle.SetPalette(1) # Default 
-  myStyle.SetFrameBorderMode(1) # Border
-   # Axis 
-  myStyle.SetLabelSize(0.04, "xyz") # size of axis values
-  myStyle.SetTitleSize(0.04, "xyz")
-  myStyle.SetPadTickX(1)
-  myStyle.SetPadTickY(1)
-  # Title 
-  myStyle.SetTitleColor(1) # Black 
-  myStyle.SetTitleStyle(0) # Transparent 
-  myStyle.SetTitleBorderSize(0) # Transparent
-  myStyle.SetTitleY(0.97) # Set y-position (fraction of pad size)
-  myStyle.SetTitleX(0.4) # Set x-position (fraction of pad size)
-  # #Stat box dimensions, position and style 
-  myStyle.SetStatY(0.89) # Set y-position (fraction of pad size)
-  myStyle.SetStatX(0.89) # Set x-position (fraction of pad size)
-  myStyle.SetStatW(0.36) # Set width of stat-box (fraction of pad size)
-  myStyle.SetStatH(0.12) # Set height of stat-box (fraction of pad size)
-  myStyle.SetStatStyle(0) # Transparent 
-  myStyle.SetStatColor(0)  # Transparent
-  myStyle.SetStatBorderSize(1) # Transparent
-  # Histo Filling (visual)
-  myStyle.SetHistFillColor(8)
-  myStyle.SetHistFillStyle(3014)      
-  # Stats display options 
-  #myStyle.SetOptStat("ourRmMe") #over/under -flows, Rms and Means with errors, number of entries
-  myStyle.SetOptStat("neouRM") #over/under -flows, Rms and Means with errors, number of entries
-  myStyle.SetOptFit(1111)  #probability, Chi2, errors, name/values of parameters
-  myStyle.SetStatFormat("11.4f")  # 4 sig.fig, f=float
-
-  return myStyle
-
+from ROOT import TH1F, TF1, TCanvas
+#sys.path.append(os.path.abspath(str(os.environ['MRB_SOURCE'])+"/gm2tracker/align/macros"))
+# sys.path.append(os.path.abspath("~"))
+# from rootlogon import SetMyStyle, myStyle
+# SetMyStyle()
 
 def getOffsets(f, name):
     offsets = [] #tmp storage buffer 
@@ -80,7 +36,6 @@ def getOffsets(f, name):
 
     return offsets   
 
-SetMyStyle() 
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument("-mis", "--mis") # offset scale (SD) [um]
@@ -104,7 +59,7 @@ dirName=str(sign)+str(shift)+"_Off_"+str(misalignment)+"_Mis_"+str(mode)+"_"+str
 
 station12Path = "Extrapolation/vertices/station12/pValue>0.005_and_noVolumesHit/"
 station18Path = "Extrapolation/vertices/station18/pValue>0.005_and_noVolumesHit/"
-plotNames=["h_radialPos_vs_time", "h_verticalPos_vs_time"]
+plotNames=["h_radialPos", "h_verticalPos"]
 
 
 #Global containers
@@ -127,63 +82,42 @@ RMS_S18_ver_error=[]
 cases=[]
 
 #First take the reference nominal point "0"
-scr = "/Users/gleb/software/alignTrack/mpIIDESY/Systematics_ana/nominal/trackRecoPlots.root"
+scr = "/Users/gleb/software/alignTrack/mpIIDESY/Systematics_ana/new_nominal/trackRecoPlots.root"
 # scr = str(os.environ['MRB_SOURCE'])+"/gm2tracker/align/Systematics/nominalAlign/trackRecoPlots.root"
 scrFile = TFile.Open(scr)
 
-#open the TH2F histos
-s12_rad_2D = scrFile.Get(str(station12Path)+plotNames[0])
-s18_rad_2D = scrFile.Get(str(station18Path)+plotNames[0])
-s12_ver_2D = scrFile.Get(str(station12Path)+plotNames[1]) 
-s18_ver_2D = scrFile.Get(str(station18Path)+plotNames[1])
+#open the histos
+s12_rad = scrFile.Get(str(station12Path)+plotNames[0])
+s18_rad = scrFile.Get(str(station18Path)+plotNames[0])
+s12_ver = scrFile.Get(str(station12Path)+plotNames[1])
+s18_ver = scrFile.Get(str(station18Path)+plotNames[1])
 
+s12_rad.GetXaxis().SetRangeUser(-70, 70) # cutting out tails 
+s18_rad.GetXaxis().SetRangeUser(-70, 70)
+s12_ver.GetXaxis().SetRangeUser(-70, 70)
+s18_ver.GetXaxis().SetRangeUser(-70, 70)
 
-# Apply 30 us time cut 
-
-first_bin = s12_rad_2D.FindBin(30.0, 0, 0) 
-s12_rad = s12_rad_2D.ProjectionY("", 200, -1)
-
-first_bin = s18_rad_2D.FindFirstBinAbove(30.0 ,2) 
-s18_rad = s18_rad_2D.ProjectionY("", 200, -1)
-
-first_bin = s12_ver_2D.FindFirstBinAbove(30.0 ,2) 
-s12_ver = s12_ver_2D.ProjectionY("", 200, -1)
-
-first_bin = s18_ver_2D.FindFirstBinAbove(30.0 ,2) 
-s18_ver = s18_ver_2D.ProjectionY("", 200, -1)
 
 ####### FITTING ###########
 
-
-# Vertical 
 s12_ver.GetXaxis().SetRangeUser(-30, 30)
 s18_ver.GetXaxis().SetRangeUser(-30, 30)
 
- 
+gF = TF1("gF", "gaus", -30, 30)
 
-s18_ver.Fit(gF, "Q")
+s12_ver.Fit(gF, "")
+S12_ver.append(gF.GetParameter(1))
+S12_ver_error.append(gF.GetParError(1))
+RMS_S12_ver.append(gF.GetParameter(2))
+RMS_S12_ver_error.append(gF.GetParError(2))
+
+s18_ver.Fit(gF, "")
 S18_ver.append(gF.GetParameter(1))
 S18_ver_error.append(gF.GetParError(1))
 RMS_S18_ver.append(gF.GetParameter(2))
 RMS_S18_ver_error.append(gF.GetParError(2))
 
-
-#Radial
-s12_rad.GetXaxis().SetRangeUser(-70, 70) # cutting out tails 
-s18_rad.GetXaxis().SetRangeUser(-70, 70)
-S12_rad.append(s12_rad.GetMean())
-S18_rad.append(s18_rad.GetMean())
-S12_rad_error.append(s12_rad.GetMeanError())
-S18_rad_error.append(s18_rad.GetMeanError())
-RMS_S12_rad.append(s12_rad.GetRMS())
-RMS_S18_rad.append(s18_rad.GetRMS())
-RMS_S12_rad_error.append(s12_rad.GetRMSError())
-RMS_S18_rad_error.append(s18_rad.GetRMSError())
-
-
 ####### FITTING ###########
-# s12_ver.GetXaxis().SetRangeUser(-70, 70)
-# s18_ver.GetXaxis().SetRangeUser(-70, 70)
 #S12_ver.append(s12_ver.GetMean())
 #S18_ver.append(s18_ver.GetMean())
 #S12_ver_error.append(s12_ver.GetMeanError())
@@ -192,6 +126,15 @@ RMS_S18_rad_error.append(s18_rad.GetRMSError())
 # RMS_S18_ver.append(s18_ver.GetRMS())
 # RMS_S12_ver_error.append(s12_ver.GetRMSError())
 # RMS_S18_ver_error.append(s18_ver.GetRMSError())
+
+S12_rad.append(s12_rad.GetMean())
+S18_rad.append(s18_rad.GetMean())
+S12_rad_error.append(s12_rad.GetMeanError())
+S18_rad_error.append(s18_rad.GetMeanError())
+RMS_S12_rad.append(s12_rad.GetRMS())
+RMS_S18_rad.append(s18_rad.GetRMS())
+RMS_S12_rad_error.append(s12_rad.GetRMSError())
+RMS_S18_rad_error.append(s18_rad.GetRMSError())
 
 
 cases.append(int(0))
@@ -207,14 +150,13 @@ dM_all_ver=[]
 #Fil containers in a loop 
 for i_trial in range(0, trialN):
 
-    print("i_trial=", i_trial)
+    print(i_trial)
     # if (i_trial==5 or i_trial==11 or i_trial==12):
     #     continue
 
-    # scr = "Systematics_ana/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
-    scr = "/Users/gleb/software/alignTrack/mpIIDESY/Systematics_ana/Global/trackRecoPlots.root"
+    #scr = "Systematics_ana/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
     #scr = "/pnfs/GM2/scratch/users/glukicov/Systematics_ana/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
-    # scr = "/pnfs/GM2/scratch/users/glukicov/Global/trackRecoPlots.root"
+    scr = "/Users/gleb/software/alignTrack/mpIIDESY/Systematics_ana/data_tesr/trackRecoPlots.root"
 
     #Check file exists
     scrFilePresent=os.path.isfile(str(scr))
@@ -222,49 +164,47 @@ for i_trial in range(0, trialN):
       
     if(scrFilePresent):
         scrFile = TFile.Open(scr)
-            #open the TH2F histos
-        s12_rad_2D = scrFile.Get(str(station12Path)+plotNames[0])
-        s18_rad_2D = scrFile.Get(str(station18Path)+plotNames[0])
-        s12_ver_2D = scrFile.Get(str(station12Path)+plotNames[1]) 
-        s18_ver_2D = scrFile.Get(str(station18Path)+plotNames[1])
+        #open the histos
+        s12_rad = scrFile.Get(str(station12Path)+plotNames[0])
+        s18_rad = scrFile.Get(str(station18Path)+plotNames[0])
+        s12_ver = scrFile.Get(str(station12Path)+plotNames[1])
+        s18_ver = scrFile.Get(str(station18Path)+plotNames[1])
+
+        s12_rad.GetXaxis().SetRangeUser(-70, 70) # cutting out tails 
+        s18_rad.GetXaxis().SetRangeUser(-70, 70)
+        s12_ver.GetXaxis().SetRangeUser(-70, 70)
+        s18_ver.GetXaxis().SetRangeUser(-70, 70) 
 
 
         ####### FITTING ###########
 
-        first_bin = s12_rad_2D.FindFirstBinAbove(30.0 ,2) 
-        s12_rad = s12_rad_2D.ProjectionY("", first_bin, -1)
-
-        first_bin = s18_rad_2D.FindFirstBinAbove(30.0 ,2) 
-        s18_rad = s18_rad_2D.ProjectionY("", first_bin, -1)
-
-        first_bin = s12_ver_2D.FindFirstBinAbove(30.0 ,2) 
-        s12_ver = s12_ver_2D.ProjectionY("", first_bin, -1)
-
-        first_bin = s18_ver_2D.FindFirstBinAbove(30.0 ,2) 
-        s18_ver = s18_ver_2D.ProjectionY("", first_bin, -1)
-
-
-        # Vertical 
         s12_ver.GetXaxis().SetRangeUser(-30, 30)
         s18_ver.GetXaxis().SetRangeUser(-30, 30)
 
         gF = TF1("gF", "gaus", -30, 30)
 
-        s12_ver.Fit(gF, "Q")
+        s12_ver.Fit(gF, "")
         S12_ver.append(gF.GetParameter(1))
         S12_ver_error.append(gF.GetParError(1))
         RMS_S12_ver.append(gF.GetParameter(2))
         RMS_S12_ver_error.append(gF.GetParError(2))
 
-        s18_ver.Fit(gF, "Q")
+        s18_ver.Fit(gF, "")
         S18_ver.append(gF.GetParameter(1))
         S18_ver_error.append(gF.GetParError(1))
         RMS_S18_ver.append(gF.GetParameter(2))
         RMS_S18_ver_error.append(gF.GetParError(2))
 
-        #Radial
-        s12_rad.GetXaxis().SetRangeUser(-70, 70) # cutting out tails 
-        s18_rad.GetXaxis().SetRangeUser(-70, 70)
+        ####### FITTING ###########
+        #S12_ver.append(s12_ver.GetMean())
+        #S18_ver.append(s18_ver.GetMean())
+        #S12_ver_error.append(s12_ver.GetMeanError())
+        #S18_ver_error.append(s18_ver.GetMeanError())
+        # RMS_S12_ver.append(s12_ver.GetRMS())
+        # RMS_S18_ver.append(s18_ver.GetRMS())
+        # RMS_S12_ver_error.append(s12_ver.GetRMSError())
+        # RMS_S18_ver_error.append(s18_ver.GetRMSError())
+
         S12_rad.append(s12_rad.GetMean())
         S18_rad.append(s18_rad.GetMean())
         S12_rad_error.append(s12_rad.GetMeanError())
@@ -275,36 +215,28 @@ for i_trial in range(0, trialN):
         RMS_S18_rad_error.append(s18_rad.GetRMSError())
 
 
-        ####### FITTING ###########
-        # s12_ver.GetXaxis().SetRangeUser(-70, 70)
-        # s18_ver.GetXaxis().SetRangeUser(-70, 70)
-        #S12_ver.append(s12_ver.GetMean())
-        #S18_ver.append(s18_ver.GetMean())
-        #S12_ver_error.append(s12_ver.GetMeanError())
-        #S18_ver_error.append(s18_ver.GetMeanError())
-        # RMS_S12_ver.append(s12_ver.GetRMS())
-        # RMS_S18_ver.append(s18_ver.GetRMS())
-        # RMS_S12_ver_error.append(s12_ver.GetRMSError())
-        # RMS_S18_ver_error.append(s18_ver.GetRMSError())
-
         cases.append(int(i_trial+1)) #already have the 1st element from nominal
 
+        '''
+        #file = "Systematics_reco/"+str(dirName)+"/"+str(i_trial+1)+"/RunTrackingDAQ.fcl"
+        file = str(os.environ['MRB_SOURCE'])+"/gm2tracker/align/Systematics_reco/"+str(dirName)+"/"+str(i_trial+1)+"/RunTrackingDAQ.fcl"
+
+        f=open(file, "r")
+        radial = (getOffsets(f, "services.Geometry.strawtracker.radialOffsetPerModule:"))
+        radial = radial.replace("services.Geometry.strawtracker.radialOffsetPerModule: [", " ") 
+        radial = radial.replace("]", "") 
+        radialOff = np.array([float(r) for r in radial.split(',')])
+        radialOff=radialOff[8:16] 
+        radialOff=radialOff*1e3 # mm -> um 
+
+        Mis_SD_rad.append(int(np.std(radialOff))) # to the nearest um 
+        Mis_Mean_rad.append(int(np.mean(radialOff)))
+        '''
+
         
-        # #file = "Systematics_reco/"+str(dirName)+"/"+str(i_trial+1)+"/RunTrackingDAQ.fcl"
-        # file = str(os.environ['MRB_SOURCE'])+"/gm2tracker/align/Systematics_reco/"+str(dirName)+"/"+str(i_trial+1)+"/RunTrackingDAQ.fcl"
 
-        # f=open(file, "r")
-        # radial = (getOffsets(f, "services.Geometry.strawtracker.radialOffsetPerModule:"))
-        # radial = radial.replace("services.Geometry.strawtracker.radialOffsetPerModule: [", " ") 
-        # radial = radial.replace("]", "") 
-        # radialOff = np.array([float(r) for r in radial.split(',')])
-        # radialOff=radialOff[8:16] 
-        # radialOff=radialOff*1e3 # mm -> um 
-
-        # Mis_SD_rad.append(int(np.std(radialOff))) # to the nearest um 
-        # Mis_Mean_rad.append(int(np.mean(radialOff)))
-
-        #if doesn't exist, move on to the next case 
+    
+    #if doesn't exist, move on to the next case 
     else:
         continue
 
@@ -446,8 +378,8 @@ plt.subplots_adjust(hspace=0.43)
 
 plt.savefig("SD_"+str(dirName)+".png", dpi=600)
 
-
 '''
+
 # Plot for covariance
 plt.figure(3) 
 plt.suptitle("Correlation plots for "+str(dirName) , fontsize=10)

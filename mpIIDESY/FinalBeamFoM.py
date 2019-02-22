@@ -119,7 +119,7 @@ RMS_S_rad_error_max=[S12_RMS_S_rad_error_max, S18_RMS_S_rad_error_max]
 S_rad=[S_rad_mean, S_rad_max, RMS_S_rad_mean, RMS_S_rad_max]
 S_rad_error=[S_rad_error_mean, S_rad_error_max, RMS_S_rad_error_mean, RMS_S_rad_error_max]
 
-y_title = ["SD(|Radial Mean|) [um]", "|Radial Max| [um]", "SD(|SD Mean|) [um]", "|SD Max| [um]"]
+y_title = ["|Vertical Mean| [um]", "|Vertical Max| [um]", "|SD Mean| [um]", "|SD Mean| [um]"]
 
 # Fill Plots 
 
@@ -133,7 +133,6 @@ for i_case in range(0, 4):
     axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
     axes.yaxis.set_major_formatter(FormatStrFormatter("%.0f")) # 1 decimal point of y-axis 
     axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
-    axes.tick_params(axis='x', labelsize=8) #in-out ticks on y axis 
 
     for i_station in range(0, 2):
         plt.scatter(misalignment, S_rad[i_case][i_station],  marker="+", color=str(color[i_station])) # plot all cases and reference points 
@@ -147,7 +146,7 @@ for i_case in range(0, 4):
     plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
     plt.subplots_adjust(bottom=0.1)
     plt.subplots_adjust(hspace=0.43)
-    #plt.subplots_adjust(right=0.9)
+    plt.subplots_adjust(right=0.9)
 
 plt.savefig("fom.png", dpi=600)
 

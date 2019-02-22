@@ -26,6 +26,7 @@ def round_sig(x, sig=2):
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--moduleN', help='mode')
+parser.add_argument('-f', '--fileN', help='input ROOT file')
 parser.add_argument("-mode", "--mode")
 parser.add_argument("-pvals", "--pvals", nargs='+')
 parser.add_argument("-p0", "--p0", nargs='+')
@@ -64,100 +65,58 @@ print(len(layerNames), "planes: ", layerNames)
 
 if (mode == "plot"):
 
-	f = TFile.Open('TrackerAlignment.root')
-	if f:
-	    print("is open")
+	fileName = str(args.fileN)
+	regime = None 
+	if (fileName == "TrackerAlignment.root"):
+		print("Plotting Residuals from Alignment Tracks!")
+		regime="align"
+		input("Correct? [press enter]")
+
+	elif (fileName == "gm2tracker_ana.root"):
+		print("Plotting Residuals from Quality Geane Tracks!")
+		regime="track"
+		input("Correct? [press enter]") 
 	else:
-	    print("Not found")
+		print("Not expected file name!")
+		sys.exit()
 
-	#-------layersPz----------
-	i_totalLayer=0
-	yMin = 0.92
-	yMax = 1.02
-	plt.figure(1)
-	axes = plt.gca()
-	for i_module in range(0, NModules):
-		line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
-		plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-	for i in range(0, len(moduleNames)):
-		i_module=moduleNames[i]
-		for n in range(0, NLayers):
-			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/PzoP reduced Module " + str(i_module) + " " + str(LayerNames[n])
-			#print name
-			t = f.Get(str(name))
-			mean = t.GetMean()
-			SD = t.GetRMS()
-			SDError = t.GetRMSError()
-			plt.errorbar(i_layer, mean, yerr=SD, color="red") 
-			plt.plot(i_layer, mean, marker="_", color="red")
-			i_totalLayer+=1
-	
-	axes.set_xlim(0, i_totalLayer+1)
-	axes.set_ylim(yMin, yMax)
-	plt.ylabel("<Pz/P> [error = SD]")
-	plt.xlabel("Layer", fontsize=10)
-	plt.savefig("layersPz.png")
+	f = TFile.Open(fileName)
+	if f:
+	    print(str(fileName)+" is open")
+	else:
+	    print(str(fileName)+" not found")
 
-	#-------layersResiduals----------
-	# #
-	# yMin = 0.1
-	# yMax = 0.18
-	# totalLayer=0
-	# plt.figure(2)
-	# axes = plt.gca()
-	# for i in range(0, len(moduleNames)):
-	# 	i_module=moduleNames[i]
-	# 	line = [[i_module*4+0.5,yMin], [i_module*4+0.5, yMax]]
-	# 	plt.plot(
-	# 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	# 	    color = 'green')
+	if (regime=="align"): # only alignment data has Pz/P     
+		#-------layersPz----------
+		i_totalLayer=0
+		yMin = 0.92
+		yMax = 1.02
+		plt.figure(1)
+		axes = plt.gca()
+		for i_module in range(0, NModules):
+			line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
+			plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+		for i in range(0, len(moduleNames)):
+			i_module=moduleNames[i]
+			for n in range(0, NLayers):
+				i_layer=layerNames[i_totalLayer]
+				name = "TrackerAlignment/UV/PzoP reduced Module " + str(i_module) + " " + str(LayerNames[n])
+				#print name
+				t = f.Get(str(name))
+				mean = t.GetMean()
+				SD = t.GetRMS()
+				SDError = t.GetRMSError()
+				plt.errorbar(i_layer, mean, yerr=SD, color="red") 
+				plt.plot(i_layer, mean, marker="_", color="red")
+				i_totalLayer+=1
+		
+		axes.set_xlim(0, i_totalLayer+1)
+		axes.set_ylim(yMin, yMax)
+		plt.ylabel("<Pz/P> [error = SD]")
+		plt.xlabel("Layer", fontsize=10)
+		plt.savefig("layersPz.png")
 
-	# 	for i_layer in range(0, NLayers):
-	# 		name = "TrackerAlignment/UV/h_Residuals_Module_" + str(i_module) + "_" + str(LayerNames[i_layer])
-	# 		t = f.Get(str(name))
-	# 		SD = t.GetRMS()
-	# 		SDError = t.GetRMSError()
-	# 		#print "SD= ", SD , "SDError= ", SDError
-	# 		totalLayer=totalLayer+1
-	# 		plt.errorbar(totalLayer, SD, yerr=SDError, color="red") 
-	# 		plt.plot(totalLayer, SD, marker="_", color="red")
-	# axes.set_xlim(0, totalLayer+1)
-	# axes.set_ylim(yMin, yMax)
-	# plt.ylabel("Residual SD /mm [error = SD error]")
-	# plt.xlabel("Layer", fontsize=10)
-	# plt.savefig("layersResiduals.png")
-
-	# #-------layersPz(red)----------
-	# #
-	# totalLayer=0
-	# yMin = 0.92
-	# yMax = 1.02
-	# plt.figure(3)
-	# axes = plt.gca()
-	# for i in range(0, len(moduleNames)):
-	# 	i_module=moduleNames[i]
-	# 	line = [[i_module*4+0.5, yMin], [i_module*4+0.5, yMax]]
-	# 	plt.plot(
-	# 	    *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),
-	# 	    color = 'green')
-	# 	for i_layer in range(0, NLayers):
-	# 		name = "TrackerAlignment/UV/h_pzpRed_M" + str(i_module) + "_" + str(LayerNames[i_layer])
-	# 		t = f.Get(str(name))
-	# 		#print name
-	# 		mean = t.GetMean()
-	# 		SD = t.GetRMS()
-	# 		#print "mean= ", mean , "SD= ", SD
-	# 		totalLayer=totalLayer+1
-	# 		plt.errorbar(totalLayer, mean, yerr=SD, color="red") 
-	# 		plt.plot(totalLayer, mean, marker="_", color="red")
-	# axes.set_xlim(0, totalLayer+1)
-	# axes.set_ylim(yMin, yMax)
-	# plt.ylabel("<Pz/P_Reduced> [error = SD]")
-	# plt.xlabel("Layer", fontsize=10)
-	# plt.savefig("layersPzP_Reduced.png")
-
-	
+		
 	####### LAYERS ##############
 
 	#-------LayerPulls----------
@@ -176,7 +135,10 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="align"):
+				name = "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="track"):
+				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Pulls/UV Measure Pull Plane "+str(i_layer)
 			#print name
 			t = f.Get(str(name))
 			mean = t.GetMean()
@@ -213,7 +175,10 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="align"):
+				name == "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="track"):
+				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Pulls/UV Measure Pull Plane "+str(i_layer)
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			meanError=t.GetMeanError()
@@ -261,7 +226,10 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="align"):
+				name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="track"):
+				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			SD = t.GetRMS()
@@ -301,7 +269,10 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="align"):
+				name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
+			if (regime=="track"):
+				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			means.append(mean*1e3)
@@ -408,7 +379,7 @@ if (mode == "plot"):
 
 	########################################################
 
-
+	'''
 
 	#-------modulePulls----------
 	#
@@ -657,19 +628,21 @@ if (mode == "plot"):
 	subprocess.call(["convert" , "+append", "ResidualsSD_M.png" , "PullsSD_M.png", "SD_M.png"])
 	subprocess.call(["convert" , "-append", "SD_M.png", "Pulls_Res_M.png", "M_SD_Pulls_Res_Fom.png"])
 	subprocess.call(["trash" , "Residuals_M.png" , "Pulls_M.png", "M.png", "Residuals_M_Zoom.png" , "Pulls_M_Zoom.png", "M_Zoom.png", "M.png" , "M_Zoom.png", "Pulls_Res_M.png", "ResidualsSD_M.png" , "PullsSD_M.png", "SD_M.png"])
-
+	
+	'''
 
 	#------PEDE Labels-----
 	#
-	myStyle  =  TStyle("MyStyle", "My Root Styles")
-	cUniform = TCanvas("cLabels", "cLabels", 700, 700)
-	cUniform.Divide(1,1)
-	name = "TrackerAlignment/Hits/Labels"
-	hUniform = f.Get(str(name))
-	cUniform.cd(1)
-	hUniform.Draw() 
-	gStyle.SetOptStat() #over/under -flows, Rms and Means with errors, number of entries
-	cUniform.Print("hLabels.png")
+	if (regime == "align"):
+		myStyle  =  TStyle("MyStyle", "My Root Styles")
+		cUniform = TCanvas("cLabels", "cLabels", 700, 700)
+		cUniform.Divide(1,1)
+		name = "TrackerAlignment/Hits/Labels"
+		hUniform = f.Get(str(name))
+		cUniform.cd(1)
+		hUniform.Draw() 
+		gStyle.SetOptStat() #over/under -flows, Rms and Means with errors, number of entries
+		cUniform.Print("hLabels.png")
 
 
 	#------pValFit---------
@@ -677,7 +650,10 @@ if (mode == "plot"):
 	myStyle  =  TStyle("MyStyle", "My Root Styles")
 	cUniform = TCanvas("cUnifrom", "cUnifrom", 700, 700)
 	cUniform.Divide(1,1)
-	name = "TrackerAlignment/Tracks/pValue"
+	if (regime == "align"):
+		name = "TrackerAlignment/Tracks/pValue"
+	if (regime == "track"):
+		name = "TrackSummary/FitResults/pValues"
 	hUniform = f.Get(str(name))
 	#Get parameters from the histogram
 	hBinMin = hUniform.FindFirstBinAbove(0, 1)
