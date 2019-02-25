@@ -11,26 +11,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='mode')
-parser.add_argument("-mode", "--mode") # offset scale (SD) [um]
-parser.add_argument("-dof", "--dof") # radial, vertical or both 
 parser.add_argument("-mis", "--mis") # offset scale (SD) [um]
-parser.add_argument("-shift", "--shift") # offset scale (mean) [um]
-parser.add_argument("-trialN", "--trialN") # number of iterations
-parser.add_argument("-out", "--outFile", help='Output file')
+parser.add_argument("-shift", "--shift") # offset mean shift (mean) [um]
+parser.add_argument("-sign", "--sign") # offset sign
+parser.add_argument("-trialN", "--trialN", nargs='?', type=int, default=25) # number of iterations
+parser.add_argument("-mode", "--mode", nargs='?', type=str, default="U") # offset scale (SD) [um]
+parser.add_argument("-dof", "--dof", nargs='?', type=str, default="B") # radial, vertical or both 
+parser.add_argument("-out", "--outFile", nargs='?', type=str, default="RunTrackingDAQ_align.fcl", help='Output file')
 args = parser.parse_args()
 
 # CONSTANTS 
 moduleN = 8 #number of movable detectors
-stationN = 3 # S0, S12, S18 
+stationN = 2 # S12, S18 
 globalN = 2 # X, Y
+outFile = str(args.outFile) 
 trialN = int(args.trialN) 
 misalignment = int(args.mis)
-np.random.seed(12345+misalignment)
-outFile = str(args.outFile) 
 shift = int(args.shift) 
 mode = str(args.mode)
 dof=str(args.dof)
+sign=str(args.sign)
 
+#Set constant seed based on the mis scale 
+np.random.seed(12345+misalignment)
 
 if (mode == "U"):
     print("Uniform Smearing mode.")
@@ -38,6 +41,16 @@ elif (mode == "G"):
     print("Gaussian Smearing mode.")
 else:
     print("Specify Uniform (U) or Gaussian (G) smearing!")
+    sys.exit()
+
+if (sign == "P"):
+    print("Positive shift.")
+    signMath = +1.0
+elif (sign == "N"):
+    print("Negative shift.")
+    signMath= -1.0
+else:
+    print("Specify Positive (P) or Negative (N) sign!")
     sys.exit()
 
 if (dof == "B"):
@@ -50,7 +63,9 @@ else:
     print("Specify correct dof: B, R, V!")
     sys.exit()
 
-dirName=str(shift)+"_Off_"+str(misalignment)+"_Mis_"+str(mode)+"_"+str(dof)
+print("Doing "+str(trialN)+" randomisations.")
+
+dirName=str(sign)+str(shift)+"_Off_"+str(misalignment)+"_Mis_"+str(mode)+"_"+str(dof)
 subprocess.call(["mkdir" , str(dirName)]) #top level dir
 
 
@@ -64,10 +79,10 @@ SDMisY=[]
 
 #Quickly open the output and check that no previous offsets have been written,
 with open(outFile) as f:
-     if "services.Geometry.strawtracker.radialOffsetPerModule" in f.read():
+     if "services.Geometry.strawtracker.strawModuleRShift" in f.read():
          print("The output file already contains offsets - check the correct file is passed/manually backup and delete old offsets!")
          sys.exit()
-     if "services.Geometry.strawtracker.verticalOffsetPerModule:" in f.read():
+     if "services.Geometry.strawtracker.strawModuleHShift:" in f.read():
          print("The output file already contains offsets - check the correct file is passed/manually backup and delete old offsets!")
          sys.exit()
 
@@ -78,9 +93,9 @@ for i_trial in range(0, trialN):
     misX = np.zeros(moduleN)
     misY = np.zeros(moduleN)
 
-    #overall offset/shift 
-    offsetX=np.ones(moduleN) * shift 
-    offsetY=np.ones(moduleN) * shift 
+    #overall offset/shift * P/N sign 
+    offsetX=np.ones(moduleN) * shift * signMath
+    offsetY=np.ones(moduleN) * shift * signMath
 
     #Gaussian smearing 
     if (mode == "G"):
@@ -95,10 +110,12 @@ for i_trial in range(0, trialN):
              misY[i]=offsetY[i] + np.random.uniform(-misalignment, misalignment)
 
     #appends same offsets for S12 and S18 
-    a = np.concatenate((np.zeros(moduleN), misX), axis=0)  # S0 + S12 
-    b= np.concatenate((np.zeros(moduleN), misY), axis=0)
-    radialOffsetPerModule = np.concatenate((a, misX), axis=0) # S18 + (S0, S12) 
-    verticalOffsetPerModule = np.concatenate((b, misY), axis=0)
+    # a = np.concatenate((np.zeros(moduleN), misX), axis=0)  # S0 + S12 
+    # b= np.concatenate((np.zeros(moduleN), misY), axis=0)
+    # radialOffsetPerModule = np.concatenate((a, misX), axis=0) # S18 + (S0, S12) 
+    # verticalOffsetPerModule = np.concatenate((b, misY), axis=0)
+    radialOffsetPerModule = np.array(misX)
+    verticalOffsetPerModule = np.array(misY)
 
     # truncate to the nearest um 
     radialOffsetPerModule = radialOffsetPerModule.astype(int)
@@ -125,21 +142,31 @@ for i_trial in range(0, trialN):
     f = open(str(dirName)+"/"+str(i_trial+1)+"/"+outFile, 'a+')
     f.write("\n\n//Straw Offsets\n")
     
-    if(dof == "both" or dof=="rad"):
-        f.write("services.Geometry.strawtracker.radialOffsetPerModule: [ ")
-        for item in radialOffsetPerModule[:-1]:
-            f.write( str( round(item*1e-3, 3) ) + ", ") # um -> mm 
-        f.write( str( round(radialOffsetPerModule[-1]*1e-3, 3) ) )
-        f.write(" ]\n")
-    
-    if(dof == "both" or dof=="ver"):
-        f.write("services.Geometry.strawtracker.verticalOffsetPerModule: [ ")
-        for item in verticalOffsetPerModule[:-1]:
-            f.write( str( round(item*1e-3, 3) ) + ", " )
-        f.write( str( round(verticalOffsetPerModule[-1]*1e-3, 3) ) )
-        f.write(" ]\n")
+    nameS=["12", "18"]
+
+    for i_station in range(0, 2):
+
+        if(dof == "B" or dof=="R"):
+            f.write("services.Geometry.strawtracker.strawModuleRShift"+str(nameS[i_station])+": [ ")
+            for item in radialOffsetPerModule[:-1]:
+                f.write( str( round(item*1e-3, 3) ) + ", ") # um -> mm 
+            f.write( str( round(radialOffsetPerModule[-1]*1e-3, 3) ) )
+            f.write(" ]\n")
+        
+        if(dof == "B" or dof=="V"):
+            f.write("services.Geometry.strawtracker.strawModuleHShift"+str(nameS[i_station])+": [ ")
+            for item in verticalOffsetPerModule[:-1]:
+                f.write( str( round(item*1e-3, 3) ) + ", " )
+            f.write( str( round(verticalOffsetPerModule[-1]*1e-3, 3) ) )
+            f.write(" ]\n")
+
     f.close()
     
+
+
+#now flatten MisX for plotting
+MisX = np.reshape(MisX, -1)
+MisY = np.reshape(MisY, -1)
 
 ## plot for all trials
 plt.subplot(311) 
@@ -168,8 +195,8 @@ bins = np.linspace(-200, 200, 25)
 plt.hist(MisX, bins, alpha=0.5, label='Mis. X')
 plt.hist(MisY, bins, alpha=0.5, label='Mis. Y')
 plt.legend(loc='upper left', title="Misalignment")
-plt.text(130, 2, "Entries X: "+str(len(MisX))+"\nMean X: "+str(round(np.mean(MisX),3))+"\nSD X: "+str(round(np.std(MisX),3)), bbox=dict(facecolor='green', alpha=0.5))
-plt.text(20, 2, "Entries Y: "+str(len(MisY))+"\nMean Y: "+str(round(np.mean(MisY),3))+"\nSD Y: "+str(round(np.std(MisY),3)), bbox=dict(facecolor='red', alpha=0.5))
+plt.text(130, 10, "Entries X: "+str(len(MisX))+"\nMean X: "+str(round(np.mean(MisX),3))+"\nSD X: "+str(round(np.std(MisX),3)), bbox=dict(facecolor='green', alpha=0.5))
+plt.text(20, 10, "Entries Y: "+str(len(MisY))+"\nMean Y: "+str(round(np.mean(MisY),3))+"\nSD Y: "+str(round(np.std(MisY),3)), bbox=dict(facecolor='red', alpha=0.5))
 plt.xlabel("Misalignment offset [um]", fontsize=10)
 
 plt.subplots_adjust(bottom=0.1)
