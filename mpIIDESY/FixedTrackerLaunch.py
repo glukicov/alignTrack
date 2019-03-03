@@ -82,11 +82,11 @@ input("Correct? [press enter]")
 
 # # #Run 15922  :: Iteration 2
 # if (stationN == "12"):
-# 	 #offsets=( 0.158, 0.001, -0.162, 0.0, -0.34, 0.083, -0.389, 0.062, -0.401, 0.052, -0.289, 0.019, -0.072, -0.022, 0.11, 0.024) #S12 
-#      offsets=( 0.0, 0.0, -0.32, -0.001, -0.498, 0.081, -0.547, 0.06, -0.559, 0.051, -0.447, 0.017, -0.23, -0.023, -0.048, 0.023) #S12
+# 	 offsets=( 0.158, 0.001, -0.162, 0.0, -0.34, 0.083, -0.389, 0.062, -0.401, 0.052, -0.289, 0.019, -0.072, -0.022, 0.11, 0.024) #S12 
+#      #offsets=( 0.0, 0.0, -0.32, -0.001, -0.498, 0.081, -0.547, 0.06, -0.559, 0.051, -0.447, 0.017, -0.23, -0.023, -0.048, 0.023) #S12
 # if (stationN == "18"):
 # 	 offsets=( 0.082, 0.013, -0.102, -0.01, -0.192, 0.138, -0.192, 0.148, -0.264, 0.129, -0.168, 0.188, -0.002, 0.081, 0.03, -0.097) #S18 
-#    offsets=( 0.0, 0.0, -0.184, -0.022, -0.274, 0.125, -0.274, 0.136, -0.346, 0.117, -0.249, 0.176, -0.083, 0.068, -0.051, -0.109) #S18
+#      #offsets=( 0.0, 0.0, -0.184, -0.022, -0.274, 0.125, -0.274, 0.136, -0.346, 0.117, -0.249, 0.176, -0.083, 0.068, -0.051, -0.109) #S18
 
 # print("Offsets iteration 2 [mm]: ", offsets)
 # input("Offsets :: iteration 2 correct? [press enter]") 
@@ -439,8 +439,8 @@ else:
 sugMean  = []
 #Take away the 0th module shift from the rest 
 for i in range(0, len(recoXMean)):
-	sugMean.append(recoXMean[i]-recoXMean[0])
-	sugMean.append(recoYMean[i]-recoYMean[0])
+	sugMean.append(recoXMean[i])
+	sugMean.append(recoYMean[i])
 
 offset = " "
 for i in range(0, (len(sugMean)-1) ):
@@ -460,13 +460,6 @@ verticalOffsetPerModule=np.round_(recoYMean, 3) #Y per station
 
 print("radialOffsetPerModule", radialOffsetPerModule)
 print("verticalOffsetPerModule", verticalOffsetPerModule)
-
-#Take away the 0th module shift from the rest 
-radialOffsetPerModule = np.round_(radialOffsetPerModule - radialOffsetPerModule[0], 3)
-verticalOffsetPerModule = np.round_(verticalOffsetPerModule - verticalOffsetPerModule[0], 3)
-
-print("radialOffsetPerModule modified", radialOffsetPerModule)
-print("verticalOffsetPerModule modified", verticalOffsetPerModule)
 
 f=open("OffsetsPerModule"+str(stationN)+".fcl", "w+")
 
