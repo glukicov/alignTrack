@@ -32,6 +32,7 @@ parser.add_argument("-pvals", "--pvals", nargs='+')
 parser.add_argument("-p0", "--p0", nargs='+')
 parser.add_argument("-mis", "--mis", nargs='+')
 parser.add_argument("-abs", "--abs")
+parser.add_argument('-s', '--stationN', help='station number')
 args = parser.parse_args()
 
 
@@ -39,6 +40,7 @@ NModules=8
 NLayers=4 # per modules
 NTotalLayers=32
 mode = str(args.mode)
+stationN = "S"+str(args.stationN)
 LayerNames = ["U0", "U1", "V0", "V1"]
 moduleNamesInitial=np.arange(1,NModules+1) #1-8
 layerNamesInitial=np.arange(1, NTotalLayers+1) #1-32
@@ -138,7 +140,7 @@ if (mode == "plot"):
 			if (regime=="align"):
 				name = "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
 			if (regime=="track"):
-				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Pulls/UV Measure Pull Plane "+str(i_layer)
+				name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_layer)+"/Measure Pulls/UV Measure Pull Plane "+str(i_layer)
 			#print name
 			t = f.Get(str(name))
 			mean = t.GetMean()
@@ -155,7 +157,7 @@ if (mode == "plot"):
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pulls Mean [error = SD]", fontsize=20)
 	plt.xlabel("Layer", fontsize=20)
-	plt.title("Pulls Means (SD)", fontsize=20)
+	plt.title("Pulls Means (SD) "+stationN, fontsize=20)
 	plt.savefig("Pulls_L.png")
 
 
@@ -178,7 +180,7 @@ if (mode == "plot"):
 			if (regime=="align"):
 				name == "TrackerAlignment/UV/Pulls Module " + str(i_module) + " " + str(LayerNames[n])
 			if (regime=="track"):
-				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Pulls/UV Measure Pull Plane "+str(i_layer)
+				name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_layer)+"/Measure Pulls/UV Measure Pull Plane "+str(i_layer)
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			meanError=t.GetMeanError()
@@ -207,7 +209,7 @@ if (mode == "plot"):
 	axes.set_ylim(yMin, yMax)
 	plt.ylabel("Pull Mean [error = Error on the Mean]", fontsize=20)
 	plt.xlabel("Layer", fontsize=20)
-	plt.title("Mean pull", fontsize=18)
+	plt.title("Mean pull "+stationN, fontsize=18)
 	plt.savefig("Pulls_L_Zoom.png")
 
 	#-------LayerResiudals----------
@@ -229,7 +231,7 @@ if (mode == "plot"):
 			if (regime=="align"):
 				name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
 			if (regime=="track"):
-				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
+				name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			SD = t.GetRMS()
@@ -248,7 +250,7 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual Means (SD)", fontsize=18)
+	plt.title("UV Residual Means (SD) "+stationN, fontsize=18)
 	plt.ylabel("Residual mean [um] (error = SD)", fontsize=18)
 	plt.xlabel("Layer", fontsize=18)
 	plt.savefig("Residuals_L.png")
@@ -272,7 +274,7 @@ if (mode == "plot"):
 			if (regime=="align"):
 				name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
 			if (regime=="track"):
-				name = "TrackSummary/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
+				name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
 			t = f.Get(str(name))
 			mean = t.GetMean()
 			means.append(mean*1e3)
@@ -299,7 +301,7 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual Means", fontsize=18)
+	plt.title("UV Residual Means "+stationN, fontsize=18)
 	plt.ylabel("Residual Mean [um]", fontsize=18)
 	plt.xlabel("Layer", fontsize=18)
 	plt.savefig("Residuals_L_Zoom.png")
@@ -332,7 +334,7 @@ if (mode == "plot"):
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual SD", fontsize=20)
+	plt.title("UV Residual SD "+stationN, fontsize=20)
 	plt.ylabel("Residual SD /um [error = SD Error]", fontsize=18)
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("ResidualsSD_L.png")
@@ -365,7 +367,7 @@ if (mode == "plot"):
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("Pulls SD", fontsize=20)
+	plt.title("Pulls SD "+stationN, fontsize=20)
 	plt.ylabel("Pulls SD [error = SD Error]", fontsize=18)
 	plt.xlabel("Layer", fontsize=20)
 	plt.savefig("PullsSD_L.png")
@@ -375,7 +377,7 @@ if (mode == "plot"):
 	subprocess.call(["convert" , "-append", "L.png" , "L_Zoom.png", "Pulls_Res_L.png"])
 	subprocess.call(["convert" , "+append", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
 	subprocess.call(["convert" , "-append", "SD_L.png", "Pulls_Res_L.png", "L_SD_Pulls_Res_Fom.png"])
-	subprocess.call(["trash" , "Residuals_L.png" , "Pulls_L.png", "L.png", "Residuals_L_Zoom.png" , "Pulls_L_Zoom.png", "L_Zoom.png", "L.png" , "L_Zoom.png", "Pulls_Res_L.png", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
+	subprocess.call(["trash" , "Residuals_L.png" , "Pulls_L.png", "L.png", "Pulls_L_Zoom.png", "L_Zoom.png", "L.png" , "L_Zoom.png", "Pulls_Res_L.png", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
 
 	########################################################
 
@@ -641,6 +643,7 @@ if (mode == "plot"):
 		hUniform = f.Get(str(name))
 		cUniform.cd(1)
 		hUniform.Draw() 
+		hUniform.GetXaxis().SetTitle(stationN)
 		gStyle.SetOptStat() #over/under -flows, Rms and Means with errors, number of entries
 		cUniform.Print("hLabels.png")
 
@@ -653,7 +656,7 @@ if (mode == "plot"):
 	if (regime == "align"):
 		name = "TrackerAlignment/Tracks/pValue"
 	if (regime == "track"):
-		name = "TrackSummary/FitResults/pValues"
+		name = "TrackSummary"+stationN+"/FitResults/pValues"
 	hUniform = f.Get(str(name))
 	#Get parameters from the histogram
 	hBinMin = hUniform.FindFirstBinAbove(0, 1)
@@ -727,7 +730,7 @@ if (mode == "plot"):
 
 	aboveFitRatio = float(aboveFitCounter)/(hUniformNorm.GetSize()-2)  #divide by the #bin without OF and UF  
 
-	hUniformNorm.SetTitle("Chi^{2}/ndf = " + str(round_sig(pValF,3)) + " p0= " + str(round_sig(p0,3)) + " mean=" + str(round_sig(pMean,3)) + " L.V.= " + str(largestValue) + " >P0= " + str(aboveFitRatio) + " #bins= " +  str(hUniformNorm.GetSize()-2) )
+	hUniformNorm.SetTitle(stationN+": Chi^{2}/ndf = " + str(round_sig(pValF,3)) + " p0= " + str(round_sig(p0,3)) + " mean=" + str(round_sig(pMean,3)) + " L.V.= " + str(largestValue) + " >P0= " + str(aboveFitRatio) + " #bins= " +  str(hUniformNorm.GetSize()-2) )
 	gStyle.SetOptStat("ourRmMe") #over/under -flows, Rms and Means with errors, number of entries
 	gStyle.SetOptFit(1111)  #probability, Chi2, errors, name/values of parameters
 	gStyle.SetStatFormat("11.4f")  # 4 sig.fig, f=float
@@ -831,7 +834,7 @@ if (mode == "p0"):
 	axes.set_xlim(-0.5, trialN-0.5)
 	axes.xaxis.set_major_locator(MaxNLocator(integer=True))
 	axes.set_ylim(yMin, yMax)
-	plt.ylabel("p0 of the fit", fontsize=20)
+	plt.ylabel("p0 of the fit "+stationN, fontsize=20)
 	plt.xlabel("Module Removed", fontsize=20)
 	# plt.xlabel("Iteration", fontsize=20)
 	plt.savefig("p0FoM.png")
@@ -895,7 +898,7 @@ if (mode == "mis"):
 	    color = 'grey')
 	axes.set_xlim(0.5, NModules+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("Misalignment X (<X> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
+	plt.title("Misalignment X (<X> = %s um $\sigma$= %s um)"+stationN %(int(round(avgMean)), int(round(SD))), fontsize=14)
 	plt.ylabel("Misalignment [um]", fontsize=16)
 
 	plt.subplot(212)
@@ -929,7 +932,7 @@ if (mode == "mis"):
 	    color = 'grey')
 	axes2.set_xlim(0.5, NModules+1)
 	axes2.set_ylim(yMin, yMax)
-	plt.title("Misalignment Y (<Y> = %s um $\sigma$= %s um)" %(int(round(avgMean)), int(round(SD))), fontsize=14)
+	plt.title("Misalignment Y (<Y> = %s um $\sigma$= %s um)"+stationN %(int(round(avgMean)), int(round(SD))), fontsize=14)
 	plt.ylabel("Misalignment [um]", fontsize=16)
 	plt.xlabel("Module", fontsize=16)
 

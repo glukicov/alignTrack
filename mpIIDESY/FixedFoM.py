@@ -41,13 +41,6 @@ if (stationN == "12"):
 	secondModuleX=[1271,  1281, 1271, 1281]
 	secondModuleY=[1272,  1282, 1272, 1282]
 
-# if (stationN == "12"):
-# 	firstModuleX= [1221,  1221, 1231, 1231]
-# 	firstModuleY= [1222,  1222, 1232, 1232]
-# 	secondModuleX=[1261,  1271, 1261, 1271]
-# 	secondModuleY=[1262,  1272, 1262, 1272]
-
-
 if (stationN == "18"):
 	firstModuleX= [1811,  1811, 1821, 1821]
 	firstModuleY= [1812,  1812, 1822, 1822]
