@@ -9,6 +9,7 @@
 import argparse, sys
 from scipy import stats
 
+
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode')
 parser.add_argument('-rp', '--removedPars', nargs='+',  help='pars removed')
@@ -46,10 +47,18 @@ if (stationN == "0"):
 if (stationN == "12"):
 	expectPars = (1211, 1212, 1221, 1222, 1231, 1232, 1241, 1242, 1251, 1252, 1261, 1262, 1271, 1272, 1281, 1282)  # XY  [Station 12]
 	locationStation="upper left"
+	yMaxY =  100
+	yMinY = -100
+	yMaxX =  100
+	yMinX = -100
 
 if (stationN == "18"):
 	expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
 	locationStation="lower left"
+	yMaxY =  300
+	yMinY = -300
+	yMaxX =  300
+	yMinX = -300
 
 
 #Deal with removed modules 
@@ -60,6 +69,16 @@ if (stationN == "18"):
 
 #Truth Misalignment 
 T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
+
+
+## ----------------------------
+# #MDC1 DS1
+if (stationN == "12"):
+	T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
+if (stationN == "18"):
+	T_mis_C= (0.082, 0.013, -0.102, -0.01, -0.192, 0.138, -0.192, 0.148, -0.264, 0.129, -0.168, 0.188, -0.002, 0.081, 0.03, -0.097) #S18
+# ##----------------------------
+
 
  # T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.5, -0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S12: MDC1 large 
 #T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S18: MDC1 large 
@@ -73,9 +92,10 @@ useOffsets = False
 
 # Run 0 
 mis_C=T_mis_C  # the truth is the only misalignment 
+print("Station S:",stationN)
 print("Initial Truth Misalignment [mm]: ", mis_C)
 print("Expected Parameters: ", expectPars)
-input("Correct? [press enter]") 
+#input("Correct? [press enter]") 
 
 # ## ----------------------------
 # useOffsets = True
@@ -299,8 +319,6 @@ for i_module in range(0, 8):
 colours = ["green", "blue", "black", "orange", "purple"]
 spacing = [2, 3.5, 4.5, 5.5, 6.5]
 # yMinX = -np.max(np.array(recoXMean))*1.4
-yMaxX = 300
-yMinX = -600
 # if(stationN=="12"):
 # 	yMinX = -600
 # yMaxX = np.max(np.array(recoXMean))*1.4
@@ -372,8 +390,6 @@ plt.xlabel("Module", fontsize=8)
 # plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
 
 plt.subplot(212) # Y 
-yMaxY = 300
-yMinY = -300
 plt.rcParams.update({'font.size': 8})
 axes2 = plt.gca()
 axes2.set_xlim(0.5, 8.5)

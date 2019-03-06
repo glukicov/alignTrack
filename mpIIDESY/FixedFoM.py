@@ -42,10 +42,14 @@ if (stationN == "12"):
 	secondModuleY=[1272,  1282, 1272, 1282]
 
 if (stationN == "18"):
-	firstModuleX= [1811,  1811, 1821, 1821]
-	firstModuleY= [1812,  1812, 1822, 1822]
-	secondModuleX=[1871,  1881, 1871, 1881]
-	secondModuleY=[1872,  1882, 1872, 1882]
+	# firstModuleX= [1811,  1811, 1821, 1821]
+	# firstModuleY= [1812,  1812, 1822, 1822]
+	# secondModuleX=[1871,  1881, 1871, 1881]
+	# secondModuleY=[1872,  1882, 1872, 1882]
+	firstModuleX= [1811,  1811]
+	firstModuleY= [1812,  1812]
+	secondModuleX=[1871,  1881]
+	secondModuleY=[1872,  1882]
 
 
 

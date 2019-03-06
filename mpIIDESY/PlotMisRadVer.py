@@ -39,26 +39,26 @@ def getOffsets(f, name):
 
 ###Store the offsets from file
 f=open(file, "r")
-radial = (getOffsets(f, "services.Geometry.strawtracker.radialOffsetPerModule:"))
-radial = radial.replace("services.Geometry.strawtracker.radialOffsetPerModule: [", " ") 
+radial = (getOffsets(f, "services.Geometry.strawtracker.strawModuleRShift12:"))
+radial = radial.replace("services.Geometry.strawtracker.strawModuleRShift12: [", " ") 
 radial = radial.replace("]", "") 
 radialOff = np.array([float(r) for r in radial.split(',')])
-radialOff=radialOff[8:16] 
+radialOff=radialOff[0:8] 
 radialOff=radialOff*1e3 # mm -> um 
 print("Radial:", radialOff)
 
 f=open(file, "r")
-vertical = (getOffsets(f, "services.Geometry.strawtracker.verticalOffsetPerModule:"))
-vertical = vertical .replace("services.Geometry.strawtracker.verticalOffsetPerModule: [", "") 
+vertical = (getOffsets(f, "services.Geometry.strawtracker.strawModuleHShift12:"))
+vertical = vertical .replace("services.Geometry.strawtracker.strawModuleHShift12: [", "") 
 vertical = vertical .replace("]", "") 
 verticalOff = np.array([float(v) for v in vertical .split(',')])
-verticalOff=verticalOff[8:16] 
+verticalOff=verticalOff[0:8] 
 verticalOff=verticalOff*1e3 # mm -> um 
 print("Vertical:",  verticalOff)
 
 
 ###Get a nice label
-extraLabel = file.replace("/gm2/app/users/glukicov/TrackerAlignment/gm2Dev_v9_15_00/srcs/gm2tracker/align/Systematics_new/", " ") # replace "/" with "_"
+extraLabel = file.replace("/gm2/app/users/glukicov/TrackerAlignment/gm2Dev_v9_17_01/srcs/gm2tracker/align/Systematics_new/", " ") # replace "/" with "_"
 extraLabel = extraLabel.replace("/", "_") # replace "/" with "_"
 extraLabel = extraLabel.replace("_RunTrackingDAQ.fcl", "") # replace "/" with "_"
 
@@ -66,8 +66,8 @@ print("Label:", extraLabel)
 
 
 colours = ["green", "blue", "black", "orange", "purple"]
-yMin = -250
-yMax = 250
+yMin = -200
+yMax = 200
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 10})
 axes = plt.gca()
