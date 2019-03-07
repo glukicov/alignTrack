@@ -132,19 +132,21 @@ if (mode == "plot"):
 	hitTimeHistoPath_s12 = "HitSummary/Station_12/h_hitTime"
 
 	canvasName = "s12_vertical"
-	canvasTitle = "S12 Vertical"
+	canvasTitle = "S12"
 	plotPath = station12Path
 	plotName="h_verticalPos_vs_time"
 	legendName = cases 
-	colorHisto = moduleArray
 	hitsTotal_s12_nom = - 1 # global container 
 
 	#create main canvas 
-	canvas = TCanvas(canvasName, canvasTitle, 800, 600)
-	#Postion legend once per main loop accordingly 
+	canvas = TCanvas(canvasName, canvasTitle, 16000, 10000)
+	canvas.Divide(2,2)
 	legend =  TLegend(0.87, 0.87, 0.59, 0.55) 
-
-	scrFiles = []
+	legend_tracks =  TLegend(0.87, 0.87, 0.59, 0.55) 
+	legend_hits =  TLegend(0.87, 0.87, 0.59, 0.55) 
+	
+	scrFiles = [] # keep all opened files in scope 
+	clonedHistos=[]
 
 	#now stack the dist.
 	for i_total, i_case in enumerate(cases):
@@ -166,11 +168,8 @@ if (mode == "plot"):
 		hist_1D.SetTitle("")
 		hist_1D.GetXaxis().SetRangeUser(-50, 50) # applying a maximum range cut 
 		hist_1D.GetYaxis().SetTitleOffset(1.4);
-		hist_1D.SetLineColor(colorHisto[i_total])
-		legenObject = hist_1D	
-		legenValue1 = str(legendName[i_total])
-		legend.AddEntry(legenObject,str(legenValue1),"L") 
-		legend.SetTextSize(.028)
+		hist_1D.GetXaxis().SetTitleOffset(1.4);
+		hist_1D.SetLineColor(i_total+1) # 0=white... 
 		
 		#Normalisation 
 		#only for nominal case
@@ -188,27 +187,18 @@ if (mode == "plot"):
 
 		tracks = hist_1D.GetEntries()
 		hits = hitsTotal_s12/hitsTotal_s12_nom
-		norm =  tracks/hits	  
+		# norm =  tracks/hits	  
+		norm =  hits	  
 
 		#unscaled  
-		if (scale == "none"):
-			pass
-
-		#scaled by tracks 
-		if (scale == "tracks"):
-			hist_1D.Scale(1/tracks); # normalise the histo 
-			hist_1D.GetYaxis().SetTitle("Enteries (Normalised: 1/Tracks)")
-
-		#scaled by (case_hits/nominal_hits)/Tracks 
-		if (scale == "h/t"):
-			hist_1D.Scale(1/norm); # normalise the histo 
-			hist_1D.GetYaxis().SetTitle("Enteries (Normalised: (case_hits/nominal_hits)/Tracks)")
-
-		#scaled by Tracks /(case_hits/nominal_hits)
-		if (scale == "t/h"):
-			hist_1D.Scale(norm); # normalise the histo 
-			hist_1D.GetYaxis().SetTitle("Enteries (Normalised: Tracks/(case_hits/nominal_hits))")
-
+		#if (scale == "none"):
+		canvas.cd(1)
+		legend.SetHeader(canvasTitle+" "+str(label)+" [unnorm.] cases: ", "C")
+		hist_1D.GetYaxis().SetTitle("Enteries")
+		legenObject = hist_1D	
+		legenValue1 = str(legendName[i_total]) + " <y>= " + str(round(hist_1D.GetMean(), 3))
+		legend.AddEntry(legenObject,str(legenValue1),"L") 
+		legend.SetTextSize(.028)
 		if (i_case == 0):
 			hist_1D.Draw("")
 			legend.Draw("")
@@ -217,12 +207,53 @@ if (mode == "plot"):
 			hist_1D.Draw("same")
 			legend.Draw("same")
 
+		#scaled by tracks 
+		# #if (scale == "tracks"):
+		canvas.cd(2)
+		legend_tracks.SetHeader(canvasTitle+" "+str(label)+" [norm. tracks] cases: ", "C")
+		cloneNameTH1 = "hist_1D_tracks_"+str(i_case)+str(i_total)
+		hist_1D_tracks = hist_1D.Clone(cloneNameTH1)
+		clonedHistos.append(hist_1D_tracks)
+		hist_1D_tracks.Scale(1/tracks); # normalise the histo 
+		hist_1D_tracks.GetYaxis().SetTitle("Enteries (Normalised: 1/Tracks)")
+		legenObject = hist_1D_tracks	
+		legenValue1 = str(legendName[i_total]) + " <y>= " + str(round(hist_1D_tracks.GetMean(), 3))
+		legend_tracks.AddEntry(legenObject,str(legenValue1),"L") 
+		legend_tracks.SetTextSize(.028)
+		if (i_case == 0):
+			hist_1D_tracks.Draw("")
+			legend_tracks.Draw("")
+			
+		else:
+			hist_1D_tracks.Draw("same")
+			legend_tracks.Draw("same")
+
+		#scaled by (case_hits/nominal_hits)/Tracks 
+		#if (scale == "hits"):
+		canvas.cd(3)
+		legend_hits.SetHeader(canvasTitle+" "+str(label)+" [norm. hits] cases: ", "C")
+		cloneNameTH1 = "hist_1D_hits_"+str(i_case)+str(i_total)
+		hist_1D_hits = hist_1D.Clone(cloneNameTH1)
+		clonedHistos.append(hist_1D_hits)
+		hist_1D_hits.Scale(1/norm); # normalise the histo 
+		hist_1D_hits.GetYaxis().SetTitle("Enteries (Normalised: 1/(case_hits/nominal_hits))")
+		legenObject = hist_1D_hits	
+		legenValue1 = str(legendName[i_total]) + " <y>= " + str(round(hist_1D_hits.GetMean(), 3))
+		legend_hits.AddEntry(legenObject,str(legenValue1),"L") 
+		legend_hits.SetTextSize(.028)
+		if (i_case == 0):
+			hist_1D_hits.Draw("")
+			legend_hits.Draw("")
+			
+		else:
+			hist_1D_hits.Draw("same")
+			legend_hits.Draw("same")
+
 			
 	#Do some final massagin and save to a file
-	legend.SetHeader(canvasTitle+" "+str(label)+" cases: ", "C"); # option "C" allows to center the header
 	gStyle.SetOptStat(0)
 	gStyle.SetOptFit(0)
 	gStyle.SetLegendBorderSize(0)
 	gStyle.SetLegendTextSize(0.023)
 	canvas.Draw()
-	canvas.Print(str(canvasName)+".png")
+	canvas.Print(str(canvasName)+str(label)+".png")
