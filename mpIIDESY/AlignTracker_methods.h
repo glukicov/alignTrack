@@ -128,13 +128,15 @@ private:
 	bool hitCut = true; // if true, hits will be rejected if DCA > strawRadius
 	
 	//Set truth misalignment of modules 
-	float dispX[8] =     {  0.009, -0.003, -0.011,  0.007,  0.005, -0.019, -0.007, -0.003}; // manual misalignment [relative misalignment per module]
-	float dispZ[8] =     {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // manual misalignment [relative misalignment per module]
-	float dispTheta[8] = {0.00,  0.00,  0.0,  0.00,  0.00,  0.00,  0.0,  0.0}; // radians
+	// float dispX[4] =     { 0.00, 0.01, -0.01, 0.00}; // manual misalignment [relative misalignment per module]
+	float dispX[4] =     { 0.00, 0.00, 	0.020, 0.00}; // manual misalignment [relative misalignment per module]
+	// float dispX[4] =     { 0.00, 0.0005, 	-0.0005, 0.00}; // manual misalignment [relative misalignment per module]
+	float dispZ[4] =     {0.00,  0.00,  0.0,  0.00}; // manual misalignment [relative misalignment per module]
+	float dispTheta[4] = {0.00,  0.00,  0.0,  0.00}; // radians
 
 	// **** GEOMETRIC CONSTANTS ****  // XXX will be taken from gm2geom in the future
 	// define detector geometry [all distances are in cm]
-	static const int moduleN = 8; //number of movable detectors/module [independent modules]
+	static const int moduleN = 4; //number of movable detectors/module [independent modules]
 	static const int strawN = 8; //number of measurement elements in x direction  [number of straws per layer]
 	static const int viewN = 2; //There are two views per module (U and V) XXX
 	static const int layerN = 2; //there are 2 layers per view [4 layers per module]

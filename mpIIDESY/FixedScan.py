@@ -64,7 +64,7 @@ firstModuleY=np.array(firstModuleY)
 for i in range (0, len(firstModuleX)):
 
 	#set new  label
-	label = "S"+str(stationN)+"_"+str(i+1)
+	label = "S"+str(stationN)+"_"+str(i+2)
 
 	#Write new steering file
 	f = open('ParameterFile.txt', "w")

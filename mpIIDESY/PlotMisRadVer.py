@@ -64,10 +64,11 @@ extraLabel = extraLabel.replace("_RunTrackingDAQ.fcl", "") # replace "/" with "_
 
 print("Label:", extraLabel)
 
+moduleArray=np.arange(1,9)
 
 colours = ["green", "blue", "black", "orange", "purple"]
-yMin = -200
-yMax = 200
+yMin = -100
+yMax = 100
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 10})
 axes = plt.gca()
@@ -77,8 +78,8 @@ plt.title("Misalignment: Radial "+str(extraLabel), fontsize=10)
 plt.ylabel("Misalignment [um]", fontsize=10)
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+plt.plot(moduleArray, radialOff, marker=".", color="red")
 for i_module in range(0, 8):
-	plt.plot(i_module+1, radialOff[i_module], marker=".", color="red")
 	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 
@@ -86,7 +87,7 @@ for i_module in range(0, 8):
 avgMeanMis = sum(radialOff)/float(len(radialOff))
 SDMis = np.std(radialOff)
 textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-plt.text(4.7, 80, textstr, fontsize=10, color="black")
+plt.text(4.7, -80, textstr, fontsize=10, color="black")
 plt.xlabel("Module", fontsize=10)
 
 plt.subplot(212) # Y 
@@ -97,8 +98,8 @@ plt.title("Misalignment: Vertical "+str(extraLabel), fontsize=10)
 plt.ylabel("Misalignment [um]", fontsize=10)
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+plt.plot(moduleArray, verticalOff, marker=".", color="red")
 for i_module in range(0, 8):
-	plt.plot(i_module+1, verticalOff[i_module], marker=".", color="red")
 	line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 	
@@ -107,9 +108,9 @@ for i_module in range(0, 8):
 avgMeanMis = sum(verticalOff)/float(len(verticalOff))
 SDMis = np.std(verticalOff)
 textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-plt.text(4.7, 80, textstr, fontsize=10, color="black")
+plt.text(4.7, -80, textstr, fontsize=10, color="black")
 plt.xlabel("Module", fontsize=10)
 
 plt.tight_layout()
-
+plt.show()
 plt.savefig("Mis"+str(extraLabel)+".png", dpi=600)

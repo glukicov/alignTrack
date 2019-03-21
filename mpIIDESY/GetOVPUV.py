@@ -48,8 +48,6 @@ layerNamesInitial=np.arange(1, NTotalLayers+1) #1-32
 
 #Metric
 
-
-
 if (int(args.moduleN) != -1):
 	removedModule=int(args.moduleN)
 	moduleNames=np.delete(moduleNamesInitial, removedModule-1) # indexing so -1
@@ -240,8 +238,8 @@ if (mode == "plot"):
 			ResidualRMSError.append(SDError*1e3)
 			#print "mean= ", mean , "SD= ", SD
 			# mm to um *1e3 
-			plt.errorbar(i_layer, mean*1e3, yerr=SD*1e3, color="red") 
-			plt.plot(i_layer, mean*1e3, marker="_", color="red")
+			plt.errorbar(i_layer, mean*1e3, yerr=SD*1e3, color="red", markersize=14, elinewidth=3) 
+			plt.plot(i_layer, mean*1e3, marker="+", color="red")
 			#axes.annotate(round_sig(mean*1e3, 3), (i_module, mean))
 			#axes.annotate( "("+str(round_sig(SD*1e3, 3))+")", (i_module-0.43, yMin+0.05*1e3))
 			i_totalLayer+=1
@@ -279,9 +277,9 @@ if (mode == "plot"):
 			mean = t.GetMean()
 			means.append(mean*1e3)
 			meanError = t.GetMeanError()
-			MeanErrors.append(meanError)
-			plt.errorbar(i_layer, mean*1e3, yerr=meanError*1e3, color="red") 
-			plt.plot(i_layer, mean*1e3, marker="_", color="red")
+			MeanErrors.append(meanError*1e3)
+			plt.errorbar(i_layer, mean*1e3, yerr=meanError*1e3, color="red", markersize=14, elinewidth=3) 
+			plt.plot(i_layer, mean*1e3, marker="+", color="red")
 			#axes.annotate(round_sig(mean*1e3), (i_module, mean*1e3))
 			i_totalLayer+=1
 
@@ -290,7 +288,7 @@ if (mode == "plot"):
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
 	plt.text(32.1, avgMean, str(round_sig(avgMean)), fontsize=9)
 	for i in range(0, len(means)):
-		number = (means[i]-avgMean)/(MeanErrors[i]*1e3)
+		number = (means[i]-avgMean)/(MeanErrors[i])
 		if (number != 0):
 			number = number
 		else:
@@ -301,9 +299,10 @@ if (mode == "plot"):
 	plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
-	plt.title("UV Residual Means "+stationN, fontsize=18)
+	plt.title("UV Residual Mean "+stationN, fontsize=18)
 	plt.ylabel("Residual Mean [um]", fontsize=18)
 	plt.xlabel("Layer", fontsize=18)
+	plt.tight_layout()
 	plt.savefig("Residuals_L_Zoom.png")
 
 	#----Layer Residual SD 
@@ -320,8 +319,8 @@ if (mode == "plot"):
 		i_module=moduleNames[i]
 		for n in range(0, NLayers):
 			i_layer=layerNames[i_totalLayer]
-			plt.errorbar(i_layer, ResidualRMS[i_totalLayer], yerr=ResidualRMSError[i_totalLayer], color="red") 
-			plt.plot(i_layer, ResidualRMS[i_totalLayer], marker="_", color="red")
+			plt.errorbar(i_layer, ResidualRMS[i_totalLayer], yerr=ResidualRMSError[i_totalLayer], color="red", markersize=14, elinewidth=3) 
+			plt.plot(i_layer, ResidualRMS[i_totalLayer], marker="+", color="red")
 			#axes.annotate(int(round_sig( ResidualRMS[i_totalLayer], 3)), (i_module,  ResidualRMS[i_totalLayer]))
 			means.append(ResidualRMS[i_totalLayer])
 			i_totalLayer+=1
@@ -335,8 +334,9 @@ if (mode == "plot"):
 	axes.set_xlim(0.5, NTotalLayers+1)
 	axes.set_ylim(yMin, yMax)
 	plt.title("UV Residual SD "+stationN, fontsize=20)
-	plt.ylabel("Residual SD /um [error = SD Error]", fontsize=18)
+	plt.ylabel("Residual SD /um", fontsize=18)
 	plt.xlabel("Layer", fontsize=20)
+	plt.tight_layout()
 	plt.savefig("ResidualsSD_L.png")
 
 	#----Layer Pull SD 
@@ -377,7 +377,8 @@ if (mode == "plot"):
 	subprocess.call(["convert" , "-append", "L.png" , "L_Zoom.png", "Pulls_Res_L.png"])
 	subprocess.call(["convert" , "+append", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
 	subprocess.call(["convert" , "-append", "SD_L.png", "Pulls_Res_L.png", "L_SD_Pulls_Res_Fom.png"])
-	subprocess.call(["trash" , "Residuals_L.png" , "Pulls_L.png", "L.png", "Pulls_L_Zoom.png", "L_Zoom.png", "L.png" , "L_Zoom.png", "Pulls_Res_L.png", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
+	subprocess.call(["convert" , "-append", "Residuals_L_Zoom.png" , "ResidualsSD_L.png", "FoM_Res.png"])
+	# subprocess.call(["trash" , "Residuals_L.png" , "Pulls_L.png", "L.png", "Pulls_L_Zoom.png", "L_Zoom.png", "L.png" , "L_Zoom.png", "Pulls_Res_L.png", "ResidualsSD_L.png" , "PullsSD_L.png", "SD_L.png"])
 
 	########################################################
 

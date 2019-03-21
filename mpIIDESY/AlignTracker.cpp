@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
 			Logger::Instance()->write(Logger::ERROR, "Exception caught: " + string(e.what()) + "\nPlease ensure valid verbosity level specified!");
 		}
 	} // end of 2nd else [correct # arguments]
-	Tracker::instance()->setTrackNumber(tracksInput);
+	Tracker::instance()->setTrackNumber(tracksInput*10); // request more tracks in case of rejection 
 	//this is also passed to Tracker functions, with debug file names
 	if (compareStr == "d") {
 		debugBool = true; // print out to debug files [and verbose cout output]
@@ -276,9 +276,9 @@ int main(int argc, char* argv[]) {
 	TH1I* h_hitCount = new TH1I("h_hitCount", "Hit count", 33 , 0, 33);
 	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "#Delta (Recon - True) Slope",  119,  -0.002, 0.002);
 
-	TH1F* h_pval = new TH1F("p_value", "p-value", 48, -0.1, 1.1);
-	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 89, -0.1, 90);
-	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 89, -0.1, 10.0);
+	TH1F* h_pval = new TH1F("p_value", "p-value", 49, -0.01, 1.1);
+	TH1F* h_chi2_circle = new TH1F("h_chi2_circle", "#Chi^{2}: circle-fit", 149, -0.1, 90);
+	TH1F* h_chi2_circle_ndf = new TH1F("h_chi2_circle_ndf", "#Chi^{2}/ndf: circle-fit", 149, -0.1, 10.0);
 	//PEDE: Derivatives
 	TH1F* h_DLC1 = new TH1F("h_DLC1", "DLC1: All Modules",  149,  -1.1, 1.1); h_DLC1->SetDirectory(cd_PEDE);
 	TH1F* h_DLC2 = new TH1F("h_DLC2", "DLC2: All Modules",  879,  -65.0, 65.0); h_DLC2->SetDirectory(cd_PEDE);
@@ -501,10 +501,14 @@ int main(int argc, char* argv[]) {
 			M.end(); // Write buffer (set of derivatives with same local parameters) to file.
 			recordN++; // count records (i.e. written tracks);
 
-		} // cut on DCA check
+            //Stop when requested number of tracks is reached 
+            if (recordN >= Tracker::instance()->getTrackNumber()) goto stop;
 
+		} // cut on DCA check
 	} // end of track count // End of Mille // End of collecting residual records
 	//Passing constants to plotting scripts
+    stop:
+    std::cout<<"stopped\n";
 	contsants_plot << Tracker::instance()->getModuleN() << " " << Tracker::instance()->getViewN() << " "
 	               << Tracker::instance()->getLayerN() << " " << Tracker::instance()->getStrawN() << " " << recordN << " "
 	               << Tracker::instance()->getBeamOffset()   << " " << Tracker::instance()->getBeamStart() << " " <<  Tracker::instance()->getBeamPositionLength()

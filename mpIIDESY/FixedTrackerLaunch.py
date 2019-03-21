@@ -11,10 +11,12 @@ from scipy import stats
 
 
 parser = argparse.ArgumentParser(description='mode')
-parser.add_argument('-m', '--mode', help='mode')
+parser.add_argument('-m', '--mode', help='mode', default="PEDE_Mis_art.txt")
 parser.add_argument('-rp', '--removedPars', nargs='+',  help='pars removed')
-parser.add_argument('-eL', '--eL', help='label')
+parser.add_argument('-eL', '--eL', help='label', default="None")
 parser.add_argument('-s', '--stationN', help='station number')
+parser.add_argument('-c', '--case', help="case study", default=None)
+parser.add_argument('-i', '--iteration', help="iteration number", default=0)
 args = parser.parse_args()
 
 from math import log10, floor, ceil
@@ -25,9 +27,13 @@ def round_sig(x, sig=2):
 def float_round(num, places = 0, direction = floor):
     return direction(num * (10**places)) / float(10**places)
 
-extraLabel =-1
 extraLabel=str(args.eL)
 stationN = str(args.stationN)
+if(extraLabel == "None"):
+	extraLabel="S"+stationN
+
+case = str(args.case)
+iteration = int(args.iteration)
 
 file = str(args.mode)
 from matplotlib.pyplot import *
@@ -39,27 +45,26 @@ from time import gmtime, strftime
 import subprocess
 
 
-#Truth Misalignment 
+#Expected parameters for stations 
 if (stationN == "0"):
 	expectPars = (1011, 1012, 1021, 1022, 1031, 1032, 1041, 1042, 1051, 1052, 1061, 1062, 1071, 1072, 1081, 1082)  # XY  [Station 0]
 	locationStation="lower left"
 
 if (stationN == "12"):
 	expectPars = (1211, 1212, 1221, 1222, 1231, 1232, 1241, 1242, 1251, 1252, 1261, 1262, 1271, 1272, 1281, 1282)  # XY  [Station 12]
-	locationStation="upper left"
-	yMaxY =  100
-	yMinY = -100
-	yMaxX =  100
-	yMinX = -100
+	locationStation="upper right"
+	yMaxY =  120
+	yMinY = -120
+	yMaxX =  120
+	yMinX = -120
 
 if (stationN == "18"):
 	expectPars = (1811, 1812, 1821, 1822, 1831, 1832, 1841, 1842, 1851, 1852, 1861, 1862, 1871, 1872, 1881, 1882)  # XY  [Station 18]
-	locationStation="lower left"
-	yMaxY =  300
-	yMinY = -300
-	yMaxX =  300
-	yMinX = -300
-
+	locationStation="lower right"
+	yMaxY =  220
+	yMinY = -220
+	yMaxX =  120
+	yMinX = -120
 
 #Deal with removed modules 
 # removedPars=np.array(args.removedPars)
@@ -67,21 +72,79 @@ if (stationN == "18"):
 # print(removedParsInt[0])
 # # print removedPars 
 
-#Truth Misalignment 
+#Truth Misalignment (assume initial knowledge of misalignment)
 T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
 
-
+#If simulation, add truth misalignment to plots 
 ## ----------------------------
-# #MDC1 DS1
-if (stationN == "12"):
-	T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
-if (stationN == "18"):
-	T_mis_C= (0.082, 0.013, -0.102, -0.01, -0.192, 0.138, -0.192, 0.148, -0.264, 0.129, -0.168, 0.188, -0.002, 0.081, 0.03, -0.097) #S18
+if (case =="DS0"):
+	name = "MDC1 DS1"
+	if (stationN == "12"):
+		T_mis_C= (0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S12
+	if (stationN == "18"):
+		T_mis_C= (0.0, 0.0, 0.059, 0.059, 0.004, 0.007, 0.033, -0.044, -0.064, 0.066, 0.095, 0.028, -0.071, -0.023, -0.037, -0.04) #S18
+	print("Truth Misalignment ", name, stationN, ": ", T_mis_C)
+	input("Truth Misalignment correct? [press enter]")
+
+	if(iteration == 2):
+		## ----------------------------
+		useOffsets = True
+
+		name="MDC1 DS0 Iteration 2"
+		if (stationN == "12"):
+			 offsets=( 0.0, 0.0, -0.022, 0.01, 0.035, 0.001, -0.018, -0.001, -0.002, 0.001, 0.002, 0.0, 0.004, -0.001, 0.0, 0.0) #S12
+		if (stationN == "18"):
+			offsets=( 0.0, 0.0, 0.02, 0.042, -0.016, 0.011, 0.013, -0.023, -0.05, 0.055, 0.054, 0.036, -0.046, 0.01, 0.0, 0.0) #S18
+		print("Offsets [mm] ", name , offsets)
+		input("Offsets correct? [press enter]") 
+		# ##----------------------------
+
+	if(iteration == 3):
+		## ----------------------------
+		useOffsets = True
+
+		name="MDC1 DS0 Iteration 3"
+		if (stationN == "12"):
+			offsets=( 0.0, 0.0, -0.028, -0.015, 0.052, -0.002, -0.024, -0.001, -0.006, 0.002, 0.0, -0.001, 0.004, -0.001, -0.005, 0.019) #S12
+		if (stationN == "18"):
+			offsets=( 0.0, 0.0, 0.031, 0.029, -0.017, 0.009, 0.022, -0.018, -0.06, 0.06, 0.086, 0.04, -0.046, 0.01, 0.012, 0.016) #S18
+		print("Offsets [mm] ", name , offsets)
+		input("Offsets correct? [press enter]") 
+		# ##----------------------------
+
+	if(iteration == 4):
+		# ## ----------------------------
+		useOffsets = True
+
+		name="MDC1 DS0 Iteration 4"
+		if (stationN == "12"):
+			offsets=( 0.0, 0.0, -0.028, -0.003, 0.061, -0.003, -0.025, -0.006, -0.009, -0.007, -0.001, 0.0, 0.004, -0.001, -0.008, 0.012) #S12
+		if (stationN == "18"):
+			offsets=( 0.0, 0.0, 0.036, 0.034, -0.017, 0.01, 0.022, -0.022, -0.065, 0.061, 0.097, 0.041, -0.046, 0.01, 0.011, 0.022) #S18
+		print("Offsets [mm] ", name , offsets)
+		input("Offsets correct? [press enter]") 
+		# ##----------------------------
+
 # ##----------------------------
 
-
- # T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.5, -0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S12: MDC1 large 
-#T_mis_C=(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) #S18: MDC1 large 
+## ----------------------------
+if (case =="DS1"):
+	name="MDC1 DS1"
+	if (stationN == "12"):
+		T_mis_C= (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
+		yMaxY =  120
+		yMinY = -120
+		yMaxX =  120
+		yMinX = -120
+	if (stationN == "18"):
+		T_mis_C= (0.082, 0.013, -0.102, -0.01, -0.192, 0.138, -0.192, 0.148, -0.264, 0.129, -0.168, 0.188, -0.002, 0.081, 0.03, -0.097) #S18
+		yMaxY =  320
+		yMinY = -320
+		yMaxX =  320
+		yMinX = -320
+	print("Truth Misalignment ", name, stationN, ": ", T_mis_C)
+	input("Truth Misalignment correct? [press enter]")
+# ##----------------------------
 
 
 moduleN=8
@@ -95,22 +158,33 @@ mis_C=T_mis_C  # the truth is the only misalignment
 print("Station S:",stationN)
 print("Initial Truth Misalignment [mm]: ", mis_C)
 print("Expected Parameters: ", expectPars)
-#input("Correct? [press enter]") 
+# input("Correct? [press enter]") 
 
-# ## ----------------------------
-# useOffsets = True
 
-# # #Run 15922  :: Iteration 2
-# if (stationN == "12"):
-# 	 offsets=( 0.158, 0.001, -0.162, 0.0, -0.34, 0.083, -0.389, 0.062, -0.401, 0.052, -0.289, 0.019, -0.072, -0.022, 0.11, 0.024) #S12 
-#      #offsets=( 0.0, 0.0, -0.32, -0.001, -0.498, 0.081, -0.547, 0.06, -0.559, 0.051, -0.447, 0.017, -0.23, -0.023, -0.048, 0.023) #S12
-# if (stationN == "18"):
-# 	 offsets=( 0.082, 0.013, -0.102, -0.01, -0.192, 0.138, -0.192, 0.148, -0.264, 0.129, -0.168, 0.188, -0.002, 0.081, 0.03, -0.097) #S18 
-#      #offsets=( 0.0, 0.0, -0.184, -0.022, -0.274, 0.125, -0.274, 0.136, -0.346, 0.117, -0.249, 0.176, -0.083, 0.068, -0.051, -0.109) #S18
+if (case =="15922"):
+	if(iteration == 2):
+		## ----------------------------
+		useOffsets = True
+		name="Run 15922 DLC4 Iteration 2"
+		if (stationN == "12"):
+			offsets=( 0.0, 0.0, -0.015, -0.011, -0.013, 0.055, 0.012, 0.031, -0.008, 0.019, 0.001, -0.014, 0.035, -0.046, 0.0, 0.0) #S12
+		if (stationN == "18"):
+			offsets=( 0.0, 0.0, -0.012, -0.016, -0.007, 0.129, 0.032, 0.153, -0.028, 0.146, 0.002, 0.214, 0.056, 0.139, 0.0, 0.0) #S18
+		print("Offsets [mm] ", name , offsets)
+		input("Offsets correct? [press enter]") 
+		##----------------------------
 
-# print("Offsets iteration 2 [mm]: ", offsets)
-# input("Offsets :: iteration 2 correct? [press enter]") 
-# # ##----------------------------
+	if(iteration == 3):
+		## ----------------------------
+		useOffsets = True
+		name="Run 15922 DLC4 Iteration 3"
+		if (stationN == "12"):
+			offsets=( 0.0, 0.0, -0.025, -0.011, -0.021, 0.056, 0.013, 0.03, -0.011, 0.019, 0.004, -0.014, 0.052, -0.047, 0.0, 0.0) #S12
+		if (stationN == "18"):
+			offsets=( 0.0, 0.0, -0.02, -0.016, -0.01, 0.129, 0.04, 0.152, -0.038, 0.146, 0.005, 0.217, 0.082, 0.141, 0.0, 0.0) #S18
+		print("Offsets [mm] ", name , offsets)
+		input("Offsets correct? [press enter]") 
+		##----------------------------
 
 
 if ( len(offsets) != len(expectPars) ):
@@ -450,7 +524,7 @@ plt.xlabel("Module", fontsize=8)
 if (extraLabel == -1):
 	plt.savefig("XY.png")
 else:
-	plt.savefig(str(extraLabel)+".png", dpi=600)
+	plt.savefig(str(extraLabel)+".png", dpi=100)
 
 sugMean  = []
 #Take away the 0th module shift from the rest 

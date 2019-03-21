@@ -20,5 +20,3 @@ for i_station in range(0, stationN):
     os.chdir(str(name)+"/")
     subprocess.call(["mkdir" , str(stationName[i_station])])
     os.chdir("../")
-
-os.chdir(str(name)+"/")

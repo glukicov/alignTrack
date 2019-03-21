@@ -13,11 +13,12 @@ import argparse, sys
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode')
 parser.add_argument('-moduleN', '--moduleN', default=8)
+parser.add_argument('-parN', '--parN', default=2)
 args = parser.parse_args()
 
 mode = str(args.mode)
 moduleN = int(args.moduleN)       
-parN = 2 # GL 
+parN = int(args.parN) # GL 
 
 with open('trackN.txt') as f:
     for line in f:  #Line is a string
