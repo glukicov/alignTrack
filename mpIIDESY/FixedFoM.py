@@ -89,7 +89,7 @@ for i in range (0, len(firstModuleX)):
 	subprocess.call(["/Users/gleb/software/alignTrack/PEDE/pede", "SteeringFile.txt"])
 
 	#Read new alignments and append
-	subprocess.call(["python" , "../../ConcatenatePEDE.py", "-m", "a", "-moduleN", str(moduleN)])
+	subprocess.call(["python" , "/Users/gleb/software/alignTrack/mpIIDESY/ConcatenatePEDE.py", "-m", "a", "-moduleN", str(moduleN)])
 
 	#Keep a copy of the files
 	subprocess.call(["cp" , "ParameterFile.txt", str(fileLabel)+str(i)+"ParameterFile.txt"])
@@ -149,6 +149,6 @@ for i in range (0, len(firstModuleX)):
 
 
 #Produce FoM
-subprocess.call(["python3", "../../FixedTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN)])
+subprocess.call(["python3", "/Users/gleb/software/alignTrack/mpIIDESY/FixedTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN)])
 
 # subprocess.call(["python3", "../../RobustTrackerLaunch.py", "-m", "PEDE_Mis_art.txt", "-eL", str(label), "-s", str(stationN), "-moduleN", str(moduleN)])

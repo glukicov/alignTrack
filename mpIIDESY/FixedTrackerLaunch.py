@@ -14,12 +14,15 @@ import matplotlib.ticker as ticker
 import numpy as np  # smart arrays 
 import itertools # smart lines
 from time import gmtime, strftime 
-import subprocess
 from math import log10, floor, ceil
+import subprocess, shlex
+import numpy.polynomial.polynomial as poly 
 
 #custom rounding function 
 def round_sig(x, sig=2):
 	return round(x, sig-int(floor(log10(abs(x))))-1)
+
+strawModuleZPosition = [ 0.0, 134.36, 268.72, 403.08, 537.42, 671.77, 806.10, 940.406] # station CS 
 
 #define input arguments 
 parser = argparse.ArgumentParser(description='mode')
@@ -29,6 +32,9 @@ parser.add_argument('-s', '--stationN', help='station number')
 parser.add_argument('-c', '--case', help="case study", default=None) # defined below 
 parser.add_argument('-i', '--iteration', help="iteration number", default=0) # define below 
 args = parser.parse_args()
+
+print("Writing new results file!")
+subprocess.call(["python" , "/Users/gleb/software/alignTrack/mpIIDESY/ConcatenatePEDE.py", "-m", "w"])
 
 #get the passed arguments 
 extraLabel=str(args.eL)
@@ -116,12 +122,12 @@ if ( len(offsets) != len(expectPars) ):
 #Now print and check for correctly loaded offsets 
 print("Station S:",stationN)
 print("Expected Parameters: ", expectPars)
-input("Correct? [press enter]") 
+# input("Correct? [press enter]") 
 print("Truth Misalignment ", name, stationN, ": ", T_mis_C)
-input("Truth Misalignment correct? [press enter]")
+# input("Truth Misalignment correct? [press enter]")
 if (useOffsets==True):
 	print("Offsets [mm] ", name , offsets)
-	input("Offsets correct? [press enter]") 
+	# input("Offsets correct? [press enter]") 
 
  # the truth is the only known misalignment 
 mis_C=T_mis_C 
@@ -310,6 +316,34 @@ for i_module in range(0, 8):
 	dMYMean.append(meanY/lineN-misY[0][i_module])
 
 
+#################################
+### Correct the angle in truth misalignment
+
+# TODO implement in the loop + plotting 
+#form X (z-position), Y (misalignment) array 
+dataRad=[strawModuleZPosition, misX[0]] 
+dataVer=[strawModuleZPosition, misY[0]]
+dataArray = (dataRad, dataVer)
+MisCorrected=[]
+
+for i_global in range(0, int(globalN)):
+	
+	data = dataArray[i_global]
+	#Do a linear fit 
+	x_new = np.linspace(float(min(data[0])), float(max(data[0])), num=1e3) # generate x-points for evaluation 
+	coefs = poly.polyfit(data[0], data[1], 1) # straight line
+	ffit = poly.polyval(x_new, coefs) # plot over generated points 
+
+	#Correct the truth
+	corrected_T_mis_C = []
+	for i_module in range(0, len(moduleArray)):
+	    # corr = Y + Gradient * X + Intercept 
+	    correction = data[1][i_module] - coefs[1] * data[0][i_module] - coefs[0]
+	    corrected_T_mis_C.append(correction)
+	
+	MisCorrected.append(corrected_T_mis_C)
+##################################
+
 colours = ["green", "blue", "black", "orange", "purple"]
 plt.subplot(211) # X 
 plt.rcParams.update({'font.size': 8})
@@ -325,7 +359,7 @@ axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 
-plt.plot(moduleArray, np.array(misX[0]), marker=".", color="red", label="Truth Mis.")
+plt.plot(moduleArray, np.array(MisCorrected[0]), marker=".", color="red", label="Truth Mis.")
 if(useOffsets):
 	plt.plot(moduleArray, np.array(offsetsX)*1e3, marker="+", color="black", label="Reco. Mis.\n(previous iteration)")
 
@@ -388,7 +422,7 @@ axes2.tick_params(axis='y', which='both', left=True, right=True, direction='inou
 line = [[0.5,0.0], [8.5, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 
-plt.plot(moduleArray, np.array(misY[0]), marker=".", color="red", label="Truth Mis.")
+plt.plot(moduleArray, np.array(MisCorrected[1]), marker=".", color="red", label="Truth Mis.")
 if(useOffsets):
 	plt.plot(moduleArray, np.array(offsetsY)*1e3, marker="+", color="black", label="Reco. Mis.\n(previous iteration)")
 
@@ -433,7 +467,7 @@ plt.xlabel("Module", fontsize=8)
 if (extraLabel == -1):
 	plt.savefig("XY.png")
 else:
-	plt.savefig(str(extraLabel)+".png", dpi=100)
+	plt.savefig(str(extraLabel)+".png", dpi=200)
 
 sugMean  = []
 #Take away the 0th module shift from the rest 
