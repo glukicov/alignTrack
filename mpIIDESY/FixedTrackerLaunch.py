@@ -22,8 +22,6 @@ import numpy.polynomial.polynomial as poly
 def round_sig(x, sig=2):
 	return round(x, sig-int(floor(log10(abs(x))))-1)
 
-strawModuleZPosition = [ 0.0, 134.36, 268.72, 403.08, 537.42, 671.77, 806.10, 940.406] # station CS 
-
 #define input arguments 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--mode', help='mode', default="PEDE_Mis_art.txt")  # input file mode 
@@ -59,18 +57,21 @@ if (stationN == "18"):
 
 #Truth Misalignment (assume initial knowledge of misalignment)
 T_mis_C=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
-useOffsets=False # no offsets unless set 
+useOffsets=False # no offsets unless set
+useTruth=False 
 
 #Define some constants
 moduleN=8
 moduleArray=np.arange(1, moduleN+1) #(1, 2,...,8) for plotting 
 globalN=int(len(expectPars))/int(moduleN)
 offsets = [0 for i in list(range(int(moduleN*globalN)))] # first set to 0 unless doing iterations
+strawModuleZPosition = [ 0.0, 134.36, 268.72, 403.08, 537.42, 671.77, 806.10, 940.406] # station CS 
 
 #If simulation, add truth misalignment to plots 
 # the yMaxY etc. (axis range) are passed here for later plotting 
 ## ----------------------------DS0 ---------------------
 if (case =="DS0"):
+	useTruth = True 
 	yMaxY =  120
 	yMinY = -120
 	yMaxX =  120
@@ -88,10 +89,19 @@ if (case =="DS0"):
 			offsets=( -0.019, -0.007, -0.018, 0.006, 0.061, 0.001, -0.013, -0.001, -0.005, 0.006, 0.001, 0.0, 0.0, -0.003, -0.008, -0.002) #S12
 		if (stationN == "18"):
 			offsets=( 0.012, -0.025, 0.028, 0.026, -0.028, -0.001, -0.006, -0.04, -0.068, 0.05, 0.074, 0.022, -0.032, -0.007, 0.02, -0.024) #S18
+
+	if(iteration == 3):
+		useOffsets = True
+		name="MDC1 DS0 Iteration 3"
+		if (stationN == "12"):
+			offsets=( -0.018, 0.009, -0.023, 0.007, 0.072, -0.01, -0.018, -0.006, -0.009, -0.008, -0.001, 0.0, 0.002, 0.0, -0.006, 0.009) #S12
+		if (stationN == "18"):
+			offsets=( -0.005, -0.023, 0.033, 0.019, -0.025, -0.007, 0.006, -0.038, -0.073, 0.062, 0.097, 0.032, -0.042, -0.016, 0.008, -0.029) #S18
 # ##--------------------------------------------
 
 ## ----------------------------DS1---------------------------
 if (case =="DS1"):
+	useTruth = True 
 	name="MDC1 DS1"
 	if (stationN == "12"):
 		T_mis_C= (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) # No Assumed Misalignment
@@ -114,6 +124,7 @@ if (case =="15922"):
 	yMinY = -220
 	yMaxX =  120
 	yMinX = -120
+	name = " "
 # ##----------------------------------------
 
 if ( len(offsets) != len(expectPars) ):
@@ -122,12 +133,14 @@ if ( len(offsets) != len(expectPars) ):
 #Now print and check for correctly loaded offsets 
 print("Station S:",stationN)
 print("Expected Parameters: ", expectPars)
+print("Using truth:", useTruth)
+print("Using offsets:", useOffsets)
 # input("Correct? [press enter]") 
 print("Truth Misalignment ", name, stationN, ": ", T_mis_C)
 # input("Truth Misalignment correct? [press enter]")
 if (useOffsets==True):
 	print("Offsets [mm] ", name , offsets)
-	# input("Offsets correct? [press enter]") 
+	# input("Offsets correct? [press enter]")
 
  # the truth is the only known misalignment 
 mis_C=T_mis_C 
@@ -326,6 +339,21 @@ dataVer=[strawModuleZPosition, misY[0]]
 dataArray = (dataRad, dataVer)
 MisCorrected=[]
 
+print("********Uncorrected Truth******")
+sys.stdout.write("services.Geometry.strawtracker.strawModuleRShift"+str(stationN)+": [ ")
+for item in misX[0][:-1]:
+	sys.stdout.write( str(round(int(item)*1e-3,3)) + ", ")  # um -> mm 
+sys.stdout.write( str( round(int(misX[0][-1])*1e-3,3) ) )
+sys.stdout.write(" ]\n")
+
+sys.stdout.write("services.Geometry.strawtracker.strawModuleHShift"+str(stationN)+": [ ")
+for item in misY[0][:-1]:
+    sys.stdout.write( str( round(int(item)*1e-3,3)) + ", " ) 
+sys.stdout.write( str( round(int(misY[0][-1])*1e-3,3) ) ) 
+sys.stdout.write(" ]\n")
+sys.stdout.flush()
+print("********************")
+
 for i_global in range(0, int(globalN)):
 	
 	data = dataArray[i_global]
@@ -342,6 +370,9 @@ for i_global in range(0, int(globalN)):
 	    corrected_T_mis_C.append(correction)
 	
 	MisCorrected.append(corrected_T_mis_C)
+
+
+
 ##################################
 
 colours = ["green", "blue", "black", "orange", "purple"]
@@ -374,31 +405,14 @@ print(recoXMean)
 plt.errorbar(moduleArray, np.array(recoXMean), yerr=recoXMeanError,  color=str(colours[4]), markersize=12, elinewidth=2, label="Reco. Mis.\n(this iteration)")
 plt.plot(moduleArray, np.array(recoXMean), marker="+", color=str(colours[4]))
 
-#Legend (top legend)
-#textstr = "Truth"
-#plt.text(1, 400, textstr, color="red", fontsize=10, fontweight='bold')
-# if (extraLabel != -1):
-	# plt.text(2.0, 420, extraLabel, color="purple", fontsize=8, fontweight='bold')
-# plt.subplots_adjust(top=0.85)
 #Legend (stats X)
-# avgMeanMis = sum(np.array(misX[0]))/float(len(np.array(misX[0])))
-# SDMis = np.std(np.array(misX[0]))
-#textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-#plt.text(8.7, 150, textstr, fontsize=10, color="red")
-# avgMeandReconTruth = sum(np.array(dMXMean))/float(len(np.array(dMXMean)))
-# SDdReconTruth = np.std(np.array(dMXMean))
-# textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-# plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
-
-#Absolute mean Reco Mis 
-absMeanRecoMisX = sum( np.absolute(recoXMean) ) / float( len(recoXMean) ) 
-absMeanRecoMisX_Error = stats.sem(recoXMeanError)
-absMeanTruthMisX = sum( np.absolute( misX[0] ) ) / float( len(misX[0]) ) 
-dAbsMeanX = absMeanTruthMisX - absMeanRecoMisX
-# textStrX = "<|RecoX|>={0}".format(int(round(absMeanRecoMisX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  +" um\n<|TruthX|>={0}".format(int(round(absMeanTruthMisX)))+" um \n<|d(R-T)|>={0}".format(int(round(dAbsMeanX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  + " um\n" 
-#textStrX = "<|RecoX|>={0}".format(int(round(absMeanRecoMisX)))+ r"$\pm$" + str(int(absMeanRecoMisX_Error))  +" um"
-#plt.text(8.6, 50-100, textStrX, fontsize=8, color=str(colours[4]))
-# plt.subplots_adjust(right=0.77)
+if(useTruth == True):
+	avgMeanMisX = sum(np.abs(np.array(MisCorrected[0])))/float(len(np.array(MisCorrected[0])))
+	textstr = '<Truth X>=%s um'%(int(round(avgMeanMisX)))
+	plt.text(8.7, yMaxX, textstr, fontsize=10, color="red")
+	avgMeanRecoX = sum(np.abs(np.array(recoXMean)))/float(len(np.array(recoXMean)))
+	textstr = '<Reco X>=%s um'%(int(round(avgMeanRecoX)))
+	plt.text(8.7, yMaxX*0.8, textstr, fontsize=10, color="purple")
 
 # plt.legend(loc=locationStation)
 axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -437,32 +451,19 @@ plt.errorbar(moduleArray, np.array(recoYMean), yerr=recoYMeanError[i_module],  c
 plt.plot(moduleArray, np.array(recoYMean),  marker="+", color=str(colours[4]), markersize=8)
 
 #Legend (stats Y)
-# avgMeanMis = sum(np.array(misY[0]))/float(len(np.array(misY[0])))
-# SDMis = np.std(np.array(misY[0]))
-#textstr = '<Truth>=%s um\nSD Truth=%s um \n'%(int(round(avgMeanMis)), int(round(SDMis)))
-#plt.text(8.7, 150, textstr, fontsize=10, color="red")
-# avgMeandReconTruth = sum(np.array(dMYMean))/float(len(np.array(dMYMean)))
-# SDdReconTruth = np.std(np.array(dMYMean))
-# textstrReco = "<(Mean - Tr.>={0}".format(int(round(avgMeandReconTruth)))+ "um\nSD (Mean - Tr.)={0}".format(int(round(SDdReconTruth)))+" um \n" 
-# plt.text(8.6, 50-100, textstrReco, fontsize=8, color=str(colours[4]))
-
-
-#Absolute mean Reco Mis 
-absMeanRecoMisY = sum( np.absolute(recoYMean) ) / float( len(recoYMean) ) 
-absMeanRecoMisY_Error = stats.sem(recoYMeanError)
-absMeanTruthMisY = sum( np.absolute( misY[0] ) ) / float( len(misY[0]) ) 
-dAbsMeanY = absMeanTruthMisY - absMeanRecoMisY
-# textStrY = "<|RecoY|>={0}".format(int(round(absMeanRecoMisY)))+ r"$\pm$" + str(int(absMeanRecoMisY_Error))  + " um\n<|TruthY|>={0}".format(int(round(absMeanTruthMisY)))+" um \n<|d(R-T)|>={0}".format(int(round(dAbsMeanY)))+ r"$\pm$" + str(int(absMeanRecoMisY_Error))  + " um\n" 
-#textStrY = "<|RecoY|>={0}".format(int(round(absMeanRecoMisY)))+ r"$\pm$" + str(int(absMeanRecoMisY_Error))  + " um"
-#plt.text(8.6, 50-100, textStrY, fontsize=8, color=str(colours[4]))
-
-# plt.legend(loc=locationStation)
+if(useTruth):
+	avgMeanMisY = sum(np.abs(np.array(MisCorrected[1])))/float(len(np.array(misY[0])))
+	textstr = '<Truth Y>=%s um'%(int(round(avgMeanMisY)))
+	plt.text(8.7, yMaxY, textstr, fontsize=10, color="red")
+	avgMeanRecoY = sum(np.abs(np.array(recoYMean)))/float(len(np.array(recoYMean)))
+	textstr = '<Reco Y>=%s um'%(int(round(avgMeanRecoY)))
+	plt.text(8.7, yMaxY*0.8, textstr, fontsize=10, color="purple")
+	
 axes2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-# plt.subplots_adjust(right=0.77)
 plt.subplots_adjust(bottom=0.1)
 plt.subplots_adjust(hspace=0.35)
 plt.xlabel("Module", fontsize=8)
-# plt.show()
+
 
 if (extraLabel == -1):
 	plt.savefig("XY.png")

@@ -11,7 +11,7 @@ import subprocess, shlex
 import numpy.polynomial.polynomial as poly
 
 #take the un-corrected truth 
-T_mis_C= (0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+T_mis_C= ( 0.0, 0.0, 0.059, 0.059, 0.004, 0.007, 0.033, -0.044, -0.064, 0.066, 0.095, 0.028, -0.071, -0.023, -0.037, -0.04)
 strawModuleZPosition = [ 0.0, 134.36, 268.72, 403.08, 537.42, 671.77, 806.10, 940.406]
 moduleArray=np.arange(1,9) 
 
@@ -22,7 +22,8 @@ for i_module in range(0, len(strawModuleZPosition)-1):
 ### Correct the angle in misalignment
 
 #split into X and Y
-T_mis_C_rad = np.array(T_mis_C[0::2])
+# T_mis_C_rad = np.array(T_mis_C[0::2])
+T_mis_C_rad = [-0.028, 0.036, -0.008, -0.053, 0.062, 0.03, -0.014, -0.025]
 T_mis_C_ver = np.array(T_mis_C[1::2])
 print("T_mis_C_rad=", T_mis_C_rad)
 print("T_mis_C_ver=", T_mis_C_ver)
