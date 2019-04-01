@@ -23,7 +23,7 @@ for i_module in range(0, len(strawModuleZPosition)-1):
 
 #split into X and Y
 # T_mis_C_rad = np.array(T_mis_C[0::2])
-T_mis_C_rad = [-0.028, 0.036, -0.008, -0.053, 0.062, 0.03, -0.014, -0.025]
+T_mis_C_rad = [-0.16, -0.034, 0.126, 0.088, 0.088, 0.049, -0.024, -0.134]
 T_mis_C_ver = np.array(T_mis_C[1::2])
 print("T_mis_C_rad=", T_mis_C_rad)
 print("T_mis_C_ver=", T_mis_C_ver)

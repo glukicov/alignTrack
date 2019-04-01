@@ -167,11 +167,11 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import numpy.polynomial.polynomial as poly
 
-data_full = [0, 134.363, 268.72, 403.081, 537.421, 671.77, 806.103, 940.406 ], [0. ,    0.036,  0.127 , 0.044 , 0.025 ,-0.013, -0.071, -0.149]
+# data_full = [0, 134.363, 268.72, 403.081, 537.421, 671.77, 806.103, 940.406 ], [0. ,    0.036,  0.127 , 0.044 , 0.025 ,-0.013, -0.071, -0.149]
 
-# data = [0, 134.363, 403.081, 537.421, 671.77, 806.103, 940.406 ], [0. ,    0.036,  0.044 , 0.025 ,-0.013, -0.071, -0.149]
+data = [0, 134.363, 268.72, 403.081, 537.421, 671.77, 806.103, 940.406 ], [ -0.16, -0.034, 0.126, 0.088, 0.088, 0.049, -0.024, -0.134]
 
-data = [0, 134.363, 268.72, 403.081, 537.421, 671.77, 806.103, 940.406 ], [ -0.019, -0.018, 0.061, -0.013, -0.005, 0.001, 0.0, -0.008]
+data_full = [0, 134.363, 268.72, 403.081, 537.421, 671.77, 806.103, 940.406 ], [ -0.16, -0.034, 0.126, 0.088, 0.088, 0.049, -0.024, -0.134]
 
 moduleN = 8
 
@@ -184,7 +184,7 @@ plt.close('all')
 fig = plt.figure(figsize=(6,6))
 ax = fig.add_subplot(111)
 ax.plot(data[0], data[1], 'ro', label='misalignment', zorder=1)
-# ax.plot(268.72, 0.127, 'go', label='non-fitted module 3', zorder=1)
+ax.plot(268.72, 0.126, 'go', label='non-fitted module 3', zorder=1)
 
 ellipse = Ellipse(xy=center, width=2*width, height=2*height, angle=np.rad2deg(phi), edgecolor='b', fc='None', lw=2, label='Fit', zorder = 2)
 ax.add_patch(ellipse)
