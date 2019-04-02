@@ -1,8 +1,10 @@
 ############
 # A single script that runs residual plotter, PEDE, and alignment plotter
-# Assume to run from a folder with :
+# 
+# Assumed to be run from a folder with :
 # 1) TrackerAlignemnt.root (alignment ana file from RunAlignmentPlots.fcl)
 # 2) PEDE data file from Alignment producer (e.g. trackerAlignment_S12.fcl)
+#
 # Created: 28 March 2019 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
 # Modified: 28 March 2019 by Gleb
 ##############

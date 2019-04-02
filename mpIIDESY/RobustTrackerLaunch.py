@@ -142,7 +142,7 @@ for i_global in range(0, globalN):
     fhicl_out.write(FHICLServicePath+FHICLPatchName[i_global]+stationN+": [ ")
     for i_module in range(0, ModuleN):
         sys.stdout.write(str(data[i_global][i_module][1]))
-        fhicl_out.write(str(data[i_global][i_module][1]*1e-3)) # um -> mm 
+        fhicl_out.write(str(round(data[i_global][i_module][1]*1e-3,3))) # um -> mm 
         if(i_module != 7):
             sys.stdout.write(" ")
             fhicl_out.write(", ")
@@ -185,7 +185,7 @@ for i_global in range(0, globalN):
     axes = plt.gca()
     axes.set_xlim(ModuleArray[0]-0.5, ModuleArray[-1]+0.5)
     axes.set_ylim(yMin, yMax)
-    plt.title(GlobalParNames[i_global]+" misalignment", fontsize=12)
+    plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN, fontsize=12)
     plt.ylabel(r"Misalignment [$\mathrm{\mu m}$]")
     plt.xlabel("Module", fontsize=12)
     plt.xticks(fontsize=10, rotation=0) 
