@@ -5,15 +5,25 @@ import argparse, sys
 import subprocess
 
 parser = argparse.ArgumentParser(description='mode')
-parser.add_argument('-p', '--path', help='path')
+parser.add_argument('-p', '--path', type=str)
+parser.add_argument('-vm', '--virtualMachine', default="Y", type=str)
 args = parser.parse_args()
 
 
-path = str(args.path)
+path = args.path
+vm = args.virtualMachine
 
 files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.bin")
 
+command=""
 for i in range(0, len(files)):
-
-	command = "gm2gpvm01:"+str(path)+"/"+str(files[i])
-	subprocess.call(["scp", str(command), "." ] )
+    
+    if (vm == "Y"):
+        command = "gm2gpvm01:"+str(path)+"/"+str(files[i])
+        print("Coping from VM...")
+    
+    if (vm == "N"):
+        command = "gm2ucl:"+str(path)+"/"+str(files[i])
+        print("Coping from gm2ucl")
+    
+    subprocess.call(["scp", str(command), "." ] )

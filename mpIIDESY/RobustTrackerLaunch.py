@@ -49,10 +49,10 @@ extra_label_name=args.extra_label
 #Define constants (Capital + cammelCase)
 ModuleN = 8 # per station 
 ModuleArray=np.arange(1, ModuleN+1) #(1, 2,...,8) for plotting  
-GlobalParNames = ["Radial", "Vertical", "\theta", "\phi", "\psi"] #only ever going to have 5 pars.
+GlobalParNames = ["Radial", "Vertical", r'$\Phi', r'$\Psi', r'$\Theta'] #only ever going to have 5 pars.
 GlobalParLabels = [1, 2, 3, 4, 5] # their label
 GlobalParDict = dict(zip(GlobalParLabels, GlobalParNames))
-FHICLPatchName = ["strawModuleRShift", "strawModuleHShift", None, None, None] # no FHICL patch for angles in art yet  
+FHICLPatchName = ["strawModuleRShift", "strawModuleHShift",r"$\phi", r"$\psi", r"$\theta"] # no FHICL patch for angles in art yet  
 FHICLServicePath = "services.Geometry.strawtracker." #full path of the tracking FHICL patch 
 
 #Define variables that will be PEDE result-dependent 
@@ -76,8 +76,8 @@ for i_par in range(0, parN):
     lineString = df[0][i_par] 
     arrayString = [str(i) for i in lineString.split()] # remove spaces 
     pars.append(int(arrayString[0]))
-    pede_results.append(round(float(arrayString[1])*1000)) #mm to the nearest um 
-    pede_errors.append(round(float(arrayString[4])*1000)) #mm to the nearest um 
+    pede_results.append(round(float(arrayString[1])*1000)) #mm to the nearest um / rad -> mrad
+    pede_errors.append(round(float(arrayString[4])*1000)) #mm to the nearest um  / rad -> mrad 
 
 # combine into a data structure 
 results=[pars, pede_results, pede_errors]
@@ -178,7 +178,12 @@ print("Truth alignment used for comparison (simulation only):", useTruth)
 # Plotting "constants"
 yMax = 120
 yMin = -120
-subplotArray = [211, 212]
+subplotArray = []
+units = [r"[$\mathrm{\mu m}$]", r"[$\mathrm{\mu m}$]", "mrad"]
+if (globalN == 2):
+    subplotArray = [211, 212]
+if (globalN == 3):
+    subplotArray = [311, 312, 313]
 #Make subplot for each result 
 for i_global in range(0, globalN):
     plt.subplot(subplotArray[i_global]) 
@@ -210,7 +215,7 @@ for i_global in range(0, globalN):
     plt.errorbar(ModuleArray, data_points, yerr=error_points,  color="purple", markersize=12, elinewidth=1, label="Reco. Mis.\n(this iteration)")
     plt.plot(ModuleArray, data_points, marker="+", color="purple")
     meanAbsReco = np.sum(np.abs(data_points))/len(data_points)
-    textstr = '<|Reco|>=%s um'%(int(round(meanAbsReco)))
+    textstr = r'<|Reco|>=%s $\mathrm{\mu m}$'%(int(round(meanAbsReco)))
     plt.text(8.7, yMax*0.8, textstr, fontsize=10, color="purple")
     #Plot previous iteration
     if(useOffsets):
@@ -219,7 +224,7 @@ for i_global in range(0, globalN):
     if(useTruth):
         plt.plot(ModuleArray, corrected_truth[i_global], marker=".", color="red", label="Truth Mis.")
         meanAbsTruth = np.sum(np.abs(corrected_truth[i_global]))/len(corrected_truth[i_global])
-        textstr = '<|Truth|>=%s um'%(int(round(meanAbsTruth)))
+        textstr = r'<|Truth|>=%s $\mathrm{\mu m}$'%(int(round(meanAbsTruth)))
         plt.text(8.7, yMax, textstr, fontsize=10, color="red")
 
     axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
