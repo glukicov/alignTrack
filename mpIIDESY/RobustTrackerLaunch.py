@@ -17,6 +17,7 @@ import numpy.polynomial.polynomial as poly # linear fit
 import matplotlib.pyplot as plt #for plotting  
 import itertools # smart lines in plotting 
 
+
 ### HELPER FUNCTIONS ######
 ## Read offsets from FHICL file 
 def getOffsets(f, name):
@@ -37,7 +38,7 @@ def getOffsets(f, name):
 #Define and open command line arguments
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-pF', '--pede_file', help='input pede results (.res) file', default="millepede.res", type=str)  # input PEDE file  
-parser.add_argument('-oF', '--offset_file', help='FHICL file used for tracking with offsets', default="RunTrackingSim_align.fcl", type=str)  # input PEDE file  
+parser.add_argument('-oF', '--offset_file', help='FHICL file used for tracking with offsets', default="RunGeaneSim_align.fcl", type=str)  # input PEDE file  
 parser.add_argument('-tF', '--truth_file', help='FHICL file used for MDC1 generation', default="runGasGunRing_align.fcl", type=str)  # input PEDE file  
 parser.add_argument('-eL', '--extra_label', help='extra plotting label', default="", type=str) # if extra label is passed for plot tittle (e..g iteration #)
 args = parser.parse_args()
@@ -49,10 +50,11 @@ extra_label_name=args.extra_label
 #Define constants (Capital + cammelCase)
 ModuleN = 8 # per station 
 ModuleArray=np.arange(1, ModuleN+1) #(1, 2,...,8) for plotting  
-GlobalParNames = ["Radial", "Vertical", r'$\Phi', r'$\Psi', r'$\Theta'] #only ever going to have 5 pars.
+GlobalParNames = ["Radial", "Vertical", 'Φ', 'ψ', 'θ'] #only ever going to have 5 pars.
+units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]", " [mrad]", " [mrad]", " [mrad]"]
 GlobalParLabels = [1, 2, 3, 4, 5] # their label
 GlobalParDict = dict(zip(GlobalParLabels, GlobalParNames))
-FHICLPatchName = ["strawModuleRShift", "strawModuleHShift",r"$\phi", r"$\psi", r"$\theta"] # no FHICL patch for angles in art yet  
+FHICLPatchName = ["strawModuleRShift", "strawModuleHShift"," strawModuleRotationPhi", "strawModuleRotationPsi", "strawModuleRotationTheta"] # no FHICL patch for angles in art yet  
 FHICLServicePath = "services.Geometry.strawtracker." #full path of the tracking FHICL patch 
 
 #Define variables that will be PEDE result-dependent 
@@ -76,8 +78,8 @@ for i_par in range(0, parN):
     lineString = df[0][i_par] 
     arrayString = [str(i) for i in lineString.split()] # remove spaces 
     pars.append(int(arrayString[0]))
-    pede_results.append(round(float(arrayString[1])*1000)) #mm to the nearest um / rad -> mrad
-    pede_errors.append(round(float(arrayString[4])*1000)) #mm to the nearest um  / rad -> mrad 
+    pede_results.append((float(arrayString[1])*1000)) #mm to the nearest um / rad -> mrad
+    pede_errors.append((float(arrayString[4])*1000)) #mm to the nearest um  / rad -> mrad 
 
 # combine into a data structure 
 results=[pars, pede_results, pede_errors]
@@ -86,10 +88,10 @@ data = [[[0 for i_result in range(len(results))] for i_module in range(ModuleN)]
 for i_global in range(0, globalN):
     for i_module in range(0, ModuleN):
           for i_result in range(0, len(results)):
-            data[i_global][i_module][i_result]=results[i_result][i_global::2][i_module] 
+            data[i_global][i_module][i_result]=results[i_result][i_global::globalN][i_module] 
 
 #Loop through parameters to establish names ( full label = AA (station) + B (module) + C (par. label) )
-stationN=str(pars[0])[0:2]
+stationN=str(pars[0])[0:2] # XXX check logic 
 print("Alignment results for Station:", stationN, " | All results in [um]")
 all_labels=[]
 for i_par in pars:
@@ -176,22 +178,18 @@ print("Truth alignment used for comparison (simulation only):", useTruth)
 
 ######### Plotting #############
 # Plotting "constants"
-yMax = 120
-yMin = -120
-subplotArray = []
-units = [r"[$\mathrm{\mu m}$]", r"[$\mathrm{\mu m}$]", "mrad"]
-if (globalN == 2):
-    subplotArray = [211, 212]
-if (globalN == 3):
-    subplotArray = [311, 312, 313]
+f = plt.figure(figsize=(7,int(globalN*2+1)))
+#TOOD make min max from data
+yMax = [130, 130, 25, 25, 25]
+yMin = [-130, -130, -25, -25, -25]
 #Make subplot for each result 
 for i_global in range(0, globalN):
-    plt.subplot(subplotArray[i_global]) 
+    plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
     axes = plt.gca()
     axes.set_xlim(ModuleArray[0]-0.5, ModuleArray[-1]+0.5)
-    axes.set_ylim(yMin, yMax)
+    axes.set_ylim(yMin[i_global], yMax[i_global])
     plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN, fontsize=12)
-    plt.ylabel(r"Misalignment [$\mathrm{\mu m}$]")
+    plt.ylabel(r"Misalignment "+ units[i_global])
     plt.xlabel("Module", fontsize=12)
     plt.xticks(fontsize=10, rotation=0) 
     plt.yticks(fontsize=10, rotation=0)
@@ -207,7 +205,7 @@ for i_global in range(0, globalN):
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
     #Plot module lines
     for i_module in range(0, 8):
-        line = [[i_module+0.5, yMin], [i_module+0.5, yMax]]
+        line = [[i_module+0.5, yMin[i_global]], [i_module+0.5, yMax[i_global]]]
         plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
         data_points.append(data[i_global][i_module][1])
         error_points.append(data[i_global][i_module][2])
@@ -215,17 +213,17 @@ for i_global in range(0, globalN):
     plt.errorbar(ModuleArray, data_points, yerr=error_points,  color="purple", markersize=12, elinewidth=1, label="Reco. Mis.\n(this iteration)")
     plt.plot(ModuleArray, data_points, marker="+", color="purple")
     meanAbsReco = np.sum(np.abs(data_points))/len(data_points)
-    textstr = r'<|Reco|>=%s $\mathrm{\mu m}$'%(int(round(meanAbsReco)))
-    plt.text(8.7, yMax*0.8, textstr, fontsize=10, color="purple")
+    textstr = "<|Reco|>="+str(int(round(meanAbsReco)))+str(units[i_global])
+    plt.text(8.7, yMax[i_global]*0.8, textstr, fontsize=8, color="purple")
     #Plot previous iteration
     if(useOffsets):
         plt.plot(ModuleArray, offsets[i_global],  marker="+", color="black", label="Reco. Mis.\n(previous iteration)")
     #Plot truth
-    if(useTruth):
+    if(useTruth and i_global != 2): # ignoring truth for angles 
         plt.plot(ModuleArray, corrected_truth[i_global], marker=".", color="red", label="Truth Mis.")
         meanAbsTruth = np.sum(np.abs(corrected_truth[i_global]))/len(corrected_truth[i_global])
-        textstr = r'<|Truth|>=%s $\mathrm{\mu m}$'%(int(round(meanAbsTruth)))
-        plt.text(8.7, yMax, textstr, fontsize=10, color="red")
+        textstr =  "<|Truth|>="+str(int(round(meanAbsTruth)))+str(units[i_global])
+        plt.text(8.7, yMax[i_global], textstr, fontsize=8, color="red")
 
     axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 plt.savefig("PEDE_Results_S"+stationN+".png", dpi=250)

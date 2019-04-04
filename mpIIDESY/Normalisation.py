@@ -23,7 +23,8 @@ for i_module in range(0, len(strawModuleZPosition)-1):
 
 #split into X and Y
 # T_mis_C_rad = np.array(T_mis_C[0::2])
-T_mis_C_rad = [-0.16, -0.034, 0.126, 0.088, 0.088, 0.049, -0.024, -0.134]
+# T_mis_C_rad = [0.0, 0.059, 0.004, 0.033, -0.064, 0.095, -0.071, -0.037 ]
+T_mis_C_rad = [0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0 ]
 T_mis_C_ver = np.array(T_mis_C[1::2])
 print("T_mis_C_rad=", T_mis_C_rad)
 print("T_mis_C_ver=", T_mis_C_ver)
@@ -55,6 +56,25 @@ print("Corrected Gradient", coefs_Corr[1])
 ##################################
 #Sanity Plot
 
+# plt.figure(1, figsize=(12, 6)) # FoM vs Tracks
+# plt.tight_layout(pad=0.4, w_pad=0.2, h_pad=1.0)
+# axes = plt.subplot(111)
+# plt.subplots_adjust(right=0.8)
+# plt.minorticks_on()
+# axes.tick_params(axis='x',which='minor',bottom=False)
+# axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+# axes.set_xlim(0.9*min(strawModuleZPosition),1.1*max(strawModuleZPosition))
+# axes.set_ylim(-0.140, 0.140)
+# plt.plot(strawModuleZPosition, T_mis_C_rad, 'o', marker=".", color="red", label="Uncorr.")
+# plt.plot(strawModuleZPosition, corrected_T_mis_C, 'o', marker="x", color="red", label="Corr.")
+# axes.plot(x_new, ffit, color="red")
+# axes.plot(x_new, ffit_Corr, color="red", linestyle="--")
+# axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+# plt.title("Misalignment X Truth Corrected")
+# plt.ylabel("Misalignment [mm]")
+# plt.xlabel("Module Z postion [mm]")
+# plt.savefig("test.png", dpi=250)
+
 plt.figure(1, figsize=(12, 6)) # FoM vs Tracks
 plt.tight_layout(pad=0.4, w_pad=0.2, h_pad=1.0)
 axes = plt.subplot(111)
@@ -64,8 +84,15 @@ axes.tick_params(axis='x',which='minor',bottom=False)
 axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
 axes.set_xlim(0.9*min(strawModuleZPosition),1.1*max(strawModuleZPosition))
 axes.set_ylim(-0.140, 0.140)
-plt.plot(strawModuleZPosition, T_mis_C_rad, 'o', marker=".", color="red", label="Uncorr.")
-plt.plot(strawModuleZPosition, corrected_T_mis_C, 'o', marker="x", color="red", label="Corr.")
+for i_module in range(0, 8):
+    rect_unc = plt.Rectangle((strawModuleZPosition[i_module]-20/2, T_mis_C_rad[i_module]-(0.05/2)), 20, 0.05, color='blue', label="Uncorr.")
+    axes.add_patch(rect_unc)
+    rect_cor = plt.Rectangle((strawModuleZPosition[i_module]-20/2, corrected_T_mis_C[i_module]-(0.05/2)), 20, 0.05, color='green', label="Corr.")
+    axes.add_patch(rect_cor)
+    rect_cor_angle = plt.Rectangle((strawModuleZPosition[i_module]-20/2, corrected_T_mis_C[i_module]-(0.05/2)), 2, 0.01, angle=30.0, color='red', label="angle.")
+    axes.add_patch(rect_cor_angle)
+    # plt.plot(strawModuleZPosition, T_mis_C_rad, 'o', marker=".", color="red", label="Uncorr.")
+    # plt.plot(strawModuleZPosition, corrected_T_mis_C, 'o', marker="x", color="red", label="Corr.")
 axes.plot(x_new, ffit, color="red")
 axes.plot(x_new, ffit_Corr, color="red", linestyle="--")
 axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
