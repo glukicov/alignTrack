@@ -180,8 +180,8 @@ print("Truth alignment used for comparison (simulation only):", useTruth)
 # Plotting "constants"
 f = plt.figure(figsize=(7,int(globalN*2+1)))
 #TOOD make min max from data
-yMax = [130, 130, 25, 25, 25]
-yMin = [-130, -130, -25, -25, -25]
+yMax = [120, 120, 25, 25, 25]
+yMin = [-120, -120, -25, -25, -25]
 #Make subplot for each result 
 for i_global in range(0, globalN):
     plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
