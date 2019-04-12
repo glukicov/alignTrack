@@ -79,10 +79,13 @@ else:
 
 if (regime=="align"): # only alignment data has Pz/P and implicit station number 
 	label_mean = f.Get("TrackerAlignment/Hits/Labels").GetMean()
+	print(label_mean)
 	if(label_mean < 1280 and label_mean > 1210):
 		stationN = "12"
 	if(label_mean < 1880 and label_mean > 1810):
 		stationN = "18"
+	if(label_mean < 1080 and label_mean > 1010):
+		stationN = "0"
 	#-------layersPz----------
 	i_totalLayer=0
 	yMin = 0.92
@@ -163,7 +166,7 @@ line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 axes.set_xlim(0.5, NTotalLayers+1)
 axes.set_ylim(yMin, yMax)
-plt.title("UV Residual Mean "+stationN, fontsize=18)
+plt.title("UV Residual Mean S"+stationN, fontsize=18)
 plt.ylabel("Residual Mean [um]", fontsize=18)
 plt.xlabel("Layer", fontsize=18)
 plt.tight_layout()
@@ -197,7 +200,7 @@ line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 axes.set_xlim(0.5, NTotalLayers+1)
 axes.set_ylim(yMin, yMax)
-plt.title("UV Residual SD "+stationN, fontsize=20)
+plt.title("UV Residual SD S"+stationN, fontsize=20)
 plt.ylabel("Residual SD /um", fontsize=18)
 plt.xlabel("Layer", fontsize=20)
 plt.tight_layout()

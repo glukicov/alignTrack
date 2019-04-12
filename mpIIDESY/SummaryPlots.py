@@ -111,6 +111,46 @@ for i_iter in range(0, len(path)):
     print("Offset "+FHICLPatchName[i_global]+stationN+" :", offset[i_iter][i_global])
 
 
+# ######### Plotting #############
+# # Plotting "constants"
+# f = plt.figure(figsize=(7,int(globalN*2+1)))
+# #TOOD make min max from data
+# yMax = [120, 120, 25, 25, 25]
+# yMin = [-120, -120, -25, -25, -25]
+# bar_width, bar_offset, opacity = 0.15, 0.3, 0.8
+# #Make subplot for each result 
+# for i_iter in range(0, len(path)):
+#     for i_global in range(0, globalN):
+#         plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
+#         axes = plt.gca()
+#         axes.set_xlim(ModuleArray[0]-0.5, ModuleArray[-1]+0.5)
+#         axes.set_ylim(yMin[i_global], yMax[i_global])
+#         plt.title(GlobalParNames[i_global]+" residuum misalignment in S"+stationN, fontsize=12)
+#         plt.ylabel(r"Residuum misalignment "+ units[i_global])
+#         plt.xlabel("Module", fontsize=12)
+#         plt.xticks(fontsize=10, rotation=0) 
+#         plt.xticks(ModuleArray + bar_width, ModuleArray)
+#         plt.yticks(fontsize=10, rotation=0)
+#         plt.minorticks_on()
+#         axes.tick_params(axis='x',which='minor',bottom=False)
+#         axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+#         plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
+#         # #Plot the 0th line 
+#         line = [[ModuleArray[0]-0.5,0.0], [ModuleArray[-1]+0.5, 0.0]]
+#         plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+#         # #Plot module lines
+#         for i_module in range(0, 8):
+#              line = [[i_module+0.5, yMin[i_global]], [i_module+0.5, yMax[i_global]]]
+#              plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
+#         # #Plot data 
+#         if (i_iter == 0):
+#             rects1 = plt.bar(ModuleArray-bar_offset, truth[i_global], bar_width, alpha=opacity, color=colors[0],label=labels[0])
+#         rects2 = plt.bar(ModuleArray + bar_width*(i_iter+1)-bar_offset, offset[i_iter][i_global]-truth[i_global], bar_width, alpha=opacity, color=colors[i_iter+1], label=labels[i_iter+1])
+#         axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
+
+
+# plt.savefig("Summary_S"+stationN+".png", dpi=250)
+
 ######### Plotting #############
 # Plotting "constants"
 f = plt.figure(figsize=(7,int(globalN*2+1)))
@@ -142,10 +182,10 @@ for i_iter in range(0, len(path)):
         for i_module in range(0, 8):
              line = [[i_module+0.5, yMin[i_global]], [i_module+0.5, yMax[i_global]]]
              plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-        # #Plot data 
-        if (i_iter == 0):
-            rects1 = plt.bar(ModuleArray-bar_offset, truth[i_global], bar_width, alpha=opacity, color=colors[0],label=labels[0])
-        rects2 = plt.bar(ModuleArray + bar_width*(i_iter+1)-bar_offset, offset[i_iter][i_global]-truth[i_global], bar_width, alpha=opacity, color=colors[i_iter+1], label=labels[i_iter+1])
+        # #Plot data
+        dTruth = offset[i_iter][i_global]-truth[i_global]
+        print("dTruth", dTruth)
+        plt.plot(ModuleArray, dTruth, color=colors[i_iter+1], label=labels[i_iter+1])
         axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 
 

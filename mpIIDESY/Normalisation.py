@@ -11,101 +11,127 @@ import subprocess, shlex
 import numpy.polynomial.polynomial as poly
 
 #take the un-corrected truth 
-T_mis_C= ( 0.0, 0.0, 0.059, 0.059, 0.004, 0.007, 0.033, -0.044, -0.064, 0.066, 0.095, 0.028, -0.071, -0.023, -0.037, -0.04)
 strawModuleZPosition = [ 0.0, 134.36, 268.72, 403.08, 537.42, 671.77, 806.10, 940.406]
-moduleArray=np.arange(1,9) 
+ModuleArray=np.arange(1,9)
+ModuleN=len(ModuleArray)
+globalN=2
 
-for i_module in range(0, len(strawModuleZPosition)-1):
-    print("dZ=", round(strawModuleZPosition[i_module]-strawModuleZPosition[i_module+1],3))
-
+FHICLPatchName = ["strawModuleRShift", "strawModuleHShift"] # no FHICL patch for angles in art yet  
+FHICLServicePath = "services.Geometry.strawtracker." #full path of the tracking FHICL patch     print("dZ=", round(strawModuleZPosition[i_module]-strawModuleZPosition[i_module+1],3))
+GlobalParNames = ["Radial", "Vertical"]
+units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]"]
 #################################
 ### Correct the angle in misalignment
 
 #split into X and Y
-# T_mis_C_rad = np.array(T_mis_C[0::2])
-# T_mis_C_rad = [0.0, 0.059, 0.004, 0.033, -0.064, 0.095, -0.071, -0.037 ]
-T_mis_C_rad = [0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-T_mis_C_ver = np.array(T_mis_C[1::2])
-print("T_mis_C_rad=", T_mis_C_rad)
-print("T_mis_C_ver=", T_mis_C_ver)
+T_mis_C_rad = [-0.016, 0.037, -0.019, 0.014, -0.074, 0.099, -0.049, 0.008]
+T_mis_C_ver = [-0.009, 0.04, -0.017, -0.067, 0.048, 0.023, -0.011, -0.006]
+stationN="12"
 
-#form X (z-position), Y (misalignment) array 
-data=[strawModuleZPosition, T_mis_C_rad] 
+yMax = [0.120, 0.120]
+yMin = [-0.120, -0.120]
 
-#Do a linear fit 
-x_new = np.linspace(float(min(data[0])), float(max(data[0])), num=1e3) # generate x-points for evaluation 
-coefs = poly.polyfit(data[0], data[1], 1) # straight line
-ffit = poly.polyval(x_new, coefs) # plot over generated points 
+#Angles and Offsets 
+corrected_truth = []
+truth = [T_mis_C_rad, T_mis_C_ver]
+plt.figure(1)
+for i_global in range(0, globalN):
+    print("Truth "+FHICLPatchName[i_global]+stationN+" :", truth[i_global])
+    # Correct the truth offsets to have 0 angle and 0 overall offset via a a linear fit 
+    x_new = np.linspace(float(min(strawModuleZPosition)), float(max(strawModuleZPosition)), num=1000) # generate x-points for evaluation 
+    coefs = poly.polyfit(strawModuleZPosition, truth[i_global], 1) # straight line 
+    ffit = poly.polyval(x_new, coefs) # plot over generated points 
+    corrected_array = []
+    print("Intercept", coefs[0])
+    print("Gradient", coefs[1])
+    for i_module in range(0, ModuleN):
+        # corr = Y (in um) + Gradient * X + Intercept 
+        correction =  round(truth[i_global][i_module] - coefs[1] * strawModuleZPosition[i_module]  - coefs[0],3)
+        corrected_array.append(correction)
+    corrected_truth.append(corrected_array)
+    x_new = np.linspace(float(min(strawModuleZPosition)), float(max(strawModuleZPosition)), num=1000) # generate x-points for evaluation 
+    coefs_Corr = poly.polyfit(strawModuleZPosition, corrected_truth[i_global], 1) # straight line 
+    ffit_Corr = poly.polyval(x_new, coefs_Corr) # plot over generated points
+    print("Corrected Intercept", coefs_Corr[0])
+    print("Corrected Gradient", coefs_Corr[1])
 
-print("Intercept", coefs[0])
-print("Gradient", coefs[1])
+    plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
+    axes = plt.gca()
+    axes.set_xlim(strawModuleZPosition[0]*0.9, strawModuleZPosition[-1]*1.1)
+    axes.set_ylim(yMin[i_global], yMax[i_global])
+    plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN, fontsize=12)
+    plt.ylabel(r"Misalignment "+ units[i_global])
+    plt.xlabel("Module", fontsize=12)
+    plt.xticks(fontsize=10, rotation=0) 
+    plt.yticks(fontsize=10, rotation=0)
+    plt.minorticks_on()
+    axes.tick_params(axis='x',which='minor',bottom=False)
+    axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+    plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
+    plt.plot(strawModuleZPosition, truth[i_global], marker=".", color="red", label="Uncorr.", linewidth=0)
+    plt.plot(x_new, ffit, color="red")
+    plt.plot(x_new, ffit_Corr, color="red", linestyle="--")
+    plt.plot(strawModuleZPosition, corrected_truth[i_global], marker="x", color="red", label="Corr.", linewidth=0)
+    axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 
-#Correct the truth
-corrected_T_mis_C = []
-for i_module in range(0, len(moduleArray)):
-    # corr = Y + Gradient * X + Intercept 
-    correction = data[1][i_module] - coefs[1] * data[0][i_module] - coefs[0]
-    corrected_T_mis_C.append(correction)
+plt.savefig("Line_Corrected.png", dpi=250)
 
-x_new_Corr = np.linspace(float(min(data[0])), float(max(data[0])), num=1e3) # generate x-points for evaluation 
-coefs_Corr = poly.polyfit(data[0], corrected_T_mis_C, 1) # straight line
-ffit_Corr = poly.polyval(x_new_Corr, coefs_Corr) # plot over generated points 
+for i_global in range(0, globalN):
+     print("Corrected Truth "+FHICLPatchName[i_global]+stationN+" :", corrected_truth[i_global])
 
-print("Corrected Intercept", coefs_Corr[0])
-print("Corrected Gradient", coefs_Corr[1])
-##################################
-#Sanity Plot
+# Curve 
+#Do a curve x^2 fit 
 
-# plt.figure(1, figsize=(12, 6)) # FoM vs Tracks
-# plt.tight_layout(pad=0.4, w_pad=0.2, h_pad=1.0)
-# axes = plt.subplot(111)
-# plt.subplots_adjust(right=0.8)
-# plt.minorticks_on()
-# axes.tick_params(axis='x',which='minor',bottom=False)
-# axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
-# axes.set_xlim(0.9*min(strawModuleZPosition),1.1*max(strawModuleZPosition))
-# axes.set_ylim(-0.140, 0.140)
-# plt.plot(strawModuleZPosition, T_mis_C_rad, 'o', marker=".", color="red", label="Uncorr.")
-# plt.plot(strawModuleZPosition, corrected_T_mis_C, 'o', marker="x", color="red", label="Corr.")
-# axes.plot(x_new, ffit, color="red")
-# axes.plot(x_new, ffit_Corr, color="red", linestyle="--")
-# axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-# plt.title("Misalignment X Truth Corrected")
-# plt.ylabel("Misalignment [mm]")
-# plt.xlabel("Module Z postion [mm]")
-# plt.savefig("test.png", dpi=250)
+truth = [corrected_truth[0], corrected_truth[1]]
+corrected_truth = []
 
-plt.figure(1, figsize=(12, 6)) # FoM vs Tracks
-plt.tight_layout(pad=0.4, w_pad=0.2, h_pad=1.0)
-axes = plt.subplot(111)
-plt.subplots_adjust(right=0.8)
-plt.minorticks_on()
-axes.tick_params(axis='x',which='minor',bottom=False)
-axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
-axes.set_xlim(0.9*min(strawModuleZPosition),1.1*max(strawModuleZPosition))
-axes.set_ylim(-0.140, 0.140)
-for i_module in range(0, 8):
-    rect_unc = plt.Rectangle((strawModuleZPosition[i_module]-20/2, T_mis_C_rad[i_module]-(0.05/2)), 20, 0.05, color='blue', label="Uncorr.")
-    axes.add_patch(rect_unc)
-    rect_cor = plt.Rectangle((strawModuleZPosition[i_module]-20/2, corrected_T_mis_C[i_module]-(0.05/2)), 20, 0.05, color='green', label="Corr.")
-    axes.add_patch(rect_cor)
-    rect_cor_angle = plt.Rectangle((strawModuleZPosition[i_module]-20/2, corrected_T_mis_C[i_module]-(0.05/2)), 2, 0.01, angle=30.0, color='red', label="angle.")
-    axes.add_patch(rect_cor_angle)
-    # plt.plot(strawModuleZPosition, T_mis_C_rad, 'o', marker=".", color="red", label="Uncorr.")
-    # plt.plot(strawModuleZPosition, corrected_T_mis_C, 'o', marker="x", color="red", label="Corr.")
-axes.plot(x_new, ffit, color="red")
-axes.plot(x_new, ffit_Corr, color="red", linestyle="--")
-axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-plt.title("Misalignment X Truth Corrected")
-plt.ylabel("Misalignment [mm]")
-plt.xlabel("Module Z postion [mm]")
-plt.savefig("test.png", dpi=250)
+plt.figure(2)
+for i_global in range(0, globalN):
+    x_new = np.linspace(float(min(strawModuleZPosition)), float(max(strawModuleZPosition)), num=1e3) # generate x-points for evaluation 
+    coefs = poly.polyfit(strawModuleZPosition, truth[i_global], 2) # x2 curve
+    ffit = poly.polyval(x_new, coefs) # plot over generated points 
+
+    print("Intercept (a)", coefs[0])
+    print("Gradient 1 (b)", coefs[1])
+    print("Gradient 2 (c)", coefs[2])
+    print("Midpoint", -coefs[1] / (2*coefs[2]))
+
+    corrected_array = []
+    for i_module in range(0, ModuleN):
+        # corr = Y (in um) + Gradient * X + Intercept 
+        correction =  round(truth[i_global][i_module] - coefs[2] * (strawModuleZPosition[i_module] ** 2)  - coefs[1] * strawModuleZPosition[i_module]  - coefs[0],3)
+        corrected_array.append(correction)
+    corrected_truth.append(corrected_array)
+    print(corrected_truth)
+    x_new = np.linspace(float(min(strawModuleZPosition)), float(max(strawModuleZPosition)), num=1000) # generate x-points for evaluation 
+    coefs_Corr = poly.polyfit(strawModuleZPosition, corrected_truth[i_global], 1) # straight line 
+    ffit_Corr = poly.polyval(x_new, coefs_Corr) # plot over generated points
+    print("Corrected Intercept", coefs_Corr[0])
+    print("Corrected Gradient", coefs_Corr[1])
 
 
+    plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
+    axes = plt.gca()
+    axes.set_xlim(strawModuleZPosition[0]*0.9, strawModuleZPosition[-1]*1.1)
+    axes.set_ylim(yMin[i_global], yMax[i_global])
+    plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN, fontsize=12)
+    plt.ylabel(r"Misalignment "+ units[i_global])
+    plt.xlabel("Module", fontsize=12)
+    plt.xticks(fontsize=10, rotation=0) 
+    plt.yticks(fontsize=10, rotation=0)
+    plt.minorticks_on()
+    axes.tick_params(axis='x',which='minor',bottom=False)
+    axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+    plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
+    plt.plot(strawModuleZPosition, truth[i_global], marker=".", color="red", label="Uncorr.", linewidth=0)
+    plt.plot(x_new, ffit, color="red")
+    plt.plot(x_new, ffit_Corr, color="red", linestyle="--")
+    plt.plot(strawModuleZPosition, corrected_truth[i_global], marker="x", color="red", label="Corr.", linewidth=0)
+    axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 
+plt.savefig("Curve_Corrected.png", dpi=250)
 
-# xTitle = "
+for i_global in range(0, globalN):
+     print("Corrected Truth "+FHICLPatchName[i_global]+stationN+" :", corrected_truth[i_global])
 
-
-
-# plt.plot(moduleArray, np.array(T_mis_C_rad), marker=".", color="red", label="Truth Mis. (uncorr.)")
+subprocess.call(["convert" , "-append", "Line_Corrected.png" , "Curve_Corrected.png", "Corrected.png"])

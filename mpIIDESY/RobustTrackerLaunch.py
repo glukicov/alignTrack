@@ -91,7 +91,9 @@ for i_global in range(0, globalN):
             data[i_global][i_module][i_result]=results[i_result][i_global::globalN][i_module] 
 
 #Loop through parameters to establish names ( full label = AA (station) + B (module) + C (par. label) )
-stationN=str(pars[0])[0:2] # XXX check logic 
+stationN=str(pars[0])[0:2]
+if (stationN=="10"):
+    stationN="0" #set S0 label  
 print("Alignment results for Station:", stationN, " | All results in [um]")
 all_labels=[]
 for i_par in pars:
