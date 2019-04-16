@@ -19,13 +19,14 @@ globalN=2
 FHICLPatchName = ["strawModuleRShift", "strawModuleHShift"] # no FHICL patch for angles in art yet  
 FHICLServicePath = "services.Geometry.strawtracker." #full path of the tracking FHICL patch     print("dZ=", round(strawModuleZPosition[i_module]-strawModuleZPosition[i_module+1],3))
 GlobalParNames = ["Radial", "Vertical"]
-units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]"]
+#units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]"]
+units = ["[mm]", "[mm]"]
 #################################
 ### Correct the angle in misalignment
 
 #split into X and Y
-T_mis_C_rad = [-0.016, 0.037, -0.019, 0.014, -0.074, 0.099, -0.049, 0.008]
-T_mis_C_ver = [-0.009, 0.04, -0.017, -0.067, 0.048, 0.023, -0.011, -0.006]
+T_mis_C_rad = [-0.032, 0.034, -0.011, 0.026, -0.062, 0.105, -0.051, -0.008]
+T_mis_C_ver = [-0.028, 0.036, -0.008, -0.053, 0.062, 0.03, -0.014, -0.025 ]
 stationN="12"
 
 yMax = [0.120, 0.120]
@@ -74,7 +75,7 @@ for i_global in range(0, globalN):
     plt.plot(strawModuleZPosition, corrected_truth[i_global], marker="x", color="red", label="Corr.", linewidth=0)
     axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 
-plt.savefig("Line_Corrected.png", dpi=250)
+plt.savefig("Line_Corrected.pdf", dpi=250)
 
 for i_global in range(0, globalN):
      print("Corrected Truth "+FHICLPatchName[i_global]+stationN+" :", corrected_truth[i_global])
@@ -133,5 +134,7 @@ plt.savefig("Curve_Corrected.png", dpi=250)
 
 for i_global in range(0, globalN):
      print("Corrected Truth "+FHICLPatchName[i_global]+stationN+" :", corrected_truth[i_global])
+
+print(np.array(corrected_truth)-np.array(truth))
 
 subprocess.call(["convert" , "-append", "Line_Corrected.png" , "Curve_Corrected.png", "Corrected.png"])
