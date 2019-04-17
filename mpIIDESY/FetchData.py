@@ -19,7 +19,7 @@ command=""
 for i in range(0, len(files)):
     
     if (vm == "Y"):
-        command = "gm2gpvm01:"+str(path)+"/"+str(files[i])
+        command = "gm2gpvm04:"+str(path)+"/"+str(files[i])
         print("Coping from VM...")
     
     if (vm == "N"):
