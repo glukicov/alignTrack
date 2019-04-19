@@ -1,9 +1,5 @@
 void Mahalanobis() {
 
-// Fit function is
-    // ax^2 + bx +c or bx +c
-    std::string curve = "[0]*x + [1]"; // bx + c
-    const int parN = 2; // slope, intercept (b, c)
 
 //Define constants
     const int stationN = 2;
@@ -22,6 +18,14 @@ void Mahalanobis() {
     double* measuredR[stationN] = {measuredR_s12, measuredR_s18};
     double erR = 0.2; // 200 um / 0.2 mmm
     double errR[moduleN]; std::fill_n(errR, moduleN, erR); // fill with constant value
+
+    // Fit function is'
+    double pivotPoint = (Z[3] + Z[4])/2; 
+    std::cout << "pivotPoint= "<< pivotPoint << "\n";
+    // ax^2 + bx +c or bx +c
+    std::string curve = "[0]*(x-"+to_string(pivotPoint)+")*(x-"+to_string(pivotPoint)+") + [1]*(x-"+to_string(pivotPoint)+") + [2]"; // bx + c
+    const int parN = 2; // slope, intercept (b, c)
+
 
 //Make new canvas and legend with plotting range
     TCanvas* canvas_survey = new TCanvas("canvas_survey", "", 800, 600);
@@ -103,7 +107,7 @@ void Mahalanobis() {
         //draw the nominal line
         tge_vector[i_station]->Draw("AP");
 
-        int i_state = 0; // this is a counter, expect 9 states with 2 parametes
+        int i_state = 0; // this is a counter, expect 3^parN states: 3 base state (+1, 0, -1) with ^parN permutations
         std::vector<double> b, c; // containers to store slopes and intercepts
 
         //loop over the 1-sigma changes
@@ -144,10 +148,26 @@ void Mahalanobis() {
             } // intercept
         } // slope
         //save per station
-        legend->Draw("SAME");
+        legend->Draw("same");
         canvas_survey->Draw();
         std::stringstream plotName; plotName << "Mach_line_" << labels[i_station] << ".png";
         canvas_survey->Print(plotName.str().c_str());
+
+        //Clear previous canvas
+        canvas_survey->Clear();
+        legend->Clear();
+
+        // Summary plot
+        TGraph* summary = new TGraph(i_state, b.data(), c.data());
+        summary->SetTitle(Form("%s; #theta [degrees]; intercept",labels[i_station].c_str()));
+        summary->GetXaxis()->CenterTitle();
+        summary->GetYaxis()->CenterTitle();
+        summary->SetMarkerColor(colors[i_station]);
+        summary->SetMarkerStyle(markerStyle);
+        summary->Draw("AP");
+        plotName.str(""); plotName << "Mach_point_" << labels[i_station] << ".png";
+        canvas_survey->Print(plotName.str().c_str());
+
     } // Mah per station
 
 } // main
