@@ -24,7 +24,7 @@ void Mahalanobis() {
     std::cout << "pivotPoint= "<< pivotPoint << "\n";
     // ax^2 + bx +c or bx +c
     std::string curve = "[0]*(x-"+to_string(pivotPoint)+")*(x-"+to_string(pivotPoint)+") + [1]*(x-"+to_string(pivotPoint)+") + [2]"; // bx + c
-    const int parN = 2; // slope, intercept (b, c)
+    const int parN = 3; // curvature, slope, intercept (a, b, c)
 
 
 //Make new canvas and legend with plotting range
@@ -54,14 +54,18 @@ void Mahalanobis() {
         TFitResultPtr fit_result = tge->Fit(function_name.str().c_str(), "QRS"); // Quite Chi2 fit over Range of the function, with pointer return (S)
         fit_vector.push_back(fit_result);
         tge->GetFunction(function_name.str().c_str())->SetLineColor(colors[i_station]);
-        double slope = tge->GetFunction(function_name.str().c_str())->GetParameter(0);
-        double slope_error = tge->GetFunction(function_name.str().c_str())->GetParError(0);
-        double angle_deg = atan(slope) * (180 / TMath::Pi());
-        double angle_deg_error = slope_error * (180 / TMath::Pi());
+        // double slope = tge->GetFunction(function_name.str().c_str())->GetParameter(0);
+        // double slope_error = tge->GetFunction(function_name.str().c_str())->GetParError(0);
+        // double angle_deg = atan(slope) * (180 / TMath::Pi());
+        // double angle_deg_error = slope_error * (180 / TMath::Pi());
+        double a = tge->GetFunction(function_name.str().c_str())->GetParameter(0);
+        double b = tge->GetFunction(function_name.str().c_str())->GetParameter(1);
+        double c = tge->GetFunction(function_name.str().c_str())->GetParameter(2);
 
         //Display fit results
         legend->SetBorderSize(0);
-        std::stringstream legend_string; legend_string << std::setprecision(roundTo) << labels[i_station] << " #theta= " << angle_deg << " #pm " << angle_deg_error;
+        // std::stringstream legend_string; legend_string << std::setprecision(roundTo) << labels[i_station] << " #theta= " << angle_deg << " #pm " << angle_deg_error;
+        std::stringstream legend_string; legend_string << std::setprecision(roundTo) << labels[i_station] << " a= " << a << " b= " << b << " c= " << c;
         std::cout << legend_string.str() << "\n";
         legend->AddEntry(tge, legend_string.str().c_str(), "l");
 
@@ -72,7 +76,7 @@ void Mahalanobis() {
     canvas_survey->Print("Survey.png");
 
 // Mahalanobis fits
-    int col[] = {3, 7, 6, 7, 5, 2, 4, 1, 12};
+    int col[] = {3, 7, 6, 7, 5, 2, 4, 1, 12, 3, 7, 6, 7, 5, 2, 4, 1, 12, 3, 7, 6, 7, 5, 2, 4, 1, 12, 3, 7, 6, 7, 5, 2, 4, 1, 12, 3, 7, 6, 7, 5, 2, 4, 1, 12};
 
 // Pick 1 sigma points per station
     for  (int i_station = 0; i_station < stationN; i_station++) {
@@ -108,13 +112,14 @@ void Mahalanobis() {
         tge_vector[i_station]->Draw("AP");
 
         int i_state = 0; // this is a counter, expect 3^parN states: 3 base state (+1, 0, -1) with ^parN permutations
-        std::vector<double> b, c; // containers to store slopes and intercepts
+        std::vector<double> a, b, c; // containers to store slopes and intercepts
 
         //loop over the 1-sigma changes
+        for (int i_curve = -1; i_curve < 2; i_curve++) {
         for (int i_slope = -1; i_slope < 2; i_slope++) {
             for (int i_intercept = -1; i_intercept < 2; i_intercept++) {
                 TVectorD stateVector(parN);
-                stateVector[0] = i_slope; stateVector[1] = i_intercept;
+                stateVector[0] = i_curve; stateVector[1] = i_slope; stateVector[2] = i_intercept;
 
                 double scale = stateVector.Norm2Sqr() > 0 ? r / sqrt(stateVector.Norm2Sqr()) : 1;
                 for (int i_par = 0; i_par < parN; i_par++) stateVector[i_par] *= scale;
@@ -126,7 +131,7 @@ void Mahalanobis() {
                 std::cout << endl;
 
                 //set new state parameters for the fit
-                TF1* stateFit = new TF1(Form("State_%d_%d", i_slope, i_intercept), curve.c_str(), Z[0], Z[moduleN - 1]);
+                TF1* stateFit = new TF1(Form("State_%d_%d_%d", i_curve, i_slope, i_intercept), curve.c_str(), Z[0], Z[moduleN - 1]);
                 for (int i_par = 0; i_par < parN; i_par++) stateFit->SetParameter(i_par, newParameters[i_par]);
 
                 // bold dashed lines for state fits
@@ -134,19 +139,21 @@ void Mahalanobis() {
                 stateFit->Draw("same");
 
                 //get new slopes and intercepts
-                double b_state = stateFit->GetParameter(0);
-                double c_state = stateFit->GetParameter(1);
-                double b_state_deg = atan(b_state) * ( 180 / TMath::Pi() );
-                b.push_back(b_state_deg); c.push_back(c_state);
+                double a_state = stateFit->GetParameter(0);
+                double b_state = stateFit->GetParameter(1);
+                double c_state = stateFit->GetParameter(2);
+                // double b_state_deg = atan(b_state) * ( 180 / TMath::Pi() );
+                 a.push_back(a_state); b.push_back(b_state); c.push_back(c_state);
 
                 //print keeping the +/- with showpos
-                std::stringstream legend_string; legend_string << std::showpos << std::setprecision(roundTo) << i_slope << i_intercept << " " << labels[i_station] << " b: " << b_state_deg << " c: " << c_state;
+                std::stringstream legend_string; legend_string << std::showpos << std::setprecision(roundTo) << i_slope << i_intercept << " " << labels[i_station] << " a:" << a_state << " b: " << b_state << " c: " << c_state;
                 legend->AddEntry(stateFit, legend_string.str().c_str(), "l");
 
                 i_state++;
 
             } // intercept
         } // slope
+    } // curve
         //save per station
         legend->Draw("same");
         canvas_survey->Draw();
@@ -157,16 +164,41 @@ void Mahalanobis() {
         canvas_survey->Clear();
         legend->Clear();
 
-        // Summary plot
-        TGraph* summary = new TGraph(i_state, b.data(), c.data());
-        summary->SetTitle(Form("%s; #theta [degrees]; intercept",labels[i_station].c_str()));
-        summary->GetXaxis()->CenterTitle();
-        summary->GetYaxis()->CenterTitle();
-        summary->SetMarkerColor(colors[i_station]);
-        summary->SetMarkerStyle(markerStyle);
-        summary->Draw("AP");
-        plotName.str(""); plotName << "Mach_point_" << labels[i_station] << ".png";
+        // Summary plots
+        TGraph* summary_ab = new TGraph(i_state, a.data(), b.data());
+        summary_ab->SetTitle(Form("%s; a; b", labels[i_station].c_str()));
+        summary_ab->GetXaxis()->SetTitle("a");
+        summary_ab->GetYaxis()->SetTitle("b");
+        summary_ab->GetXaxis()->CenterTitle();
+        summary_ab->GetYaxis()->CenterTitle();
+        summary_ab->SetMarkerColor(colors[i_station]);
+        summary_ab->SetMarkerStyle(markerStyle);
+        summary_ab->Draw("AP");
+        plotName.str(""); plotName << "Mach_point_ab_" << labels[i_station] << ".png";
         canvas_survey->Print(plotName.str().c_str());
+        canvas_survey->Clear();
+
+        TGraph* summary_ac = new TGraph(i_state, a.data(), c.data());
+        summary_ac->SetTitle(Form("%s; a; c", labels[i_station].c_str()));
+        summary_ac->GetXaxis()->CenterTitle();
+        summary_ac->GetYaxis()->CenterTitle();
+        summary_ac->SetMarkerColor(colors[i_station]);
+        summary_ac->SetMarkerStyle(markerStyle);
+        summary_ac->Draw("AP");
+        plotName.str(""); plotName << "Mach_point_ac_" << labels[i_station] << ".png";
+        canvas_survey->Print(plotName.str().c_str());
+        canvas_survey->Clear();
+
+        TGraph* summary_bc = new TGraph(i_state, b.data(), c.data());
+        summary_bc->SetTitle(Form("%s; b; c", labels[i_station].c_str()));
+        summary_bc->GetXaxis()->CenterTitle();
+        summary_bc->GetYaxis()->CenterTitle();
+        summary_bc->SetMarkerColor(colors[i_station]);
+        summary_bc->SetMarkerStyle(markerStyle);
+        summary_bc->Draw("AP");
+        plotName.str(""); plotName << "Mach_point_bc_" << labels[i_station] << ".png";
+        canvas_survey->Print(plotName.str().c_str());
+        canvas_survey->Clear();
 
     } // Mah per station
 
