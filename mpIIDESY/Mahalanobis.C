@@ -26,6 +26,11 @@ void Mahalanobis() {
     std::string curve = "[0]*(x-"+to_string(pivotPoint)+")*(x-"+to_string(pivotPoint)+") + [1]*(x-"+to_string(pivotPoint)+") + [2]"; // bx + c
     const int parN = 3; // curvature, slope, intercept (a, b, c)
 
+    std::cout << "RShift from Curve: ";
+    for (int i_module=0; i_module < moduleN; i_module++){
+        std::cout << 1.0*pow(10, -6)*(Z[i_module]-pivotPoint)*(Z[i_module]-pivotPoint) << ", ";
+    }
+    std::cout<<"\n";
 
 //Make new canvas and legend with plotting range
     TCanvas* canvas_survey = new TCanvas("canvas_survey", "", 800, 600);

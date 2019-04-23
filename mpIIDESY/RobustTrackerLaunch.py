@@ -179,6 +179,8 @@ if truth_file.is_file():
 print("Truth alignment used for comparison (simulation only):", useTruth)
 
 ######### Plotting #############
+metric_ficl=open("metricS"+str(stationN)+".txt", "w+") 
+
 # Plotting "constants"
 f = plt.figure(figsize=(7,int(globalN*2+1)))
 #TOOD make min max from data
@@ -226,9 +228,11 @@ for i_global in range(0, globalN):
         meanAbsTruth = np.sum(np.abs(corrected_truth[i_global]))/len(corrected_truth[i_global])
         textstr =  "<|Truth|>="+str(int(round(meanAbsTruth)))+str(units[i_global])
         plt.text(8.7, yMax[i_global], textstr, fontsize=8, color="red")
+        metric_ficl.write(str(int(round(meanAbsReco-meanAbsTruth)))+" ")
 
     axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 plt.savefig("PEDE_Results_S"+stationN+".png", dpi=250)
+metric_ficl.close()
 
 print("\nResults plotted in PEDE_Results_S"+stationN+".png\n")
 print("\nOffsets for re-tracking are written to OffsetsPerModule"+str(stationN)+".fcl")
