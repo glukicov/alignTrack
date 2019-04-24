@@ -16,7 +16,6 @@ import numpy.polynomial.polynomial as poly # linear fit
 import matplotlib.pyplot as plt #for plotting  
 import itertools # smart lines in plotting 
 
-
 ### HELPER FUNCTIONS ######
 ## Read offsets from FHICL file 
 def getOffsets(f, name):
@@ -31,7 +30,7 @@ def getOffsets(f, name):
     offsets = offsets.replace("]", "") 
     offsets = np.array([float(r) for r in offsets.split(',')])
     offsets = np.array(offsets*1000) # convert to um 
-    offsets = offsets.astype(int) 
+    offsets = offsets.astype(float) 
     return offsets 
 
 #Define and open command line arguments
@@ -55,6 +54,7 @@ GlobalParLabels = [1, 2, 3, 4, 5] # their label
 GlobalParDict = dict(zip(GlobalParLabels, GlobalParNames))
 FHICLPatchName = ["strawModuleRShift", "strawModuleHShift"," strawModuleRotationPhi", "strawModuleRotationPsi", "strawModuleRotationTheta"] # no FHICL patch for angles in art yet  
 FHICLServicePath = "services.Geometry.strawtracker." #full path of the tracking FHICL patch 
+round_to = 3 # decimal places 
 
 #Define variables that will be PEDE result-dependent 
 globalN = -1 # per module
@@ -82,6 +82,7 @@ for i_par in range(0, parN):
 
 # combine into a data structure 
 results=[pars, pede_results, pede_errors]
+
 # structure:  data[i_global][i_module][i_results] with result: 0=label, 1=align 2= error 
 data = [[[0 for i_result in range(len(results))] for i_module in range(ModuleN)] for i_global in range(globalN)]
 for i_global in range(0, globalN):
@@ -111,14 +112,14 @@ print("Number of global parameters per module:", globalN)
 for i_global in range(0, globalN):
     sys.stdout.write("PEDE result for "+FHICLPatchName[i_global]+stationN+": [ ")
     for i_module in range(0, ModuleN):
-        sys.stdout.write(str(data[i_global][i_module][1]))
+        sys.stdout.write(str(round(data[i_global][i_module][1], round_to)))
         if(i_module != 7):
             sys.stdout.write(" ")
     sys.stdout.write(" ] \n")
 for i_global in range(0, globalN):
     sys.stdout.write("PEDE result for "+FHICLPatchName[i_global]+stationN+" error: [ ")
     for i_module in range(0, ModuleN):
-        sys.stdout.write(str(data[i_global][i_module][2]))
+        sys.stdout.write(str(round(data[i_global][i_module][2], round_to)))
         if(i_module != 7):
             sys.stdout.write(" ")
     sys.stdout.write(" ] \n")
@@ -144,8 +145,8 @@ for i_global in range(0, globalN):
     sys.stdout.write("PEDE adjusted result for "+FHICLPatchName[i_global]+stationN+": [ ")
     fhicl_out.write(FHICLServicePath+FHICLPatchName[i_global]+stationN+": [ ")
     for i_module in range(0, ModuleN):
-        sys.stdout.write(str(data[i_global][i_module][1]))
-        fhicl_out.write(str(round(data[i_global][i_module][1]*1e-3,3))) # um -> mm 
+        sys.stdout.write(str(round(data[i_global][i_module][1], round_to)))
+        fhicl_out.write(str(round(data[i_global][i_module][1]*1e-3, (round_to+1) ))) # um -> 1/10 mm for FHICL file 
         if(i_module != 7):
             sys.stdout.write(" ")
             fhicl_out.write(", ")
@@ -158,24 +159,14 @@ fhicl_out.close()
 truth_file = os.path.isfile(truth_file_name)
 if truth_file:
     useTruth=True
-    corrected_truth = []
     truth = [[0 for i_module in range(ModuleN)] for i_global in range(globalN)]
     for i_global in range(0, 2):
         truth_file=open(truth_file_name, "r")
         truth_input = getOffsets(truth_file, FHICLServicePath+FHICLPatchName[i_global]+stationN)
         truth[i_global]=truth_input
         print("Truth "+FHICLPatchName[i_global]+stationN+" :", truth[i_global])
-        # Correct the truth offsets to have 0 angle and 0 overall offset via a a linear fit 
-        x_new = np.linspace(float(min(ModuleArray)), float(max(ModuleArray)), num=1000) # generate x-points for evaluation 
-        coefs = poly.polyfit(ModuleArray, truth[i_global], 1) # straight line 
-        corrected_array = []
-        for i_module in range(0, ModuleN):
-            # corr = Y (in um) + Gradient * X + Intercept 
-            correction =  int(truth[i_global][i_module] - coefs[1] * ModuleArray[i_module]  - coefs[0])
-            corrected_array.append(correction)
-        corrected_truth.append(corrected_array)
-        print("Corrected Truth "+FHICLPatchName[i_global]+stationN+" :", corrected_truth[i_global])
 print("Truth alignment used for comparison (simulation only):", useTruth)
+
 
 ######### Plotting #############
 metric_ficl=open("metricS"+str(stationN)+".txt", "w+") 
@@ -216,18 +207,18 @@ for i_global in range(0, globalN):
     plt.errorbar(ModuleArray, data_points, yerr=error_points,  color="purple", markersize=12, elinewidth=1, label="Reco. Mis.\n(this iteration)")
     plt.plot(ModuleArray, data_points, marker="+", color="purple")
     meanAbsReco = np.sum(np.abs(data_points))/len(data_points)
-    textstr = "<|Reco|>="+str(int(round(meanAbsReco)))+str(units[i_global])
+    textstr = "<|Reco|>="+str(int(meanAbsReco))+str(units[i_global])
     plt.text(8.7, yMax[i_global]*0.8, textstr, fontsize=8, color="purple")
     #Plot previous iteration
     if(useOffsets):
         plt.plot(ModuleArray, offsets[i_global],  marker="+", color="black", label="Reco. Mis.\n(previous iteration)")
     #Plot truth
     if(useTruth and i_global != 2): # ignoring truth for angles 
-        plt.plot(ModuleArray, corrected_truth[i_global], marker=".", color="red", label="Truth Mis.")
-        meanAbsTruth = np.sum(np.abs(corrected_truth[i_global]))/len(corrected_truth[i_global])
-        textstr =  "<|Truth|>="+str(int(round(meanAbsTruth)))+str(units[i_global])
+        plt.plot(ModuleArray, truth[i_global], marker=".", color="red", label="Truth Mis.")
+        meanAbsTruth = np.sum(np.abs(truth[i_global]))/len(truth[i_global])
+        textstr =  "<|Truth|>="+str(int(meanAbsTruth))+str(units[i_global])
         plt.text(8.7, yMax[i_global], textstr, fontsize=8, color="red")
-        metric_ficl.write(str(int(round(meanAbsReco-meanAbsTruth)))+" ")
+        metric_ficl.write(str( round(meanAbsReco-meanAbsTruth, round_to) )+" ")
 
     axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 plt.savefig("PEDE_Results_S"+stationN+".png", dpi=250)

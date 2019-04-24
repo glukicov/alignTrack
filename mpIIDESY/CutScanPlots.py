@@ -5,7 +5,7 @@
 import argparse, sys, glob, os # glob is awesome! allows regex in process calls 
 import subprocess, shlex 
 import re 
-from pathlib import Path #check files
+# from pathlib import Path #check files
 import pandas as pd # get data frame from text file 
 import numpy as np # arrays 
 import numpy.polynomial.polynomial as poly # linear fit 
@@ -16,7 +16,7 @@ import itertools # smart lines in plotting
 ModuleN = 8 # per station 
 globalN = 2 # X, y
 ModuleArray=np.arange(1, ModuleN+1) #(1, 2,...,8) for plotting  
-GlobalParNames = ["Radial", "Vertical", 'Φ', 'ψ', 'θ'] #only ever going to have 5 pars.
+GlobalParNames = ["Radial", "Vertical", r'$\phi$', r'$\psi$', r'$\theta$'] #only ever going to have 5 pars.
 units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]", " [mrad]", " [mrad]", " [mrad]"]
 
 parser = argparse.ArgumentParser(description='mode')
@@ -33,7 +33,7 @@ stationN=len(stationName)
 sigma = 10 # um 
 
 if (scan == "dca"):
-    cutScans = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5]
+    cutScans = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     defaultValue = 0.5
     cutName = "cutDCA"
     scan_units = " [mm]"
@@ -86,10 +86,10 @@ for i_total, i_cut in  enumerate(cutScans):
         subprocess.call("pwd") # status printout 
         fileName = "metric"+str(stationName[i_station])+".txt"
         metricFile = open(fileName, "r")
-        numbers = [int(x) for x in next(metricFile).split()] # read first line
+        numbers = [float(x) for x in next(metricFile).split()] # read first line
         # Chi2 = residual^2 / sigma^2 
-        metricX.append( int(numbers[0])**2/sigma**2 )
-        metricY.append( int(numbers[1])**2/sigma**2 )
+        metricX.append( (numbers[0])**2/sigma**2 )
+        metricY.append( (numbers[1])**2/sigma**2 )
 
         os.chdir("../../") # go back to top dir 
 

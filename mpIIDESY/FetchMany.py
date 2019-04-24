@@ -8,61 +8,83 @@ import re
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument("-scan", "--scan") # scan study 
 parser.add_argument('-p', '--path', help='path')
+parser.add_argument('-vm', '--virtualMachine', default="Y", type=str)
 args = parser.parse_args()
 
 path = str(args.path)
 scan=str(args.scan)
+vm = args.virtualMachine
 
 #Define tracker constants 
-stationN=2
-stationName=["S12", "S18"]
+# stationName=["S12", "S18"]
+stationName=["S0", "S12", "S18"]
+stationN=len(stationName)
 
-files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.bin")
+files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.png")
 
 #Define the scan variables
 # cutScans: values to replace the default value 
 # defaultValue: default in the FHICL file 
 # cutName : must be present in the FHICL file as "cutName : defaultValue" e.g. "cutDCA : 0.5"
 if (scan == "dca"):
-    cutScans = [0.0, 0.250, 0.400, 0.600, 0.700, 0.800, 0.900, 1.000, 1.200, 1.500, 1.700, 2.000, 2.200]
-       
+    cutScans = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    defaultValue = 0.5
+    cutName = "cutDCA"
+   
 elif (scan == "mom"):
-    # cutScans = [0, 1000, 1300, 1500, 1700]
-    cutScans = [0, 1000, 1300, 1500, 1700, 2000, 2300, 2500, 2800]
+    cutScans = [0, 800, 1000, 1300, 1500, 1700, 2000]
+    defaultValue = 0.0
+    cutName = "PCut"
+
+elif (scan == "time"):
+    cutScans = [0, 10000, 20000, 25000, 30000, 35000, 40000]
+    defaultValue = 0.0
+    cutName = "timeCut"
 
 elif (scan == "pval"):
-    # cutScans = [0.0, 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.02, 0.03, 0.04, 0.05]
-    cutScans = [0.0, 0.001]
+    cutScans = [0.0, 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.02, 0.03, 0.04, 0.05]
+    defaultValue = 0.005
+    cutName = "pValueCut"
 
 elif (scan == "pzp"):
-    cutScans = ["PzP_98", "PzP_95"]
+    cutScans = [0.0, 0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1.0]
+    defaultValue = 0.93
+    cutName = "pzCut"
 
-elif (scan == "mixed"):
-    cutScans = ["4DLC_0", "4DLC_1000",  "5DLC_0",  "5DLC_1000"]    
+elif (scan == "minHits"):
+    cutScans = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    defaultValue = 9
+    pzCut = "minHits"
 
 else:
     print("Incorrect scan specified!")
 
+machine=""
+if (vm == "Y"):
+    machine = "gm2gpvm04:"
+    print("Coping from VM...")
 
-#for i_total, i_cut in  enumerate(cutScans):
-for i_station in range(0, stationN):
-        
-        #subprocess.call(["mkdir" , str(i_cut)])
-        subprocess.call(["mkdir" , str(stationName[i_station])]) 
-        
-        #for i_station in range(0, stationN):
-        for i_total, i_cut in  enumerate(cutScans):
-        
-            #subprocess.call(["mkdir" , str(i_cut)+"/"+str(stationName[i_station])]) 
-            subprocess.call(["mkdir" , str(stationName[i_station])+"/"+str(i_cut)])
-        
-            # fullPath = str(path)+"/"+str(i_cut)+"/"+str(stationName[i_station])+"/"
-            fullPath = str(path)+"/"+str(stationName[i_station])+"/"+str(i_cut)+"/"
-            print("fullPath", fullPath)
+if (vm == "N"):
+    machine = "gm2ucl:"
+    print("Coping from gm2ucl")
 
+#copy top-level files 
+print("Copying top-level files")
+for i in range(0, len(files)):
+    command = machine  + "/" + str(path)+ "/" + str(files[i])
+    subprocess.call(["scp", str(command), "." ])
+    print(command)
+
+#Per cut 
+for i_total, i_cut in  enumerate(cutScans):
+        subprocess.call(["mkdir" , str(i_cut)])
+       #Pet station 
+        for i_station in stationName:
+            subprocess.call(["mkdir" , str(i_cut)+"/"+i_station]) 
+            fullPath = machine + path+ "/" +str(i_cut)+ "/" +i_station+ "/"
+            print("Copying from", fullPath)
+            #Per file 
             for i in range(0, len(files)):
-
-                command = "gm2gpvm03:"+str(fullPath)+"/"+str(files[i])
-                print("command", command)
-                # subprocess.call(["scp", str(command), str(i_cut)+"/"+str(stationName[i_station])+"/"] )
-                subprocess.call(["scp", str(command), str(stationName[i_station])+"/"+str(i_cut)+"/"] )
+                command = fullPath+ "/" +str(files[i])
+                #print("command", command)
+                subprocess.call(["scp", str(command), str(i_cut)+"/"+i_station+"/"] )
