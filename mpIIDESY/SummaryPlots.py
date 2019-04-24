@@ -46,7 +46,7 @@ extra_label_name=args.extra_label
 
 print("Summary plots for", len(path), "iterations")
 print(path)
-colors = ["red", "orange", "purple", "green", "black", "yellow", "pink", "grey"]
+colors = ["red", "blue", "purple", "green", "pink", "yellow", "yellow", "grey"]
 labels= ["Truth", "Iter. 1", "Iter. 2", "Iter. 3", "Iter. 4", "Iter. 5", "Iter. 6", "Iter. 7"]
 
 #Get constants from the 1st iteration

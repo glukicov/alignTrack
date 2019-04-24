@@ -7,8 +7,7 @@
 # Created: 28 March 2019 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
 # Modified: 28 March 2019 by Gleb
 #####################################################################
-import sys # print out to terminal 
-from pathlib import Path #check files
+import sys, os # print out to terminal 
 import pandas as pd # get data frame from text file 
 import numpy as np # arrays 
 import argparse # command line inputs sub
@@ -50,7 +49,7 @@ extra_label_name=args.extra_label
 #Define constants (Capital + cammelCase)
 ModuleN = 8 # per station 
 ModuleArray=np.arange(1, ModuleN+1) #(1, 2,...,8) for plotting  
-GlobalParNames = ["Radial", "Vertical", 'Φ', 'ψ', 'θ'] #only ever going to have 5 pars.
+GlobalParNames = ["Radial", "Vertical", r'$\phi$', r'$\psi$', r'$\theta$'] #only ever going to have 5 pars.
 units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]", " [mrad]", " [mrad]", " [mrad]"]
 GlobalParLabels = [1, 2, 3, 4, 5] # their label
 GlobalParDict = dict(zip(GlobalParLabels, GlobalParNames))
@@ -126,8 +125,8 @@ for i_global in range(0, globalN):
 
 ##### Load offsets ######
 # Check if offsets were loaded from FHICL file, and adjust data accordingly 
-offset_file = Path(offset_file_name)
-if offset_file.is_file():
+offset_file = os.path.isfile(offset_file_name)
+if offset_file:
     useOffsets=True
     offsets = [[0 for i_module in range(ModuleN)] for i_global in range(globalN)]
     for i_global in range(0, 2):
@@ -156,8 +155,8 @@ fhicl_out.close()
 
 ### Load truth misalignment #####
 # Check if truth file was loaded 
-truth_file = Path(truth_file_name)
-if truth_file.is_file():
+truth_file = os.path.isfile(truth_file_name)
+if truth_file:
     useTruth=True
     corrected_truth = []
     truth = [[0 for i_module in range(ModuleN)] for i_global in range(globalN)]

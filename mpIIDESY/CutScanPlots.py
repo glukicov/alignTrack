@@ -39,8 +39,8 @@ if (scan == "dca"):
     scan_units = " [mm]"
    
 elif (scan == "P"):
-    # cutScans = [0, 800, 1000, 1300, 1500, 1700, 2000]
-    cutScans = [0, 800]
+    cutScans = [0, 800, 1000, 1300, 1500, 1700, 2000]
+    # cutScans = [0, 800]
     defaultValue = 0.0
     cutName = "PCut"
     scan_units = " [MeV]"
@@ -123,7 +123,7 @@ for i_global in range(0, globalN):
     axes.set_xlim(cutScans[0]-cutScans[1]/10, cutScans[-1]*1.2)
     axes.set_ylim(yMin[i_global], yMax[i_global])
     plt.title(GlobalParNames[i_global]+" alignment performance for "+ str(scan) +" scan", fontsize=12)
-    plt.ylabel(r"$\chi^{2}_{<|\mathrm{Truth}-\mathrm{Reco}|>}$"+ units[i_global])
+    plt.ylabel(r"$\chi^{2}_{\mathrm{ndf}}$"+ units[i_global])
     plt.xlabel(str(scan)+str(scan_units), fontsize=12)
     plt.xticks(fontsize=10, rotation=0) 
     plt.yticks(fontsize=10, rotation=0)
