@@ -53,7 +53,7 @@ if (mode == "station"):
 
     print("Summary plots for", len(path), "iterations for a single station")
     print(path)
-    colors = ["purple", "black", "red", "green", "pink", "yellow", "yellow", "grey"]
+    colors = ["purple", "black", "red", "green", "blue", "yellow", "yellow", "grey"]
     labels= ["Truth", "Iter. 1", "Iter. 2", "Iter. 3", "Iter. 4", "Iter. 5", "Iter. 6", "Iter. 7"]
 
     #Get constants from the 1st iteration
@@ -212,6 +212,8 @@ if (mode == "iteration"):
     tracks_errors = [[0 for i_iter in range(0, len(path)) ] for i_station in range(stationN)] # keep zero errors for symmetry 
     pvals = [[0 for i_iter in range(0, len(path))]  for i_station in range(stationN)]
     pvals_errors = [[0 for i_iter in range(0, len(path)) ]  for i_station in range(stationN)]
+    mom = [[0 for i_iter in range(0, len(path))]  for i_station in range(stationN)]
+    mom_errors = [[0 for i_iter in range(0, len(path)) ]  for i_station in range(stationN)]
 
     fileName = "TrackerAlignment.root" # can be changed for TP s
 
@@ -226,30 +228,25 @@ if (mode == "iteration"):
 
             pvals[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMean())
             pvals_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMeanError())
+            mom[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMean())
+            mom_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMeanError())
             tracks[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetEntries())
 
 
     ###Plot 
-    data=(pvals, tracks)
-    errors=(pvals_errors, tracks_errors)
-    plot_names = ("<pValue>", "Tracks")
+    data=(pvals, tracks, mom)
+    errors=(pvals_errors, tracks_errors, mom_errors)
+    plot_names = ("<pValue>", "Tracks [%]", "<P> [MeV]")
     x_ticks = np.arange(1, len(path)+1)
 
     fig = plt.figure(figsize=(12,int(2*2+1)))
     for i_state in range(0, len(data)):
          #Make subplot for each result 
    
-        plt.subplot(int( str(1)+"2"+str(int(i_state+1)) )) 
+        plt.subplot(int( str(1)+str(len(data))+str(int(i_state+1)) )) 
         axes = plt.gca()
         axes.xaxis.set_major_locator(MaxNLocator(integer=True))
         axes.set_xlim(x_ticks[0]-0.5, x_ticks[-1]+0.5)
-        
-        #for tracks only 
-        if(i_state==1):
-            # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            f = mticker.ScalarFormatter(useOffset=False, useMathText=True)
-            g = lambda x,pos : "${}$".format(f._formatSciNotation('%1.10e' % x))
-            plt.gca().yaxis.set_major_formatter(mticker.FuncFormatter(g))
         
         plt.ylabel(plot_names[i_state], fontsize=14)
         plt.xlabel("Iteration", fontsize=14)
@@ -260,12 +257,22 @@ if (mode == "iteration"):
         axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
        
         #Plot data
-        textStr = "Improvement after "+str(x_ticks[-1])+" iterations:"
+        textStr = "After "+str(x_ticks[-1])+" iterations:"
         plt.text(0.65, 0.3, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
         for i_station in range(0, stationN):
+
+             #for tracks only 
+            if(i_state==1):
+                final_tracks=np.max(data[i_state][0] + data[i_state][1]) # chose largest from two stations 
+                initial_tracks=np.min(data[i_state][0] + data[i_state][1])
+                data[i_state][i_station] = data[i_state][i_station]/initial_tracks * 100 
+
+                #axes.set_ylim(x_ticks[0]-0.5, x_ticks[-1]+0.5)
+
+
             plt.plot(x_ticks, data[i_state][i_station], color=colors[i_station], marker=".", linewidth=0, linestyle=":")  
             plt.errorbar(x_ticks, data[i_state][i_station],  yerr=errors[i_state][i_station], color=colors[i_station], label=stationName[i_station], elinewidth=0, linestyle=":")  
-            textStr = stationName[i_station] + ": +" + str( int( (data[i_state][i_station][-1] - data[i_state][i_station][0])*100/data[i_state][i_station][-1] ) ) + "%\n"
+            textStr = stationName[i_station] + ": +" + str( round( (data[i_state][i_station][-1] - data[i_state][i_station][0])*100/data[i_state][i_station][-1], 1 ) ) + "%\n"
             plt.text(0.75, 0.20-float(i_station)/10, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
         axes.legend(loc='center right', fontsize=14)      
 

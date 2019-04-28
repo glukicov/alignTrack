@@ -6,21 +6,32 @@ import subprocess, shlex
 import re 
 
 parser = argparse.ArgumentParser(description='mode')
-parser.add_argument("-scan", "--scan") # scan study 
+parser.add_argument("-scan", "--scan", default="None") # scan study 
+parser.add_argument("-dir", "--directory", default="None")  
 parser.add_argument('-p', '--path', help='path')
 parser.add_argument('-vm', '--virtualMachine', default="Y", type=str)
 args = parser.parse_args()
 
 path = str(args.path)
 scan=str(args.scan)
+directory=str(args.directory)
 vm = args.virtualMachine
 
 #Define tracker constants 
-# stationName=["S12", "S18"]
-stationName=["S0", "S12", "S18"]
+stationName=["S12", "S18"]
+# stationName=["S0", "S12", "S18"]
 stationN=len(stationName)
 
 files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.png")
+
+machine=""
+if (vm == "Y"):
+    machine = "gm2gpvm04:"
+    print("Coping from VM...")
+
+if (vm == "N"):
+    machine = "gm2ucl:"
+    print("Coping from gm2ucl")
 
 #Define the scan variables
 # cutScans: values to replace the default value 
@@ -56,35 +67,44 @@ elif (scan == "minHits"):
     defaultValue = 9
     pzCut = "minHits"
 
+elif (directory != "None"):
+    print("Copying over dir: ", directory)
+    subprocess.call(["mkdir" , directory])
+        #Pet station 
+    for i_station in stationName:
+        subprocess.call(["mkdir" , str(directory)+"/"+i_station]) 
+        fullPath = machine + path+ "/" +i_station+ "/"
+        print("Copying from", fullPath)
+        #Per file 
+        for i in range(0, len(files)):
+            command = fullPath+ "/" +str(files[i])
+            print("command", command)
+            subprocess.call(["scp", str(command), directory+"/"+i_station] )
+
 else:
     print("Incorrect scan specified!")
+    sys.exit()
 
-machine=""
-if (vm == "Y"):
-    machine = "gm2gpvm04:"
-    print("Coping from VM...")
 
-if (vm == "N"):
-    machine = "gm2ucl:"
-    print("Coping from gm2ucl")
+if (scan != "None"):
 
-#copy top-level files 
-print("Copying top-level files")
-for i in range(0, len(files)):
-    command = machine  + "/" + str(path)+ "/" + str(files[i])
-    subprocess.call(["scp", str(command), "." ])
-    print(command)
+    #copy top-level files 
+    print("Copying top-level files")
+    for i in range(0, len(files)):
+        command = machine  + "/" + str(path)+ "/" + str(files[i])
+        subprocess.call(["scp", str(command), "." ])
+        print(command)
 
-#Per cut 
-for i_total, i_cut in  enumerate(cutScans):
-        subprocess.call(["mkdir" , str(i_cut)])
-       #Pet station 
-        for i_station in stationName:
-            subprocess.call(["mkdir" , str(i_cut)+"/"+i_station]) 
-            fullPath = machine + path+ "/" +str(i_cut)+ "/" +i_station+ "/"
-            print("Copying from", fullPath)
-            #Per file 
-            for i in range(0, len(files)):
-                command = fullPath+ "/" +str(files[i])
-                #print("command", command)
-                subprocess.call(["scp", str(command), str(i_cut)+"/"+i_station+"/"] )
+    #Per cut 
+    for i_total, i_cut in  enumerate(cutScans):
+            subprocess.call(["mkdir" , str(i_cut)])
+           #Pet station 
+            for i_station in stationName:
+                subprocess.call(["mkdir" , str(i_cut)+"/"+i_station]) 
+                fullPath = machine + path+ "/" +str(i_cut)+ "/" +i_station+ "/"
+                print("Copying from", fullPath)
+                #Per file 
+                for i in range(0, len(files)):
+                    command = fullPath+ "/" +str(files[i])
+                    #print("command", command)
+                    subprocess.call(["scp", str(command), str(i_cut)+"/"+i_station+"/"] )
