@@ -18,11 +18,13 @@ directory=str(args.directory)
 vm = args.virtualMachine
 
 #Define tracker constants 
-stationName=["S12", "S18"]
-# stationName=["S0", "S12", "S18"]
+# stationName=["S0"]
+# stationName=["S12", "S18"]
+stationName=["S0", "S12", "S18"]
 stationN=len(stationName)
 
-files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.png")
+# files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.png")
+files = ( "*.txt", "*.fcl", "*.log", "*.png")
 
 machine=""
 if (vm == "Y"):
@@ -38,7 +40,7 @@ if (vm == "N"):
 # defaultValue: default in the FHICL file 
 # cutName : must be present in the FHICL file as "cutName : defaultValue" e.g. "cutDCA : 0.5"
 if (scan == "dca"):
-    cutScans = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    cutScans = [0.3, 0.4, 0.5, 0.6, 0.7]
     defaultValue = 0.5
     cutName = "cutDCA"
    
@@ -48,22 +50,23 @@ elif (scan == "mom"):
     cutName = "PCut"
 
 elif (scan == "time"):
-    cutScans = [0, 10000, 20000, 25000, 30000, 35000, 40000]
+    cutScans = [0, 10000, 20000, 30000, 35000]
     defaultValue = 0.0
     cutName = "timeCut"
 
 elif (scan == "pval"):
-    cutScans = [0.0, 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.02, 0.03, 0.04, 0.05]
+    cutScans = [0.0, 0.001, 0.002, 0.003, 0.004, 0.005, 0.007, 0.01, 0.03, 0.05]
     defaultValue = 0.005
     cutName = "pValueCut"
 
 elif (scan == "pzp"):
-    cutScans = [0.0, 0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1.0]
+    cutScans = [0.0]
+    # cutScans = [0.9, 0.93, 0.95, 0.98]
     defaultValue = 0.93
     cutName = "pzCut"
 
 elif (scan == "minHits"):
-    cutScans = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    cutScans = [5, 7, 8, 9, 10, 11]
     defaultValue = 9
     pzCut = "minHits"
 
@@ -88,12 +91,12 @@ else:
 
 if (scan != "None"):
 
-    #copy top-level files 
-    print("Copying top-level files")
-    for i in range(0, len(files)):
-        command = machine  + "/" + str(path)+ "/" + str(files[i])
-        subprocess.call(["scp", str(command), "." ])
-        print(command)
+    # #copy top-level files 
+    # print("Copying top-level files")
+    # for i in range(0, len(files)):
+    #     command = machine  + "/" + str(path)+ "/" + str(files[i])
+    #     subprocess.call(["scp", str(command), "." ])
+    #     print(command)
 
     #Per cut 
     for i_total, i_cut in  enumerate(cutScans):

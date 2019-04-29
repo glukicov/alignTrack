@@ -155,6 +155,12 @@ for i_global in range(0, globalN):
 fhicl_out.close()
 
 ### Load truth misalignment #####
+# if S0 there is no misalignment 
+if (stationN == "0"):
+    useTruth=True
+    truth = [[0 for i_module in range(ModuleN)] for i_global in range(globalN)]
+    print("Using 0th truth offsets for S0")
+
 # Check if truth file was loaded 
 truth_file = os.path.isfile(truth_file_name)
 if truth_file:
