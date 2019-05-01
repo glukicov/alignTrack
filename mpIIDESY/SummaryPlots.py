@@ -42,12 +42,14 @@ parser.add_argument('-p', '--path', nargs='+', help="List of directories", type=
 parser.add_argument('-tF', '--truth_file', help='FHICL file used for MDC1 generation', default="runGasGunRing_align.fcl", type=str)  # input PEDE file  
 parser.add_argument('-eL', '--extra_label', help='extra plotting label', default="", type=str) # if extra label is passed for plot tittle (e..g iteration #)
 parser.add_argument('-m', '--mode', help='station or iteration', default="station", type=str) 
+parser.add_argument('-tp', '--tp', help='use tracking plots', default="N", type=str) 
 args = parser.parse_args()
 args = parser.parse_args()
 path=args.path
 truth_file_name=args.truth_file
 extra_label_name=args.extra_label
 mode=args.mode
+tp=args.tp
 
 if (mode == "station"): 
 
@@ -205,7 +207,8 @@ if (mode == "station"):
 if (mode == "iteration"): 
 
     print("Summary plots for", len(path), "iterations both stations")
-    stationName=["S12", "S18"]
+    # stationName=["S12", "S18"]
+    stationName=["S12"]
     stationN=len(stationName)
     colors=["red", "blue"]
     tracks = [[0 for i_iter in range(0, len(path)) ] for i_station in range(stationN) ]
@@ -215,30 +218,48 @@ if (mode == "iteration"):
     mom = [[0 for i_iter in range(0, len(path))]  for i_station in range(stationN)]
     mom_errors = [[0 for i_iter in range(0, len(path)) ]  for i_station in range(stationN)]
 
-    fileName = "TrackerAlignment.root" # can be changed for TP s
+    if( tp == "Y"):
+        print("Using tracking plots")
+        x_ticks = path
+        fileName = "gm2tracker_ana.root" # can be changed for TP s
+        for i_iter in range(0, len(path)):
+            for i_station in range(0, stationN):
+                print("Station:", stationName[i_station], "iter:", path[i_iter])
+                f = TFile.Open(path[i_iter]+"/"+fileName)
+                if f:
+                    print(str(fileName)+" is open")
+                else:
+                    print(str(fileName)+" not found")
+                pvals[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetMean())
+                pvals_errors[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetMeanError())
+                mom[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/P").GetMean())
+                mom_errors[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/P").GetMeanError())
+                tracks[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetEntries())
 
-    for i_iter in range(0, len(path)):
-        for i_station in range(0, stationN):
 
-            f = TFile.Open(path[i_iter]+"/"+stationName[i_station]+"/"+fileName)
-            if f:
-                print(str(fileName)+" is open")
-            else:
-                print(str(fileName)+" not found")
-
-            pvals[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMean())
-            pvals_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMeanError())
-            mom[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMean())
-            mom_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMeanError())
-            tracks[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetEntries())
+    if( tp == "N"):
+        print("Using alignment plots")
+        x_ticks = np.arange(1, len(path)+1)
+        fileName = "TrackerAlignment.root" # can be changed for TP s
+        for i_iter in range(0, len(path)):
+            for i_station in range(0, stationN):
+                f = TFile.Open(path[i_iter]+"/"+stationName[i_station]+"/"+fileName)
+                if f:
+                    print(str(fileName)+" is open")
+                else:
+                    print(str(fileName)+" not found")
+                pvals[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMean())
+                pvals_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMeanError())
+                mom[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMean())
+                mom_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMeanError())
+                tracks[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetEntries())
 
 
     ###Plot 
     data=(pvals, tracks, mom)
     errors=(pvals_errors, tracks_errors, mom_errors)
     plot_names = ("<pValue>", "Tracks [%]", "<P> [MeV]")
-    x_ticks = np.arange(1, len(path)+1)
-
+    
     fig = plt.figure(figsize=(12,int(2*2+1)))
     for i_state in range(0, len(data)):
          #Make subplot for each result 
@@ -246,7 +267,9 @@ if (mode == "iteration"):
         plt.subplot(int( str(1)+str(len(data))+str(int(i_state+1)) )) 
         axes = plt.gca()
         axes.xaxis.set_major_locator(MaxNLocator(integer=True))
-        axes.set_xlim(x_ticks[0]-0.5, x_ticks[-1]+0.5)
+        
+        if( tp == "N"):
+            axes.set_xlim(x_ticks[0]-0.5, x_ticks[-1]+0.5)
         
         plt.ylabel(plot_names[i_state], fontsize=14)
         plt.xlabel("Iteration", fontsize=14)
@@ -260,15 +283,18 @@ if (mode == "iteration"):
         textStr = "After "+str(x_ticks[-1])+" iterations:"
         plt.text(0.65, 0.3, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
         for i_station in range(0, stationN):
+            print("Station:", stationName[i_station], "state:", i_state, "iter:", plot_names[i_iter])
 
              #for tracks only 
             if(i_state==1):
-                final_tracks=np.max(data[i_state][0] + data[i_state][1]) # chose largest from two stations 
-                initial_tracks=np.min(data[i_state][0] + data[i_state][1])
+                
+                initial_tracks=np.min(data[i_state][i_station])
                 data[i_state][i_station] = data[i_state][i_station]/initial_tracks * 100 
+                print("\n\nUsing initial tracks for scaling\n\n")
 
-                #axes.set_ylim(x_ticks[0]-0.5, x_ticks[-1]+0.5)
-
+                # truth_tracks = np.array(data[i_state][i_station][1])
+                # data[i_state][i_station] = data[i_state][i_station]/truth_tracks * 100
+                # print("\n\nUsing truth tracks for scaling\n\n")
 
             plt.plot(x_ticks, data[i_state][i_station], color=colors[i_station], marker=".", linewidth=0, linestyle=":")  
             plt.errorbar(x_ticks, data[i_state][i_station],  yerr=errors[i_state][i_station], color=colors[i_station], label=stationName[i_station], elinewidth=0, linestyle=":")  
