@@ -207,8 +207,8 @@ if (mode == "station"):
 if (mode == "iteration"): 
 
     print("Summary plots for", len(path), "iterations both stations")
-    # stationName=["S12", "S18"]
-    stationName=["S12"]
+    stationName=["S12", "S18"]
+    # stationName=["S12"]
     stationN=len(stationName)
     colors=["red", "blue"]
     tracks = [[0 for i_iter in range(0, len(path)) ] for i_station in range(stationN) ]
@@ -288,13 +288,13 @@ if (mode == "iteration"):
              #for tracks only 
             if(i_state==1):
                 
-                initial_tracks=np.min(data[i_state][i_station])
-                data[i_state][i_station] = data[i_state][i_station]/initial_tracks * 100 
-                print("\n\nUsing initial tracks for scaling\n\n")
+                # initial_tracks=np.min(data[i_state][i_station])
+                # data[i_state][i_station] = data[i_state][i_station]/initial_tracks * 100 
+                # print("\n\nUsing initial tracks for scaling\n\n")
 
-                # truth_tracks = np.array(data[i_state][i_station][1])
-                # data[i_state][i_station] = data[i_state][i_station]/truth_tracks * 100
-                # print("\n\nUsing truth tracks for scaling\n\n")
+                truth_tracks = np.array(data[i_state][i_station][1])
+                data[i_state][i_station] = data[i_state][i_station]/truth_tracks * 100
+                print("\n\nUsing truth tracks for scaling\n\n")
 
             plt.plot(x_ticks, data[i_state][i_station], color=colors[i_station], marker=".", linewidth=0, linestyle=":")  
             plt.errorbar(x_ticks, data[i_state][i_station],  yerr=errors[i_state][i_station], color=colors[i_station], label=stationName[i_station], elinewidth=0, linestyle=":")  

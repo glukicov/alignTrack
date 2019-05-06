@@ -28,8 +28,10 @@ parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--moduleN', help='mode', default=-1) # # of removed module from tracking (if applicable)
 parser.add_argument('-f', '--fileN', help='input ROOT file', default="TrackerAlignment.root")
 parser.add_argument('-s', '--stationN', help='station number')
+parser.add_argument('-eL', '--eL', help='extra label', default="", type=str)
 args = parser.parse_args()
 
+eL=str(args.eL)
 
 NModules=8
 NLayers=4 # per modules
@@ -138,6 +140,7 @@ for i in range(0, len(moduleNames)):
 			name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
 		t = f.Get(str(name))
 		mean = t.GetMean()
+		#print(i_layer, mean)
 		means.append(mean*1e3)
 		SD = t.GetRMS()
 		SDError = t.GetRMSError()
@@ -153,24 +156,36 @@ for i in range(0, len(moduleNames)):
 avgMean = sum(means)/float(len(means))
 line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-plt.text(32.1, avgMean, str(round_sig(avgMean)), fontsize=9)
-for i in range(0, len(means)):
-	number = (means[i]-avgMean)/(MeanErrors[i])
-	if (number != 0):
-		number = number
-	else:
-		number = 0.0
-	#axes.annotate( "("+str(round_sig(number,2))+")", (i+1-0.4, -0.014*1e3))
+# plt.text(32.1, avgMean, str(round_sig(avgMean)), fontsize=9)
+
+#metric
+U0 = np.array(means[0::4])
+U1 = np.array(means[1::4])
+V0 = np.array(means[2::4])
+V1 = np.array(means[3::4])
+
+dU = U0-U1
+dV = V0-V1
+
+maxdU=max(dU)
+maxdV=max(dV)
+meandU=np.mean(dU)
+meandV=np.mean(dV)
+
+stringOut= str(maxdU) + " " + str(maxdV) + " " + str(meandU) + " " + str(meandV) + " " + str(np.mean(ResidualRMS))
+f=open("metric_"+stationN+".txt", "w+")
+f.write(stringOut)
+f.close()
 
 line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 axes.set_xlim(0.5, NTotalLayers+1)
 axes.set_ylim(yMin, yMax)
-plt.title("UV Residual Mean "+stationN, fontsize=18)
+plt.title("UV Residual Mean "+stationN+" "+eL, fontsize=18)
 plt.ylabel("Residual Mean [um]", fontsize=18)
 plt.xlabel("Layer", fontsize=18)
 plt.tight_layout()
-plt.savefig("Residuals_L_Zoom.png")
+plt.savefig("Residuals_L_Zoom"+str(stationN)+".png")
 
 #----Layer Residual SD 
 i_totalLayer=0
@@ -195,18 +210,18 @@ for i in range(0, len(moduleNames)):
 avgMean = sum(means)/float(len(means))
 line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
-plt.text(32.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
+#plt.text(32.1, avgMean, str(int(round_sig(avgMean))), fontsize=9)
 line = [[0.5,0.0], [NTotalLayers+1, 0.0]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
 axes.set_xlim(0.5, NTotalLayers+1)
 axes.set_ylim(yMin, yMax)
-plt.title("UV Residual SD "+stationN, fontsize=20)
+plt.title("UV Residual SD "+stationN+" "+eL, fontsize=20)
 plt.ylabel("Residual SD /um", fontsize=18)
 plt.xlabel("Layer", fontsize=20)
 plt.tight_layout()
-plt.savefig("ResidualsSD_L.png")
+plt.savefig("ResidualsSD_L"+str(stationN)+".png")
 
 #combine into a single .png file 
-subprocess.call(["convert" , "-append", "Residuals_L_Zoom.png" , "ResidualsSD_L.png", "FoM_Res_"+str(stationN)+".png"])
+subprocess.call(["convert" , "-append", "Residuals_L_Zoom"+str(stationN)+".png" , "ResidualsSD_L"+str(stationN)+".png", "FoM_Res_"+str(stationN)+".png"])
 
 print("ROOT File analysed!")

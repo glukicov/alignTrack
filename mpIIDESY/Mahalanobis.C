@@ -11,29 +11,38 @@ void Mahalanobis() {
     gStyle->SetOptFit(0); gStyle->SetOptStat(0); gROOT->ForceStyle(); // no default stats box
 
 //Define survey meas.
-    double Z[moduleN] = {0.0, 138.4261909, 275.7030146, 412.8463143, 551.9417241, 684.9748242, 820.6609492, 956.1864672};
-    double errX[moduleN] = { 0 };  // all zeroes
-    double measuredR_s12[moduleN] = {1.72, 2.08, 2.15, 2.29, 2.92, 2.56, 2.73, 2.92};
+    double Z_s12[moduleN-1] = {0.0, 138.4261909, 275.7030146, 412.8463143, 684.9748242, 820.6609492, 956.1864672};
+    double Z_s18[moduleN] = {0.0, 138.4261909, 275.7030146, 412.8463143, 551.9417241, 684.9748242, 820.6609492, 956.1864672};
+    double errX_s12[moduleN-1] = { 0 };  // all zeroes
+    double errX_s18[moduleN] = { 0 };  // all zeroes
+    double* errX[stationN] = {errX_s12, errX_s18}; 
+    double measuredR_s12[moduleN-1] = {1.72, 2.08, 2.15, 2.29, 2.56, 2.73, 2.92};
     double measuredR_s18[moduleN] = {3.05, 3.43, 3.81, 4.06, 4.46, 4.75, 5.05, 5.38};
     double* measuredR[stationN] = {measuredR_s12, measuredR_s18};
+    double* Z[stationN] = {Z_s12, Z_s18};
     double erR = 0.2; // 200 um / 0.2 mmm
-    double errR[moduleN]; std::fill_n(errR, moduleN, erR); // fill with constant value
+    double errR_s12[moduleN-1]; std::fill_n(errR_s12, 7, erR); // fill with constant value
+    double errR_s18[moduleN]; std::fill_n(errR_s18, moduleN, erR); // fill with constant value
+    double* errR[stationN] = {errR_s12, errR_s18}; 
 
     // Fit function is'
-    double pivotPoint = (Z[3] + Z[4])/2; 
+    double pivotPoint = (Z_s18[3] + Z_s18[4])/2; 
+    // double pivotPoint = 0.0; 
     std::cout << "pivotPoint= "<< pivotPoint << "\n";
     // ax^2 + bx +c or bx +c
     std::string curve = "[0]*(x-"+to_string(pivotPoint)+")*(x-"+to_string(pivotPoint)+") + [1]*(x-"+to_string(pivotPoint)+") + [2]"; // bx + c
+    // std::string curve = "[0]*x*x + [1]*x + [2]"; // bx + c
     const int parN = 3; // curvature, slope, intercept (a, b, c)
 
     std::cout << "RShift from Curve: ";
     for (int i_module=0; i_module < moduleN; i_module++){
-        std::cout << -1.0*pow(10, -6)*(Z[i_module]-pivotPoint)*(Z[i_module]-pivotPoint) << ", ";
+        // std::cout << 1.0*pow(10, -6)*(Z[i_module]*Z[i_module]) << ", ";
+        std::cout << 0.5*pow(10, -6)*(Z_s18[i_module]-pivotPoint)*(Z_s18[i_module]-pivotPoint) << ", ";
     }
     std::cout<<"\n";
 
 //Make new canvas and legend with plotting range
-    TCanvas* canvas_survey = new TCanvas("canvas_survey", "", 800, 600);
+    TCanvas* canvas_survey = new TCanvas("canvas_survey", "", 1600, 1600);
     TLegend* legend = new TLegend(0.35, 0.11, 0.89, 0.38);
     double rmin(0.0), rmax(6.0), zmin(-350.0), zmax(1050.0);
 
@@ -43,8 +52,11 @@ void Mahalanobis() {
 // Loop over the two stations and do the initial fit
     for (int i_station = 0; i_station < stationN; i_station++) {
 
-        //Plot data
-        TGraphErrors* tge = new TGraphErrors(moduleN, Z, measuredR[i_station], errX, errR);
+        int totalModules = moduleN;
+        if (i_station == 0 ) totalModules=totalModules-1;
+
+        //Plot data -
+        TGraphErrors* tge = new TGraphErrors(totalModules, Z[i_station], measuredR[i_station], errX[i_station], errR[i_station]);
         tge_vector.push_back(tge);
         tge->SetTitle("; Z-position of modules [mm]; #Delta R (error = #pm 0.2) [mm]");
         tge->GetXaxis()->CenterTitle(); tge->GetYaxis()->CenterTitle();
@@ -55,7 +67,7 @@ void Mahalanobis() {
 
         //Fit data
         std::stringstream function_name; function_name << "tf_" << i_station; //unique function name
-        TF1* tf = new TF1(function_name.str().c_str(), curve.c_str(), Z[0], Z[moduleN - 1]) ; // line fit in Z range
+        TF1* tf = new TF1(function_name.str().c_str(), curve.c_str(), Z[i_station][0], Z[i_station][totalModules - 1]) ; // line fit in Z range
         TFitResultPtr fit_result = tge->Fit(function_name.str().c_str(), "QRS"); // Quite Chi2 fit over Range of the function, with pointer return (S)
         fit_vector.push_back(fit_result);
         tge->GetFunction(function_name.str().c_str())->SetLineColor(colors[i_station]);
@@ -85,6 +97,9 @@ void Mahalanobis() {
 
 // Pick 1 sigma points per station
     for  (int i_station = 0; i_station < stationN; i_station++) {
+
+        int totalModules = moduleN;
+        if (i_station == 0 ) totalModules=totalModules-1;
 
         //Clear previous canvas
         canvas_survey->Clear();
@@ -136,7 +151,7 @@ void Mahalanobis() {
                 std::cout << endl;
 
                 //set new state parameters for the fit
-                TF1* stateFit = new TF1(Form("State_%d_%d_%d", i_curve, i_slope, i_intercept), curve.c_str(), Z[0], Z[moduleN - 1]);
+                TF1* stateFit = new TF1(Form("State_%d_%d_%d", i_curve, i_slope, i_intercept), curve.c_str(), Z[i_station][0], Z[i_station][totalModules - 1]);
                 for (int i_par = 0; i_par < parN; i_par++) stateFit->SetParameter(i_par, newParameters[i_par]);
 
                 // bold dashed lines for state fits
@@ -178,6 +193,7 @@ void Mahalanobis() {
         summary_ab->GetYaxis()->CenterTitle();
         summary_ab->SetMarkerColor(colors[i_station]);
         summary_ab->SetMarkerStyle(markerStyle);
+        summary_ab->SetMarkerSize(2);
         summary_ab->Draw("AP");
         plotName.str(""); plotName << "Mach_point_ab_" << labels[i_station] << ".png";
         canvas_survey->Print(plotName.str().c_str());
@@ -189,6 +205,7 @@ void Mahalanobis() {
         summary_ac->GetYaxis()->CenterTitle();
         summary_ac->SetMarkerColor(colors[i_station]);
         summary_ac->SetMarkerStyle(markerStyle);
+        summary_ac->SetMarkerSize(2);
         summary_ac->Draw("AP");
         plotName.str(""); plotName << "Mach_point_ac_" << labels[i_station] << ".png";
         canvas_survey->Print(plotName.str().c_str());
@@ -200,6 +217,7 @@ void Mahalanobis() {
         summary_bc->GetYaxis()->CenterTitle();
         summary_bc->SetMarkerColor(colors[i_station]);
         summary_bc->SetMarkerStyle(markerStyle);
+        summary_bc->SetMarkerSize(2);
         summary_bc->Draw("AP");
         plotName.str(""); plotName << "Mach_point_bc_" << labels[i_station] << ".png";
         canvas_survey->Print(plotName.str().c_str());
