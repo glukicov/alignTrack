@@ -62,6 +62,7 @@ if (mode == "Summary"):
     meandU = [[0 for i_iter in range(0, len(cutScans))]  for i_station in range(stationN)]
     meandV = [[0 for i_iter in range(0, len(cutScans)) ]  for i_station in range(stationN)]
     resolution = [[0 for i_iter in range(0, len(cutScans)) ]  for i_station in range(stationN)]
+    meanModule = [[0 for i_iter in range(0, len(cutScans)) ]  for i_station in range(stationN)]
 
     for i_iter in range(0, len(cutScans)):
             for i_station in range(0, stationN):
@@ -77,6 +78,7 @@ if (mode == "Summary"):
                 meandU[i_station][i_iter]=( (numbers[2]) )
                 meandV[i_station][i_iter]=( (numbers[3]) )
                 resolution[i_station][i_iter]=( (numbers[4]) )
+                meanModule[i_station][i_iter]=( (numbers[5]) )
     
     print("tracks", tracks)
     #scale tracks by the nominal
@@ -91,9 +93,10 @@ if (mode == "Summary"):
     
     metric_1 = (tracks)
     metric_2 = (resolution)
-    metric_3 = (maxdU, maxdV, meandU, meandV)
+    metric_3 = (meanModule)
+    metric_4 = (maxdU, maxdV, meandU, meandV)
 
-    metric=(metric_1, metric_2, metric_3)
+    metric=(metric_1, metric_2, metric_3, metric_4)
     UVlabel=[r"$\langle \Delta U \rangle$", r"$\langle \Delta V \rangle$"]
     #print(metric)
 
@@ -102,7 +105,7 @@ if (mode == "Summary"):
    
     globalN = len(metric)
 
-    GlobalParNames = ("Tracks [%]", r"$\sigma_{UV}$", "U or V <separation> [um]")
+    GlobalParNames = ("Tracks [%]", r"$\langle \sigma_{UV} \rangle$", "<|UV|>", "U or V <|separation|> [um]")
     
     # Plotting "constants"
     f = plt.figure(figsize=(7,int(globalN*3+1)))
@@ -127,13 +130,15 @@ if (mode == "Summary"):
             if (i_global == 1):
                 plt.plot(cutScans, metric[i_global][i_station] , marker="+", color=colors[i_station], label=stationName[i_station])
             if (i_global == 2):
+                plt.plot(cutScans, np.abs(metric[i_global][i_station]) , marker="+", color=colors[i_station], label=stationName[i_station])
+            if (i_global == 3):
                 plt.plot(cutScans,np.abs(metric[i_global][2][i_station]) , marker="+", linestyle=":", color=colors[i_station], label=stationName[i_station]+" "+UVlabel[0])
                 plt.plot(cutScans,np.abs(metric[i_global][3][i_station]) , marker="+", linestyle="-.", color=colors[i_station], label=stationName[i_station]+" "+UVlabel[1])
 
         # axes.legend(loc='top centre', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
         if (i_global == 1):
             axes.legend(loc='upper center', fontsize=14) # outside (R) of the plot 
-        if (i_global == 0 or i_global==2):
+        if (i_global == 0 or i_global==2 or i_global ==3):
             axes.legend(loc='lower center', fontsize=14) # outside (R) of the plot 
 
     plt.savefig("SummaryResiduals_"+str(scan)+".png", dpi=250)

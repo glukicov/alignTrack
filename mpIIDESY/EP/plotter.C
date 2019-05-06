@@ -28,7 +28,10 @@ void Plotter::InitTrees(TString input_file) {
 void Plotter::InitHistos() {
 
 
-  plot2D("Ep_vs_t_early",50,0,4200*50,200,0,2,"In Fill Time [ns]", "E/p");
+  plot2D("Ep_vs_t_early",50, 0, 4200*50, 200, 0, 2, "In Fill Time [ns]", "E/p");
+  plot2D("Ep_vs_t_all", 500, 0, 4200*50*10, 2000, 0, 4, "In Fill Time [ns]", "E/p");
+
+
 	 
 
 }
@@ -50,9 +53,12 @@ void Plotter::Run() {
       const double p = sqrt(am->trkMomX[i]*am->trkMomX[i] + am->trkMomY[i]*am->trkMomY[i] + am->trkMomZ[i]*am->trkMomZ[i]);
      
       const double E = am->cluEne[i];
+
       const double Ep = E/p;
 
-      Fill2D("Ep_vs_t_early",t,Ep);
+      Fill2D("Ep_vs_t_early", t, Ep);
+      
+      Fill2D("Ep_vs_t_all", t, Ep);
 
     }
     

@@ -25,7 +25,6 @@ Reader.o: Reader.C Reader.h
 # 	$(C++) $(ROOTCFLAGS) $(C_FLAGS) Ntuple_dict.so Reader.o Ntuple_Classes.h Skimmer.C -o Skimmer $(ROOTLIBS)
 
 
-
 ##generic rule for any plotter:
 %: %.C Plotter.h Reader.o
 	$(C++) $(ROOTCFLAGS) $(C_FLAGS) Reader.o $<  -o $@  $(ROOTLIBS)

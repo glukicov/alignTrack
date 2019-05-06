@@ -172,7 +172,17 @@ maxdV=max(dV)
 meandU=np.mean(dU)
 meandV=np.mean(dV)
 
-stringOut= str(maxdU) + " " + str(maxdV) + " " + str(meandU) + " " + str(meandV) + " " + str(np.mean(ResidualRMS))
+UV_array = (U0, U1, V0, V0)
+
+meanModule = 0
+for i_module in range(0, NModules):
+	for i_layer in range(0, 4):
+		meanModule=meanModule+UV_array[i_layer][i_module]- ( (U0[i_module]+U1[i_module]+V0[i_module]+V1[i_module])/ 4 )
+meanModule=meanModule/NTotalLayers
+
+
+
+stringOut= str(maxdU) + " " + str(maxdV) + " " + str(meandU) + " " + str(meandV) + " " + str(np.mean(ResidualRMS)) + " " + str(meanModule)
 f=open("metric_"+stationN+".txt", "w+")
 f.write(stringOut)
 f.close()

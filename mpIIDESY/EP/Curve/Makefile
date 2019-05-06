@@ -1,11 +1,11 @@
-Target  = tmp.exe
+Target  = curve.exe
 ROOTFLAGS = $(shell root-config --cflags)
 ROOTLIBS  = $(shell root-config --libs)
 all:$(Target)
 
-tmp.exe: tmp.C
+curve.exe: curve.C
 	g++ -std=c++0x -o $@ curve.C $(Objects) $(ROOTFLAGS) $(ROOTLIBS)
 
 clean:
-	rm *exe
+	rm curve.exe
 

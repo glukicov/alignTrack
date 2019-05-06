@@ -32,10 +32,10 @@ int main(int argc, char** argv){
   TCanvas* c2 = new TCanvas("c2","", 800, 600);
   std::string opt = "AP";
   int icol = 2;
-  std::vector<double> curvatures = {1.0E-5, 1.0E-6, 1.0E-7};
+  std::vector<double> curvatures = {1.0E-6, 0.5E-6, 1.0E-7};
   //std::vector<TGraph*> graphs;
 
-  TLegend* leg = new TLegend(0.11, 0.78, 0.39, 0.89);
+  TLegend* leg = new TLegend(0.11, 0.68, 0.49, 0.89);
   leg->SetBorderSize(0);
 
   for (auto& curve: curvatures){
@@ -59,16 +59,19 @@ int main(int argc, char** argv){
     TGraph* g = new TGraph(n, pTrue.data(), pDiff.data());
 
     c2->cd();
-    //g->GetYaxis()->SetNdivisions(555);
+    //c2->GetYaxis()->SetNdivisions(555);
+    // g->SetGrid(1, 1); g->Update();
     g->SetTitle("");
-    g->GetXaxis()->SetTitle("True momentum [GeV]");
-    g->GetYaxis()->SetTitle("Change in momentum [MeV]");
+    g->GetXaxis()->SetTitle("True P [GeV]");
+    g->GetYaxis()->SetTitle("#Delta P  [MeV]");
+    g->GetYaxis()->CenterTitle();
+    g->GetXaxis()->CenterTitle();
     g->SetMarkerStyle(8);
     g->SetMarkerColor(icol);
 
-    g->GetYaxis()->SetRangeUser(1E-1, 1000.0);
+    g->GetYaxis()->SetRangeUser(2E-1, 200.0);
     g->Draw(opt.c_str());
-    leg->AddEntry(g, Form("Curvature:%.2f E-6", curve/1.0E-6), "P");
+    leg->AddEntry(g, Form("Curvature: %.2f E-6", curve/1.0E-6), "P");
     opt = "SAME P";
     icol++;
   }
