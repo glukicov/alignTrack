@@ -9,7 +9,7 @@ void divideHistos() {
     vector<std::string> states{"Truth", "a=+1e-6", "a=-1e-6", "a=+0.5e-6", "a=-0.5e-6",  "a=+1e-7", "a=-1e-7"};
     int stateN = states.size();
     int splitN = 2; // Plus and Minus
-    std::string labels[] = {"Plus/Truth", "Minus/Truth"}; // split labels on y-axis
+    std::string labels[] = {"#frac{Positive}{Truth}", "#frac{Negative}{Truth}"}; // split labels on y-axis
     int curveN = 3; // each split has 3 curvatures
     int colors[] = {2, 8, 9}; // red, green, blue
     int iterable_ids[] = {1, 3, 5}; // truth =0, "+"=1,3,5 "-"=2,4,6
@@ -62,7 +62,7 @@ void divideHistos() {
             can->cd(i_pad); // move onto next pad 
             vector<TH1F*> splitArray; // temp storage 
             vector<TH1F*> dHistArray;
-            TLegend* legend =  new TLegend(0.55, 0.88, 0.15, 0.65);
+            TLegend* legend =  new TLegend(0.65, 0.88, 0.15, 0.60);
             legendArray.push_back(legend);
             for (int i_id = 0; i_id < curveN; i_id++) {
                 int fileID = i_split + iterable_ids[i_id];
@@ -76,7 +76,9 @@ void divideHistos() {
                 dHistArray[i_id]->SetMarkerColor(colors[i_id]);
                 dHistArray[i_id]->SetLineColor(colors[i_id]);
                 dHistArray[i_id]->GetYaxis()->SetRangeUser(rangeMin[i_total], rangeMax[i_total]);
+                dHistArray[i_id]->GetYaxis()->SetTitleSize(.048);
                 dHistArray[i_id]->GetYaxis()->CenterTitle();
+                dHistArray[i_id]->GetXaxis()->SetTitleSize(.048);
                 dHistArray[i_id]->GetXaxis()->CenterTitle();
                 double binWidth = dHistArray[i_id]->GetBinWidth(1);
                 stringstream yTitle;  yTitle << labels[i_split] << fixed << setprecision(2) <<  "/ " << binWidth << " " << plotUnits[i_plot];
@@ -88,7 +90,7 @@ void divideHistos() {
             i_pad++; // 1->4
             i_total++; // 0->3
             //draw legend once per pad
-            legend->SetTextSize(.038);
+            legend->SetTextSize(.048);
             legend->Draw("same");
         } //per split +/-
 

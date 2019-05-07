@@ -181,6 +181,8 @@ TH1 * Plotter::plot1DMaker(TString name, int nbins, float xlow, float xhigh, TSt
   p->GetYaxis()->SetLabelFont(42);
   p->GetXaxis()->SetTitleFont(42);
   p->GetYaxis()->SetTitleFont(42);
+  p->GetYaxis()->CenterTitle();
+  p->GetXaxis()->CenterTitle();
   p->SetTitle(0);
   p->SetLineWidth(2);
   p->SetLineColor(col);
@@ -213,6 +215,8 @@ TH2 * Plotter::plot2DMaker(TString name, int nbinsx, float xlow, float xhigh, in
   p->GetYaxis()->SetLabelFont(42);
   p->GetXaxis()->SetTitleFont(42);
   p->GetYaxis()->SetTitleFont(42);
+  p->GetYaxis()->CenterTitle();
+  p->GetXaxis()->CenterTitle();
   p->SetTitle(0);
   p->SetLineWidth(2);
   p->SetLineColor(col);
