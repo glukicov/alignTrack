@@ -19,12 +19,12 @@ vm = args.virtualMachine
 
 #Define tracker constants 
 # stationName=["S0"]
-# stationName=["S12", "S18"]
-stationName=["S0", "S12", "S18"]
+stationName=["S12", "S18"]
+# stationName=["S0", "S12", "S18"]
 stationN=len(stationName)
 
-# files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.png")
-files = ( "*.txt", "*.fcl", "*.log", "*.png")
+files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.png", "*.bin")
+# files = ( "*.txt", "*.fcl", "*.log", "*.png")
 
 machine=""
 if (vm == "Y"):
@@ -69,6 +69,9 @@ elif (scan == "minHits"):
     cutScans = [5, 7, 8, 9, 10, 11]
     defaultValue = 9
     pzCut = "minHits"
+
+elif (scan == "t0"):
+    cutScans = [30, 32, 34, 36, 38]
 
 elif (directory != "None"):
     print("Copying over dir: ", directory)

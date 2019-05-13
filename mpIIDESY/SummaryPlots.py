@@ -220,7 +220,8 @@ if (mode == "iteration"):
 
     if( tp == "Y"):
         print("Using tracking plots")
-        x_ticks = path
+        # x_ticks = path
+        x_ticks = np.arange(1, len(path)+1)
         fileName = "gm2tracker_ana.root" # can be changed for TP s
         for i_iter in range(0, len(path)):
             for i_station in range(0, stationN):
@@ -230,29 +231,34 @@ if (mode == "iteration"):
                     print(str(fileName)+" is open")
                 else:
                     print(str(fileName)+" not found")
-                pvals[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetMean())
-                pvals_errors[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetMeanError())
+
+                p_val_hist = f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues")
+                p_val_hist.GetXaxis().SetRangeUser(0.05, 1)
+                pvals[i_station][i_iter]=(p_val_hist.GetMean())
+                pvals_errors[i_station][i_iter]=(p_val_hist.GetMeanError())
                 mom[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/P").GetMean())
                 mom_errors[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/P").GetMeanError())
                 tracks[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetEntries())
 
 
-    if( tp == "N"):
-        print("Using alignment plots")
-        x_ticks = np.arange(1, len(path)+1)
-        fileName = "TrackerAlignment.root" # can be changed for TP s
-        for i_iter in range(0, len(path)):
-            for i_station in range(0, stationN):
-                f = TFile.Open(path[i_iter]+"/"+stationName[i_station]+"/"+fileName)
-                if f:
-                    print(str(fileName)+" is open")
-                else:
-                    print(str(fileName)+" not found")
-                pvals[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMean())
-                pvals_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetMeanError())
-                mom[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMean())
-                mom_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMeanError())
-                tracks[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetEntries())
+    # if( tp == "N"):
+    #     print("Using alignment plots")
+    #     x_ticks = np.arange(1, len(path)+1)
+    #     fileName = "TrackerAlignment.root" # can be changed for TP s
+    #     for i_iter in range(0, len(path)):
+    #         for i_station in range(0, stationN):
+    #             f = TFile.Open(path[i_iter]+"/"+stationName[i_station]+"/"+fileName)
+    #             if f:
+    #                 print(str(fileName)+" is open")
+    #             else:
+    #                 print(str(fileName)+" not found")
+    #             p_val_hist = f.Get("TrackerAlignment/Tracks/pValue")
+    #             p_val_hist.GetXaxis().SetRangeUser(0.05, 1)
+    #             pvals[i_station][i_iter]=(p_val_hist.GetMean())
+    #             pvals_errors[i_station][i_iter]=(p_val_hist.GetMeanError())
+    #             mom[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMean())
+    #             mom_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMeanError())
+    #             tracks[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetEntries())
 
 
     ###Plot 
@@ -260,7 +266,7 @@ if (mode == "iteration"):
     errors=(pvals_errors, tracks_errors, mom_errors)
     plot_names = ("<pValue>", "Tracks [%]", "<P> [MeV]")
     
-    fig = plt.figure(figsize=(12,int(2*2+1)))
+    fig = plt.figure(figsize=(14,int(2*2+1)))
     for i_state in range(0, len(data)):
          #Make subplot for each result 
    
@@ -281,26 +287,29 @@ if (mode == "iteration"):
        
         #Plot data
         textStr = "After "+str(x_ticks[-1])+" iterations:"
-        plt.text(0.65, 0.3, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
+        plt.text(0.65, 0.25, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
         for i_station in range(0, stationN):
             print("Station:", stationName[i_station], "state:", i_state, "iter:", plot_names[i_iter])
 
              #for tracks only 
             if(i_state==1):
                 
-                # initial_tracks=np.min(data[i_state][i_station])
-                # data[i_state][i_station] = data[i_state][i_station]/initial_tracks * 100 
-                # print("\n\nUsing initial tracks for scaling\n\n")
+                initial_tracks=np.min(data[i_state][i_station])
+                data[i_state][i_station] = data[i_state][i_station]/initial_tracks * 100 
+                print("\n\nUsing initial tracks for scaling\n\n")
 
-                truth_tracks = np.array(data[i_state][i_station][1])
-                data[i_state][i_station] = data[i_state][i_station]/truth_tracks * 100
-                print("\n\nUsing truth tracks for scaling\n\n")
+                # truth_tracks = np.array(data[i_state][i_station][3])
+                # data[i_state][i_station] = data[i_state][i_station]/truth_tracks * 100
+                # print("\n\nUsing truth tracks for scaling\n\n")
 
             plt.plot(x_ticks, data[i_state][i_station], color=colors[i_station], marker=".", linewidth=0, linestyle=":")  
             plt.errorbar(x_ticks, data[i_state][i_station],  yerr=errors[i_state][i_station], color=colors[i_station], label=stationName[i_station], elinewidth=0, linestyle=":")  
             textStr = stationName[i_station] + ": +" + str( round( (data[i_state][i_station][-1] - data[i_state][i_station][0])*100/data[i_state][i_station][-1], 1 ) ) + "%\n"
-            plt.text(0.75, 0.20-float(i_station)/10, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
-        axes.legend(loc='center right', fontsize=14)      
+            plt.text(0.75, 0.15-float(i_station)/10, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
+        if(i_state==0):
+            axes.legend(loc='upper left', fontsize=14)
+        else:     
+            axes.legend(loc='center right', fontsize=14)      
 
     plt.tight_layout()
     plt.savefig("Summary_Iterations.png", dpi=250)

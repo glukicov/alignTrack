@@ -36,7 +36,8 @@ def getOffsets(f, name):
 #Define and open command line arguments
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-pF', '--pede_file', help='input pede results (.res) file', default="millepede.res", type=str)  # input PEDE file  
-parser.add_argument('-oF', '--offset_file', help='FHICL file used for tracking with offsets', default="RunGeaneSim_align.fcl", type=str)  # input PEDE file  
+# parser.add_argument('-oF', '--offset_file', help='FHICL file used for tracking with offsets', default="RunGeaneSim_align.fcl", type=str)  # input PEDE file  
+parser.add_argument('-oF', '--offset_file', help='FHICL file used for tracking with offsets', default="RunTrackingDAQ_align.fcl", type=str)  # input PEDE file  
 parser.add_argument('-tF', '--truth_file', help='FHICL file used for MDC1 generation', default="runGasGunRing_align.fcl", type=str)  # input PEDE file  
 parser.add_argument('-eL', '--extra_label', help='extra plotting label', default="", type=str) # if extra label is passed for plot tittle (e..g iteration #)
 args = parser.parse_args()
@@ -180,15 +181,19 @@ metric_ficl=open("metricS"+str(stationN)+".txt", "w+")
 # Plotting "constants"
 f = plt.figure(figsize=(7,int(globalN*2+1)))
 #TOOD make min max from data
-yMax = [120, 120, 25, 25, 25]
-yMin = [-120, -120, -25, -25, -25]
+if (stationN=="12"):
+    yMax = [120, 120, 25, 25, 25]
+    yMin = [-120, -120, -25, -25, -25]
+if (stationN=="18"):
+    yMax = [120, 220, 25, 25, 25]
+    yMin = [-120, -220, -25, -25, -25]
 #Make subplot for each result 
 for i_global in range(0, globalN):
     plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
     axes = plt.gca()
     axes.set_xlim(ModuleArray[0]-0.5, ModuleArray[-1]+0.5)
     axes.set_ylim(yMin[i_global], yMax[i_global])
-    plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN, fontsize=12)
+    plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN+" "+extra_label_name, fontsize=12)
     plt.ylabel(r"Misalignment "+ units[i_global])
     plt.xlabel("Module", fontsize=12)
     plt.xticks(fontsize=10, rotation=0) 
@@ -225,6 +230,8 @@ for i_global in range(0, globalN):
         textstr =  "<|Truth|>="+str(int(meanAbsTruth))+str(units[i_global])
         plt.text(8.7, yMax[i_global], textstr, fontsize=8, color="red")
         metric_ficl.write(str( round(meanAbsReco-meanAbsTruth, round_to) )+" ")
+    if(useTruth == False):
+        metric_ficl.write(str( round(meanAbsReco, round_to) )+" ")
 
     axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
 plt.savefig("PEDE_Results_S"+stationN+".png", dpi=250)

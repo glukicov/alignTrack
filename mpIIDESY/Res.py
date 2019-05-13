@@ -28,13 +28,21 @@ mode=str(args.mode)
 
 
 if (scan == "t0"):
-    cutScans = ["29","30", "31", "32", "33", "34", "35", "36", "37", "38", "39"]
+    # cutScans = ["29","30", "31", "32", "33", "34", "35", "36", "37", "38", "39"]
+    cutScans = ["30", "32", "33", "35", "37", "39"]
     stationName=["S12", "S18"]
     colors=["red", "blue"]
     nominal = "34"
 
+if (scan == "t0_sim_mis"):
+    cutScans = ["26.6", "27.1", "27.6", "28.1"]
+    stationName=["S12", "S18"]
+    colors=["red", "blue"]
+    nominal = "26.6"
+
+
 if (scan == "t0_sim"):
-    cutScans = ["24.6", "25.1", "25.6", "26.1"]
+    cutScans = ["24.6", "25.1", "25.6", "26.1", "26.6", "27.1", "27.6", "28.1"]
     stationName=["S0"]
     colors=["green"]
     nominal = "24.6"
@@ -69,6 +77,7 @@ if (mode == "Summary"):
                 print("Station:", stationName[i_station], "iter:", cutScans[i_iter])
                 
                 fileName = "gm2tracker_ana.root" 
+                print(cutScans[i_iter]+"/"+fileName)
                 f = TFile.Open(cutScans[i_iter]+"/"+fileName)
                 tracks[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetEntries())
                 metricFile=open(cutScans[i_iter]+"/"+"metric_"+stationName[i_station]+".txt", "r")
@@ -83,7 +92,9 @@ if (mode == "Summary"):
     print("tracks", tracks)
     #scale tracks by the nominal
     print("Nominal t0: ", nominal)
+    trackYlabel = "Tracks"
     if nominal in cutScans:
+        trackYlabel = "Tracks [%]"
         nominal_index = cutScans.index(nominal)
         print("nominal index: ", nominal_index)
         for i_station in range(0, stationN):
@@ -105,7 +116,7 @@ if (mode == "Summary"):
    
     globalN = len(metric)
 
-    GlobalParNames = ("Tracks [%]", r"$\langle \sigma_{UV} \rangle$", "<|UV|>", "U or V <|separation|> [um]")
+    GlobalParNames = (trackYlabel, r"$\langle \sigma_{UV} \rangle$ [um]", "<|UV|> [um]", "U or V <|separation|> [um]")
     
     # Plotting "constants"
     f = plt.figure(figsize=(7,int(globalN*3+1)))
@@ -139,7 +150,7 @@ if (mode == "Summary"):
         if (i_global == 1):
             axes.legend(loc='upper center', fontsize=14) # outside (R) of the plot 
         if (i_global == 0 or i_global==2 or i_global ==3):
-            axes.legend(loc='lower center', fontsize=14) # outside (R) of the plot 
+           axes.legend(loc='lower center', fontsize=14) # outside (R) of the plot 
 
     plt.savefig("SummaryResiduals_"+str(scan)+".png", dpi=250)
 

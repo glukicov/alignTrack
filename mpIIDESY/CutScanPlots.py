@@ -26,10 +26,10 @@ args = parser.parse_args()
 scan=str(args.scan)
 
 #Define tracker constants 
-# colors=["red", "blue"]
-# stationName=["S12", "S18"]
-colors=["green", "red", "blue"]
-stationName=["S0", "S12", "S18"]
+colors=["red", "blue"]
+stationName=["S12", "S18"]
+# colors=["green", "red", "blue"]
+# stationName=["S0", "S12", "S18"]
 stationN=len(stationName)
 
 sigma = [2, 10] # um 
@@ -77,6 +77,10 @@ elif (scan == "Iteration"):
     cutName = "minHits"
     scan_units = " "
 
+elif (scan == "t0"):
+    cutScans = [30, 32, 34, 35, 37, 38]
+    scan_units = " [ns]"
+
 else:
     print("Incorrect scan specified!")
 
@@ -87,6 +91,7 @@ print("Starting ",str(int(len(cutScans)*stationN))," scan reads")
 metricX=[]
 metricY=[]
 trackN=[]
+yLabel = "" # set inside the loop 
 
 for i_total, i_cut in  enumerate(cutScans):
     for i_station in range(0, stationN):
@@ -97,13 +102,16 @@ for i_total, i_cut in  enumerate(cutScans):
         metricFile = open(fileName, "r")
         numbers = [float(x) for x in next(metricFile).split()] # read first line
         
-        #residual= meanAbsReco-meanAbsTruth
-        # metricX.append( (numbers[0]) )
-        # metricY.append( (numbers[1]) )
+        # # residual= meanAbsReco-meanAbsTruth
+        metricX.append( (numbers[0]) )
+        metricY.append( (numbers[1]) )
+        yLabel = "|<Alignment>| [um]"
 
-        # Chi2 = residual^2 / sigma^2 
-        metricX.append( (numbers[0])**2/sigma[0]**2 )
-        metricY.append( (numbers[1])**2/sigma[1]**2 )
+        # # Chi2 = residual^2 / sigma^2 
+        # metricX.append( (numbers[0])**2/sigma[0]**2 )
+        # metricY.append( (numbers[1])**2/sigma[1]**2 )
+        # yLabel = r"$\eta^{2}_{\mathrm{ndf}}$"
+
 
         metricFile = open("trackN.txt", "r")
         numbers = [float(x) for x in next(metricFile).split()] # read first line
@@ -127,12 +135,13 @@ for i_global in range(0, globalN):
 
     plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
     axes = plt.gca()
-    axes.set_xlim(cutScans[0]-cutScans[1]/10, cutScans[-1]*1.2)
+    # axes.set_xlim(cutScans[0]-cutScans[1]/10, cutScans[-1]*1.2)
+    axes.set_xlim(29, 39)
     # axes.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.title(GlobalParNames[i_global]+" alignment performance for "+ str(scan) +" scan", fontsize=12)
     if(i_global == 2):
         plt.title(GlobalParNames[i_global]+" for "+ str(scan) +" scan", fontsize=12)
-    plt.ylabel(r"$\eta^{2}_{\mathrm{ndf}}$")
+    plt.ylabel(yLabel)
     if(i_global == 2):
         plt.ylabel("trackN")
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
@@ -146,10 +155,10 @@ for i_global in range(0, globalN):
     if(i_global != 2):
         #Plot the 0th line 
         line = [[cutScans[0]-cutScans[1]/10, 0.0], [cutScans[-1]*1.2, 0.0]]
-        plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=0.5)
+        #plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=0.5)
         #Plot the 1.0 line 
         line = [[cutScans[0]-cutScans[1]/10, 1.0], [cutScans[-1]*1.2, 1.0]]
-        plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=0.5, linestyle=":")
+        #plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=0.5, linestyle=":")
    
     #Plot data 
     for i_station in range(0, stationN):
