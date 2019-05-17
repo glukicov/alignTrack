@@ -35,14 +35,14 @@ if (scan == "t0"):
     nominal = "34"
 
 if (scan == "t0_sim_mis"):
-    cutScans = ["26.6", "27.1", "27.6", "28.1"]
+    cutScans = ["25.6", "25.8", "26.1", "26.3", "26.6", "27.1", "27.6", "28.1"]
     stationName=["S12", "S18"]
     colors=["red", "blue"]
     nominal = "26.6"
 
 
 if (scan == "t0_sim"):
-    cutScans = ["24.6", "25.1", "25.6", "26.1", "26.6", "27.1", "27.6", "28.1"]
+    cutScans = ["24.6", "25.1", "25.6", "25.8", "26.1", "26.3", "26.6", "27.1", "27.6", "28.1"]
     stationName=["S0"]
     colors=["green"]
     nominal = "24.6"
@@ -147,10 +147,10 @@ if (mode == "Summary"):
                 plt.plot(cutScans,np.abs(metric[i_global][3][i_station]) , marker="+", linestyle="-.", color=colors[i_station], label=stationName[i_station]+" "+UVlabel[1])
 
         # axes.legend(loc='top centre', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
-        if (i_global == 1):
-            axes.legend(loc='upper center', fontsize=14) # outside (R) of the plot 
-        if (i_global == 0 or i_global==2 or i_global ==3):
-           axes.legend(loc='lower center', fontsize=14) # outside (R) of the plot 
+        #if (i_global == 1):
+        axes.legend(loc='upper center', fontsize=14) # outside (R) of the plot 
+        #if (i_global == 0 or i_global==2 or i_global ==3):
+           #axes.legend(loc='lower center', fontsize=14) # outside (R) of the plot 
 
     plt.savefig("SummaryResiduals_"+str(scan)+".png", dpi=250)
 

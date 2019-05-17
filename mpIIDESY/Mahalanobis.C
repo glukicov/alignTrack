@@ -76,15 +76,19 @@ void Mahalanobis() {
         // double angle_deg = atan(slope) * (180 / TMath::Pi());
         // double angle_deg_error = slope_error * (180 / TMath::Pi());
         double a = tge->GetFunction(function_name.str().c_str())->GetParameter(0);
+        double a_error = tge->GetFunction(function_name.str().c_str())->GetParError(0);
         double b = tge->GetFunction(function_name.str().c_str())->GetParameter(1);
+        double b_error = tge->GetFunction(function_name.str().c_str())->GetParError(1);
         double c = tge->GetFunction(function_name.str().c_str())->GetParameter(2);
+        double c_error = tge->GetFunction(function_name.str().c_str())->GetParError(2);
 
         //Display fit results
         legend->SetBorderSize(0);
         // std::stringstream legend_string; legend_string << std::setprecision(roundTo) << labels[i_station] << " #theta= " << angle_deg << " #pm " << angle_deg_error;
-        std::stringstream legend_string; legend_string << std::setprecision(roundTo) << labels[i_station] << " a= " << a << " b= " << b << " c= " << c;
+        std::stringstream legend_string; legend_string << std::setprecision(roundTo) << labels[i_station] << " a= " << a << " #pm " << a_error << " b= " << b << " #pm " << b_error << " c= " << c << " #pm" << c_error;
         std::cout << legend_string.str() << "\n";
         legend->AddEntry(tge, legend_string.str().c_str(), "l");
+        gStyle->SetLegendTextSize(0.028);
 
     } // per station loop
 
