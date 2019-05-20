@@ -13,7 +13,7 @@ args = parser.parse_args()
 path = args.path
 vm = args.virtualMachine
 
-files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.bin")
+files = ( "*.txt", "T*.root", "gm2tracker*.root", "*.fcl", "*.log", "*.bin")
 
 command=""
 for i in range(0, len(files)):

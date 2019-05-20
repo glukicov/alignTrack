@@ -14,7 +14,10 @@ import string
 import time
 import decimal
 import argparse, sys
-from ROOT import TH1, TFile
+from ROOT import TH1, TFile, TCanvas, TLine, TStyle, gROOT, gStyle, TColor 
+sys.path.append("/Users/gleb/")
+import rootlogon as rl
+rl.SetMyStyle()
 
 parser = argparse.ArgumentParser(description='arguments')
 parser.add_argument('-f', '--fileN', help='input ROOT file')
@@ -22,7 +25,9 @@ parser.add_argument('-n', '--sliceN', help='slice number')
 args = parser.parse_args()
 
 # name = "TrackerAlignment/Tracks/Pz"
-name = "TrackerAlignment/Tracks/pValue"
+# name = "TrackerAlignment/Tracks/pValue"
+name = "Extrapolation/vertices/station12/h_mom"
+# name = "MomentumSlices/vertices/station12/h_mom"
 n = int(args.sliceN)
 
 f = TFile.Open(str(args.fileN))
@@ -65,10 +70,29 @@ for i_bin in range(hBinMin, hBinMax):
 
 valueRange.append( float( xaxis.GetBinCenter(hBinMax) ) )  # known ending point 
 
-print("The equally filled p-val ranges are:")
-for i in range(0, n):
-    print(valueRange[i], "< p-val <", valueRange[i+1])
+print("The equally filled ranges are:")
 
+canvas = TCanvas("can", "can", 1200, 800)
+lines=[]
+t.Draw()
+t.SetTitle("")
+gStyle.SetOptStat(0)
+t.GetXaxis().CenterTitle()
+nbins = t.GetBinWidth(1)
+t.GetYaxis().CenterTitle()
+t.GetYaxis().SetTitleOffset(1.0)
+t.GetYaxis().SetTitle("Tracks/ "+str(nbins)+ " MeV")
+t.GetXaxis().SetTitle("P [MeV]")
+for i in range(0, n):
+    print(valueRange[i], "< P <", valueRange[i+1])
+    l = TLine(valueRange[i], 0, valueRange[i], 1260)
+    lines.append(l)
+    l.SetLineColor(4)
+    l.SetLineWidth(4)
+    l.Draw("same")
+
+canvas.Draw()
+canvas.Print("Sliced.png")
 
 # print("The equally filled Pz ranges are [MeV]:")
 # for i in range(0, n):
