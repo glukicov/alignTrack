@@ -19,6 +19,20 @@ from decimal import *
 round_to = 3
 getcontext().prec = round_to
 
+parser = argparse.ArgumentParser(description='arguments')
+parser.add_argument('-m', '--mode', type=str)
+parser.add_argument('-c', '--cut', type=str)
+args = parser.parse_args()
+
+mode = args.mode
+if not (mode == "profile" or mode== "graph"):
+    print("Specify 'profile' or 'graph' as --mode=")
+    sys.exit()
+
+cut = args.cut
+if not (cut == "data" or cut== "all"):
+    print("Specify 'data' or 'all' as --cut=")
+    sys.exit()
 
 gStyle.SetOptStat(0) 
 gStyle.SetOptFit(0)
@@ -30,16 +44,19 @@ gStyle.SetLegendTextSize(0.033)
 path =  "MomentumSlices/vertices/station"
 TfileName = "gm2tracker_MomSlices_ana.root"
 stationName = ["12", "18"]
-topDir= "/Users/gleb/software/alignTrack/mpIIDESY/BK_AlignCurvature_2D/"
-states = ["run15922_align_noVolumes", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
+topDir= "/Users/gleb/software/alignTrack/mpIIDESY/AlignCurvature_2D/"
+states = ["run15922_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
 stateN=len(states)
-names = ["run15922 aligned", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
+names = ["run15922 aligned", "sim_a=-0.5e-6", "sim_a=truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
 
 #Containers to store histograms in orders as the names 
 
 colors = [1, 2, 3 ,4 ,5, 6 ,7 ,8 ,9] #purple, green 
 styles = [3001, 3002]
-plotName = ["h_radialPos_vs_mom_timeCut", "h_radialPos_vs_mom", "h_radialPos_vs_mom", "h_radialPos_vs_mom", "h_radialPos_vs_mom", "h_radialPos_vs_mom", "h_radialPos_vs_mom", "h_radialPos_vs_mom", "h_radialPos_vs_mom"]
+if (cut == "data"):
+    plotName = ["h_radialPos_vs_mom_timeCut", "h_radialPos_vs_mom"]
+if (cut == "all"):
+    plotName = ["h_radialPos_vs_mom_timeCut", "h_radialPos_vs_mom_timeCut"]
 plotYtitle = ["Radial Beam Position"]
 plotXtitle = ["P"]
 plotTitle = [" "]
@@ -75,7 +92,11 @@ for i_station in range(0, len(stationName)):
 
         #Get the TH2F 
        # print(path+stationName[i_station]+"/"+plotName[i_plot])
-        plot = scrFile.Get(str(path+stationName[i_station]+"/"+plotName[i_plot]))
+        if (i_plot == 0):
+            plotNameAfterCut = plotName[0]
+        else:
+            plotNameAfterCut = plotName[1]
+        plot = scrFile.Get(str(path+stationName[i_station]+"/"+plotNameAfterCut))
         histArray.append(plot)
 
         #Get the normalisation scale
@@ -96,10 +117,10 @@ for i_station in range(0, len(stationName)):
         binN_Y=plot.GetYaxis().GetBinWidth(1)
         binN_X=plot.GetXaxis().GetBinWidth(1)
         
-        #make a profile 
+        #make a profileX  
         profile = plot.ProfileX("profile_"+str(i_plot)+str(i_station), 1, -1, "")
         profileArray.append(profile)
-        profile.SetMarkerStyle(20)
+        
 
         # create a new TGrpah for data with the same number of bins as the profile
         # only for non-zero bins
@@ -126,7 +147,20 @@ for i_station in range(0, len(stationName)):
         gr.SetName("TGraphErrors_"+str(i_plot)+str(i_station))
         graphArray.append(gr)
 
-        #new profile y-axis tools 
+        #new profile y-axis tools (in case tgrpah is drawn first)
+        gr.GetYaxis().SetTitle(plotYtitle[0]+"/ " +str(binN_Y)+" "+ unitsY[0])            
+        gr.GetYaxis().SetTitleSize(0.045)            
+        gr.GetYaxis().SetLabelSize(0.040)            
+        gr.GetXaxis().SetTitleSize(0.045)            
+        gr.GetXaxis().SetLabelSize(0.040)            
+        gr.GetYaxis().CenterTitle()
+        gr.GetYaxis().SetTitleOffset(0.45)
+        gr.GetYaxis().SetRangeUser(-11.0, 8.0) 
+        gr.GetXaxis().SetRangeUser(2100, 2700) 
+        gr.SetTitle("S"+stationName[i_station])
+        gr.GetXaxis().SetTitle(plotXtitle[0]+"/ "+str(round(binN_X,3))+" "+ unitsX[0])
+        gr.GetXaxis().CenterTitle()
+
         profile.GetYaxis().SetTitle(plotYtitle[0]+"/ " +str(binN_Y)+" "+ unitsY[0])            
         profile.GetYaxis().SetTitleSize(0.045)            
         profile.GetYaxis().SetLabelSize(0.040)            
@@ -138,35 +172,32 @@ for i_station in range(0, len(stationName)):
         profile.SetTitle("S"+stationName[i_station])
         profile.GetXaxis().SetTitle(plotXtitle[0]+"/ "+str(round(binN_X,3))+" "+ unitsX[0])
         profile.GetXaxis().CenterTitle()
-
-        #new profile y-axis tools (in case tgrpah is drawn first)
-        gr.GetYaxis().SetTitle(plotYtitle[0]+"/ " +str(binN_Y)+" "+ unitsY[0])            
-        gr.GetYaxis().SetTitleSize(0.045)            
-        gr.GetYaxis().SetLabelSize(0.040)            
-        gr.GetXaxis().SetTitleSize(0.045)            
-        gr.GetXaxis().SetLabelSize(0.040)            
-        gr.GetYaxis().CenterTitle()
-        gr.GetYaxis().SetTitleOffset(0.45)
-        gr.GetYaxis().SetRangeUser(-25.0, 11.0) 
-        gr.SetTitle("S"+stationName[i_station])
-        gr.GetXaxis().SetTitle(plotXtitle[0]+"/ "+str(round(binN_X,3))+" "+ unitsX[0])
-        gr.GetXaxis().CenterTitle()
         
         gr.SetMarkerColor( colors[i_plot] )
         gr.SetLineColor( colors[i_plot] )
-        #profile.SetMarkerColor(colors[i_plot])  # profile 
-        #profile.SetLineColor(colors[i_plot])  # profile 
+        gr.SetMarkerStyle(20)
+        profile.SetMarkerColor(colors[i_plot])  # profile 
+        profile.SetMarkerStyle(20)
+        profile.SetLineColor(colors[i_plot])  # profile 
         if (i_plot == 0):  
-            #profile.Draw("E")  # profile  
-            gr.Draw("AP")
-           
+            if (mode == "profile"):
+                profile.Draw("E")  # profile
+            if (mode == "graph"):
+                gr.Draw("AP")
+                gr.SetMarkerSize(2)
+            
         else:
-            # profile.Draw("E same")  # profile  
-            gr.Draw("AP same")
+            if (mode == "profile"):
+                profile.Draw("E same")  # profile  
+            if (mode == "graph"):
+                gr.Draw("P same")
+            
 
         #fill legend once per state      
-        # legenValue1 = str(names[i_plot])+plotMean[0]+": "+str(round(mean, round_to))+" #pm "+str(round(mean_error,round_to)) # profile 
-        legenValue1 = str(names[i_plot])
+        if (mode == "profile"):
+            legenValue1 = str(names[i_plot])+plotMean[0]+": "+str(round(mean, round_to))+" #pm "+str(round(mean_error,round_to)) # profile 
+        if (mode == "graph"):
+            legenValue1 = str(names[i_plot])
         legend.AddEntry(gr, str(legenValue1))
         
     #draw legend once per canvas 
