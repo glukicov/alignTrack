@@ -22,7 +22,7 @@ from matplotlib.cbook import get_sample_data
 from matplotlib._png import read_png
 import subprocess
 def round_sig(x, sig=2):
-    return round(x, sig-int(floor(log10(abs(x))))-1)
+	return round(x, sig-int(floor(log10(abs(x))))-1)
 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--moduleN', help='mode', default=-1) # # of removed module from tracking (if applicable)
@@ -43,16 +43,16 @@ layerNamesInitial=np.arange(1, NTotalLayers+1) #1-32
 
 #Dealing with removed module 
 if (int(args.moduleN) != -1):
-    removedModule=int(args.moduleN)
-    moduleNames=np.delete(moduleNamesInitial, removedModule-1) # indexing so -1
-    removedLayers= np.arange(removedModule*4-3,removedModule*4+1)
-    print("removedPlanes ", removedLayers) # Layers: 0, 1... Planes: 1, 2...
-    print("layerNamesInitial", layerNamesInitial)
-    layerNames=np.delete(layerNamesInitial, removedLayers-1) # indexing so -1
+	removedModule=int(args.moduleN)
+	moduleNames=np.delete(moduleNamesInitial, removedModule-1) # indexing so -1
+	removedLayers= np.arange(removedModule*4-3,removedModule*4+1)
+	print("removedPlanes ", removedLayers) # Layers: 0, 1... Planes: 1, 2...
+	print("layerNamesInitial", layerNamesInitial)
+	layerNames=np.delete(layerNamesInitial, removedLayers-1) # indexing so -1
 else:
-    removedModule=-1
-    moduleNames=moduleNamesInitial
-    layerNames=layerNamesInitial
+	removedModule=-1
+	moduleNames=moduleNamesInitial
+	layerNames=layerNamesInitial
 
 print("Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and")
 print(len(layerNames), "planes: ", layerNames)
@@ -61,17 +61,17 @@ print(len(layerNames), "planes: ", layerNames)
 fileName = str(args.fileN)
 regime = None 
 if (fileName == "TrackerAlignment.root"):
-    print("Plotting Residuals from Alignment Tracks!")
-    regime="align"
-    # input("Correct? [press enter]")
+	print("Plotting Residuals from Alignment Tracks!")
+	regime="align"
+	# input("Correct? [press enter]")
 
 elif (fileName == "gm2tracker_ana.root"):
-    print("Plotting Residuals from Quality Geane Tracks!")
-    regime="track"
-    # input("Correct? [press enter]") 
+	print("Plotting Residuals from Quality Geane Tracks!")
+	regime="track"
+	# input("Correct? [press enter]") 
 else:
-    print("Not expected file name!")
-    sys.exit()
+	print("Not expected file name!")
+	sys.exit()
 
 f = TFile.Open(fileName)
 if f:
@@ -123,53 +123,41 @@ ResidualRMSError=[]
 i_totalLayer=0
 means=[]
 MeanErrors=[]
-yMin = -60
-yMax = 60
+yMin = -65
+yMax = 80
 plt.figure(71)
 axes = plt.gca()
 for i_module in range(0, NModules):
 	line = [[i_module*NLayers+0.5,yMin], [i_module*NLayers+0.5, yMax]]
 	plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
 for i in range(0, len(moduleNames)):
-    i_module=moduleNames[i]
-    #for n in range(0, NLayers):
-    	#i_layer=layerNames[i_totalLayer]
-    if (regime=="align"):
-    	name = "TrackerAlignment/Modules/Residuals UV Module " + str(i_module)
-    if (regime=="track"):
-    	name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_module)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
-    t = f.Get(str(name))
-    mean = t.GetMean()
-    #print(i_layer, mean)
-    means.append(mean*1e3)
-    SD = t.GetRMS()
-    SDError = t.GetRMSError()
-    ResidualRMS.append(SD*1e3)
-    ResidualRMSError.append(SDError*1e3)
-    meanError = t.GetMeanError()
-    MeanErrors.append(meanError*1e3)
-    plt.errorbar(i_module, mean*1e3, yerr=meanError*1e3, color="red", markersize=15, elinewidth=3) 
-    plt.plot(i_module, mean*1e3, marker="+", color="red", linewidth=3, markersize=15)
-    line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
-    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'green')
-    #axes.annotate(round_sig(mean*1e3), (i_module, mean*1e3))
-    i_totalLayer+=1
+	i_module=moduleNames[i]
+	for n in range(0, NLayers):
+		i_layer=layerNames[i_totalLayer]
+		if (regime=="align"):
+			name = "TrackerAlignment/UV/Residuals UV Module " + str(i_module) + " " + str(LayerNames[n])
+		if (regime=="track"):
+			name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_layer)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
+		t = f.Get(str(name))
+		mean = t.GetMean()
+		#print(i_layer, mean)
+		means.append(mean*1e3)
+		SD = t.GetRMS()
+		SDError = t.GetRMSError()
+		ResidualRMS.append(SD*1e3)
+		ResidualRMSError.append(SDError*1e3)
+		meanError = t.GetMeanError()
+		MeanErrors.append(meanError*1e3)
+		plt.errorbar(i_layer, mean*1e3, yerr=meanError*1e3, color="red", markersize=14, elinewidth=3) 
+		plt.plot(i_layer, mean*1e3, marker="+", color="red")
+		#axes.annotate(round_sig(mean*1e3), (i_module, mean*1e3))
+		i_totalLayer+=1
 
 avgMean = sum(means)/float(len(means))
-line = [[0.5,avgMean], [NModules+1, avgMean]]
+line = [[0.5,avgMean], [NTotalLayers+1, avgMean]]
 plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = 'black', linestyle="-")
 # plt.text(32.1, avgMean, str(round_sig(avgMean)), fontsize=9)
-line = [[0.5,0.0], [NModules+1, 0.0]]
-#plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
-axes.set_xlim(0.5, NModules+0.5)
-axes.set_ylim(yMin, yMax)
-plt.title("UV Residual Mean "+stationN+" "+eL, fontsize=18)
-plt.ylabel("Residual Mean [um]", fontsize=18)
-plt.xlabel("Module", fontsize=18)
-plt.tight_layout()
-plt.savefig("Residuals_L_Zoom"+str(stationN)+".png", dpi=600)
 
-'''
 #metric
 U0 = np.array(means[0::4])
 U1 = np.array(means[1::4])
@@ -245,5 +233,5 @@ plt.savefig("ResidualsSD_L"+str(stationN)+".png")
 
 #combine into a single .png file 
 subprocess.call(["convert" , "-append", "Residuals_L_Zoom"+str(stationN)+".png" , "ResidualsSD_L"+str(stationN)+".png", "FoM_Res_"+str(stationN)+".png"])
-'''
+
 print("ROOT File analysed!")

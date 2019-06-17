@@ -37,7 +37,7 @@ void Mahalanobis() {
     std::cout << "RShift from Curve: ";
     for (int i_module=0; i_module < moduleN; i_module++){
         // std::cout << 1.0*pow(10, -6)*(Z[i_module]*Z[i_module]) << ", ";
-        std::cout << 0.5*pow(10, -6)*(Z_s18[i_module]-pivotPoint)*(Z_s18[i_module]-pivotPoint) << ", ";
+        std::cout << 0.2*pow(10, -6)*(Z_s18[i_module]-pivotPoint)*(Z_s18[i_module]-pivotPoint) << " ";
     }
     std::cout<<"\n";
 
