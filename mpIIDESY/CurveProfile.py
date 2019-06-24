@@ -57,14 +57,14 @@ path =  "MomentumSlices/vertices/station"
 TfileName = "gm2tracker_MomSlices_ana.root"
 stationName = ["12", "18"]
 # states = ["run15922-15924_align", "sim_truth_default", "sim_truth_cbo"]
-states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
+states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.35e-6", "sim_a=0.4e-6", "sim_a=0.45e-6", "sim_a=0.5e-6", "sim_a=0.55e-6", "sim_a=0.6e-6", "sim_a=1e-6"]
 stateN=len(states)
 # names = ["data (aligned)", "sim default", "sim cbo"]
-names = ["data (aligned)", "sim a=-0.5e-6", "sim a=truth  ", "sim a=0.1e-6 ", "sim a=0.2e-6 ", "sim a=0.3e-6 ", "sim a=0.4e-6 ", "sim a=0.5e-6 ", "sim a=1.0e-6 "]
+names = ["data (aligned)", "sim a=-0.5e-6", "sim a=truth  ", "sim a=0.1e-6 ", "sim a=0.2e-6 ", "sim a=0.3e-6 ", "sim a=0.35e-6 ", "sim a=0.4e-6 ", "sim a=0.45e-6 ", "sim a=0.5e-6 ", "sim a=0.55e-6 ", "sim a=0.6e-6 ","sim a=1.0e-6 "]
 
 #Containers to store histograms in orders as the names 
 
-colors = [1, 2, 3 ,4 ,5, 6 ,7 ,41 ,9] #purple, green 
+colors = [1, 2, 3 ,4 ,5, 6 ,7 ,41 ,9, 49, 46, 30, 12] #purple, green 
 styles = [3001, 3002]
 plotName = ["h_"+coord+"Pos_vs_mom_timeCut", "h_"+coord+"Pos_vs_mom"]
 if (coord == "vertex"):
@@ -101,7 +101,7 @@ for i_station in range(0, len(stationName)):
     #canvas pad and legend per station 
     c.cd(i_total+1)
     #if(coord == "radial" or coord == "vertical"):
-    legend =  TLegend(0.30,0.12,0.45,0.45)
+    legend =  TLegend(0.25,0.12,0.40,0.45)
     # if(coord == "vertex"):
     #     legend =  TLegend(0.10,0.45,0.45,0.9)
     legendArray.append(legend) # stroe all to keep in scope 
@@ -232,8 +232,8 @@ c.Draw()
 c.Print(coord+"_"+mode+"_"+"Pos_vs_mom_timeCut.png")
 # c.SaveAs(coord+"_"+mode+"_"+"Pos_vs_mom_timeCut.C")
 
-profile2DArray[0]=profileArray[0:9]
-profile2DArray[1]=profileArray[9:]
+profile2DArray[0]=profileArray[0:int(stateN)]
+profile2DArray[1]=profileArray[int(stateN):]
 #Calculate the sigma bands
 
 S_array=[]
@@ -284,8 +284,8 @@ for i_station in range(0, len(stationName)):
 
 rows, cols = (len(stationName), stateN-1) 
 S_array_2D = [[0]*cols]*rows 
-S_array_2D[0]=S_array[0:8]
-S_array_2D[1]=S_array[8:]    
+S_array_2D[0]=S_array[0:int(stateN)-1]
+S_array_2D[1]=S_array[int(stateN)-1:]    
 
 
 print("For range:", x_min, "to", x_max, "MeV:")
