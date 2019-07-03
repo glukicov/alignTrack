@@ -10,6 +10,7 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.cbook import get_sample_data
 from matplotlib._png import read_png
 from array import array
+import numpy.polynomial.polynomial as poly
 import subprocess
 def round_sig(x, sig=2):
     return round(x, sig-int(floor(log10(abs(x))))-1)
@@ -19,9 +20,15 @@ from decimal import *
 round_to = 3
 getcontext().prec = round_to
 
+
+def Chi2(d, s, dd, ed, es):
+    chi2 = ( ( d-s+dd )**2 ) / ( ed**2 + es**2 )
+    return chi2 
+
 parser = argparse.ArgumentParser(description='arguments')
 parser.add_argument('-m', '--mode', type=str)
 parser.add_argument('-c', '--coord', type=str, default="radial")
+parser.add_argument('--method', type=str, default=None)
 parser.add_argument('-xmin', '--x_min', type=float, default=300)
 parser.add_argument('-xmax', '--x_max', type=float, default=3000)
 parser.add_argument('-ymin', '--y_min', type=float, default=-25)
@@ -38,6 +45,11 @@ if not (mode == "profile" or mode== "graph"):
 coord = args.coord
 if not (coord == "radial" or coord== "vertical" or coord== "vertex"):
     print("Specify 'radial' or 'vertical' as --coord=")
+    sys.exit()
+
+method = args.method
+if not (method == "sigma" or method== "chi2" or method==None):
+    print("Specify 'sigma' or 'chi2' as --method=, or leave empty")
     sys.exit()
 
 y_min = args.y_min
@@ -126,7 +138,7 @@ for i_station in range(0, len(stationName)):
 
        # print("before: ", plot.GetNbinsX())
         # Rebin2D(X,Y)
-        plot.Rebin2D(2,1)
+        # plot.Rebin2D(2,1)
         #print("after: ", plot.GetNbinsX())
 
         #Get the normalisation scale
@@ -146,7 +158,6 @@ for i_station in range(0, len(stationName)):
         
         #make a profileX  
         profile = plot.ProfileX("profile_S"+str(i_station)+"_"+str(i_plot), 1, -1, "")
-        profileArray.append(profile)
         
         # create a new TGrpah for data with the same number of bins as the profile
         # only for non-zero bins
@@ -181,6 +192,7 @@ for i_station in range(0, len(stationName)):
             holder_i = 0 
         if (mode == "graph"):
             holder_i = 1 
+        profileArray.append(tmp_holder[holder_i])
                 
         #new profile/graph y-axis tools (in case tgrpah is drawn first)
         tmp_holder[holder_i].GetYaxis().SetTitle(plotYtitle[0]+"/ " +str(binN_Y)+" "+ unitsY[0])            
@@ -232,64 +244,258 @@ c.Draw()
 c.Print(coord+"_"+mode+"_"+"Pos_vs_mom_timeCut.png")
 # c.SaveAs(coord+"_"+mode+"_"+"Pos_vs_mom_timeCut.C")
 
+if(method == None):
+    print("No further methods to do now")
+    sys.exit()
+
+#split per station 
 profile2DArray[0]=profileArray[0:int(stateN)]
 profile2DArray[1]=profileArray[int(stateN):]
-#Calculate the sigma bands
-
-S_array=[]
-
-for i_station in range(0, len(stationName)):
-    print(stationName[i_station])
-    #print(profile2DArray[i_station])
-    for i_state in range(1, stateN):
-        data=profile2DArray[i_station][0]
-        sim=profile2DArray[i_station][i_state]
-        #loop over bins 
-        bin_number_X = data.GetNbinsX()
-        #print(bin_number_X)
-        i_total_bins = 0
-        S_mean=0
-        for i_bin_x in range(0, bin_number_X):
-            bin_content = data.GetBinContent(i_bin_x)
-            #skip empty bins 
-            if (bin_content == 0):
-                continue
-            #skip bins at the start (below the cut)":
-            bin_center=data.GetBinCenter(i_bin_x)
-            #print(bin_center)
-            if (bin_center < x_min):
-                continue
-            #once we hit the final bin, stop:
-            if (bin_center >= x_max):
-                break
-
-            #get the bin data 
-            data_r = data.GetBinContent(i_bin_x)
-            sim_r = sim.GetBinContent(i_bin_x)
-            data_er=data.GetBinError(i_bin_x)
-            sim_er=sim.GetBinError(i_bin_x)
-            # print(data_r, sim_r, data_er, sim_er)
-            # calculate the sigma: S = (dR)/E2, where quadrature sum of errors 
-            dR = sim_r - data_r
-            E2 = np.sqrt(data_er**2 + sim_er**2)
-            S = dR/E2
-            S_mean+=S
-            i_total_bins+=1
-        
-        #done with a state 
-        S_mean=S_mean/i_total_bins
-        S_array.append(S_mean)
-        #print(i_total_bins)
 
 
-rows, cols = (len(stationName), stateN-1) 
-S_array_2D = [[0]*cols]*rows 
-S_array_2D[0]=S_array[0:int(stateN)-1]
-S_array_2D[1]=S_array[int(stateN)-1:]    
+
+### Chi2 method ###### 
+if(method == "chi2"):
+    print("Computing chi2 method")
+
+    #generate step samples 
+    dd = np.arange(-5.0, 5.0, 0.05)
+    stepN = len(dd)
+
+    #Final results for all states/stations (the min point per state )
+    chi2Array=[] # to store the min Chi2 
+    ddArray=[] # to store the min dd 
+
+    for i_station in range(0, len(stationName)):
+        print("S"+stationName[i_station])
+        for i_state in range(1, stateN):
+            data=profile2DArray[i_station][0]
+            sim=profile2DArray[i_station][i_state]
+
+            #Final sum over bins
+            chi2Steps=[]
+            
+            #loop over steps
+            for i_step in range(0, stepN):
+
+                Chi2_dd = 0 # chi2 on the current step, summing over bins 
+                #print(i_step, dd[i_step])
+
+                #loop over bins 
+                bin_number_X = data.GetNbinsX()
+                #print(bin_number_X)
+                i_total_bins = 0
+                for i_bin_x in range(0, bin_number_X):
+                    bin_content = data.GetBinContent(i_bin_x)
+                    #skip empty bins 
+                    if (bin_content == 0):
+                        continue
+                    #skip bins at the start (below the cut)":
+                    bin_center=data.GetBinCenter(i_bin_x)
+                    #print(bin_center)
+                    if (bin_center < x_min):
+                        continue
+                    #once we hit the final bin, stop:
+                    if (bin_center >= x_max):
+                        break
+
+                    #get the bin data 
+                    data_r = data.GetBinContent(i_bin_x)
+                    sim_r = sim.GetBinContent(i_bin_x)
+                    data_er=data.GetBinError(i_bin_x)*2
+                    sim_er=sim.GetBinError(i_bin_x)*2
+                    # print(data_r, sim_r, data_er, sim_er)
+                    # calculate Chi2 as a sum from all bins Chi2(d, s, dd, ed, es):
+                    Chi2_dd += Chi2(data_r, sim_r, dd[i_step], data_er, sim_er)
+                    #print("Current: ", Chi2(data_r, sim_r, dd[i_step], data_er, sim_er)) 
+                    #print("Total: ", Chi2_dd) 
+                    i_total_bins+=1
 
 
-print("For range:", x_min, "to", x_max, "MeV:")
-for i_station in range(0, len(stationName)):
-    print(stationName[i_station])
-    for i_state in range(0, stateN-1):
-        print(names[i_state+1],": ", round(S_array_2D[i_station][i_state],3))
+                #done with a step
+                chi2Steps.append(Chi2_dd/i_total_bins) 
+            
+            #done with a state 
+            #print(chi2Steps)
+            #print("chi2Array len", len(chi2Steps))
+            #print(states[i_state])
+            #print("chi2Array min", min(chi2Steps))
+            chi2Array.append(min(chi2Steps))
+            #print("chi2Array min ID", np.argmin(chi2Steps))
+            #print("dd", dd[np.argmin(chi2Steps)])
+            ddArray.append(dd[np.argmin(chi2Steps)])
+
+            #debug sanity plot 
+            #if(i_station==0 and i_state == 4):
+            # f = plt.figure(figsize=(7,7))
+            # plt.title("S"+stationName[i_station]+" "+states[i_state]+r" $\chi^2$: "+str(round(min(chi2Steps),3))+ r" $\delta d$: "+str(round(dd[np.argmin(chi2Steps)],3)), fontsize=12)
+            # #plt.ylabel(r"$\chi^2$", fontsize=12)
+            # #plt.xlabel(r"$\delta d$", fontsize=12)
+            # plt.scatter(dd, chi2Steps)
+            # ax0=plt.gca()
+            # ax0.spines['right'].set_color('none')
+            # ax0.spines['top'].set_color('none')
+            # ax0.spines['left'].set_position('center')
+            # ax0.spines['bottom'].set_position('center')
+            # plt.show()
+
+        #station
+
+    # done with the Chi2 loop
+    print("chi2Array", chi2Array)
+    print("ddArray", ddArray)
+
+    rows, cols = (len(stationName), stateN-1) 
+    C_array_2D = [[0]*cols]*rows 
+    D_array_2D = [[0]*cols]*rows 
+    C_array_2D[0]=chi2Array[0:int(stateN)-1]
+    C_array_2D[1]=chi2Array[int(stateN)-1:]
+    D_array_2D[0]=ddArray[0:int(stateN)-1]
+    D_array_2D[1]=ddArray[int(stateN)-1:]        
+
+    print("For range:", x_min, "to", x_max, "MeV:")
+    for i_station in range(0, len(stationName)):
+        print(stationName[i_station])
+        for i_state in range(0, stateN-1):
+            print(names[i_state+1],": ", round(C_array_2D[i_station][i_state],3), round(D_array_2D[i_station][i_state],3))
+
+    # remove low/high a
+    C_array_2D[0]=C_array_2D[0][2:]
+    C_array_2D[1]=C_array_2D[1][2:]
+    D_array_2D[0]=D_array_2D[0][2:]
+    D_array_2D[1]=D_array_2D[1][2:]
+
+    print(C_array_2D[0])
+    print(C_array_2D[1])
+    print(D_array_2D[0])
+    print(D_array_2D[1])
+
+
+    x_ticks =  ( [0.1, 0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 1.0] ,["0.1e-6 ", "0.2e-6 ", "0.3e-6 ", "0.35e-6 ", "0.4e-6 ", "0.45e-6 ", "0.5e-6 ", "0.55e-6 ", "0.6e-6 ", "1.0e-6 "])
+    print(len(x_ticks[0]))
+    print(len(C_array_2D[0]))
+
+    colorsStn=["red", "blue"]
+    f = plt.figure(figsize=(7,7))
+    # #Plot the 0th line 
+    #line = [[x_ticks[0][0]-0.1,0.0], [x_ticks[0][-1]+0.1, 0.0]]
+    #plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+    # plt.ylabel(r"$\langle\chi^2\rangle$", fontsize=12))
+    plt.ylabel(r"$\delta d$ [mm]", fontsize=12)
+    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=12)
+    plt.xticks(fontsize=10, rotation=0) 
+    plt.yticks(fontsize=10, rotation=0)
+    for i_station in range(0, len(stationName)):
+        # x_new = np.linspace(float(min(x_ticks[0])), float(max(x_ticks[0])), num=1000) # generate x-points for evaluation 
+        # coefs = poly.polyfit(x_ticks[0], C_array_2D[i_station], 2) # x1 line
+        # ffit = poly.polyval(x_new, coefs) # plot over generated points 
+        # plt.plot(x_new, ffit, color=colorsStn[i_station])
+        chi2_min=(min(np.abs(C_array_2D[i_station])))
+        # chi2_min=(min(C_array_2D[i_station]))
+        a_min=(x_ticks[1][np.argmin(np.abs(C_array_2D[i_station]))])
+        plt.plot(x_ticks[0], C_array_2D[i_station], marker="+", color=colorsStn[i_station], label="S"+stationName[i_station]+": "+a_min, linestyle=":")
+        #print(S_array_2D[i_station])
+
+    axes=plt.gca()
+    plt.title("Range: "+str(x_min)+" to "+str(x_max)+" [MeV]", fontsize=12)
+    axes.set_xlim(x_ticks[0][0]-0.1, x_ticks[0][-1]+0.1)
+    # axes.set_ylim(-3, 3)
+    axes.tick_params(axis='x',which='minor', bottom=True, top=True, direction='inout')
+    axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+    plt.minorticks_on()
+    axes.legend(loc='upper center', prop={'size': 12}) # outside (R) of the plot 
+    plt.savefig("Chi2.png", dpi=250)
+
+### Sigma method ###### 
+if(method == "sigma"):
+
+    S_array=[]
+    for i_station in range(0, len(stationName)):
+        print(stationName[i_station])
+        #print(profile2DArray[i_station])
+        for i_state in range(1, stateN):
+            data=profile2DArray[i_station][0]
+            sim=profile2DArray[i_station][i_state]
+            #loop over bins 
+            bin_number_X = data.GetNbinsX()
+            #print(bin_number_X)
+            i_total_bins = 0
+            S_mean=0
+            for i_bin_x in range(0, bin_number_X):
+                bin_content = data.GetBinContent(i_bin_x)
+                #skip empty bins 
+                if (bin_content == 0):
+                    continue
+                #skip bins at the start (below the cut)":
+                bin_center=data.GetBinCenter(i_bin_x)
+                #print(bin_center)
+                if (bin_center < x_min):
+                    continue
+                #once we hit the final bin, stop:
+                if (bin_center >= x_max):
+                    break
+
+                #get the bin data 
+                data_r = data.GetBinContent(i_bin_x) #if need correction: - data.GetMean(2)
+                sim_r = sim.GetBinContent(i_bin_x) # if need correction :- sim.GetMean(2)
+                data_er=data.GetBinError(i_bin_x)*2
+                sim_er=sim.GetBinError(i_bin_x)*2
+                # print(data_r, sim_r, data_er, sim_er)
+                # calculate the sigma: S = (dR)/E2, where quadrature sum of errors 
+                dR = sim_r - data_r
+                E2 = np.sqrt(data_er**2 + sim_er**2)
+                S = dR/E2
+                #print(S)
+                S_mean+=S
+                i_total_bins+=1
+            
+            #done with a state 
+            S_mean=S_mean/i_total_bins
+            S_array.append(S_mean)
+            #print(i_total_bins)
+
+    print("Computing sigma method")
+    rows, cols = (len(stationName), stateN-1) 
+    S_array_2D = [[0]*cols]*rows 
+    S_array_2D[0]=S_array[0:int(stateN)-1]
+    S_array_2D[1]=S_array[int(stateN)-1:]    
+
+    print("For range:", x_min, "to", x_max, "MeV:")
+    for i_station in range(0, len(stationName)):
+        print(stationName[i_station])
+        for i_state in range(0, stateN-1):
+            print(names[i_state+1],": ", round(S_array_2D[i_station][i_state],3))
+
+    # remove low/high a
+    S_array_2D[0]=S_array[2:int(stateN)-2]
+    S_array_2D[1]=S_array[int(stateN)+1:-1]
+
+
+    x_ticks =  ( [0.1, 0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6] ,["0.1e-6 ", "0.2e-6 ", "0.3e-6 ", "0.35e-6 ", "0.4e-6 ", "0.45e-6 ", "0.5e-6 ", "0.55e-6 ", "0.6e-6 "])
+    colorsStn=["red", "blue"]
+    f = plt.figure(figsize=(7,7))
+    #Plot the 0th line 
+    line = [[x_ticks[0][0]-0.1,0.0], [x_ticks[0][-1]+0.1, 0.0]]
+    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+    plt.ylabel(r"$\sigma$", fontsize=12)
+    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=12)
+    plt.xticks(fontsize=10, rotation=0) 
+    plt.yticks(fontsize=10, rotation=0)
+    for i_station in range(0, len(stationName)):
+        x_new = np.linspace(float(min(x_ticks[0])), float(max(x_ticks[0])), num=1000) # generate x-points for evaluation 
+        coefs = poly.polyfit(x_ticks[0], S_array_2D[i_station], 1) # x1 line
+        ffit = poly.polyval(x_new, coefs) # plot over generated points 
+        plt.plot(x_new, ffit, color=colorsStn[i_station])
+        x_0 = -coefs[0]/coefs[1] # x(y=0) = -c/m 
+        plt.scatter(x_ticks[0], S_array_2D[i_station], marker="+", color=colorsStn[i_station], label="S"+stationName[i_station]+": a="+str(round(x_0,3))+r"$\times10^{-6}$" )
+        #print(S_array_2D[i_station])
+
+    axes=plt.gca()
+    plt.title("Range: "+str(x_min)+" to "+str(x_max)+" [MeV]", fontsize=12)
+    axes.set_xlim(x_ticks[0][0]-0.1, x_ticks[0][-1]+0.1)
+    # axes.set_ylim(-3, 3)
+    axes.tick_params(axis='x',which='minor', bottom=True, top=True, direction='inout')
+    axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+    plt.minorticks_on()
+    axes.legend(loc='upper left', prop={'size': 12}) # outside (R) of the plot 
+    plt.savefig("Sigma.png", dpi=250)
