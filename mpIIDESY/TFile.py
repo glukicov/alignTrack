@@ -76,8 +76,8 @@ for i_plot in range(0, len(plotNames)):
     hist_1D.SetLineColor(823)
    
     
-    #if(plotNames[i_plot]=="S12_rad_sd" or plotNames[i_plot]=="S18_rad_sd"):
-    #    hist_1D.GetXaxis().SetRangeUser(-800, 800)
+    if(plotNames[i_plot]=="S12_ver_sd" ):
+       hist_1D.GetYaxis().SetRangeUser(0.0, 26.0)
         
 
     mean = int(round(hist_1D.GetMean(), 0))
