@@ -23,7 +23,7 @@ stationName=["S12", "S18"]
 # stationName=["S0", "S12", "S18"]
 stationN=len(stationName)
 
-files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.png", "*.bin")
+files = ( "*.txt", "T*.root", "gm2tracker_ana.root", "*.fcl", "*.log", "*.bin")
 # files = ( "*.txt", "*.fcl", "*.log", "*.png")
 
 machine=""
