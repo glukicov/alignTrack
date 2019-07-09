@@ -49,7 +49,7 @@ print("Monitoring", runN,"runs:",runs)
 #Containers to fill with offsets per dof per station per run per module 
 offsets = [[[[0 for i_module in range(0, moduleN)] for i_run in range(0, runN) ] for i_station in range(0, stationN)] for i_global in range(0, globalN) ]
 
-#Get offsets from files
+#Get offsets from files per run for all modules in that run
 for i_global in range(0, globalN):
     for i_station in range(0, stationN):
         for i_run in range(0, runN):
@@ -59,7 +59,16 @@ for i_global in range(0, globalN):
             offset_input = RTL.getOffsets(file, FHICLServicePath+FHICLPatchName[i_global]+stations[i_station][1:3])
             offsets[i_global][i_station][i_run]=offset_input
 
-   ##### Plotting
+#Containers to fill with offsets per dof per station per module per run
+offsets_run = [[[[0 for i_run in range(0, runN)] for i_module in range(0, moduleN)] for i_station in range(0, stationN)] for i_global in range(0, globalN) ]
+
+for i_global in range(0, globalN):
+    for i_station in range(0, stationN):
+        for i_module in range(0, moduleN):
+            for i_run in range(0, runN):
+                offsets_run[i_global][i_station][i_module][i_run]=offsets[i_global][i_station][i_run][i_module]
+
+##### Plotting
 colors = ["red", "green", "blue", "purple", "orange", "black", "brown", "grey"]
 f = plt.figure(figsize=(7,int(globalN*2+1)))
 yMax = [120, 120]
@@ -69,7 +78,6 @@ i_total=1
 for i_global in range(0, globalN):
     for i_station in range(0, stationN):
         plt.subplot( int( str(globalN)+str(stationN)+str(i_total)) )
-        print(int( str(globalN)+str(int(i_global+1))+str(int(i_station+1)) ))
         axes = plt.gca()
         plt.title(GlobalParNames[i_global]+" alignment in "+stations[i_station], fontsize=12)
         plt.ylabel(r"Alignment [$\mathrm{\mu}$m]")
@@ -81,9 +89,8 @@ for i_global in range(0, globalN):
         axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
         plt.tight_layout()
         #Plot data per module
-        for i_run in range(0, runN):
-            for i_module in range(0, moduleN):
-                plt.plot(runs[i_run], offsets[i_global][i_station][i_run][i_module], marker=".", color=colors[i_module], linewidth=1, label="M"+str(i_module+1) if i_run == 0 else "")
+        for i_module in range(0, moduleN):
+            plt.plot(runs, offsets_run[i_global][i_station][i_module], marker=".", color=colors[i_module], linewidth=1, label="M"+str(i_module+1))
         axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
         i_total+=1
 plt.savefig("Monitoring.png", dpi=250)
