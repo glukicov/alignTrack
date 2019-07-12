@@ -28,11 +28,14 @@ alignmentMethod = "inversion" # PEDE method
 iterationN = 10 # PEDE method 
 convergenceRate = 0.01 # PEDE method
 
+#Define global variables
+all_runs=set() #no repeating runs 
+
 def main():
 
     prepareData(inputData)
 
-    runParallel(inputData)
+    runParallel(inputData, all_runs)
 
 
 def prepareData(inputData):
@@ -50,7 +53,6 @@ def prepareData(inputData):
     
     #Check all files and runs 
     all_files = next(os.walk(inputData))[2] 
-    all_runs=set() #no repeating runs 
     for file in all_files:
         run=file.strip("gm2tracker_reco_").strip(".bin")[:5]
         all_runs.add(run)
@@ -65,18 +67,30 @@ def prepareData(inputData):
     for run in all_runs:
         subprocess.call(["mkdir", inputData+"/Monitoring/"+str(run)])
         #grab all subruns for that run 
-
-        #run_data
+        run_data=[]
+        for file in all_files:
+            pos = file.find(run)
+            if (pos != -1):
+                run_data.append(inputData+"/"+file)
 
         #create Steering and Constraint files in the run dir 
         writeConstraintFile(inputData+"/Monitoring/"+str(run)+"/ConstraintFile.txt", stationN)
         writeSteeringFile(inputData+"/Monitoring/"+str(run)+"/SteeringFile.txt", run_data)
 
 
-def runParallel(inputData):
-    pass
-    #print(inputData)
+def runParallel(inputData, all_runs):
 
+    for run in all_runs:
+        os.chdir(inputData+"/Monitoring/"+run)
+        try:
+            subprocess.call(["/Users/gleb/software/alignTrack/PEDE/pede", "SteeringFile.txt"])
+        except Exception:
+            continue  
+        try:
+            subprocess.call(["python3", "/Users/gleb/software/alignTrack/mpIIDESY/RobustTrackerLaunch.py"])
+        except Exception:
+            continue
+        os.chdir("../../")
 
 def writeConstraintFile(constraintFilePath, stationN):
     constraintFile=open(constraintFilePath, "w+")
@@ -108,7 +122,7 @@ def writeConstraintFile(constraintFilePath, stationN):
             constraintFile.write(labelCN + " " + rotationalFactor + "\n")
 
 
-def writeSteeringFile(steeringFilePat, run_data):
+def writeSteeringFile(steeringFilePath, run_data):
     steeringFile=open(steeringFilePath, "w+")
 
     pedeMethod = "method " + alignmentMethod +  " " +  str(iterationN) + " " + str(convergenceRate)
@@ -120,7 +134,6 @@ def writeSteeringFile(steeringFilePat, run_data):
     for i_data in run_data:
         steeringFile.write(i_data +" ! binary data file\n")
     steeringFile.write(pedeMethod + "\n")
-    steeringFile.write("printrecord 2 -1 ! produces mpdebug.txt for record 2 with the largest value of χ2/Ndf\n")
     steeringFile.write("\n")
     steeringFile.write("end ! optional for end-of-data\n")
    

@@ -5,11 +5,9 @@
 #  on alignment data 
 # 
 # INPUT: Top Directory 
-# Directory structure: e.g. MONITOR/15922/S12 
-#   where dir=MONITOR (top directory), containing many runs 
-#         15922 is one of many runs 
-#         S12 folder has the OffsetsPerModuleS12.fcl
-#         S17 folder has the OffsetsPerModuleS18.fcl 
+# Directory structure: e.g. MONITOR/15922/ 
+#         where 15922 is one of many aligned runs for one of the two stations
+#         e.g. for S12 folder has the OffsetsPerModuleS12.fcl
 #
 # Created: 9 July 2019 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
 # Modified: 9 July 2019 by Gleb
@@ -25,13 +23,16 @@ import RobustTrackerLaunch as RTL # importing a function; this code
 # must have an "if main/def main" protection
 
 parser = argparse.ArgumentParser(description='mode')
-parser.add_argument('-d', '--dir', help='top directory', default="MONITOR", type=str) 
+parser.add_argument('-s12', '--dirS12', help='top directory', type=str) 
+parser.add_argument('-s18', '--dirS18', help='top directory', type=str) 
 args = parser.parse_args()
-top_dir=args.dir
+dirS12=args.dirS12
+dirS18=args.dirS18
 
 #Define constants 
-stations = ["S12", "S18"]
-stationN = len(stations)
+stationPath = (dirS12, dirS18)
+stationN = len(stationPath)
+stations=("S12", "S18")
 moduleN = 8 # per station 
 fileName = "OffsetsPerModule"
 fileExt = ".fcl"
@@ -52,7 +53,7 @@ data_sets =  {
 }
 
 #Get list of runs as the subdirs (removing the top dir name by spitting)
-p = Path(top_dir)
+p = Path(dirS12)
 runs = [int(str(x).rsplit('/', 1)[-1]) for x in p.iterdir() if x.is_dir()]
 runN = len(runs)
 print("Monitoring", runN,"runs:",runs)
@@ -72,11 +73,14 @@ offsets = [[[[0 for i_module in range(0, moduleN)] for i_run in range(0, runN) ]
 for i_global in range(0, globalN):
     for i_station in range(0, stationN):
         for i_run in range(0, runN):
-            path = top_dir+"/"+str(runs[i_run])+"/"+stations[i_station]
+            path = stationPath[i_station]+"/"+str(runs[i_run])+"/"
             filePath=path+"/"+fileName+stations[i_station]+fileExt
-            file = open (filePath, "r")
-            offset_input = RTL.getOffsets(file, FHICLServicePath+FHICLPatchName[i_global]+stations[i_station][1:3])
-            offsets[i_global][i_station][i_run]=offset_input
+            try:
+                file = open (filePath, "r")
+                offset_input = RTL.getOffsets(file, FHICLServicePath+FHICLPatchName[i_global]+stations[i_station][1:3])
+                offsets[i_global][i_station][i_run]=offset_input
+            except Exception:
+                continue
 
 #Containers to fill with offsets per dof per station per module per run
 offsets_run = [[[[0 for i_run in range(0, runN)] for i_module in range(0, moduleN)] for i_station in range(0, stationN)] for i_global in range(0, globalN) ]
@@ -87,6 +91,7 @@ for i_global in range(0, globalN):
             for i_run in range(0, runN):
                 offsets_run[i_global][i_station][i_module][i_run]=offsets[i_global][i_station][i_run][i_module]
 
+print(offsets_run)
 ##### Plotting
 
 #First plot: nominal values
