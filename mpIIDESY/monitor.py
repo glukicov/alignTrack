@@ -52,11 +52,40 @@ data_sets =  {
   "Lazarus": [24575, 24688] 
 }
 
-#Get list of runs as the subdirs (removing the top dir name by spitting)
-p = Path(dirS12)
-runs = [int(str(x).rsplit('/', 1)[-1]) for x in p.iterdir() if x.is_dir()]
-runN = len(runs)
-print("Monitoring", runN,"runs:",runs)
+#Get list of runs as the subdirs (removing the top dir name by splitting)
+station_runs=[[] ,[]] # all runs 
+station_runs_bool=[[], []] # runs with results (use as boolean mask)
+runN=None # total run number after cuts for both stations 
+runs=set()  # final runs for both stations 
+#quickly check if we get the .fcl results file for that run, and remove run otherwise 
+for i_station, i_path in enumerate(stationPath): 
+    p = Path(i_path)
+    runs_station = [int(str(x).rsplit('/', 1)[-1]) for x in p.iterdir() if x.is_dir()]
+    station_runs[i_station]=runs_station
+    print("Found", len(runs_station),"runs:",runs_station,"for station", stations[i_station])
+    for i_run in runs_station:
+            path = i_path+"/"+str(i_run)+"/"
+            filePath=path+"/"+fileName+stations[i_station]+fileExt
+            station_runs_bool[i_station].append(os.path.exists(filePath))
+
+#use boolean mask to remove runs with no alignment data
+
+station_runs_masked=[[], []]
+for i_station in range(0, stationN):
+    station_runs_masked[i_station] = np.ma.masked_array(station_runs[0], mask=station_runs_bool[0])
+
+# TODO Use some clever masking tools here to get non-masked data 
+
+station_runs_masked[i_station]=station_runs_masked[i_station][station_runs_masked[i_station].mask = False]
+
+# for i_station in range(0, stationN):
+#     for i_masked in station_runs_masked[i_station]:
+#         if( i_masked.isdigit() ):
+#             print(i_masked)
+#         #runs.add(i_masked)
+# # print(runs)
+
+sys.exit()
 
 #Get unique data sets names 
 unique_data_sets=set()
