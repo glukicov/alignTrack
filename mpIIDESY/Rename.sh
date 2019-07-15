@@ -1,4 +1,6 @@
 # Rename all *.root to *.bin 
 for f in $1*.root; do 
-    mv -- "$f" "${f%.root}.bin"
+    echo "$f"
+    echo "${f%.root}.bin"
+    mv -f "$f" "${f%.root}.bin"
 done

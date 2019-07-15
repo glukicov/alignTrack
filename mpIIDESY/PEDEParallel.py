@@ -6,7 +6,9 @@
 ############
 import glob # glob is awesome! allows regex in process calls 
 import subprocess, shlex 
+import time
 import sys, os # print out to terminal 
+from os import path
 import pandas as pd # get data frame from text file 
 import numpy as np # arrays 
 import argparse # command line inputs sub
@@ -18,8 +20,10 @@ import itertools # smart lines in plotting
 #Input args 
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-d', "--inputData", type=str)
+parser.add_argument('-ignoreRuns', "--ignoreRuns", nargs='+', type=int, default=[])
 args = parser.parse_args()
 inputData=args.inputData
+ignoreRuns=args.ignoreRuns
 
 #Define constants
 modulesPerStation = 8 
@@ -33,23 +37,19 @@ all_runs=set() #no repeating runs
 
 def main():
 
-    prepareData(inputData)
-
-    runParallel(inputData, all_runs)
-
-
-def prepareData(inputData):
-    
-    print("Preparing data in",inputData)
-
     #get station number from the path
     pos = inputData.find("S1")
     stationN=(inputData[pos:pos+3]) 
     print("For station:",stationN)
+
+    prepareData(inputData, stationN)
+
+    runParallel(inputData, all_runs, stationN)
+
+
+def prepareData(inputData, stationN):
     
-    #Rename all files 
-    subprocess.Popen( ["./Rename.sh"+" "+ str(inputData)], shell=True)
-    print("ROOT files renamed into bin files!")
+    print("Preparing data in",inputData)
     
     #Check all files and runs 
     all_files = next(os.walk(inputData))[2] 
@@ -65,32 +65,58 @@ def prepareData(inputData):
 
     #create run subdir and create Steering and Constraints file there
     for run in all_runs:
-        subprocess.call(["mkdir", inputData+"/Monitoring/"+str(run)])
-        #grab all subruns for that run 
-        run_data=[]
-        for file in all_files:
-            pos = file.find(run)
-            if (pos != -1):
-                run_data.append(inputData+"/"+file)
+        fullPath=inputData+"/Monitoring/"+str(run)
+        #check if already exists 
+        if (os.path.isdir(fullPath)):
+            continue
+        else:
+            subprocess.call(["mkdir", fullPath])
+            #grab all subruns for that run 
+            run_data=[]
+            for file in all_files:
+                pos = file.find(run)
+                if (pos != -1):
+                    run_data.append(inputData+"/"+file)
 
-        #create Steering and Constraint files in the run dir 
-        writeConstraintFile(inputData+"/Monitoring/"+str(run)+"/ConstraintFile.txt", stationN)
-        writeSteeringFile(inputData+"/Monitoring/"+str(run)+"/SteeringFile.txt", run_data)
+            #create Steering and Constraint files in the run dir 
+            writeConstraintFile(inputData+"/Monitoring/"+str(run)+"/ConstraintFile.txt", stationN)
+            writeSteeringFile(inputData+"/Monitoring/"+str(run)+"/SteeringFile.txt", run_data)
 
 
-def runParallel(inputData, all_runs):
+def runParallel(inputData, all_runs, stationN):
+
+    print("Starting PEDE running on data in",inputData, ":")
 
     for run in all_runs:
-        os.chdir(inputData+"/Monitoring/"+run)
-        try:
-            subprocess.call(["/Users/gleb/software/alignTrack/PEDE/pede", "SteeringFile.txt"])
-        except Exception:
-            continue  
-        try:
-            subprocess.call(["python3", "/Users/gleb/software/alignTrack/mpIIDESY/RobustTrackerLaunch.py"])
-        except Exception:
+        fullPath = inputData+"/Monitoring/"+run
+        print(fullPath)
+        os.chdir(fullPath)
+
+        fileName = "OffsetsPerModule"+stationN+".fcl"
+         #check if this run is one the blacklisted runs 
+        if ( int(run) in np.array(ignoreRuns) ):
+            print(run, "is one of the blacklisted runs, skipping")
             continue
-        os.chdir("../../")
+        #check if the PEDE was already run here
+        elif (path.exists(fileName)):
+           print(fileName,"already exists in", fullPath, "skipping...")
+           continue
+        else:
+            try:
+                subprocess.Popen(["/Users/gleb/software/alignTrack/PEDE/pede", "SteeringFile.txt"])
+                ########
+                # Nice for testing 
+                # time.sleep(10) # wait for 2 mins, if still running must be a problem 
+                # subprocess.call(["pkill", "-f", "pede" ])
+                # print("Killing any remaining PEDE processes..")
+                #######
+            except Exception:
+                continue  
+            try:
+                subprocess.call(["python3", "/Users/gleb/software/alignTrack/mpIIDESY/RobustTrackerLaunch.py"])
+            except Exception:
+                continue
+            os.chdir("../../")
 
 def writeConstraintFile(constraintFilePath, stationN):
     constraintFile=open(constraintFilePath, "w+")
