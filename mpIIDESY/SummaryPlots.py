@@ -241,24 +241,24 @@ if (mode == "iteration"):
                 tracks[i_station][i_iter]=(f.Get("TrackSummary"+str(stationName[i_station])+"/FitResults/pValues").GetEntries())
 
 
-    # if( tp == "N"):
-    #     print("Using alignment plots")
-    #     x_ticks = np.arange(1, len(path)+1)
-    #     fileName = "TrackerAlignment.root" # can be changed for TP s
-    #     for i_iter in range(0, len(path)):
-    #         for i_station in range(0, stationN):
-    #             f = TFile.Open(path[i_iter]+"/"+stationName[i_station]+"/"+fileName)
-    #             if f:
-    #                 print(str(fileName)+" is open")
-    #             else:
-    #                 print(str(fileName)+" not found")
-    #             p_val_hist = f.Get("TrackerAlignment/Tracks/pValue")
-    #             p_val_hist.GetXaxis().SetRangeUser(0.05, 1)
-    #             pvals[i_station][i_iter]=(p_val_hist.GetMean())
-    #             pvals_errors[i_station][i_iter]=(p_val_hist.GetMeanError())
-    #             mom[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMean())
-    #             mom_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMeanError())
-    #             tracks[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetEntries())
+    if( tp == "N"):
+        print("Using alignment plots")
+        x_ticks = np.arange(1, len(path)+1)
+        fileName = "TrackerAlignment.root" # can be changed for TP s
+        for i_iter in range(0, len(path)):
+            for i_station in range(0, stationN):
+                f = TFile.Open(path[i_iter]+"/"+stationName[i_station]+"/"+fileName)
+                if f:
+                    print(str(fileName)+" is open")
+                else:
+                    print(str(fileName)+" not found")
+                p_val_hist = f.Get("TrackerAlignment/Tracks/pValue")
+                p_val_hist.GetXaxis().SetRangeUser(0.05, 1)
+                pvals[i_station][i_iter]=(p_val_hist.GetMean())
+                pvals_errors[i_station][i_iter]=(p_val_hist.GetMeanError())
+                mom[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMean())
+                mom_errors[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/P").GetMeanError())
+                tracks[i_station][i_iter]=(f.Get("TrackerAlignment/Tracks/pValue").GetEntries())
 
 
     ###Plot 
@@ -274,6 +274,7 @@ if (mode == "iteration"):
         axes = plt.gca()
         axes.xaxis.set_major_locator(MaxNLocator(integer=True))
         
+        x_ticks = np.arange(1, len(path)+1)
         if( tp == "N"):
             axes.set_xlim(x_ticks[0]-0.5, x_ticks[-1]+0.5)
         
@@ -287,9 +288,9 @@ if (mode == "iteration"):
        
         #Plot data
         textStr = "After "+str(x_ticks[-1])+" iterations:"
-        plt.text(0.65, 0.25, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
+        plt.text(0.65, 0.65, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
         for i_station in range(0, stationN):
-            print("Station:", stationName[i_station], "state:", i_state, "iter:", plot_names[i_iter])
+            #print("Station:", stationName[i_station], "state:", i_state, "iter:", plot_names[i_iter])
 
              #for tracks only 
             if(i_state==1):
@@ -305,8 +306,8 @@ if (mode == "iteration"):
             plt.plot(x_ticks, data[i_state][i_station], color=colors[i_station], marker=".", linewidth=0, linestyle=":")  
             plt.errorbar(x_ticks, data[i_state][i_station],  yerr=errors[i_state][i_station], color=colors[i_station], label=stationName[i_station], elinewidth=0, linestyle=":")  
             textStr = stationName[i_station] + ": +" + str( round( (data[i_state][i_station][-1] - data[i_state][i_station][0])*100/data[i_state][i_station][-1], 1 ) ) + "%\n"
-            plt.text(0.75, 0.15-float(i_station)/10, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
-        if(i_state==0):
+            plt.text(0.75, 0.55-float(i_station)/10, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
+        if(i_state==0 or i_state==1):
             axes.legend(loc='upper left', fontsize=14)
         else:     
             axes.legend(loc='center right', fontsize=14)      

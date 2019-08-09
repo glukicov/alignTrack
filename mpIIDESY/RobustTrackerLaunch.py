@@ -49,7 +49,8 @@ def main():
     extra_label_name=args.extra_label
 
     #Define constants (Capital + cammelCase)
-    ModuleN = 8 # per station 
+    ModuleN = 8 # per station
+    tracker=("Tracker 1", "Tracker 2")
     ModuleArray=np.arange(1, ModuleN+1) #(1, 2,...,8) for plotting  
     GlobalParNames = ["Radial", "Vertical", r'$\phi$', r'$\psi$', r'$\theta$'] #only ever going to have 5 pars.
     units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]", " [mrad]", " [mrad]", " [mrad]"]
@@ -184,9 +185,11 @@ def main():
     f = plt.figure(figsize=(7,int(globalN*2+1)))
     #TOOD make min max from data
     if (stationN=="12"):
+        i_station=0
         yMax = [120, 120, 25, 25, 25]
         yMin = [-120, -120, -25, -25, -25]
     if (stationN=="18"):
+        i_station=1
         yMax = [120, 220, 25, 25, 25]
         yMin = [-120, -220, -25, -25, -25]
     #Make subplot for each result 
@@ -196,6 +199,7 @@ def main():
         axes.set_xlim(ModuleArray[0]-0.5, ModuleArray[-1]+0.5)
         axes.set_ylim(yMin[i_global], yMax[i_global])
         plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN+" "+extra_label_name, fontsize=12)
+        # plt.title(GlobalParNames[i_global]+" misalignment in "+tracker[i_station]+" "+extra_label_name, fontsize=12)
         plt.ylabel(r"Misalignment "+ units[i_global])
         plt.xlabel("Module", fontsize=12)
         plt.xticks(fontsize=10, rotation=0) 

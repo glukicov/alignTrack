@@ -42,9 +42,9 @@ void Mahalanobis() {
     std::cout<<"\n";
 
 //Make new canvas and legend with plotting range
-    TCanvas* canvas_survey = new TCanvas("canvas_survey", "", 1600, 1600);
-    TLegend* legend = new TLegend(0.35, 0.11, 0.89, 0.38);
-    double rmin(0.0), rmax(6.0), zmin(-350.0), zmax(1050.0);
+    TCanvas* canvas_survey = new TCanvas("canvas_survey", "", 900, 800);
+    TLegend* legend = new TLegend(0.1, 0.89, 0.45, 0.4);
+    double rmin(2.3), rmax(6.0), zmin(-500.0), zmax(980.0);
 
     std::vector<TGraphErrors*> tge_vector; // keep all graphs in scope
     std::vector<TFitResultPtr> fit_vector; // keep all fits results in scope
@@ -92,7 +92,7 @@ void Mahalanobis() {
 
     } // per station loop
 
-    legend->Draw("SAME");
+    // legend->Draw("SAME");
     canvas_survey->Draw();
     canvas_survey->Print("Survey.png");
 
@@ -155,7 +155,7 @@ void Mahalanobis() {
                 std::cout << endl;
 
                 //set new state parameters for the fit
-                TF1* stateFit = new TF1(Form("State_%d_%d_%d", i_curve, i_slope, i_intercept), curve.c_str(), Z[i_station][0], Z[i_station][totalModules - 1]);
+                TF1* stateFit = new TF1(Form("State_%d_%d_%d", i_curve, i_slope, i_intercept), curve.c_str(), Z[i_station][0]-10, Z[i_station][totalModules - 1]+10);
                 for (int i_par = 0; i_par < parN; i_par++) stateFit->SetParameter(i_par, newParameters[i_par]);
 
                 // bold dashed lines for state fits
@@ -170,7 +170,7 @@ void Mahalanobis() {
                  a.push_back(a_state); b.push_back(b_state); c.push_back(c_state);
 
                 //print keeping the +/- with showpos
-                std::stringstream legend_string; legend_string << std::showpos << std::setprecision(roundTo) << i_slope << i_intercept << " " << labels[i_station] << " a:" << a_state << " b: " << b_state << " c: " << c_state;
+                std::stringstream legend_string; legend_string << std::showpos << std::setprecision(roundTo) << i_curve << i_slope << i_intercept << " " << labels[i_station] << " a:" << a_state << " b: " << b_state << " c: " << c_state;
                 legend->AddEntry(stateFit, legend_string.str().c_str(), "l");
 
                 i_state++;
@@ -179,7 +179,7 @@ void Mahalanobis() {
         } // slope
     } // curve
         //save per station
-        legend->Draw("same");
+        // legend->Draw("same");
         canvas_survey->Draw();
         std::stringstream plotName; plotName << "Mach_line_" << labels[i_station] << ".png";
         canvas_survey->Print(plotName.str().c_str());

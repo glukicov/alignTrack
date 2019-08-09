@@ -36,6 +36,7 @@ eL=str(args.eL)
 
 NModules=8
 NLayers=4 # per modules
+tracker=("Tracker 1", "Tracker 2")
 NTotalLayers=32
 stationN=str(args.stationN)
 LayerNames = ["U0", "U1", "V0", "V1"]
@@ -57,6 +58,7 @@ else:
 
 print("Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and")
 print(len(layerNames), "planes: ", layerNames)
+
 
 
 fileName1 = str(args.fileN1)
@@ -95,8 +97,10 @@ if (regime=="align"): # only alignment data has Pz/P and implicit station number
     label_mean = (label_mean_1 + label_mean_2)/2
     if(label_mean < 1280 and label_mean > 1210):
         stationN = "S12"
+        i_station=0
     elif(label_mean < 1880 and label_mean > 1810):
         stationN = "S18"
+        i_station=1
     elif(label_mean < 1080 and label_mean > 1010):
         stationN = "S0"
     else:
@@ -135,10 +139,12 @@ for i in range(0, len(moduleNames)):
 
 line = [[0.5,0.0], [NModules+0.5, 0.0]]
 plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=1)
-axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 12}) # outside (R) of the plot 
+# axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 12}) # outside (R) of the plot 
+axes.legend(loc='upper left', prop={'size': 12})
 axes.set_xlim(0.5, NModules+0.5)
 axes.set_ylim(yMin, yMax)
-plt.title("UV Residuals in "+stationN+" "+eL, fontsize=18)
+# plt.title("UV Residuals in "+stationN+" "+eL, fontsize=18)
+plt.title("UV Residuals in "+tracker[i_station]+" "+eL, fontsize=18)
 plt.ylabel(r"Residual Mean [$\mathrm{\mu}$m]", fontsize=18)
 axes.tick_params(axis="y", labelsize=11)
 axes.tick_params(axis="x", labelsize=11)
