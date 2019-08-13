@@ -12,7 +12,7 @@
 # Created: 9 July 2019 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
 # Modified: 9 July 2019 by Gleb
 #######################################################################
-
+import subprocess, shlex 
 import sys, os, re # print out to terminal 
 from glob import glob
 import numpy as np # arrays 
@@ -70,14 +70,14 @@ sys.stdout = Logger()
 
 ###Define DS and run ranges as a dict
 data_sets = OrderedDict() # keep the same order for Python2
-data_sets["60h"] =  [15921, 15992]
 data_sets["60h"] = [15921, 15992] 
 data_sets["9D"] = [16355, 16539] 
 data_sets["End Game"] = [16908, 17528] 
 data_sets["High Kick" ] = [16110, 16256] 
 data_sets["Low Kick" ] = [16669, 16714] 
 data_sets["Serenity Now"] = [24376, 24462] 
-data_sets["Lazarus"] = [24575, 24688]  
+data_sets["Lazarus"] = [24575, 24688]
+data_sets["Sybil"] = [26053, 26384] 
 
 #Get list of runs as the subdirs (removing the top dir name by splitting)
 station_runs=[[] ,[]] # all runs 
@@ -97,7 +97,7 @@ def getTracks(f, name):
     tracks = tracks.replace("= number of records", "")
     return int(tracks)
 
-def make_plot(colors, colorsS, plotName, font_size, plot_dpi, y_Max, n_rows, globalN, data_sets, main_title, broken=False):
+def make_plot(colors, colorsS, plotName, font_size, plot_dpi, y_Max, n_rows, globalN, data_sets, main_title, broken=False, plot_show=True):
     
     if (broken is False):
         fig, axes = plt.subplots(nrows=n_rows, figsize=(10, 8)) # n_rows subplots, with shared axis if passed 
@@ -154,7 +154,7 @@ def make_plot(colors, colorsS, plotName, font_size, plot_dpi, y_Max, n_rows, glo
                         yMax=np.max(offsets_run[i_global][i_station])
                         yMin=np.min(offsets_run[i_global][i_station])
                     if (plotName=="_relative"):
-                        axes[i_total].plot(list(selected_runs), offsets_run[i_global][i_station][i_module]-np.mean(offsets_run[i_global][i_station][i_module]), marker=".", color=colors[i_module], linewidth=0, label="M"+str(i_module+1))
+                        axes[i_total].plot(list(selected_runs), offsets_run[i_global][i_station][i_module]-np.mean(offsets_run[i_global][i_station][i_module]), marker=".", color=colors[i_module], linewidth=0)
                         axes[i_total].errorbar(list(selected_runs), offsets_run[i_global][i_station][i_module]-np.mean(offsets_run[i_global][i_station][i_module]), yerr=y_error, marker=".", color=colors[i_module], linewidth=0, elinewidth=1, label="M"+str(i_module+1))
                         yMax=np.max(offsets_run[i_global][i_station])
                         yMin=np.min(offsets_run[i_global][i_station])
@@ -190,7 +190,8 @@ def make_plot(colors, colorsS, plotName, font_size, plot_dpi, y_Max, n_rows, glo
             if (globalN==2):
                 i_total+=1 # increment axes counter for alignment plots 
     plt.savefig("Monitoring"+plotName+".png", dpi=plot_dpi)
-    plt.show()
+    if (plot_show):
+        plt.show()
         
 #Welcome message -> Logger 
 print("Summary monitoring plots for S12 and S18:", dirS12, dirS18)
@@ -226,12 +227,37 @@ trackN=[ [], [] ] #Get track number per run
 for i_run, run in enumerate(runs):
     path_s12 = stationPath[0]+"/"+str(run)+"/"
     path_s18 = stationPath[1]+"/"+str(run)+"/"
-    file_s12 = open (path_s12+"millepede.log", "r")
-    file_s18 = open (path_s18+"millepede.log", "r")
-    tracks = [getTracks(file_s12, "\s+NREC\s+=\s+"), getTracks(file_s18, "\s+NREC\s+=\s+")]
+    #print(run)
     file_s12 = open (path_s12+"millepede.end", "r")
     file_s18 = open (path_s18+"millepede.end", "r")
     status = [int(file_s12.read(8)), int(file_s18.read(8))]
+    # check status is correct - abort and re-run pede otherwise 
+    # 1 = ok
+    # 3 = bad matrix status, removed later 
+    if  ( status[0]==-1 or status[1]==-1 ):
+        print(run, "has incorrect status, check millepede.end and re-run")
+        print("S12",status[0])
+        print("S18",status[1])
+        sys.exit()
+
+        # input("Clear bad data for re-run?")
+        # if (status[0]==-1):
+        #     os.chdir(path_s12)
+        #     subprocess.call(["rm", "millepede.his"])
+        #     subprocess.call(["rm", "millepede.end"])
+        #     subprocess.call(["rm", "OffsetsPerModuleS12.fcl"])
+        #     os.chdir("../../")
+        # if (status[1]==-1):
+        #     os.chdir(path_s18)
+        #     subprocess.call(["rm", "millepede.his"])
+        #     subprocess.call(["rm", "millepede.end"])
+        #     subprocess.call(["rm", "OffsetsPerModuleS18.fcl"])
+        #     os.chdir("../../")        
+
+    # otherwise, use all '1' status  
+    file_s12 = open (path_s12+"millepede.log", "r")
+    file_s18 = open (path_s18+"millepede.log", "r")
+    tracks = [getTracks(file_s12, "\s+NREC\s+=\s+"), getTracks(file_s18, "\s+NREC\s+=\s+")]
     if ( (tracks[0] > int(trackCut) and tracks[1] > int(trackCut)) and ( status[0]!=3 and status[1]!=3 )  ):
         trackN[0].append(tracks[0])
         trackN[1].append(tracks[1])
@@ -295,7 +321,7 @@ y_Max = 12 # for relative plot
 n_rows_array = [4, 4, 1]
 global_n = [2, 2, 1]
 plotName = ["", "_relative", "_tracks"]
-main_title = ["Alignment per run", r"Alignment-$\langle$Alignment$\rangle$ per run", "Tracks used in alignment"]
+main_title = ["Alignment per run", r"Alignment per run-$\langle$Alignment$\rangle$ ", "Tracks used in alignment"]
 
 #Produce the 3 plots: absolute, relative and trackN
 # for i_state in range(stateN):
@@ -303,6 +329,6 @@ main_title = ["Alignment per run", r"Alignment-$\langle$Alignment$\rangle$ per r
 
 #Produce 2 broken axis plots for alignment
 for i_state in range(stateN-1):
-    make_plot(colors, colorsS, plotName[i_state], font_size, plot_dpi, y_Max, n_rows_array[i_state], global_n[i_state], data_sets, main_title[i_state], broken=False)
+    make_plot(colors, colorsS, plotName[i_state], font_size, plot_dpi, y_Max, n_rows_array[i_state], global_n[i_state], data_sets, main_title[i_state], broken=False, plot_show=True)
 
 print("Monitoring plots are ready!")
