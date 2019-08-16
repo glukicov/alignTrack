@@ -30,7 +30,7 @@ from collections import OrderedDict
 parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-s12', '--dirS12', help='top directory', type=str) 
 parser.add_argument('-s18', '--dirS18', help='top directory', type=str) 
-parser.add_argument('-trackCut', '--trackCut', help='top directory', type=int, default=300000)
+parser.add_argument('-trackCut', '--trackCut', help='top directory', type=int, default=250000)
 parser.add_argument('-pedeCut', '--pedeCut', help='top directory', type=bool, default=True)
 args = parser.parse_args()
 dirS12=args.dirS12
@@ -42,7 +42,8 @@ pedeCut=args.pedeCut
 stationPath = (dirS12, dirS18)
 stationN = len(stationPath)
 stations=("S12", "S18")
-tracker=("Tracker 1", "Tracker 2")
+# tracker=("Tracker 1", "Tracker 2")
+tracker=stations
 moduleN = 8 # per station 
 fileName = "OffsetsPerModule"
 fileExt = ".fcl"
@@ -71,10 +72,10 @@ sys.stdout = Logger()
 ###Define DS and run ranges as a dict
 data_sets = OrderedDict() # keep the same order for Python2
 data_sets["60h"] = [15921, 15992] 
-data_sets["9D"] = [16355, 16539] 
-data_sets["End Game"] = [16908, 17528] 
 data_sets["High Kick" ] = [16110, 16256] 
-data_sets["Low Kick" ] = [16669, 16714] 
+data_sets["9D"] = [16355, 16539] 
+data_sets["Low Kick" ] = [16669, 16714]
+data_sets["End Game"] = [16908, 17528] 
 data_sets["Serenity Now"] = [24376, 24462] 
 data_sets["Lazarus"] = [24575, 24688]
 data_sets["Sybil"] = [26053, 26384] 
@@ -227,7 +228,7 @@ trackN=[ [], [] ] #Get track number per run
 for i_run, run in enumerate(runs):
     path_s12 = stationPath[0]+"/"+str(run)+"/"
     path_s18 = stationPath[1]+"/"+str(run)+"/"
-    #print(run)
+    # print(run)
     file_s12 = open (path_s12+"millepede.end", "r")
     file_s18 = open (path_s18+"millepede.end", "r")
     status = [int(file_s12.read(8)), int(file_s18.read(8))]
@@ -329,6 +330,6 @@ main_title = ["Alignment per run", r"Alignment per run-$\langle$Alignment$\rangl
 
 #Produce 2 broken axis plots for alignment
 for i_state in range(stateN-1):
-    make_plot(colors, colorsS, plotName[i_state], font_size, plot_dpi, y_Max, n_rows_array[i_state], global_n[i_state], data_sets, main_title[i_state], broken=False, plot_show=True)
+    make_plot(colors, colorsS, plotName[i_state], font_size, plot_dpi, y_Max, n_rows_array[i_state], global_n[i_state], data_sets, main_title[i_state], broken=True, plot_show=False)
 
 print("Monitoring plots are ready!")
