@@ -1,0 +1,52 @@
+%Bold math in titles etc. 
+\makeatletter
+\g@addto@macro\bfseries\boldmath 
+\makeatother
+
+%
+% Some commonly used definitions
+%
+\def\urltilda{\kern -.15em\lower .7ex\hbox{\~{}}\kern .04em}
+\def\urldot{\kern -.10em.\kern -.10em}
+\def\urlhttp{http\kern -.10em\lower -.1ex\hbox{:}\kern -.12em\lower 0ex\hbox{/}\kern -.18em\lower 0ex\hbox{/}}
+\def\quarter{{$\nicefrac{1}{4}$}}
+\def\half{{$\nicefrac{1}{2}$}}
+\def\gm2{{\texttt{g-2}}\xspace}
+\def\cpp{{\texttt{C++}}\xspace}
+\def\fortran{{\texttt{Fortran}}\xspace}
+\def\mp2{{\texttt{Millepede-II}}\xspace}
+\def\pede{{\texttt{PEDE}}\xspace}
+\def\python{{\texttt{Python}}\xspace}
+\def\mille{{\texttt{Mille}}\xspace}
+\def\geant{{\texttt{GEANT}}\xspace}
+\def\art{{\textit{art}}\xspace}
+\def\tms{{\SI{30}{\micro\second}}\xspace}
+\def\fom{{figure-of-merit}\xspace}
+\def\cs{{cross-section}\xspace}
+\def\Ro{{Run-1}\xspace}
+\def\Rt{{Run-2}\xspace}
+\def\Rtr{{Run-3}\xspace}
+\def\Rf{{Run-4}\xspace}
+\def\S{{Sec.}\xspace}
+\def\C{{Ch.}\xspace}
+\def\F{{Fig.}\xspace}
+\def\E{{Eq.}\xspace}
+\def\T{{Tab.}\xspace}
+\def\Ss{{Secs.}\xspace}
+\def\Cs{{Chs.}\xspace}
+\def\Fs{{Figs.}\xspace}
+\def\Es{{Eqs.}\xspace}
+\def\Ts{{Tabs.}\xspace}
+
+\newcommand{\eV}{\text{e\kern-0.15ex V}\xspace}
+\newcommand{\MeV}{\text{M\eV}\xspace}
+\newcommand{\GeV}{\text{G\eV}\xspace}
+\newcommand{\TeV}{\text{T\kern-0.1ex \eV}\xspace}
+
+\newcommand{\rnge}{\text{--}}
+
+% \newcommand{\mue[1]}{{\tt Mu{#1}e}\xspace}
+% \newcommand{\gbp[1]}{\pounds\kern 0.08333em{#1}}\xspace
+% \newcommand{\eu[1]}{\euro\kern 0.08333em{#1}\xspace}
+% \newcommand{\usd[1]}{\$\kern 0.08333em{#1}\xspace}
+

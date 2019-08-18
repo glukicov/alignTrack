@@ -1,0 +1,8 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Methodology of the alignment of the trackers}{}% 2
+\BOOKMARK [1][-]{section.3}{Alignment results}{}% 3
+\BOOKMARK [1][-]{section.4}{Software Methods}{}% 4
+\BOOKMARK [2][-]{subsection.4.1}{Run iterative internal alignment on a single run with residual verification}{section.4}% 5
+\BOOKMARK [2][-]{subsection.4.2}{Run internal alignment monitoring}{section.4}% 6
+\BOOKMARK [2][-]{subsection.4.3}{Run internal alignment to establish constants for a run interval}{section.4}% 7
+\BOOKMARK [1][-]{section.5}{Alignment constants and the reconstruction database}{}% 8
