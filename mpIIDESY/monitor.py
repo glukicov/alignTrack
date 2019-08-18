@@ -155,7 +155,8 @@ def make_plot(colors, colorsS, plotName, font_size, plot_dpi, y_Max, n_rows, glo
                         yMax=np.max(offsets_run[i_global][i_station])
                         yMin=np.min(offsets_run[i_global][i_station])
                     if (plotName=="_relative"):
-                        axes[i_total].plot(list(selected_runs), offsets_run[i_global][i_station][i_module]-np.mean(offsets_run[i_global][i_station][i_module]), marker=".", color=colors[i_module], linewidth=0)
+                        relative_offset = offsets_run[i_global][i_station][i_module]-np.mean(offsets_run[i_global][i_station][i_module])
+                        axes[i_total].plot(list(selected_runs), relative_offset, marker=".", color=colors[i_module], linewidth=0)
                         axes[i_total].errorbar(list(selected_runs), offsets_run[i_global][i_station][i_module]-np.mean(offsets_run[i_global][i_station][i_module]), yerr=y_error, marker=".", color=colors[i_module], linewidth=0, elinewidth=1, label="M"+str(i_module+1))
                         yMax=np.max(offsets_run[i_global][i_station])
                         yMin=np.min(offsets_run[i_global][i_station])
@@ -305,6 +306,26 @@ for i_global in range(0, globalN):
             for i_run in range(0, runN):
                 offsets_run[i_global][i_station][i_module][i_run]=offsets[i_global][i_station][i_run][i_module]
 
+# write offsets to file for Chi2 fit 
+##f=  open("all_offsets.csv", "w+")
+# chi2_sum = [ [0, 0], [0, 0] ]
+# chi2_error = [ [0.7, 0.7], [4, 4 ] ]
+# for i_global in range(0, globalN):
+#     for i_station in range(0, stationN):
+#         for i_run in range(0, runN):
+#             for i_module in range(0, moduleN):
+#                 relative_offset = offsets_run[i_global][i_station][i_module][i_run]-np.mean(offsets_run[i_global][i_station][i_module])
+#                 ##f.write(str(relative_offset)+" ")
+#                 chi2_sum[i_global][i_station] += relative_offset**2/chi2_error[i_global][i_station]**2
+#                 ##print(chi2_sum[i_global][i_station])
+#                 ##if (i_module == 7):
+#                     #f.write("\n")
+
+# for i_global in range(0, globalN):
+#     for i_station in range(0, stationN):
+#         print("Chi2:",chi2_sum[i_global][i_station]/(runN-1),"for:",GlobalParNames[i_global],stations[i_station])
+#         print(runN)
+
 ##### Plotting
 #First plot: nominal values
 #Second plot: relative to the first run in monitor
@@ -330,6 +351,6 @@ main_title = ["Alignment per run", r"Alignment per run-$\langle$Alignment$\rangl
 
 #Produce 2 broken axis plots for alignment
 for i_state in range(stateN-1):
-    make_plot(colors, colorsS, plotName[i_state], font_size, plot_dpi, y_Max, n_rows_array[i_state], global_n[i_state], data_sets, main_title[i_state], broken=True, plot_show=False)
+    make_plot(colors, colorsS, plotName[i_state], font_size, plot_dpi, y_Max, n_rows_array[i_state], global_n[i_state], data_sets, main_title[i_state], broken=False, plot_show=False)
 
 print("Monitoring plots are ready!")
