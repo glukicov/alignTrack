@@ -82,7 +82,10 @@ def main():
         arrayString = [str(i) for i in lineString.split()] # remove spaces 
         pars.append(int(arrayString[0]))
         pede_results.append((float(arrayString[1])*1000)) #mm to the nearest um / rad -> mrad
-        pede_errors.append((float(arrayString[4])*1000)) #mm to the nearest um  / rad -> mrad 
+        if (len(arrayString) < 4):
+             pede_errors.append(0) # no error if parameter is fixed 
+        else:
+            pede_errors.append((float(arrayString[4])*1000)) #mm to the nearest um  / rad -> mrad 
 
     # combine into a data structure 
     results=[pars, pede_results, pede_errors]
