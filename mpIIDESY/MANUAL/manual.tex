@@ -143,7 +143,7 @@ The uncertainty on the beam extrapolation due to the misalignment was estimated 
 A key point to note from the documents listed above is that the alignment is an iterative process. A preliminary alignment constants (i.e. module positions) from iteration 1 are used for re-tracking, with alignment at iteration 2 and beyond taking improved tracks as in input for the LSF. Three iterations are usually enough to reach convergence, which is seen as $\delta\boldsymbol{a} \rightarrow 0$. The iterations mentioned here are external to the \texttt{Millepede-II} framework, which has its own internal iterations for matrix inversion and LSF; description of \texttt{Millepede-II} is beyond the scope of this document, and is contained in the official manual \cite{mp2}.   
 
 \section{Software Methods}
-The alignment software is part of the \verb!gm2tracker! project: \verb!gm2tracker/align/!. An alignment software module has been developed as part of the \textit{gm2 art} software framework. This module comes last in the tracking chain, taking the final track-data product (\verb!TrackArtRecords_tracks!) from either data or simulation. The geometry is fully described at the tracking stage and is passed to the alignment module in the \verb!beginRun()! function. The alignment module (\verb!TrackerAlignment!) calculates the residuals of the selected tracks, as well as computes the local and global derivatives \textbf{(see backup of \href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=11331}{DocDB:11331})}. A \verb!C++! infrastructure (\texttt{Mille}) is provided \cite{mp2} to write this information into a binary file (\textbf{alignment data}) which is passed to \texttt{PEDE} (a \texttt{Fortran} executable), which performs a simultaneous LST via a matrix inversion. The alignment module is also responsible for writing a constraints file (specifying the redundant degrees of freedom), and a steering file (specifying the mathematical methods used by \texttt{PEDE}). The final outputs of the \texttt{PEDE} algorithm are labels and the corresponding fitted values of the global parameters (module positions) and their errors, if applicable. This algorithm is shown in Fig.~\ref{fig:mp2}.\\
+The alignment software is part of the \verb!gm2tracker! project: \verb!gm2tracker/align/!. An alignment software module has been developed as part of the \textit{gm2 art} software framework. This module comes last in the tracking chain, taking the final track-data product (\verb!TrackArtRecords_tracks!) from either data or simulation. The geometry is fully described at the tracking stage and is passed to the alignment module in the \verb!beginRun()! function. The alignment module (\verb!TrackerAlignment!) calculates the residuals of the selected tracks, as well as computes the local and global derivatives \textbf{(see backup of \href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=11331}{DocDB:11331})}. A \verb!C++! infrastructure (\texttt{Mille}) is provided \cite{mp2} to write this information into a binary file (\textbf{alignment data}) which is passed to \texttt{PEDE} (a \texttt{Fortran} executable), which performs a simultaneous LSF via a matrix inversion. The alignment module is also responsible for writing a constraints file (specifying the redundant degrees of freedom), and a steering file (specifying the mathematical methods used by \texttt{PEDE}). The final outputs of the \texttt{PEDE} algorithm are labels and the corresponding fitted values of the global parameters (module positions) and their errors, if applicable. This algorithm is shown in Fig.~\ref{fig:mp2}.\\
 \begin{figure}[h!]
     \centering
     \includegraphics[scale = 0.44]{fig/MP2.png}
@@ -173,7 +173,7 @@ The following cuts were used to select tracks, from simulation or data, to be us
 The \texttt{PEDE}, which a \texttt{Fortran} executable, is not part of art. The produced binary data can be passed to a standalone \texttt{PEDE} installation on \texttt{gm2gpvm}. The instruction to install \texttt{PEDE} are located on the \textbf{\href{https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework}{gm2tracker Redmine WIKI}}. 
 
 \subsection{Controlling \texttt{PEDE}} 
-The \texttt{PEDE} is controlled via steering file, which, as well as the constraints file, are produced automatically via the \verb!TrackerAlignment! module:
+The \texttt{PEDE} is controlled via a steering file, which, as well as the constraints file, are produced automatically via the \verb!TrackerAlignment! module:
 \lstinputlisting[language=Bash]{Steer.sh}
 \clearpage
 
@@ -181,7 +181,7 @@ The constraint equation is given by
 \begin{equation}
         c = \sum_i^N l_i\cdot f_l,
 \end{equation}
-where $c$ is is the constraint value, $l$ is the global parameter label, $f$ is the parameter factor, and the summation is taken over the parameters contributing the constraint. In the particular case of the alignment of the tracking detector radially and vertically with curved tracks in a magnetic field, five global degrees of freedom must be fixed by the constraints. There are two overall translations, radially and vertically, that must sum to 0, as well as two global angles of rotations, which are also fixed at 0. The global rotation is defined through the centre of the station. This is done to minimise the \say{lever arm effect}. The fifth constraint deals with the radial \textit{bowing effect} due to the radially curving tracks in the magnetic field. The constraint equations can be formulated as follows, for example for station 12:
+where $c$ is is the constraint value, $l$ is the global parameter label, $f$ is the parameter factor, and the summation is taken over the parameters contributing to the constraint. In the particular case of the alignment of the tracking detector radially and vertically with curved tracks in a magnetic field, five global degrees of freedom must be fixed by the constraints. There are two overall translations, radially and vertically, that must sum to 0, as well as two global angles of rotations, which are also fixed at 0. The global rotation is defined through the centre of the station. This is done to minimise the \say{lever arm effect}. The fifth constraint deals with the radial \textit{bowing effect} due to the radially curving tracks in the magnetic field. The constraint equations can be formulated as follows, for example for station 12:
 \begin{enumerate}
     \item No overall radial translation
     \begin{equation}
@@ -210,7 +210,7 @@ and the vertical constraints equation
 \end{equation}
 where $x_0=\SI{482.394}{\milli\metre}$ is the centre of the station.
 
-The motivation behind constraining the overall translations and rotations is simple: internal alignment should not return the module offsets related to the global movements. These global movements should be independently measured by the global Alignment. The constraint on the radial bowing effect deserves a special mention, as it is essentially a \say{local minima problem}: the internal alignment can place the tracker modules along a curved path, as the residuals will be unchanged. This radial detector curvature, however, will change the measurement of the momentum of the tracks, and the extrapolated radial position. The detector curvature, therefore, must be measured and eliminated by another means, as described in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=18625}{DocDB:18625}}.
+The motivation behind constraining the overall translations and rotations is simple: internal alignment should not return the module offsets related to the global movements. These global movements have been independently measured\footnote{Global alignment was established by Joe, Leah, and Horst.} by the global alignment \cite{Joe}. The constraint on the radial bowing effect deserves a special mention, as it is essentially a \say{local minima problem}: the internal alignment can place the tracker modules along a curved path, as the residuals will be unchanged. This radial detector curvature, however, will change the measurement of the momentum of the tracks, and the extrapolated radial position. The detector curvature, therefore, must be measured and eliminated by another means, as described in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=18625}{DocDB:18625}}.
 
 
 \subsection{Ancillary scripts}
@@ -219,7 +219,7 @@ There is a lot of developed infrastructure to simplify the alignment routines in
     \item \verb!GetRes.py!: Produces residual plots on \verb!trackRecoPlots.root! 
     \item \verb!GetRes_Iter.py!:  Produces residual comparison plots before and after alignment 
     \item \verb!RobustTrackerLaunch.py!: Produces a visual representation of the modules offsets and produces \verb!OffsetsPerModule.fcl! file that can be used for re-tracking  
-    \item \verb!Rename.sh!: Renames \verb!.root! files into \verb!.bin! on the retuned alignment data files form the grid. See \textbf{\href{https://redmine.fnal.gov/redmine/projects/g-2/wiki/Job_Running_Submission_FAQ\#What-if-I-would-like-to-retrieve-output-files-with-different-extension-like-a-binary-file-bin-produced-by-my-jobs}{Grid Wiki: "What if I would like to retrieve output file(s) with different extension? like a binary file (.bin) produced by my jobs?"}} and \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=18826}{DocDB:18826}} 
+    \item \verb!Rename.sh!: Renames \verb!.root! files into \verb!.bin! on the returned alignment data files form the grid. See \textbf{\href{https://redmine.fnal.gov/redmine/projects/g-2/wiki/Job_Running_Submission_FAQ\#What-if-I-would-like-to-retrieve-output-files-with-different-extension-like-a-binary-file-bin-produced-by-my-jobs}{Grid Wiki: "What if I would like to retrieve output file(s) with different extension? like a binary file (.bin) produced by my jobs?"}} and \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=18826}{DocDB:18826}} 
     \item \verb!PEDEParallel.py!: Produces multiple steering files and runs \texttt{PEDE} in parallel on many runs 
        \item \verb!monitor.py!: Produces the final monitoring plot across many runs 
 \end{itemize}
@@ -279,26 +279,29 @@ The goal here is to check that across an entire dataset or a whole Run (e.g. Run
       python gm2tracker/align/macros/PEDEParallel.py --mode=prepare --inputData=gm2pro_daq_full_run1_60h_5037A_goldList/S12/DATE/data/ \end{lstlisting}
       \item Run the same script in \verb!pede! and then \verb!align! modes to first run \verb!PEDE! and then \verb!RobustTrackerLaunch.py! on each run
         \begin{lstlisting}[language=bash]
-      python gm2tracker/align/macros/PEDEParallel.py --mode=pede --inputData=gm2pro_daq_full_run1_60h_5037A_goldList/S12/DATE/data/ 
-      python gm2tracker/align/macros/PEDEParallel.py --mode=align --inputData=gm2pro_daq_full_run1_60h_5037A_goldList/S12/DATE/data/\end{lstlisting}
+      python gm2tracker/align/macros/PEDEParallel.py --mode=pede --inputData=gm2pro_daq_full_run1_60h_5037A_goldList/S12/DATE/data/Monitoring/ 
+      python gm2tracker/align/macros/PEDEParallel.py --mode=align --inputData=gm2pro_daq_full_run1_60h_5037A_goldList/S12/DATE/data/Monitoring/\end{lstlisting}
        \item Finally, produce a monitoring plot as shown in Fig.~\ref{fig:60h}.
       \begin{lstlisting}[language=bash]
-      python3 $MP2/monitor.py -s12 S12/ -s18 S18 --trackCut=250000 \end{lstlisting}
+      python $MP2/monitor.py -s12 S12/ -s18 S18 \end{lstlisting}
     \end{enumerate}
     \begin{figure}[tbp]
     \centering
     \includegraphics[width = 0.6\linewidth]{fig/60h.png}
-    \caption{Radial alignment results in the eight modules of station 12 across 60 hours of g-2 data.}
+    \caption{Radial alignment results in the eight modules of station 12 across 60 hours of $g-2$ data.}
     \label{fig:60h}
     \end{figure}
 
-
 \subsection{Run alignment to establish constants for a run interval}
-The methodology is the same as in Sc.~\ref{sub:run_iterative}. However, a larger subset of data should be used with $\sim8$ runs ($\sim$3 million tracks). As soon as a module is physically swapped in a station, or removed even for a short time, a new IoV, and new constants, are required. However, the non-swapped modules should have the same offsets and set as \textit{fixed} in the new \textit{parameter file}. That is, we will only perform alignment on the swapped modules. For alignment with a single module, since the number of degrees of freedom is reduced, a constraint file is no longer necessary. The new steering file is
+The methodology is the same as in Sc.~\ref{sub:run_iterative}. However, a larger subset of data should be used with $\sim8$ runs ($\sim$3 million tracks). 
+
+As soon as a module is physically swapped in a station, or removed even for a short time, a new IoV, and new constants, are required. However, the non-swapped modules should have the same offsets and set as \textit{fixed} in the new \textit{parameter file}. That is, we will only perform alignment on the swapped modules. For alignment with a single module, since the number of degrees of freedom is reduced, a constraint file is no longer necessary. Tracking must be performed without loading any alignment constants.
+The new steering file is
 \lstinputlisting[language=Bash]{Steer2.sh}
 \clearpage
 While the newly added parameter file fixes all other modules at their previously established positions, and only performs alignment on, for example, module 6 (N.B. alignment counts modules from 1, due to the underlying Fortran code in \textit{PEDE}, convention used in tracking software starts counting from 0, as is sensible)
 \lstinputlisting[language=Bash]{ParameterFile.sh}
+For iteration 2 onwards, the above offsets must be added to the \verb!RunTrackingDAQ.fcl!, together with the newly derived offsets for module 6 (in this example), and the parameter file updated with $0.0$ for all fixed modules instead of their original offsets.
 
 \section{Alignment constants and the reconstruction database}
 The alignment constants are now used in the $gm2geom$ from the next release: \verb!v9_28_00! or \verb!v9_27_01!. Once DB methods are established, the alignment constants will migrate to the production DB with the IoV tables. 
@@ -307,7 +310,10 @@ The alignment constants are now used in the $gm2geom$ from the next release: \ve
 
 \begin{thebibliography}{99}
 
-\bibitem{mp2} V. Blobel \textit{Software Alignment for Tracking Detectors}, Nucl. Instrum. Methods A, \textbf{556}, 5 (2006).
+\bibitem{mp2} V. Blobel, \textit{Software alignment for tracking detectors}, Nucl. Instrum. Methods A, \textbf{556}, 5 (2006).
+
+\bibitem{Joe} J. Price, \textit{Global alignment}, \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=16063}{DocDB:16063}}, (2019).
+
 
 \end{thebibliography}
 
