@@ -1,5 +1,4 @@
 * g-2 Tracker Alignment: PEDE Steering File
-
 ParameterFile.txt ! Non-swapped modules are fixed here 
 Cfiles ! Following bin files are Cfiles
 Data.bin ! Binary data file

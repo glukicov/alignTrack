@@ -139,12 +139,12 @@ for i in range(0, len(moduleNames)):
 
 line = [[0.5,0.0], [NModules+0.5, 0.0]]
 plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=1)
-# axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 12}) # outside (R) of the plot 
-axes.legend(loc='upper left', prop={'size': 12})
+axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 12}) # outside (R) of the plot 
+# axes.legend(loc='upper left', prop={'size': 12})
 axes.set_xlim(0.5, NModules+0.5)
 axes.set_ylim(yMin, yMax)
-# plt.title("UV Residuals in "+stationN+" "+eL, fontsize=18)
-plt.title("UV Residuals in "+tracker[i_station]+" "+eL, fontsize=18)
+plt.title("UV Residuals in "+stationN+" "+eL, fontsize=18)
+# plt.title("UV Residuals in "+tracker[i_station]+" "+eL, fontsize=18)
 plt.ylabel(r"Residual Mean [$\mathrm{\mu}$m]", fontsize=18)
 axes.tick_params(axis="y", labelsize=11)
 axes.tick_params(axis="x", labelsize=11)

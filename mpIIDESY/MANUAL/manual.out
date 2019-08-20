@@ -1,13 +1,14 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section.2}{Methodology of the alignment of the trackers}{}% 2
 \BOOKMARK [1][-]{section.3}{Alignment results and references}{}% 3
-\BOOKMARK [1][-]{section.4}{Software Methods}{}% 4
+\BOOKMARK [1][-]{section.4}{Software methods}{}% 4
 \BOOKMARK [2][-]{subsection.4.1}{Alignment module: TrackerAlignment}{section.4}% 5
 \BOOKMARK [2][-]{subsection.4.2}{Tracking cuts for alignment}{section.4}% 6
 \BOOKMARK [2][-]{subsection.4.3}{Installing PEDE}{section.4}% 7
 \BOOKMARK [2][-]{subsection.4.4}{Controlling PEDE}{section.4}% 8
 \BOOKMARK [2][-]{subsection.4.5}{Ancillary scripts}{section.4}% 9
-\BOOKMARK [2][-]{subsection.4.6}{Run iterative alignment on a single run with residual verification}{section.4}% 10
-\BOOKMARK [2][-]{subsection.4.7}{Run alignment monitoring}{section.4}% 11
-\BOOKMARK [2][-]{subsection.4.8}{Run alignment to establish constants for a run interval}{section.4}% 12
-\BOOKMARK [1][-]{section.5}{Alignment constants and the reconstruction database}{}% 13
+\BOOKMARK [2][-]{subsection.4.6}{Run alignment locally}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.7}{Run iterative alignment on a single run with residual verification}{section.4}% 11
+\BOOKMARK [2][-]{subsection.4.8}{Run alignment monitoring}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.9}{Run alignment to establish constants for a run interval}{section.4}% 13
+\BOOKMARK [1][-]{section.5}{Alignment constants and the reconstruction database}{}% 14

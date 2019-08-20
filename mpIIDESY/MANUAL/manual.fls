@@ -135,6 +135,13 @@ INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/caption/ltcaption.sty
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/caption/ltcaption.sty
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/eurosym/eurosym.sty
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/eurosym/eurosym.sty
+INPUT /usr/local/texlive/2018/texmf-dist/tex/generic/babel/babel.sty
+INPUT /usr/local/texlive/2018/texmf-dist/tex/generic/babel/babel.sty
+INPUT /usr/local/texlive/2018/texmf-dist/tex/generic/babel/switch.def
+INPUT /usr/local/texlive/2018/texmf-dist/tex/generic/babel-english/english.ldf
+INPUT /usr/local/texlive/2018/texmf-dist/tex/generic/babel-english/english.ldf
+INPUT /usr/local/texlive/2018/texmf-dist/tex/generic/babel/babel.def
+INPUT /usr/local/texlive/2018/texmf-dist/tex/generic/babel/txtbabel.def
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/lm/lmodern.sty
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/lm/lmodern.sty
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/listings/listings.sty
@@ -267,8 +274,14 @@ INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmr12.tfm
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmbx12.tfm
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/lm/omslmr.fd
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/lm/omslmr.fd
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/lmsy10.tfm
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/lm/omllmr.fd
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/lm/omllmr.fd
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/lmmib10.tfm
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/lmmi10.tfm
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmss10.tfm
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmtt10.tfm
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/ts1-lmr10.tfm
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmtk10.tfm
 INPUT Steer.sh
 INPUT /usr/local/texlive/2018/texmf-dist/tex/latex/listings/lstlang1.sty
@@ -289,6 +302,7 @@ INPUT CurveCont.sh
 INPUT fig/Align_Data.png
 INPUT ./fig/Align_Data.png
 INPUT ./fig/Align_Data.png
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmtk10.tfm
 INPUT fig/Res_Data.png
 INPUT ./fig/Res_Data.png
 INPUT ./fig/Res_Data.png
@@ -301,6 +315,8 @@ INPUT Steer2.sh
 INPUT ParameterFile.sh
 INPUT ParameterFile.sh
 INPUT ParameterFile.sh
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmri10.tfm
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/lm/rm-lmbx10.tfm
 INPUT manual.aux
 INPUT ./manual.out
 INPUT ./manual.out
@@ -324,7 +340,9 @@ INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmr17.pfb
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmr6.pfb
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmr7.pfb
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmr8.pfb
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmri10.pfb
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmri12.pfb
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmsy10.pfb
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmtk10.pfb
+INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmtt10.pfb
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmtt12.pfb
