@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1566283686 "manual.tex" "manual.pdf" "manual" 1566283689
+["pdflatex"] 1566326381 "manual.tex" "manual.pdf" "manual" 1566326383
   "/usr/local/texlive/2018/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc" 1480098668 3486 c7eadf5dcc57b3b2d11736679f6636ba ""
   "/usr/local/texlive/2018/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc" 1480098668 2405 5dcf2c1b967ee25cc46c58cd52244aed ""
   "/usr/local/texlive/2018/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc" 1480098668 2840 216e6e45ad352e2456e1149f28885bee ""
@@ -180,14 +180,14 @@
   "fig/Res_Data.png" 1566181854 46347 57eeb6a1fdbc5bb5bdd62a176df16ce3 ""
   "fig/internal_rad.png" 1566084608 144729 ba6289a3c6dd43ae51694eb148f7c2fa ""
   "fig/rotAxis.png" 1566087453 569473 c8b5b2e97927fe5b6c9d9f9aba33f632 ""
-  "manual.aux" 1566283688 6458 4673f0d9095d823f40bf023595ff3a7d ""
-  "manual.out" 1566283688 1051 bf1fc6c86a2c7d426c268d39977a1f87 ""
-  "manual.tex" 1566283686 29296 ca7f2bca843ac5e7b282e2e3ef618a24 ""
-  "manual.toc" 1566283688 1337 a06cc3b4f87ec95a0789afeb149f9a05 ""
+  "manual.aux" 1566326383 6379 4ba4bdd6f0c7c6b3fa29aba89fa89488 ""
+  "manual.out" 1566326383 1001 ef1607c1d96a4b6886eeffd2019d13d1 ""
+  "manual.tex" 1566326381 29472 1fded8c27f41ee825be438c2b8f88a28 ""
+  "manual.toc" 1566326383 1262 d08a90168dbe2d5c6e16251f24f7edcd ""
   (generated)
   "manual.pyg"
-  "manual.aux"
-  "manual.out"
   "manual.toc"
-  "manual.pdf"
+  "manual.out"
   "manual.log"
+  "manual.aux"
+  "manual.pdf"

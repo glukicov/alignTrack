@@ -143,7 +143,7 @@ where $\boldsymbol{a_0}$ and $\boldsymbol{b_0}$ are the initially assumed geomet
 \section{Alignment results and references}
 In simulation (MDC1), alignment stability was reached, and alignment convergence within \SI{2}{\micro\metre} and \SI{10}{\micro\metre} radially and vertically, respectively, was established as shown in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=17551}{DocDB:17551}}. Stable alignment results and improved residuals in data, using run 15922, were reached as shown in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=17722}{DocDB:17722}}.
 
-Stability of the alignment constants across 3 intervals of validity (IoV) of Run-1 and Run-2 are shown in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=19297}{DocDB:19297}}.
+Stability of the alignment constants across 3 intervals of validity (IoV) of Run-1 and Run-2 are shown in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=19294}{DocDB:19294}}.
 
 A more detailed description of the alignment methods is contained in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=15106}{DocDB:15106}} (\textbf{see backup also}). More details can also be found in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=9245}{DocDB:9245} (toy model in 2D)}, \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=11331}{DocDB:11331} (residual derivatives)}, \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=15382}{DocDB:15382} (progress in MDC1)}. 
 
@@ -166,7 +166,7 @@ The \textit{producer} alignment module is controlled by a FHICL file, for exampl
 
 A \textit{dubug} mode is available when not monitoring the alignment over large datasets, with \verb!monitoring : false!. This way, a \verb!ROOT! file with debug plots will be produced. One must also set: \\
 \lstinline{outputCommands : [``drop *'', ``keep gm2strawtracker::TrackerAlignmentArtRecords_*_*_*'']} \\
-in the FHICL file, as well as add \lstinline{plotsPath : [ outputArtRootFile ]}, to produce the \verb!gm2tracker_reco.root! file, from which analysis-level plots can be produced with \verb!RunAlignmentPlots.fcl!. The data product for the alignment is described in \\ \verb!gm2dataproducts/strawtracker/TrackerAlignmentArtRecord.hh!.   
+in the FHICL file, as well as add \lstinline{plotsPath : [ outputArtRootFile ]}, to produce the \verb!gm2tracker_reco.root! file, from which analysis-level alignment plots \\ (\verb!TrackerAlignment.root!) can be produced with \verb!RunAlignmentPlots.fcl!. \\The data product for the alignment is described in \\ \verb!gm2dataproducts/strawtracker/TrackerAlignmentArtRecord.hh!.   
 
 \subsection{Tracking cuts for alignment}
 The following cuts were used to select tracks, from simulation or data, to be used in the alignment framework:
@@ -178,10 +178,8 @@ The following cuts were used to select tracks, from simulation or data, to be us
     \item \textbf{\nicefrac{Pz}{P} \textgreater~ 0.93.} Tracks that have large curvature are removed.
 \end{itemize}
 
-\subsection{Installing \texttt{PEDE}} 
+\subsection{Installing and controlling \texttt{PEDE}} 
 The \texttt{PEDE}, which a \texttt{Fortran} executable, is not part of art. The produced binary data can be passed to a standalone \texttt{PEDE} installation on \texttt{gm2gpvm}. The instruction to install \texttt{PEDE} are located on the \textbf{\href{https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework}{gm2tracker Redmine WIKI}}. 
-
-\subsection{Controlling \texttt{PEDE}} 
 The \texttt{PEDE} is controlled via a steering file, which, as well as the constraints file, are produced automatically via the \verb!TrackerAlignment! module:
 \lstinputlisting[language=Bash]{Steer.sh}
 \clearpage
@@ -225,15 +223,15 @@ The motivation behind constraining the overall translations and rotations is sim
 \subsection{Ancillary scripts}
 There is a lot of developed infrastructure to simplify the alignment routines in \\ \verb!gm2tracker/align/macros/!. Some of the essential scripts are summarised here: 
 \begin{itemize}\setlength\itemsep{0.05em}\small
-    \item \verb!GetRes.py!: Produces residual plots\footnote{S12 and S18 must be specified for GeanePlots, as in the align/fcl/RunTrackingPlots\_align.fcl} on \verb!trackRecoPlots.root! 
-    \item \verb!GetRes_Iter.py!: Produces residual comparison plots before and after alignment 
+    \item \verb!GetRes.py!: Produces residual plots\footnote{S12 and S18 must be specified for GeanePlots, as in the align/fcl/RunTrackingPlots\_align.fcl} on \verb!trackRecoPlots.root! or \verb!TrackerAlignment.root!
+    \item \verb!GetRes_Iter.py!: Produces residual comparison plots before and after alignment from two \verb!TrackerAlignment.root! files
     \item \verb!RobustTrackerLaunch.py!: Produces a visual representation of the modules offsets and produces \verb!OffsetsPerModule.fcl! file that can be used for re-tracking  
     \item \verb!Rename.sh!: Renames \verb!.root! files into \verb!.bin! on the returned alignment data files form the grid. See \textbf{\href{https://redmine.fnal.gov/redmine/projects/g-2/wiki/Job_Running_Submission_FAQ\#What-if-I-would-like-to-retrieve-output-files-with-different-extension-like-a-binary-file-bin-produced-by-my-jobs}{Grid Wiki: "What if I would like to retrieve output file(s) with different extension? like a binary file (.bin) produced by my jobs?"}} and \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=18826}{DocDB:18826}} 
     \item \verb!PEDEParallel.py!: Produces multiple steering files and runs \texttt{PEDE} in parallel on many runs 
        \item \verb!monitor.py!: Produces the final monitoring plot across many runs 
 \end{itemize}
 \subsection{Run alignment locally}
-One can start with raw \texttt{MIDAS} data, unpack it (\verb!runStrawUnpacker.fcl!), and reconstruct tracks (\verb!RunTrackingDAQ.fcl!), as described in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=19294}{DocDB:19294}}. The alignment can then be run locally on the tracks (e.g. \verb!run15922_tracks.root!)
+One can start with raw \texttt{MIDAS} data, unpack it (\verb!runStrawUnpacker.fcl!), and reconstruct tracks (\verb!RunTrackingDAQ.fcl!), as described in \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=19297}{DocDB:19297}}. The alignment can then be run locally on the tracks (e.g. \verb!run15922_tracks.root!)
 \begin{lstlisting}[language=bash] 
      gm2 -c trackerAlignment_S18.fcl -s myDataSet_subrun.root \end{lstlisting}
 This will produce \verb!SteeringFile.txt!, \verb!ConstraintFile.txt! and binary data file \verb!Data.bin!. To get the alignment correction for these tracks, \verb!PEDE! is run with
@@ -273,13 +271,15 @@ One can start with raw \texttt{MIDAS} data, unpack it (\verb!runStrawUnpacker.fc
     \end{figure}
      \item Add the resultant \verb!OffsetsPerModuleS18.fcl! to end of the \\ \verb!RunTrackingDAQ_Iteration2.fcl! and re-track on the grid, defining a new dataset \texttt{myDataSetIteration2}
      \item Repeat steps $1-7$, until the results from the current iteration are same as the last one
-      \item Produce the final residual comparison plots, for example, for the first and third iteration as shown in Fig.~\ref{fig:Res_Data}. \textbf{S12 and S18 must be specified for separate instances of GeanePlots, as shown in \small{\texttt{align/fcl/RunTrackingPlots\_align.fcl}}, to produce residuals separately for each station}.
+      \item Produce the final residual comparison plots, for example, for the first and third iteration as shown in Fig.~\ref{fig:Res_Data}. \textbf{S12 and S18 must be specified for separate instances of GeanePlots, as shown in \small{\texttt{align/fcl/RunTrackingPlots\_align.fcl}}, to produce residuals separately for each station}. Alternatively, run directly on \verb!TrackerAlignment.root!
      \begin{lstlisting}[language=bash] 
-     GetRes_Iter.py --fileN1=trackRecoPlot_Iteration1.root --fileN1=trackRecoPlot_Iteration3.root --stationN=S18  \end{lstlisting}
+     GetRes_Iter.py --fileN1=Iter1/TrackerAlignment.root --fileN1=Iter3/TrackerAlignment.root \end{lstlisting}
      \end{enumerate}
+     \vspace{-0.5cm}
      \begin{figure}[ht]
     \centering
     \includegraphics[width = 0.5\linewidth]{fig/Res_Data.png}
+    \vspace{-0.2cm}
     \caption{An improvement in the residual means after the alignment (3 iterations) is clear.}
     \label{fig:Res_Data}
     \end{figure}

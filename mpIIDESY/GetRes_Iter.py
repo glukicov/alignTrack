@@ -1,10 +1,9 @@
 ####################################################################
 # Input: TrackerAlignment.root analysis-level TFile after alignment
 # Output: Steerable by args 
-#s 
-# e.g. python3 ../../GetOVPUV.py -m -1 -mode plot 
-# Will produce UV Residuals and Residual SD plots 
-# with no (-1) modules removed 
+#
+# e.g. python GetRes_Iter.py -f1/Iter1/TrackerAlignment.root -f2/Iter3/TrackerAlignment.root
+# Will produce UV Residuals and Residual SD plots per module in a station 
 # 
 # Created: 26 June 2017 by Gleb Lukicov (UCL) g.lukicov@ucl.ac.uk
 # Modified: 26 November 2018 by Gleb
@@ -28,7 +27,6 @@ parser = argparse.ArgumentParser(description='mode')
 parser.add_argument('-m', '--moduleN', help='mode', default=-1) # # of removed module from tracking (if applicable)
 parser.add_argument('-f1', '--fileN1', help='input ROOT file', default="TrackerAlignment.root")
 parser.add_argument('-f2', '--fileN2', help='input ROOT file', default="TrackerAlignment.root")
-parser.add_argument('-s', '--stationN', help='station number')
 parser.add_argument('-eL', '--eL', help='extra label', default="", type=str)
 args = parser.parse_args()
 
@@ -38,28 +36,8 @@ NModules=8
 NLayers=4 # per modules
 tracker=("Tracker 1", "Tracker 2")
 NTotalLayers=32
-stationN=str(args.stationN)
 LayerNames = ["U0", "U1", "V0", "V1"]
-moduleNamesInitial=np.arange(1, NModules+1) #1-8
-layerNamesInitial=np.arange(1, NTotalLayers+1) #1-32
-
-#Dealing with removed module 
-if (int(args.moduleN) != -1):
-    removedModule=int(args.moduleN)
-    moduleNames=np.delete(moduleNamesInitial, removedModule-1) # indexing so -1
-    removedLayers= np.arange(removedModule*4-3,removedModule*4+1)
-    print("removedPlanes ", removedLayers) # Layers: 0, 1... Planes: 1, 2...
-    print("layerNamesInitial", layerNamesInitial)
-    layerNames=np.delete(layerNamesInitial, removedLayers-1) # indexing so -1
-else:
-    removedModule=-1
-    moduleNames=moduleNamesInitial
-    layerNames=layerNamesInitial
-
-print("Getting Plots for", len(moduleNames), "modules: ", moduleNames, "and")
-print(len(layerNames), "planes: ", layerNames)
-
-
+moduleNames=np.arange(1, NModules+1) #1-8
 
 fileName1 = str(args.fileN1)
 fileName2 = str(args.fileN2)
@@ -69,17 +47,15 @@ fileName1_short = fileName1.rsplit('/', 1)[-1]
 fileName2_short = fileName1.rsplit('/', 1)[-1]
 
 regime = None 
-if (fileName1_short == "TrackerAlignment.root" and fileName2_short):
+if (fileName1_short == "TrackerAlignment.root" and fileName2_short== "TrackerAlignment.root"):
     print("Plotting Residuals from Alignment Tracks!")
     regime="align"
-    # input("Correct? [press enter]")
-
-elif (fileName1_short == "gm2tracker_ana.root" and fileName2_short == "gm2tracker_ana.root"):
-    print("Plotting Residuals from Quality Geane Tracks!")
-    regime="track"
-    # input("Correct? [press enter]") 
 else:
-    print("Not expected file name!")
+    print("Not expected input file name!")
+    print("expected both files named:TrackerAlignment.root")
+    print("Please provide TrackerAlingment analysis-level plots.")
+    print("Run alignment FHICL with 'monitor : false' and output gm2tracker_reco.root file")
+    print("RunAlignmentPlots.fcl on that file, and use the result (TrackerAlignment.root) it in this script")
     sys.exit()
 
 f1 = TFile.Open(fileName1)
@@ -117,12 +93,8 @@ plt.figure(71)
 axes = plt.gca()
 for i in range(0, len(moduleNames)):
     i_module=moduleNames[i]
-    #for n in range(0, NLayers):
-        #i_layer=layerNames[i_totalLayer]
     if (regime=="align"):
         name = "TrackerAlignment/Modules/Residuals UV Module " + str(i_module)
-    if (regime=="track"):
-        name = "TrackSummary"+stationN+"/PerPlane/Plane"+str(i_module)+"/Measure Residuals/UVresidualsMeasPred Plane "+str(i_layer)
     t1 = f1.Get(str(name))
     t2 = f2.Get(str(name))
     mean1 = t1.GetMean()
@@ -139,8 +111,8 @@ for i in range(0, len(moduleNames)):
 
 line = [[0.5,0.0], [NModules+0.5, 0.0]]
 plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=1)
-axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 12}) # outside (R) of the plot 
-# axes.legend(loc='upper left', prop={'size': 12})
+# axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 12}) # outside (R) of the plot 
+axes.legend(loc='upper left', prop={'size': 12})
 axes.set_xlim(0.5, NModules+0.5)
 axes.set_ylim(yMin, yMax)
 plt.title("UV Residuals in "+stationN+" "+eL, fontsize=18)

@@ -5,11 +5,10 @@
 \contentsline {section}{\numberline {4}Software methods}{5}{section.4}
 \contentsline {subsection}{\numberline {4.1}Alignment module: TrackerAlignment}{6}{subsection.4.1}
 \contentsline {subsection}{\numberline {4.2}Tracking cuts for alignment}{6}{subsection.4.2}
-\contentsline {subsection}{\numberline {4.3}Installing \texttt {PEDE}}{6}{subsection.4.3}
-\contentsline {subsection}{\numberline {4.4}Controlling \texttt {PEDE}}{6}{subsection.4.4}
-\contentsline {subsection}{\numberline {4.5}Ancillary scripts}{9}{subsection.4.5}
-\contentsline {subsection}{\numberline {4.6}Run alignment locally}{9}{subsection.4.6}
-\contentsline {subsection}{\numberline {4.7}Run iterative alignment on a single run with residual verification}{10}{subsection.4.7}
-\contentsline {subsection}{\numberline {4.8}Run alignment monitoring}{11}{subsection.4.8}
-\contentsline {subsection}{\numberline {4.9}Run alignment to establish constants for a run interval}{13}{subsection.4.9}
+\contentsline {subsection}{\numberline {4.3}Installing and controlling \texttt {PEDE}}{6}{subsection.4.3}
+\contentsline {subsection}{\numberline {4.4}Ancillary scripts}{9}{subsection.4.4}
+\contentsline {subsection}{\numberline {4.5}Run alignment locally}{9}{subsection.4.5}
+\contentsline {subsection}{\numberline {4.6}Run iterative alignment on a single run with residual verification}{10}{subsection.4.6}
+\contentsline {subsection}{\numberline {4.7}Run alignment monitoring}{11}{subsection.4.7}
+\contentsline {subsection}{\numberline {4.8}Run alignment to establish constants for a run interval}{13}{subsection.4.8}
 \contentsline {section}{\numberline {5}Alignment constants and the reconstruction database}{14}{section.5}
