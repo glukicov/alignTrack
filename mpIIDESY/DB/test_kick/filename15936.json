@@ -1,0 +1,22 @@
+{
+"interval_of_validity" : { "run" : 15936 },
+
+"kicker_dqc" : 
+{
+	"columns" : [ "kickerAmplitudeUpperBound","kickerAmplitudeLowerBound","kickerTimingUpperBound","kickerTimingLowerBound","kickerFWHMUpperBound","kickerFWHMLowerBound","zeroCrossingCut" ],
+	"types" : [ "real","real","real","real","real","real","int" ],
+	"values" : [ [38935.8,35709.2,67.0598,-19.3088,151.333,148.059,25],
+		[65164.5,60796.7,80.4777,5.54815,146.393,143.419,25],
+		[118752.0,111018.0,89.7344,3.15985,155.061,151.349,25] ]
+
+},
+
+"kicker_dqc_status" : 
+{
+	"columns" : [ "run", "status" ],
+	"types" : [ "int", "int" ],
+	"values" : [ [15936,1] ]
+
+}
+
+}

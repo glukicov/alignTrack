@@ -1,0 +1,7 @@
+{
+ "interval_of_validity" : { "run_start" : 15921, "run_end" :19027 },
+
+ "tracker_align" : 
+{
+	"columns" : [ "offsets" ],
+	"types" : [ "real[8]" ],
