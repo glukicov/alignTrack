@@ -92,7 +92,7 @@ def CreateJsonFile(opts,run) :
 
     # if run_range is used, run is an array: run = [run_start, run_end]
     if opts["iov"] == "run_range" :
-       jsonFile.write( " \"interval_of_validity\" : { \"run_start\" : "+str(run[0])+", \"run_end\" :"+str(run[1])+" },\n\n " )
+       jsonFile.write( " \"interval_of_validity\" : { \"run_start\" : "+str(run[0])+", \"run_end\" : "+str(run[1])+" },\n\n " )
 
     return jsonFile
 
@@ -125,6 +125,32 @@ def WriteJsonFileConstants(jsonFile,values,writeComma=True) :
        else :
           jsonFile.write("}\n\n")
 
+
+"""
+write the json file constants as an array
+Input: 2D array 
+"""
+def WriteJsonFileConstants2DArray(jsonFile,values,writeComma=True) :
+    if not jsonFile.closed :
+       jsonFile.write(" \t\"values\" : [ ")
+       #write a dimension of the array, with elements comma separated (repr)
+       inner, outer, elements = np.shape(values) # return array shape 
+       total_length = inner + outer
+       i_length=0 # checking if reached the last dimension 
+       for i_inner in range(inner):
+          for i_outer in range(outer):
+              i_length+=1 
+              jsonFile.write( str(repr(values[i_inner][i_outer])))
+              if (i_length != total_length):
+                jsonFile.write("\n") # write new line for all but last array
+
+       # write the final closing bracket 
+       jsonFile.write(" ]\n")
+       
+       if writeComma :
+          jsonFile.write("},\n\n")
+       else :
+          jsonFile.write("}\n\n")
  
 """
 closing the json file
@@ -178,8 +204,7 @@ def getOffsets(FHICL_file):
               offsets=line
               offsets = offsets.replace(offset_name+": [", "") 
               offsets = offsets.replace("]", "") 
-              offsets = np.array([float(r) for r in offsets.split(',')])
-              offsets = offsets.astype(float) 
+              offsets = [float(r) for r in offsets.split(',')]
               offsets_array[i_station][i_global]=offsets
 
     FHICL_file.close()
@@ -240,21 +265,15 @@ def CreateJsonFiles(opts) :
              elif types[item] == "int" :
                 values[key][item] = int(line[line.find(":")+1:])
 
-    # if alignment FHICL file is passed
-    # write a JSON file with constants
-    # as an array of 8 offsets
-    # 4 channels: S12_rad, S12_ver, S18_rad, S18_rad
+    # if alignment FHICL file is passed write a JSON file with constants
+    # as an array of 8 offsets; 4 channels: S12_rad, S12_ver, S18_rad, S18_rad
     # total of 32 offsets per IoV (run_range)
-    if opts["ana"] == "tracker_align" :
-       
-       #Defining tracker constants ##
-       stationN = 2 # S12, S18
-       globalN = 2 # Radial and Verical 
-
+    elif opts["ana"] == "tracker_align" :
+    
        folderStatusName = "tracker_align_status"
        foldername = "tracker_align"
        columns    = [ "offsets" ]
-       types      = [ "real[8]" ]
+       types      = [ "real[8]" ] 
 
        cstring    = MakeString(columns)
        tstring    = MakeString(types)
@@ -263,25 +282,22 @@ def CreateJsonFiles(opts) :
        values     = None 
        jsonFile   = None
 
-       # this returns all 4 sets of arrays offsets_array[station][DoF]
-       offsets_array = getOffsets(fclFile)
-       # re-open the file 
-       # and get the run_start and run_end 
+       # this returns a 2x2 array: values[station][DoF]
+       values = getOffsets(fclFile)
+       # re-open the file and get the run_start and run_end 
        fclFile  = open(opts["fcl"],'r') 
        lines=fclFile.readlines()
        run_range[0] = [int(s) for s in lines[0].split() if s.isdigit()][0]  # run_start
        run_range[1] = [int(s) for s in lines[1].split() if s.isdigit()][0]  # run_end
        
-       #now loop over the stations and DoFs to fill json file 
+       # write the header once 
        jsonFile = CreateJsonFile(opts,run_range)
        CreateJsonFileHeader(jsonFile,foldername,cstring,tstring)
-       for i_station in range(0, stationN):
-        for i_global in range(0, globalN):
-          values=offsets_array[i_station][i_global]
-          WriteJsonFileConstants(jsonFile,values)
-          CloseJsonFile(opts,jsonFile,folderStatusName,run_range)
+       # 2D array is being loped over its dimensions inside the function  
+       WriteJsonFileConstants2DArray(jsonFile,values)
+       # write the tail and close the file 
+       CloseJsonFile(opts,jsonFile,folderStatusName,run_range)
     ###end of tracker_align statement 
-
 
     else :
       fclFile.close()

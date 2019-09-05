@@ -313,7 +313,7 @@ The goal here is to check that across an entire dataset or a whole Run (e.g. Run
     \label{fig:60h}
     \end{figure}
 \clearpage
-\subsection{Run alignment to establish constants for a run interval}
+\subsection{Run alignment to establish constants for a run interval}\label{sc:run_alignment_to_establish_constants_for_a_run_interval}
 The methodology is the same as in Sc.~\ref{sub:run_iterative}. However, a larger subset of data should be used with $\sim8$ runs ($\sim$3 million tracks). 
 
 As soon as a module is physically swapped in a station, or removed even for a short time, a new IoV, and new constants, are required. However, the non-swapped modules should have the same offsets and set as \textit{fixed}\footnote{Parameter factor of $-1$} in the new \textit{parameter file}. That is, we will only perform alignment on the swapped modules. For alignment with a single module, since the number of degrees of freedom is reduced, a constraint file is no longer necessary. Tracking must be performed without loading any alignment constants. The new steering file is
@@ -323,9 +323,28 @@ While the newly added parameter file fixes all other modules at their previously
 For iteration 2 onwards, the above offsets must be added to the \verb!RunTrackingDAQ.fcl!, together with the newly derived offsets for module 6 (in this example), and the parameter file updated with $0.0$ for all fixed modules instead of their original offsets.
 
 \section{Alignment constants and the reconstruction database}
-The alignment constants are now used in the $gm2geom$ from the next release: \verb!v9_28_00! or \verb!v9_27_01!. Once DB methods are established, the alignment constants will migrate to the production DB with the IoV tables. 
+The alignment constants are now used in the production database \\ (\verb!gm2_conditions_prod : tracker_align_internal_module!). The service that implements the alignment into the tracker geometry is the \\ \verb!gm2ringsim/strawtracker/StrawTrackerCadMesh_service.cc! via (e.g. for S12 radial shift) \verb!strawModuleRShift12!, where offsets are given as an array of 8 numbers. To write the newly derived alignment constants, as described in in Sc.~\ref{sub:run_iterative} and Sc.~\ref{sc:run_alignment_to_establish_constants_for_a_run_interval}:
 
-\textbf{This document will be updated with the DB methods soon.}
+\begin{enumerate}
+    \item The \verb!gm2db/utils/FhiclToJsonFileWriter.py! script is used to produce a JSON file from the FHICL file
+     \begin{lstlisting}[language=bash]
+     python FhiclToJsonFileWriter.py --fcl OffsetsPerModuleS12S18_Run1_Period_1_of_1_15921_19027.fcl --ana tracker_align_internal_module --iov run_range --path tracker_align_json \end{lstlisting}
+
+     where OffsetsPerModuleS12S18.fcl is the combined FHICL file for S12 and S18, with the added (e.g.) firstRun: 15921 and lastRun: 19027 lines. The above command is run once per IoV (per FHICL file) to produce a JSON file. For reference, all 3 IoV FHICL files from Run-1 and Run-2 are stored in \verb!gm2tracker/align/alignmentConstants_Run1_Run2!. The produced JSON files are stored in \verb!gm2tracker/align/tracker_align_json!
+     \item The \verb!gm2db/conDBScripts/LoadDataDevDB.py! script writes JSON files into the \textbf{development} DB:
+      \begin{lstlisting}[language=bash]
+      python LoadDataDevDB.py --action=write --input=TrackerAlignment.txt\end{lstlisting}
+      where \verb!TrackerAlignment.txt! is a file of file paths to the JSON file(s) from step 1 (see \url{https://cdcvs.fnal.gov/redmine/projects/g-2/wiki/Development_Database}).
+      If running for the first time, create the tables:
+       \begin{lstlisting}[language=bash]
+       python LoadDataDevDB.py --action=create --input=TrackerAlignment.txt \end{lstlisting}
+       \item Tag the DB commit via (e.g.)
+       \begin{lstlisting}[language=bash]
+       python LoadDataDevDB.py --action=tag --input=TrackerAlignment.txt --tag=v9_28_00 \end{lstlisting}
+       \item Test the new constants, and ask a production team member to replicate the tables into the \textbf{production} DB
+        \begin{lstlisting}[language=bash]
+        python LoadDataProdDB.py --folder=tracker_align_internal_module --prodTag v9_28_00 --devTag v9_28_00 \end{lstlisting}
+\end{enumerate}
 
 \begin{thebibliography}{99}
 \footnotesize
