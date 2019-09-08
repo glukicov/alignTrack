@@ -83,7 +83,7 @@
 %+\label{ReggianoStart}
 
 \begin{raggedright}  
-Gleb Lukicov$\,^{a,}$\footnote{g.lukicov AT ucl.ac.uk}\\
+Gleb Lukicov$\,^{a,}$\footnote{g.lukicov@ucl.ac.uk}\\
 {\it $^{\mathrm{a}}$Department of Physics and Astronomy, University College London, London, \\ WC1E 6BT, United Kingdom}
 \bigskip\bigskip
 \end{raggedright}
@@ -323,7 +323,7 @@ While the newly added parameter file fixes all other modules at their previously
 For iteration 2 onwards, the above offsets must be added to the \verb!RunTrackingDAQ.fcl!, together with the newly derived offsets for module 6 (in this example), and the parameter file updated with $0.0$ for all fixed modules instead of their original offsets.
 
 \section{Alignment constants and the reconstruction database}
-The alignment constants are now used in the production database \\ (\verb!gm2_conditions_prod : tracker_align_internal_module!). The service that implements the alignment into the tracker geometry is the \\ \verb!gm2ringsim/strawtracker/StrawTrackerCadMesh_service.cc! via (e.g. for S12 radial shift) \verb!strawModuleRShift12!, where offsets are given as an array of 8 numbers. To write the newly derived alignment constants, as described in in Sc.~\ref{sub:run_iterative} and Sc.~\ref{sc:run_alignment_to_establish_constants_for_a_run_interval}:
+The alignment constants are now used in the production database \\ (\verb!gm2_conditions_prod : tracker_align_internal_module!). The service that implements the alignment into the tracker geometry is the \\ \verb!gm2ringsim/strawtracker/StrawTrackerCadMesh_service.cc! via (e.g. for S12 radial shift) \verb!strawModuleRShift12!, where offsets are given as an array of 8 numbers. To write the newly derived alignment constants, as described in in Sc.~\ref{sub:run_iterative} and Sc.~\ref{sc:run_alignment_to_establish_constants_for_a_run_interval} (also see \textbf{\href{https://gm2-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=19505}{DocDB:19505}}):
 
 \begin{enumerate}
     \item The \verb!gm2db/utils/FhiclToJsonFileWriter.py! script is used to produce a JSON file from the FHICL file
