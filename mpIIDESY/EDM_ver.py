@@ -35,8 +35,8 @@ vertical = [ [], []]
 vertical_error = [ [], []]
 for i_file, file in enumerate(tfiles):
     for i_station, station in enumerate(stations):
-        # histo_1D_noCut=file.Get("Extrapolation/vertices/station"+str(station)+"/h_verticalPos")
-        histo_2D = file.Get("QualityCuts/AfterCuts/station"+str(station)+"/h_verticalPos_vs_time")
+        # histo_2D = file.Get("MomentumSlices/vertices/station"+str(station)+"/h_verticalPos_vs_time")
+        histo_2D = file.Get("Extrapolation/vertices/station"+str(station)+"/h_verticalPos_vs_time")
         first_bin = histo_2D.GetXaxis().FindBin(30.0) # 30 us 
         tmpNameTH1 = "tmpNameTH1_"+str(i_file)+str(i_station) # assign a new "name pointer" to the TH1 object
         histo_1D = histo_2D.ProjectionY(tmpNameTH1, first_bin, -1) 
@@ -71,7 +71,7 @@ def makePlots(name, y_title, value, value_error, both=False):
 
 
 #S12 and S18 
-y_title="Vertical Beam position"
+y_title="Vertical Beam position [mm]"
 name="both"
 makePlots(name, y_title, vertical, vertical_error, both=True)
 

@@ -9,15 +9,19 @@ import sys, os
 import subprocess
 import datetime
 import pickle
+import scipy.interpolate
+import scipy.ndimage
 # from ROOT import TH3D, TFile, TCanvas
 
 #Pass some commands 
 arg_parser = argparse.ArgumentParser(description='Input data files')
 arg_parser.add_argument('--dbFile', type=str, required=True, dest='dbFile')
 arg_parser.add_argument('--gpsFile', type=str, required=True, dest='gpsFile')
+arg_parser.add_argument('--bins', type=int, required=True, dest='bins')
 args = arg_parser.parse_args()
 dbFile = args.dbFile
 gpsFile = args.gpsFile
+bins = args.bins
 
 ### Constants 
 db_type = [('times',np.float64),('qhv',np.float64)]
@@ -39,17 +43,21 @@ def main():
     print("Starting plots on:", datetime.datetime.now())
 
     #Get data 
+    print("Getting data from files...")
     db_data = getDBData(dbFile)
     gps_data = getGPSData(gpsFile)
 
     #Clean DB data (same start/end points)
+    print("Cleaning DB data...")
     db_data_clean = cleanDB(db_data, gps_data)
 
     #Rebin data 
-    db_data_reshaped = dbReshape(db_data_clean, nbins=2)
-    gps_data_reshaped = gpsReshape(gps_data, nbins=12)
+    print("Re-binning data into",bins,"bins")
+    db_data_reshaped = dbReshape(db_data_clean, nbins=bins)
+    gps_data_reshaped = gpsReshape(gps_data, nbins=bins)
 
     #Plot data 
+    print("Plotting data..")
     plotData(db_data_reshaped, gps_data_reshaped)
 
     print("Finishing plots on:", datetime.datetime.now())
@@ -93,92 +101,88 @@ def cleanDB(db_collection, gps_collection):
     return clean_data
 
 
-def dbReshape(db_collection_clean, nbins=20):
-    # Average this every Na points so that we have nbins
-    # nbins = float(nbins)
-    # print("Using",nbins,"bins")
-    # total_data_len = len(db_collection_clean[0])
-    # print("Total of",total_data_len,"data points")
-    # rescale = int(total_data_len/nbins)
-    rescale = nbins
-    print("rescale:",rescale)
-    #Rescale data as the mean in the bin
-    rescaled_data_array =[]
-    for i, i_tuple in enumerate(db_collection_clean):
-        print("i_tuple before: ", i_tuple[0], i_tuple[-1],"| len:", len(i_tuple)) # TODO get name
-        i_tuple = np.mean(np.array(i_tuple[:int((len(i_tuple)/rescale)*rescale)]).reshape(-1,rescale), axis=1)
-        print("i_tuple after: ", i_tuple[0], i_tuple[-1],"| len:", len(i_tuple)) # TODO get name
-        rescaled_data_array.append(i_tuple)
-    dataR = db_collection_reshaped(*rescaled_data_array)
+def dbReshape(db_collection_clean, nbins=20): 
+    data_len = len(db_collection_clean[0])
+    rescale = int(data_len/nbins) # elements per bin 
+    total_kept = rescale * nbins # can fit in bins equally
+    total_removed = data_len - total_kept # drop elements that can fit 
+    rescaled_data_array =[] 
+    for array in db_collection_clean:  #lop over each array in the collection 
+        array = (array[:-total_removed or None]) # remove elements 
+        rescaled_array = [] 
+        for i_bin in range(nbins):  #loop over bins, as a range of rescaled elements 
+            lower = rescale*i_bin 
+            upper = rescale*(i_bin+1)
+            rescaled_array.append(np.mean(array[lower:upper])) # take the mean of the slice (bin)
+        rescaled_data_array.append(rescaled_array)
+    dataR = db_collection_reshaped(*rescaled_data_array)  # push arrays into the collection 
     return dataR
 
 def gpsReshape(gps_collection, nbins=20):
-    # Average this every Na points so that we have nbins
-    # nbins = float(nbins)
-    # print("Using",nbins,"bins")
-    # total_data_len = len(gps_collection[0])
-    # print("Total of",total_data_len,"data points")
-    # rescale = int(total_data_len/nbins)
-
-    rescale = nbins
-    print("rescale:",rescale)
-    #Rescale data as the mean in the bin
-    rescaled_data_array =[]
-    for i, i_tuple in enumerate(gps_collection):
-        print("i_tuple before: ", i_tuple[0], i_tuple[-1],"| len:", len(i_tuple)) # TODO get name
-        i_tuple = np.mean(np.array(i_tuple[:(int(len(i_tuple)/rescale)*rescale)]).reshape(-1,rescale), axis=1)
-        print("i_tuple after: ", i_tuple[0], i_tuple[-1],"| len:", len(i_tuple)) # TODO get name
-        rescaled_data_array.append(i_tuple)
-    dataR = gps_collection_reshaped(*rescaled_data_array)
+    data_len = len(gps_collection[0])
+    rescale = int(data_len/nbins) # elements per bin 
+    total_kept = rescale * nbins # can fit in bins equally
+    total_removed = data_len - total_kept # drop elements that can fit 
+    rescaled_data_array =[] 
+    for array in gps_collection:  #lop over each array in the collection 
+        array = (array[:-total_removed or None]) # remove elements 
+        rescaled_array = [] 
+        for i_bin in range(nbins):  #loop over bins, as a range of rescaled elements 
+            lower = rescale*i_bin 
+            upper = rescale*(i_bin+1)
+            rescaled_array.append(np.mean(array[lower:upper])) # take the mean of the slice (bin)
+        rescaled_data_array.append(rescaled_array)
+    dataR = gps_collection_reshaped(*rescaled_data_array)  # push arrays into the collection 
     return dataR
+    
 
 def plotData(db_collection, gps_collection):
     time_db = db_collection.time
     qhv = db_collection.qhv
-    time_gps = gps_collection.time[:-2 or None] # XXX super hack TODO reshape properly 
-    s12 = gps_collection.s12[:-2 or None] # XXX super hack TODO reshape properly 
-    s18 = gps_collection.s18[:-2 or None]   # XXX super hack TODO reshape properly 
+    time_gps = gps_collection.time
+    s12 = gps_collection.s12
+    s18 = gps_collection.s18
     ver = [s12, s18]
 
-    for i_station, station in enumerate(stations):
+    # for i_station, station in enumerate(stations):
 
-        # make new plot and format 
-        fig, ax = plt.subplots()
-        ax.set_ylabel("<Y>: "+station + "[mm]", fontsize=14, color="green", fontweight='bold')
-        ax.set_xlabel("GPS Time [CDT]", fontsize=14)
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
-        plt.minorticks_on()
-        ax.tick_params(axis='x', which='both', bottom=True, direction='inout')
-        ax.tick_params(axis='y', which='both', left=True, direction='inout')
-        plt.grid()
-        ax.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
-        fig.autofmt_xdate()
+    #     # make new plot and format 
+    #     fig, ax = plt.subplots()
+    #     ax.set_ylabel("<Y>: "+station + "[mm]", fontsize=14, color="green", fontweight='bold')
+    #     ax.set_xlabel("GPS Time [CDT]", fontsize=14)
+    #     plt.xticks(fontsize=12)
+    #     plt.yticks(fontsize=12)
+    #     plt.minorticks_on()
+    #     ax.tick_params(axis='x', which='both', bottom=True, direction='inout')
+    #     ax.tick_params(axis='y', which='both', left=True, direction='inout')
+    #     plt.grid()
+    #     ax.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
+    #     fig.autofmt_xdate()
         
-        # now, the second axes that shares the x-axis with the axs
-        ax2 = ax.twinx()
-        ax2.yaxis.tick_right()
-        ax2.yaxis.set_label_position("right")
-        ax2.set_ylabel("QHV2 [kV]", fontsize=14, color='red', fontweight='bold')
-        ax2.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
+    #     # now, the second axes that shares the x-axis with the axs
+    #     ax2 = ax.twinx()
+    #     ax2.yaxis.tick_right()
+    #     ax2.yaxis.set_label_position("right")
+    #     ax2.set_ylabel("QHV2 [kV]", fontsize=14, color='red', fontweight='bold')
+    #     ax2.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
         
-        #plot data 
-        ax.scatter(time_gps, ver[i_station], color='green', s=5.0)                          
-        ax2.scatter(time_db, qhv, color='red', s=5.0)
+    #     #plot data 
+    #     ax.scatter(time_gps, ver[i_station], color='green', s=5.0)                          
+    #     ax2.scatter(time_db, qhv, color='red', s=5.0)
          
-        #write to disk
-        plt.savefig("DBvsGPS_"+station+".png", dpi=300)
-        pickle.dump(fig, open("DBvsGPS_"+station+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
+    #     #write to disk
+    #     plt.savefig("DBvsGPS_"+station+".png", dpi=300)
+    #     pickle.dump(fig, open("DBvsGPS_"+station+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
         
-        #plt.show()
-        plt.cla()
-        plt.clf()
+    #     #plt.show()
+    #     plt.cla()
+    #     plt.clf()
 
     for i_station, station in enumerate(stations):
 
         # make new plot and format 
         fig, ax = plt.subplots()
-        ax.set_ylabel("<Y>: "+station + "[mm]", fontsize=14, color="green", fontweight='bold')
+        ax.set_ylabel("<Y>: "+station + " [mm]", fontsize=14, color="green", fontweight='bold')
         ax.set_xlabel("QHV [kV]", fontsize=14, color='red', fontweight='bold')
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
@@ -188,31 +192,13 @@ def plotData(db_collection, gps_collection):
         plt.grid()
         
         #plot data 
-        ax.scatter(qhv, ver[i_station], color='green', s=5.0)                          \
+        ax.scatter(qhv, ver[i_station], color='green', s=12.0)                          \
         #write to disk
         plt.savefig("YvsQHV_"+station+".png", dpi=300)
         pickle.dump(fig, open("YvsQHV_"+station+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
-        
+    
         plt.show()
-        plt.cla()
-        plt.clf()
 
-
-
-    # plot_array = [] # keep arrays in scope
-    # tfile = TFile("DBvsGPS.root", "new")
-    # for i_station, station in enumerate(stations):
-    #     print(station)
-    #     plot = TH3D(str(station), str(station), 100, 737230.0, 737230.9, 24, 9.0, 23.0, 14, -7.0, 9.0)
-    #     # gps and db have different shapes 
-    #     for i_entry in range(len(time_db)):
-    #         plot.Fill(time_db[i_entry], qhv[i_entry], 0)
-    #     for i_entry in range(len(time_gps)):
-    #         plot.Fill(time_gps[i_entry], 0, ver[i_station][i_entry])
-    #     plot_array.append(plot)
-    #     plot.Draw()
-    #     plot.Write()
-    # tfile.Close() 
 
 
 if __name__ == "__main__":
