@@ -11,13 +11,15 @@ import datetime
 import pickle
 import scipy.interpolate
 import scipy.ndimage
+from scipy import stats
+import numpy.polynomial.polynomial as poly
 # from ROOT import TH3D, TFile, TCanvas
 
 #Pass some commands 
 arg_parser = argparse.ArgumentParser(description='Input data files')
 arg_parser.add_argument('--dbFile', type=str, required=True, dest='dbFile')
 arg_parser.add_argument('--gpsFile', type=str, required=True, dest='gpsFile')
-arg_parser.add_argument('--bins', type=int, required=True, dest='bins')
+arg_parser.add_argument('--bins', type=int, default=np.arange(2, 100, 1), dest='bins', nargs='+')
 args = arg_parser.parse_args()
 dbFile = args.dbFile
 gpsFile = args.gpsFile
@@ -26,17 +28,26 @@ bins = args.bins
 ### Constants 
 db_type = [('times',np.float64),('qhv',np.float64)]
 gps_type = [('times',np.float64),('s12',np.float64), ('s18',np.float64)]
+stations=("S12", "S18")
+# plot constants
+font=14
+plt.rc('xtick',labelsize=font)
+plt.rc('ytick',labelsize=font)
+
 
 # Data types 
 db_collection_shape = ['time', 'qhv']
+db_collection_reshaped_shape = ['time', 'qhv', 'eqhv']
 gps_collection_shape= ['time', 's12', 's18']
+gps_collection_reshaped_shape= ['time', 's12', 'es12', 's18', 'es18']
 db_collection = collections.namedtuple('db_collection', db_collection_shape)
 db_collection_clean = collections.namedtuple('db_collection_clean', db_collection_shape)
-db_collection_reshaped = collections.namedtuple('db_collection_clean', db_collection_shape)
+db_collection_reshaped = collections.namedtuple('db_collection_reshaped', db_collection_reshaped_shape)
 gps_collection = collections.namedtuple('gps_collection', gps_collection_shape)
-gps_collection_reshaped = collections.namedtuple('gps_collection', gps_collection_shape)
+gps_collection_reshaped = collections.namedtuple('gps_collection', gps_collection_reshaped_shape)
 
-stations=("S12", "S18")
+# storage 
+cors_array = [] # cors_array[i_bin][i_station]
 
 def main():
 
@@ -51,14 +62,19 @@ def main():
     print("Cleaning DB data...")
     db_data_clean = cleanDB(db_data, gps_data)
 
-    #Rebin data 
-    print("Re-binning data into",bins,"bins")
-    db_data_reshaped = dbReshape(db_data_clean, nbins=bins)
-    gps_data_reshaped = gpsReshape(gps_data, nbins=bins)
+    for i_bin in bins:
+    
+        #Rebin data 
+        print("Re-binning data into",i_bin,"bins with error calculation for GPS data")
+        db_data_reshaped, rescale_db = dbReshape(db_data_clean, nbins=i_bin)
+        gps_data_reshaped, rescale_gps = gpsReshape(gps_data, nbins=i_bin)
 
-    #Plot data 
-    print("Plotting data..")
-    plotData(db_data_reshaped, gps_data_reshaped)
+        #Plot data 
+        print("Plotting data..")
+        cor = plotData(db_data_reshaped, gps_data_reshaped, rescale_db, rescale_gps, i_bin)
+        cors_array.append(cor)
+    
+    plotFinal(bins, cors_array) # print cor vs bins
 
     print("Finishing plots on:", datetime.datetime.now())
 
@@ -107,16 +123,24 @@ def dbReshape(db_collection_clean, nbins=20):
     total_kept = rescale * nbins # can fit in bins equally
     total_removed = data_len - total_kept # drop elements that can fit 
     rescaled_data_array =[] 
-    for array in db_collection_clean:  #lop over each array in the collection 
+    for i_array, array in enumerate(db_collection_clean):  #lop over each array in the collection 
         array = (array[:-total_removed or None]) # remove elements 
         rescaled_array = [] 
+        rescaled_array_sem = [] 
         for i_bin in range(nbins):  #loop over bins, as a range of rescaled elements 
             lower = rescale*i_bin 
             upper = rescale*(i_bin+1)
-            rescaled_array.append(np.mean(array[lower:upper])) # take the mean of the slice (bin)
+            sliced_array = array[lower:upper]
+            rescaled_array.append(np.mean(sliced_array)) # take the mean of the slice (bin)
+            if (i_array == 1):
+                sem = stats.sem(sliced_array)
+                rescaled_array_sem.append(sem)
         rescaled_data_array.append(rescaled_array)
+        if (i_array == 1):
+            rescaled_data_array.append(rescaled_array_sem)
+
     dataR = db_collection_reshaped(*rescaled_data_array)  # push arrays into the collection 
-    return dataR
+    return dataR, rescale
 
 def gpsReshape(gps_collection, nbins=20):
     data_len = len(gps_collection[0])
@@ -124,82 +148,105 @@ def gpsReshape(gps_collection, nbins=20):
     total_kept = rescale * nbins # can fit in bins equally
     total_removed = data_len - total_kept # drop elements that can fit 
     rescaled_data_array =[] 
-    for array in gps_collection:  #lop over each array in the collection 
+    for i_array, array in enumerate(gps_collection):  #lop over each array in the collection 
         array = (array[:-total_removed or None]) # remove elements 
         rescaled_array = [] 
+        rescaled_array_sem = [] 
         for i_bin in range(nbins):  #loop over bins, as a range of rescaled elements 
             lower = rescale*i_bin 
             upper = rescale*(i_bin+1)
-            rescaled_array.append(np.mean(array[lower:upper])) # take the mean of the slice (bin)
+            sliced_array = array[lower:upper]
+            rescaled_array.append(np.mean(sliced_array)) # take the mean of the slice (bin)
+            # if data is the <Y> from the station 
+            if (i_array==1 or i_array==2):
+                sem = stats.sem(sliced_array)
+                rescaled_array_sem.append(sem)
         rescaled_data_array.append(rescaled_array)
+        if (i_array==1 or i_array==2):
+            rescaled_data_array.append(rescaled_array_sem)
+
     dataR = gps_collection_reshaped(*rescaled_data_array)  # push arrays into the collection 
-    return dataR
+    return dataR, rescale
     
 
-def plotData(db_collection, gps_collection):
+def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin):
     time_db = db_collection.time
     qhv = db_collection.qhv
+    eqhv = db_collection.eqhv
     time_gps = gps_collection.time
     s12 = gps_collection.s12
+    es12 = gps_collection.es12
     s18 = gps_collection.s18
+    es18 = gps_collection.es18
     ver = [s12, s18]
+    error = [es12, es18]
 
-    # for i_station, station in enumerate(stations):
-
-    #     # make new plot and format 
-    #     fig, ax = plt.subplots()
-    #     ax.set_ylabel("<Y>: "+station + "[mm]", fontsize=14, color="green", fontweight='bold')
-    #     ax.set_xlabel("GPS Time [CDT]", fontsize=14)
-    #     plt.xticks(fontsize=12)
-    #     plt.yticks(fontsize=12)
-    #     plt.minorticks_on()
-    #     ax.tick_params(axis='x', which='both', bottom=True, direction='inout')
-    #     ax.tick_params(axis='y', which='both', left=True, direction='inout')
-    #     plt.grid()
-    #     ax.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
-    #     fig.autofmt_xdate()
-        
-    #     # now, the second axes that shares the x-axis with the axs
-    #     ax2 = ax.twinx()
-    #     ax2.yaxis.tick_right()
-    #     ax2.yaxis.set_label_position("right")
-    #     ax2.set_ylabel("QHV2 [kV]", fontsize=14, color='red', fontweight='bold')
-    #     ax2.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
-        
-    #     #plot data 
-    #     ax.scatter(time_gps, ver[i_station], color='green', s=5.0)                          
-    #     ax2.scatter(time_db, qhv, color='red', s=5.0)
-         
-    #     #write to disk
-    #     plt.savefig("DBvsGPS_"+station+".png", dpi=300)
-    #     pickle.dump(fig, open("DBvsGPS_"+station+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
-        
-    #     #plt.show()
-    #     plt.cla()
-    #     plt.clf()
-
-    for i_station, station in enumerate(stations):
-
-        # make new plot and format 
-        fig, ax = plt.subplots()
-        ax.set_ylabel("<Y>: "+station + " [mm]", fontsize=14, color="green", fontweight='bold')
-        ax.set_xlabel("QHV [kV]", fontsize=14, color='red', fontweight='bold')
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
-        plt.minorticks_on()
-        ax.tick_params(axis='x', which='both', bottom=True, direction='inout')
-        ax.tick_params(axis='y', which='both', left=True, direction='inout')
-        plt.grid()
-        
-        #plot data 
-        ax.scatter(qhv, ver[i_station], color='green', s=12.0)                          \
-        #write to disk
-        plt.savefig("YvsQHV_"+station+".png", dpi=300)
-        pickle.dump(fig, open("YvsQHV_"+station+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
     
-        plt.show()
 
+    for i in range(len(qhv)):
+        if (qhv[i] > 18.0):
+            date = mdate.num2date(time_db[i])
+            if (date.hour > 10):
+                print(mdate.num2date(time_gps[i]).hour, mdate.num2date(time_gps[i]).minute, s18[i])
 
+    #return correlation
+    corr_array = []
+
+    fig, ax = plt.subplots(2, 1, figsize=(8,10))
+    
+    for i_station, station in enumerate(stations):
+        
+        #get correlation, fit a line
+        corr_matrix = np.corrcoef(qhv, ver[i_station])
+        corr = np.round(corr_matrix[0][1], 3)
+        x_gen = np.linspace(float(min(qhv)), float(max(qhv)), num=1000) # generate x-points for evaluation 
+        coefs = poly.polyfit(qhv, ver[i_station], 1) # x1 line
+        fit = poly.polyval(x_gen, coefs) # fit over generated points
+        corr_array.append(corr) # per station 
+
+        #plot data 
+        ax[i_station].minorticks_on()
+        ax[i_station].grid()
+        ax[i_station].scatter(qhv, ver[i_station], color='green', label=station+":\n r="+str(corr)+"\n bins="+str(i_bin)+"\n <Y> per bin="+str(rescale_gps)+"\n QHV per bin="+str(rescale_db) )
+        ax[i_station].errorbar(qhv, ver[i_station], yerr=error[i_station], xerr=eqhv, elinewidth=1, linewidth=0, capsize=2, color='green')  
+        ax[i_station].plot(x_gen, fit, color="red", linestyle="--", label="Fit")
+        ax[i_station].set_ylabel("<Y>: "+station + " [mm]", fontsize=font+2, fontweight='bold')
+        ax[i_station].set_xlabel("QHV [kV]", fontsize=font+2, fontweight='bold')
+        ax[i_station].tick_params(axis='x', which='both', bottom=True, direction='inout')
+        ax[i_station].tick_params(axis='y', which='both', left=True, direction='inout')
+        #get correlation, fit a line, legend 
+        ax[i_station].legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 14}) # outside (R) of the plot 
+        
+       
+    #write to disk
+    plt.tight_layout()
+    plt.savefig("YvsQHV_"+str(i_bin)+".png", dpi=100)
+    pickle.dump(fig, open("YvsQHV_"+str(i_bin)+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
+
+    return corr_array
+
+def plotFinal(bins, cors_array):
+   
+    fig, ax = plt.subplots(2, 1, figsize=(8,10))
+    
+    for i_station, station in enumerate(stations):
+ 
+        #plot data 
+        ax[i_station].minorticks_on()
+        ax[i_station].grid()
+        for i_bin, the_bin in enumerate(bins):
+            ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='purple', label=station if(i_bin==0) else "")  
+        ax[i_station].set_ylabel(r"Correlation, $r$", fontsize=font+2, fontweight='bold')
+        ax[i_station].set_xlabel("Bin number", fontsize=font+2, fontweight='bold')
+        ax[i_station].tick_params(axis='x', which='both', bottom=True, direction='inout')
+        ax[i_station].tick_params(axis='y', which='both', left=True, direction='inout')
+        #get correlation, fit a line, legend 
+        ax[i_station].legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 14}) # outside (R) of the plot 
+       
+    #write to disk
+    plt.tight_layout()
+    plt.savefig("Final.png", dpi=100)
+    pickle.dump(fig, open("Final.pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
 
 if __name__ == "__main__":
     main()

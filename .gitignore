@@ -10,7 +10,9 @@
 *.pyc
 *.txt.BK
 *.gif
+.pickle
 mpIIDESY/BK/
+mpIIDESY/*.pickle
 Mptest2
 Mptest2.root
 GenerateFitUniform

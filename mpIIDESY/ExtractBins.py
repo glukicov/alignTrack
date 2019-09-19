@@ -29,6 +29,7 @@ stations=("12", "18")
 
 gps_times=[[], []]
 vertical=[[], []]
+vertical_error = [[], []]
 
 for i_station, station in enumerate(stations):
 
@@ -60,7 +61,9 @@ for i_station, station in enumerate(stations):
     profile = plot2D.ProfileX("profile_S"+str(i_station), 1, -1, "")
     for i_bin_x in range(min_bin_x, max_bin_x):
          y = profile.GetBinContent(i_bin_x)
+         error = profile.GetBinError(i_bin_x)
          vertical[i_station].append(y)
+         vertical_error[i_station].append(error)
 
     print("Found",len(vertical[i_station]),"tracker records")
     print("Max",min(vertical[i_station]))
@@ -73,7 +76,8 @@ for i_station, station in enumerate(stations):
 f=open("OfflineData.txt", "w+")
 for i_record, record in enumerate(gps_times[i_station]):
     f.write(str(gps_times[0][i_record])+", "+str(vertical[0][i_record])+", "+str(vertical[1][i_record])+"\n")
-
+    # f.write(str(gps_times[0][i_record])+", "+str(vertical[0][i_record])+", "+str(vertical_error[0][i_record])+", "\
+    #         +str(vertical[1][i_record])+", "+str(vertical_error[1][i_record])+"\n")
 
 
 
