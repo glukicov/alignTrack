@@ -17,6 +17,7 @@ parser.add_argument('-f', '--fileN', help='input ROOT file')
 args = parser.parse_args()
 
 path= "MomentumSlices/vertices/station"
+# path= "Extrapolation/vertices/station"
 name="/h_verticalPos_vs_GPS_timeCut"
 
 f = TFile.Open(str(args.fileN))

@@ -13,6 +13,7 @@ import scipy.interpolate
 import scipy.ndimage
 from scipy import stats
 import numpy.polynomial.polynomial as poly
+import itertools # smart lines in plotting 
 # from ROOT import TH3D, TFile, TCanvas
 
 #Pass some commands 
@@ -182,12 +183,11 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin):
     error = [es12, es18]
 
     
-
-    for i in range(len(qhv)):
-        if (qhv[i] > 18.0):
-            date = mdate.num2date(time_db[i])
-            if (date.hour > 10):
-                print(mdate.num2date(time_gps[i]).hour, mdate.num2date(time_gps[i]).minute, s18[i])
+   # for i in range(len(qhv)):
+   #      if (qhv[i] > 18.0):
+   #          date = mdate.num2date(time_db[i])
+   #          if (date.hour > 10):
+   #              print(mdate.num2date(time_gps[i]).hour, mdate.num2date(time_gps[i]).minute, s18[i])
 
     #return correlation
     corr_array = []
@@ -202,14 +202,15 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin):
         x_gen = np.linspace(float(min(qhv)), float(max(qhv)), num=1000) # generate x-points for evaluation 
         coefs = poly.polyfit(qhv, ver[i_station], 1) # x1 line
         fit = poly.polyval(x_gen, coefs) # fit over generated points
-        corr_array.append(corr) # per station 
+        
+        corr_array.append(coefs[1]) # per station 
 
         #plot data 
         ax[i_station].minorticks_on()
         ax[i_station].grid()
-        ax[i_station].scatter(qhv, ver[i_station], color='green', label=station+":\n r="+str(corr)+"\n bins="+str(i_bin)+"\n <Y> per bin="+str(rescale_gps)+"\n QHV per bin="+str(rescale_db) )
+        ax[i_station].scatter(qhv, ver[i_station], color='green', label=station+":\n bins="+str(i_bin)+"\n <Y> per bin="+str(rescale_gps)+"\n QHV per bin="+str(rescale_db) )
         ax[i_station].errorbar(qhv, ver[i_station], yerr=error[i_station], xerr=eqhv, elinewidth=1, linewidth=0, capsize=2, color='green')  
-        ax[i_station].plot(x_gen, fit, color="red", linestyle="--", label="Fit")
+        ax[i_station].plot(x_gen, fit, color="red", linestyle="--", label="Fit\n r="+str(corr)+"\n slope="+str(round(coefs[1],4))+"\n intercept="+str(round(coefs[0],4)) )
         ax[i_station].set_ylabel("<Y>: "+station + " [mm]", fontsize=font+2, fontweight='bold')
         ax[i_station].set_xlabel("QHV [kV]", fontsize=font+2, fontweight='bold')
         ax[i_station].tick_params(axis='x', which='both', bottom=True, direction='inout')
@@ -218,10 +219,11 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin):
         ax[i_station].legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 14}) # outside (R) of the plot 
         
        
-    #write to disk
-    plt.tight_layout()
-    plt.savefig("YvsQHV_"+str(i_bin)+".png", dpi=100)
-    pickle.dump(fig, open("YvsQHV_"+str(i_bin)+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
+    #write to disk if only passing a single bin number
+    if (len(bins) < 30 ): 
+        plt.tight_layout()
+        plt.savefig("YvsQHV_"+str(i_bin)+".png", dpi=100)
+        # pickle.dump(fig, open("YvsQHV_"+str(i_bin)+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
 
     return corr_array
 
@@ -229,24 +231,34 @@ def plotFinal(bins, cors_array):
    
     fig, ax = plt.subplots(2, 1, figsize=(8,10))
     
+    stationM=[ [], [] ]
     for i_station, station in enumerate(stations):
  
         #plot data 
         ax[i_station].minorticks_on()
         ax[i_station].grid()
         for i_bin, the_bin in enumerate(bins):
-            ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='purple', label=station if(i_bin==0) else "")  
-        ax[i_station].set_ylabel(r"Correlation, $r$", fontsize=font+2, fontweight='bold')
-        ax[i_station].set_xlabel("Bin number", fontsize=font+2, fontweight='bold')
+            ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='orange', label=station if(i_bin==0) else "")  
+            stationM[i_station].append(cors_array[i_bin][i_station])
+        
+        mean= np.mean(stationM[i_station])
+        print(station, mean)
+        line =  [bins[0], mean] ,  [bins[-1], mean]
+        ax[i_station].plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linestyle="--")
+        
+        ax[i_station].set_ylabel("Slope", fontsize=font+2, fontweight='bold')
+        # ax[i_station].set_ylabel(r"Correlation, $r$", fontsize=font+2, fontweight='bold'))
+        ax[i_station].set_xlabel("Number of bins", fontsize=font+2, fontweight='bold')
         ax[i_station].tick_params(axis='x', which='both', bottom=True, direction='inout')
         ax[i_station].tick_params(axis='y', which='both', left=True, direction='inout')
         #get correlation, fit a line, legend 
         ax[i_station].legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 14}) # outside (R) of the plot 
-       
+        
+    print("Combined mean", ( np.mean(stationM[0]) + np.mean(stationM[1]) ) /2  )
     #write to disk
     plt.tight_layout()
     plt.savefig("Final.png", dpi=100)
-    pickle.dump(fig, open("Final.pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
+    #pickle.dump(fig, open("Final.pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
 
 if __name__ == "__main__":
     main()

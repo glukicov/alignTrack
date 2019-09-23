@@ -50,7 +50,7 @@ def main():
 
     #Define constants (Capital + cammelCase)
     ModuleN = 8 # per station
-    tracker=("Tracker 1", "Tracker 2")
+    # tracker=("Tracker 1", "Tracker 2")
     ModuleArray=np.arange(1, ModuleN+1) #(1, 2,...,8) for plotting  
     GlobalParNames = ["Radial", "Vertical", r'$\phi$', r'$\psi$', r'$\theta$'] #only ever going to have 5 pars.
     units = [r" [$\mathrm{\mu m}$]", r" [$\mathrm{\mu m}$]", " [mrad]", " [mrad]", " [mrad]"]
@@ -191,18 +191,24 @@ def main():
         i_station=0
         yMax = [120, 120, 25, 25, 25]
         yMin = [-120, -120, -25, -25, -25]
-    if (stationN=="18"):
+    if (stationN=="18" and useTruth == False):
         i_station=1
         yMax = [120, 220, 25, 25, 25]
         yMin = [-120, -220, -25, -25, -25]
+    else:
+        i_station=1
+        yMax = [120, 120, 25, 25, 25]
+        yMin = [-120, -120, -25, -25, -25]
     #Make subplot for each result 
     for i_global in range(0, globalN):
         plt.subplot(int( str(globalN)+"1"+str(int(i_global+1)) )) 
         axes = plt.gca()
         axes.set_xlim(ModuleArray[0]-0.5, ModuleArray[-1]+0.5)
         axes.set_ylim(yMin[i_global], yMax[i_global])
-        plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN+" "+extra_label_name, fontsize=12)
-        # plt.title(GlobalParNames[i_global]+" misalignment in "+tracker[i_station]+" "+extra_label_name, fontsize=12)
+        #plt.title(GlobalParNames[i_global]+" misalignment in S"+stationN+" "+extra_label_name, fontsize=12)
+        #plt.title(GlobalParNames[i_global]+" misalignment in "+tracker[i_station]+" "+extra_label_name, fontsize=12)
+        textstr = GlobalParNames[i_global]+" in S"+stationN+":"
+        plt.text(8.7, yMax[i_global]*0.9, textstr, fontsize=10, color="green", fontweight='bold')
         plt.ylabel(r"Misalignment "+ units[i_global])
         plt.xlabel("Module", fontsize=12)
         plt.xticks(fontsize=10, rotation=0) 
@@ -215,7 +221,7 @@ def main():
         data_points =[] 
         error_points = []
         #Plot the 0th line 
-        line = [[ModuleArray[0]-0.5,0.0], [ModuleArray[-1]+0.5, 0.0]]
+        line = [ [ModuleArray[0]-0.5,0.0 ], [ModuleArray[-1]+0.5, 0.0]]
         plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
         #Plot module lines
         for i_module in range(0, 8):
@@ -224,25 +230,25 @@ def main():
             data_points.append(data[i_global][i_module][1])
             error_points.append(data[i_global][i_module][2])
         #Plot data 
-        plt.errorbar(ModuleArray, data_points, yerr=error_points,  color="purple", markersize=12, elinewidth=1, label="Reco. Mis.\n(this iteration)")
+        plt.errorbar(ModuleArray, data_points, yerr=error_points,  color="purple", markersize=12, elinewidth=1, label="Reconstructed\n misalignment\n(this iteration)")
         plt.plot(ModuleArray, data_points, marker="+", color="purple")
         meanAbsReco = np.sum(np.abs(data_points))/len(data_points)
         textstr = "<|Reco|>="+str(int(meanAbsReco))+str(units[i_global])
-        plt.text(8.7, yMax[i_global]*0.8, textstr, fontsize=8, color="purple")
+        plt.text(8.7, yMax[i_global]*0.7, textstr, fontsize=10, color="purple")
         #Plot previous iteration
         if(useOffsets):
-            plt.plot(ModuleArray, offsets[i_global],  marker="+", color="black", label="Reco. Mis.\n(previous iteration)")
+            plt.plot(ModuleArray, offsets[i_global],  marker="+", color="black", label="Reconstructed\n misalignment\n(previous iteration)")
         #Plot truth
         if(useTruth and i_global != 2): # ignoring truth for angles 
-            plt.plot(ModuleArray, truth[i_global], marker=".", color="red", label="Truth Mis.")
+            plt.plot(ModuleArray, truth[i_global], marker=".", color="red", label="Truth misalignment")
             meanAbsTruth = np.sum(np.abs(truth[i_global]))/len(truth[i_global])
             textstr =  "<|Truth|>="+str(int(meanAbsTruth))+str(units[i_global])
-            plt.text(8.7, yMax[i_global], textstr, fontsize=8, color="red")
+            plt.text(8.7, yMax[i_global]*0.5, textstr, fontsize=10, color="red")
             metric_ficl.write(str( round(meanAbsReco-meanAbsTruth, round_to) )+" ")
         if(useTruth == False):
             metric_ficl.write(str( round(meanAbsReco, round_to) )+" ")
 
-        axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 8}) # outside (R) of the plot 
+        axes.legend(loc='center left', bbox_to_anchor=(1, 0.3), prop={'size': 9}) # outside (R) of the plot 
     plt.savefig("PEDE_Results_S"+stationN+".png", dpi=250)
     metric_ficl.close()
 
