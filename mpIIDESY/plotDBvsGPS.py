@@ -1,3 +1,7 @@
+######
+# Gleb (20 Sep 2019)
+# Plot QHV db data vs <Y> offline data to estimate B_r 
+#######
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,19 +16,20 @@ import pickle
 import scipy.interpolate
 import scipy.ndimage
 from scipy import stats
-import numpy.polynomial.polynomial as poly
 import itertools # smart lines in plotting 
-# from ROOT import TH3D, TFile, TCanvas
 
 #Pass some commands 
 arg_parser = argparse.ArgumentParser(description='Input data files')
-arg_parser.add_argument('--dbFile', type=str, required=True, dest='dbFile')
-arg_parser.add_argument('--gpsFile', type=str, required=True, dest='gpsFile')
-arg_parser.add_argument('--bins', type=int, default=np.arange(2, 100, 1), dest='bins', nargs='+')
+arg_parser.add_argument('--dbFile', type=str, required=True, dest='dbFile')  # DB data (time, qhv)
+arg_parser.add_argument('--gpsFile', type=str, required=True, dest='gpsFile') # Offline data (time YS12, YS18)
+#Individual plots if passed a bin number, otherwise loop over a define range 
+arg_parser.add_argument('--bins', type=int, default=np.arange(5, 40, 1), dest='bins', nargs='+') 
+arg_parser.add_argument('--mode', type=int, default=0, help='"0"= 1/qhv "1"=qhv')
 args = arg_parser.parse_args()
 dbFile = args.dbFile
 gpsFile = args.gpsFile
 bins = args.bins
+mode = args.mode
 
 ### Constants 
 db_type = [('times',np.float64),('qhv',np.float64)]
@@ -35,6 +40,9 @@ font=14
 plt.rc('xtick',labelsize=font)
 plt.rc('ytick',labelsize=font)
 
+#Physics constants
+B_0 = 1.45 # T
+R_0 = 7.11e3 # mm 
 
 # Data types 
 db_collection_shape = ['time', 'qhv']
@@ -49,6 +57,8 @@ gps_collection_reshaped = collections.namedtuple('gps_collection', gps_collectio
 
 # storage 
 cors_array = [] # cors_array[i_bin][i_station]
+slope_array = [] 
+slopeE_array = []
 
 def main():
 
@@ -64,7 +74,7 @@ def main():
     db_data_clean = cleanDB(db_data, gps_data)
 
     for i_bin in bins:
-    
+
         #Rebin data 
         print("Re-binning data into",i_bin,"bins with error calculation for GPS data")
         db_data_reshaped, rescale_db = dbReshape(db_data_clean, nbins=i_bin)
@@ -72,10 +82,16 @@ def main():
 
         #Plot data 
         print("Plotting data..")
-        cor = plotData(db_data_reshaped, gps_data_reshaped, rescale_db, rescale_gps, i_bin)
+        cor, slope, slopeE = plotData(db_data_reshaped, gps_data_reshaped, rescale_db, rescale_gps, i_bin, mode)
         cors_array.append(cor)
+        slope_array.append(slope)
+        slopeE_array.append(slopeE)
     
-    plotFinal(bins, cors_array) # print cor vs bins
+    
+    #make final FoM plots if looping over many number of bis 
+    if (len(bins) > 1):
+        plotFinal(bins, cors_array, slopeE_array) # print cor vs bins,
+        plotFinal(bins, slope_array, slopeE_array, slope=True) # print slope vs bins
 
     print("Finishing plots on:", datetime.datetime.now())
 
@@ -127,18 +143,18 @@ def dbReshape(db_collection_clean, nbins=20):
     for i_array, array in enumerate(db_collection_clean):  #lop over each array in the collection 
         array = (array[:-total_removed or None]) # remove elements 
         rescaled_array = [] 
-        rescaled_array_sem = [] 
+        rescaled_array_range = [] 
         for i_bin in range(nbins):  #loop over bins, as a range of rescaled elements 
             lower = rescale*i_bin 
             upper = rescale*(i_bin+1)
             sliced_array = array[lower:upper]
             rescaled_array.append(np.mean(sliced_array)) # take the mean of the slice (bin)
             if (i_array == 1):
-                sem = stats.sem(sliced_array)
-                rescaled_array_sem.append(sem)
+                range_min_max = np.max(sliced_array)-np.min(sliced_array)
+                rescaled_array_range.append(range_min_max)
         rescaled_data_array.append(rescaled_array)
         if (i_array == 1):
-            rescaled_data_array.append(rescaled_array_sem)
+            rescaled_data_array.append(rescaled_array_range)
 
     dataR = db_collection_reshaped(*rescaled_data_array)  # push arrays into the collection 
     return dataR, rescale
@@ -170,11 +186,9 @@ def gpsReshape(gps_collection, nbins=20):
     return dataR, rescale
     
 
-def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin):
-    time_db = db_collection.time
+def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin, mode):
     qhv = db_collection.qhv
-    eqhv = db_collection.eqhv
-    time_gps = gps_collection.time
+    eqhv = db_collection.eqhv # not currently using x-error
     s12 = gps_collection.s12
     es12 = gps_collection.es12
     s18 = gps_collection.s18
@@ -182,83 +196,98 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin):
     ver = [s12, s18]
     error = [es12, es18]
 
-    
-   # for i in range(len(qhv)):
-   #      if (qhv[i] > 18.0):
-   #          date = mdate.num2date(time_db[i])
-   #          if (date.hour > 10):
-   #              print(mdate.num2date(time_gps[i]).hour, mdate.num2date(time_gps[i]).minute, s18[i])
-
-    #return correlation
+    #return arrays 
     corr_array = []
+    slope_array = []
+    slopeE_array = []
+
+    # inverse if default mode is passed    
+    if (mode == 0):
+        qhv = np.array(1/np.array(qhv))
+        x_label = r"1/QHV [kV$^{-1}$]"
+    else:
+        x_label = "QHV [kV]"
 
     fig, ax = plt.subplots(2, 1, figsize=(8,10))
     
     for i_station, station in enumerate(stations):
         
+        ### Linear fit 
         #get correlation, fit a line
         corr_matrix = np.corrcoef(qhv, ver[i_station])
-        corr = np.round(corr_matrix[0][1], 3)
         x_gen = np.linspace(float(min(qhv)), float(max(qhv)), num=1000) # generate x-points for evaluation 
-        coefs = poly.polyfit(qhv, ver[i_station], 1) # x1 line
-        fit = poly.polyval(x_gen, coefs) # fit over generated points
+        coefs, cov_matrix = np.polyfit(qhv, ver[i_station], 1, cov=True, w=error[i_station]) # x1 line [0=slope, 1=inter]
+        fit = np.polyval(coefs, x_gen) # fit over generated points
         
-        corr_array.append(coefs[1]) # per station 
+        # unpack parameters and plot the fitted function 
+        slope = coefs[0]
+        intercept= coefs[1]
+        corr = np.round(corr_matrix[0][1], 3) # get correlation as a diag. element 
+        slopeE = np.sqrt(cov_matrix[0][0])
+        slope_array.append(slope) # per station 
+        corr_array.append(corr) # per station
+        slopeE_array.append(slopeE) # per station 
+        ax[i_station].plot(x_gen, fit, color="red", linestyle="--", label="Fit:\n Correlation="+str(corr)+"\n Slope="+str(round(slope,3))+r" $\pm$ "+str(round(slopeE,3))+r" mm$\cdot$kV")
 
         #plot data 
         ax[i_station].minorticks_on()
         ax[i_station].grid()
-        ax[i_station].scatter(qhv, ver[i_station], color='green', label=station+":\n bins="+str(i_bin)+"\n <Y> per bin="+str(rescale_gps)+"\n QHV per bin="+str(rescale_db) )
-        ax[i_station].errorbar(qhv, ver[i_station], yerr=error[i_station], xerr=eqhv, elinewidth=1, linewidth=0, capsize=2, color='green')  
-        ax[i_station].plot(x_gen, fit, color="red", linestyle="--", label="Fit\n r="+str(corr)+"\n slope="+str(round(coefs[1],4))+"\n intercept="+str(round(coefs[0],4)) )
+        ax[i_station].scatter(qhv, ver[i_station], color='green', label=station+": Number of bins="+str(i_bin))
+        ax[i_station].errorbar(qhv, ver[i_station], yerr=error[i_station], elinewidth=1, linewidth=0, capsize=2, color='green')  
         ax[i_station].set_ylabel("<Y>: "+station + " [mm]", fontsize=font+2, fontweight='bold')
-        ax[i_station].set_xlabel("QHV [kV]", fontsize=font+2, fontweight='bold')
+        ax[i_station].set_xlabel(x_label, fontsize=font+2, fontweight='bold')
         ax[i_station].tick_params(axis='x', which='both', bottom=True, direction='inout')
         ax[i_station].tick_params(axis='y', which='both', left=True, direction='inout')
-        #get correlation, fit a line, legend 
-        ax[i_station].legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 14}) # outside (R) of the plot 
+        ax[i_station].legend(loc='upper center', bbox_to_anchor=(0.9, 1.2), prop={'size': 14}) # outside (R) of the plot 
         
-       
+        print("station:", station)
+        print("slope [mm]:", round(slope,3),"+-",round(slopeE,3))
+        print("slope [um]:", round(slope*1e3),"+-",round(slopeE*1e3)) # nearest um 
+        
+        # TODO calculate n explicitly (TDR, how James did it) for a range of voltages in question 
+        n = 0.005715
+
+        B_r = (slope * n) / (R_0)
+        print("B_r [ppm]", B_r*1e6)
+        print("\n")
+
     #write to disk if only passing a single bin number
-    if (len(bins) < 30 ): 
+    if (len(bins) == 1 ): 
         plt.tight_layout()
         plt.savefig("YvsQHV_"+str(i_bin)+".png", dpi=100)
-        # pickle.dump(fig, open("YvsQHV_"+str(i_bin)+".pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
 
-    return corr_array
+    return corr_array, slope_array, slopeE_array
 
-def plotFinal(bins, cors_array):
-   
+def plotFinal(bins, cors_array, slopeE_array, slope=False):
+    stationM=[ [], [] ] # mean per station 
+    word = ["correlation", "slope"] # corr=False, slope=True
     fig, ax = plt.subplots(2, 1, figsize=(8,10))
-    
-    stationM=[ [], [] ]
     for i_station, station in enumerate(stations):
- 
-        #plot data 
         ax[i_station].minorticks_on()
         ax[i_station].grid()
         for i_bin, the_bin in enumerate(bins):
-            ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='orange', label=station if(i_bin==0) else "")  
-            stationM[i_station].append(cors_array[i_bin][i_station])
-        
-        mean= np.mean(stationM[i_station])
-        print(station, mean)
-        line =  [bins[0], mean] ,  [bins[-1], mean]
-        ax[i_station].plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linestyle="--")
-        
-        ax[i_station].set_ylabel("Slope", fontsize=font+2, fontweight='bold')
-        # ax[i_station].set_ylabel(r"Correlation, $r$", fontsize=font+2, fontweight='bold'))
+            if (slope==False):
+                ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='purple', label=station if(i_bin==0) else "")  
+            else:
+                ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='orange')  
+                ax[i_station].errorbar(the_bin, cors_array[i_bin][i_station], yerr=slopeE_array[i_bin][i_station], color='orange', label=station if(i_bin==0) else "")  
+                stationM[i_station].append(cors_array[i_bin][i_station])  #accumulate statistics per station
+        #end of loop over bins 
+
+        if (slope==False):
+            ax[i_station].set_ylabel(r"Correlation, $r$", fontsize=font+2, fontweight='bold')
+        else:
+            mean=np.mean(stationM[i_station]) # for plotting only 
+            line =  [bins[0], mean] ,  [bins[-1], mean]
+            ax[i_station].set_ylabel(r"Slope [mm$\cdot$kV$^{-1}$]", fontsize=font+2, fontweight='bold')
+            ax[i_station].plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linestyle="--", label="<slope>="+str(round(mean,3)) )
         ax[i_station].set_xlabel("Number of bins", fontsize=font+2, fontweight='bold')
         ax[i_station].tick_params(axis='x', which='both', bottom=True, direction='inout')
         ax[i_station].tick_params(axis='y', which='both', left=True, direction='inout')
-        #get correlation, fit a line, legend 
-        ax[i_station].legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 14}) # outside (R) of the plot 
-        
-    print("Combined mean", ( np.mean(stationM[0]) + np.mean(stationM[1]) ) /2  )
+        ax[i_station].legend(loc='upper center', bbox_to_anchor=(0.9, 1.2), prop={'size': 14}) # outside (R) of the plot    
     #write to disk
     plt.tight_layout()
-    plt.savefig("Final.png", dpi=100)
-    #pickle.dump(fig, open("Final.pickle", 'wb')) # This is for Python 3 - py2 may need `file` instead of `open`
+    plt.savefig("Final_"+str(word[slope])+".png", dpi=100)
 
 if __name__ == "__main__":
     main()
