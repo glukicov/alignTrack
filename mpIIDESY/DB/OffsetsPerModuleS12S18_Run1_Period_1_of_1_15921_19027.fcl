@@ -1,6 +1,0 @@
-firstRun: 15921
-lastRun: 19027
-services.Geometry.strawtracker.strawModuleRShift12: [ 0.0207, -0.0185, -0.021, 0.0148, -0.0134, 0.0014, 0.0481, -0.0323 ] 
-services.Geometry.strawtracker.strawModuleHShift12: [ -0.025, -0.0306, 0.0542, 0.0277, 0.0153, -0.0124, -0.0439, 0.0148 ] 
-services.Geometry.strawtracker.strawModuleRShift18: [ 0.0153, -0.0182, -0.0107, 0.0371, -0.0534, -0.0039, 0.0752, -0.0413 ] 
-services.Geometry.strawtracker.strawModuleHShift18: [ -0.0711, -0.0919, 0.0645, 0.0744, 0.0581, 0.1186, 0.018, -0.1705 ] 

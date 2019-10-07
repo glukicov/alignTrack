@@ -328,9 +328,9 @@ The alignment constants are now used in the production database \\ (\verb!gm2_co
 \begin{enumerate}
     \item The \verb!gm2db/utils/FhiclToJsonFileWriter.py! script is used to produce a JSON file from the FHICL file
      \begin{lstlisting}[language=bash]
-     python FhiclToJsonFileWriter.py --fcl OffsetsPerModuleS12S18_Run1_Period_1_of_1_15921_19027.fcl --ana tracker_align_internal_module --iov run_range --path tracker_align_json \end{lstlisting}
+     python FhiclToJsonFileWriter.py --fcl OffsetsPerModuleS12S18_Run1_Period_1_of_1_15921.fcl --ana tracker_align_internal_module --iov run --path tracker_align_internal_module_json/ --file tracker_align_internal_module \end{lstlisting}
 
-     where OffsetsPerModuleS12S18.fcl is the combined FHICL file for S12 and S18, with the added (e.g.) firstRun: 15921 and lastRun: 19027 lines. The above command is run once per IoV (per FHICL file) to produce a JSON file. For reference, all 3 IoV FHICL files from Run-1 and Run-2 are stored in \verb!gm2tracker/align/alignmentConstants_Run1_Run2!. The produced JSON files are stored in \verb!gm2tracker/align/tracker_align_json!
+     where OffsetsPerModuleS12S18.fcl is the combined FHICL file for S12 and S18, with the added (e.g.) firstRun: 15921 line. The above command is run once per IoV (per FHICL file) to produce a JSON file. For reference, all 3 IoV FHICL files from Run-1 and Run-2 are stored in \verb!gm2tracker/align/alignmentConstants_Run1_Run2!.
      \item The \verb!gm2db/conDBScripts/LoadDataDevDB.py! script writes JSON files into the \textbf{development} DB:
       \begin{lstlisting}[language=bash]
       python LoadDataDevDB.py --action=write --input=TrackerAlignment.txt\end{lstlisting}
@@ -340,10 +340,10 @@ The alignment constants are now used in the production database \\ (\verb!gm2_co
        python LoadDataDevDB.py --action=create --input=TrackerAlignment.txt \end{lstlisting}
        \item Tag the DB commit via (e.g.)
        \begin{lstlisting}[language=bash]
-       python LoadDataDevDB.py --action=tag --input=TrackerAlignment.txt --tag=v9_28_00 \end{lstlisting}
+       python LoadDataDevDB.py --action=tag --input=TrackerAlignment.txt --tag=v2 \end{lstlisting}
        \item Test the new constants, and ask a production team member to replicate the tables into the \textbf{production} DB
         \begin{lstlisting}[language=bash]
-        python LoadDataProdDB.py --folder=tracker_align_internal_module --prodTag v9_28_00 --devTag v9_28_00 \end{lstlisting}
+        python LoadDataProdDB.py --folder=tracker_align_internal_module --prodTag v2 --devTag v2 \end{lstlisting}
 \end{enumerate}
 
 \begin{thebibliography}{99}

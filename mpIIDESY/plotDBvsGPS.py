@@ -56,7 +56,7 @@ gps_collection = collections.namedtuple('gps_collection', gps_collection_shape)
 gps_collection_reshaped = collections.namedtuple('gps_collection', gps_collection_reshaped_shape)
 
 # storage 
-cors_array = [] # cors_array[i_bin][i_station]
+chi2_array = [] # cors_array[i_bin][i_station]
 slope_array = [] 
 slopeE_array = []
 
@@ -82,19 +82,27 @@ def main():
 
         #Plot data 
         print("Plotting data..")
-        cor, slope, slopeE = plotData(db_data_reshaped, gps_data_reshaped, rescale_db, rescale_gps, i_bin, mode)
-        cors_array.append(cor)
+        chi2, slope, slopeE = plotData(db_data_reshaped, gps_data_reshaped, rescale_db, rescale_gps, i_bin, mode)
+        chi2_array.append(chi2)
         slope_array.append(slope)
         slopeE_array.append(slopeE)
     
     
     #make final FoM plots if looping over many number of bis 
     if (len(bins) > 1):
-        plotFinal(bins, cors_array, slopeE_array) # print cor vs bins,
+        plotFinal(bins, chi2_array, slopeE_array) # print cor vs bins,
         plotFinal(bins, slope_array, slopeE_array, slope=True) # print slope vs bins
 
     print("Finishing plots on:", datetime.datetime.now())
 
+def chi2Calc(data=[], error=[], pred=[]):
+    N=len(data)
+    if (N != len(pred)):
+        print("chi2Calc::Data/pred array mismatch!")
+        sys.exit()
+    chi2= ((np.array(data)-np.array(pred))**2) / ((np.array(error))**2)
+    chi2ndf=float(np.sum(chi2))/float(N-2)
+    return chi2ndf
 
 def getDBData(file_name):
     db_data = np.genfromtxt(file_name, dtype=db_type, delimiter=',')
@@ -197,7 +205,7 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin, mode
     error = [es12, es18]
 
     #return arrays 
-    corr_array = []
+    chi2_array = []
     slope_array = []
     slopeE_array = []
 
@@ -222,12 +230,13 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin, mode
         # unpack parameters and plot the fitted function 
         slope = coefs[0]
         intercept= coefs[1]
-        corr = np.round(corr_matrix[0][1], 3) # get correlation as a diag. element 
+        #corr = np.round(corr_matrix[0][1], 3) # get correlation as a diag. element 
+        chi2 = chi2Calc(data=ver[i_station],  error=error[i_station],  pred=np.polyval(coefs, qhv))
         slopeE = np.sqrt(cov_matrix[0][0])
         slope_array.append(slope) # per station 
-        corr_array.append(corr) # per station
+        chi2_array.append(chi2) # per station
         slopeE_array.append(slopeE) # per station 
-        ax[i_station].plot(x_gen, fit, color="red", linestyle="--", label="Fit:\n Correlation="+str(corr)+"\n Slope="+str(round(slope,3))+r" $\pm$ "+str(round(slopeE,3))+r" mm$\cdot$kV")
+        ax[i_station].plot(x_gen, fit, color="red", linestyle="--", label="Fit:\n"+r"$\chi^2/ndf$="+str(round(chi2,2))+"\n Slope="+str(round(slope,3))+r" $\pm$ "+str(round(slopeE,3))+r" mm$\cdot$kV")
 
         #plot data 
         ax[i_station].minorticks_on()
@@ -242,13 +251,14 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin, mode
         
         print("station:", station)
         print("slope [mm]:", round(slope,3),"+-",round(slopeE,3))
-        print("slope [um]:", round(slope*1e3),"+-",round(slopeE*1e3)) # nearest um 
+        print("slope [um]:", int(round(slope*1e3)),"+-",int(round(slopeE*1e3))) # nearest um 
         
         # TODO calculate n explicitly (TDR, how James did it) for a range of voltages in question 
         n = 0.005715
 
         B_r = (slope * n) / (R_0)
-        print("B_r [ppm]", B_r*1e6)
+        B_r_error = (slopeE * n) / (R_0)
+        print("B_r [ppm]", round(B_r*1e6,3), "+-", round(B_r_error*1e6,3))
         print("\n")
 
     #write to disk if only passing a single bin number
@@ -256,26 +266,26 @@ def plotData(db_collection, gps_collection, rescale_db, rescale_gps, i_bin, mode
         plt.tight_layout()
         plt.savefig("YvsQHV_"+str(i_bin)+".png", dpi=100)
 
-    return corr_array, slope_array, slopeE_array
+    return chi2_array, slope_array, slopeE_array
 
-def plotFinal(bins, cors_array, slopeE_array, slope=False):
+def plotFinal(bins, data_array, slopeE_array, slope=False):
     stationM=[ [], [] ] # mean per station 
-    word = ["correlation", "slope"] # corr=False, slope=True
+    word = ["chi2", "slope"] # corr=False, slope=True
     fig, ax = plt.subplots(2, 1, figsize=(8,10))
     for i_station, station in enumerate(stations):
         ax[i_station].minorticks_on()
         ax[i_station].grid()
         for i_bin, the_bin in enumerate(bins):
             if (slope==False):
-                ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='purple', label=station if(i_bin==0) else "")  
+                ax[i_station].scatter(the_bin, data_array[i_bin][i_station], color='purple', label=station if(i_bin==0) else "")  
             else:
-                ax[i_station].scatter(the_bin, cors_array[i_bin][i_station], color='orange')  
-                ax[i_station].errorbar(the_bin, cors_array[i_bin][i_station], yerr=slopeE_array[i_bin][i_station], color='orange', label=station if(i_bin==0) else "")  
-                stationM[i_station].append(cors_array[i_bin][i_station])  #accumulate statistics per station
+                ax[i_station].scatter(the_bin, data_array[i_bin][i_station], color='orange')  
+                ax[i_station].errorbar(the_bin, data_array[i_bin][i_station], yerr=slopeE_array[i_bin][i_station], color='orange', label=station if(i_bin==0) else "")  
+                stationM[i_station].append(data_array[i_bin][i_station])  #accumulate statistics per station
         #end of loop over bins 
 
         if (slope==False):
-            ax[i_station].set_ylabel(r"Correlation, $r$", fontsize=font+2, fontweight='bold')
+            ax[i_station].set_ylabel(r"\Chi2/ndf", fontsize=font+2, fontweight='bold')
         else:
             mean=np.mean(stationM[i_station]) # for plotting only 
             line =  [bins[0], mean] ,  [bins[-1], mean]
