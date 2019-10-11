@@ -83,6 +83,3 @@ color="green"
 value = np.array(vertical[1])-np.array(vertical[0])
 error = np.sqrt( np.array(vertical_error[1])**2 + np.array(vertical_error[0])**2 )
 makePlots(name, y_title, value, error)
-
-
-
