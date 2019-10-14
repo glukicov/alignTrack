@@ -1,0 +1,24 @@
+{
+"interval_of_validity" : { "run" : 25086 },
+
+"tracker_align_internal_module" : 
+{
+	"columns" : [ "M1","M2","M3","M4","M5","M6","M7","M8" ],
+	"types" : [ "real","real","real","real","real","real","real","real" ],
+ 	"values" : [ [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] ]
+},
+
+"tracker_align_internal_module_status" : 
+{
+	"columns" : [ "run", "status" ],
+	"types" : [ "int", "int" ],
+	"values" : [ [25086,1] ]
+
+}
+
+}

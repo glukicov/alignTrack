@@ -1,0 +1,22 @@
+{
+"interval_of_validity" : { "run" : 15921 },
+
+"tracker_align_external" : 
+{
+	"columns" : [ "radialShift","verticalShift","trackerXZAngle","trackerYZAngle" ],
+	"types" : [ "real","real","real","real" ],
+	"values" : [ [0.0,0.0,0.0,0.0],
+		[0.0,0.0,0.0,0.0],
+		[0.0,0.0,0.0,0.0] ]
+
+},
+
+"tracker_align_external_status" : 
+{
+	"columns" : [ "run", "status" ],
+	"types" : [ "int", "int" ],
+	"values" : [ [15921,1] ]
+
+}
+
+}

@@ -1,5 +1,9 @@
 # ignores all files with following extensions JUST in the current directory (millepede)
-
+/mpIIDESY/AlignmentData/
+/mpIIDESY/Monitor/
+mpIIDESY/EP/Curve/BK/tmp.exe
+mpIIDESY/EP/Curve/curve.exe
+mpIIDESY/EP/data/
 *.o
 *.his
 *.log
