@@ -2,6 +2,8 @@
 
 ### This project has moved to its new home: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework ###
 
+###Legacy code up to v1.0 is mainted here:
+
 ### DIR Structure ###
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
 2. PEDE/ - up-to-date clean version of pede from DESY svn: http://svnsrv.desy.de/public/MillepedeII/tags/V04-03-08
