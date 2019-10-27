@@ -1,4 +1,5 @@
 # ignores all files with following extensions JUST in the current directory (millepede)
+mpIIDESY/Plots/.ipynb_checkpoints/
 /mpIIDESY/AlignmentData/
 /mpIIDESY/Monitor/
 mpIIDESY/EP/Curve/BK/tmp.exe

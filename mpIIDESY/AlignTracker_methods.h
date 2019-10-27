@@ -129,8 +129,8 @@ private:
 	
 	//Set truth misalignment of modules 
 	// float dispX[4] =     { 0.00, 0.01, -0.01, 0.00}; // manual misalignment [relative misalignment per module]
-	float dispX[4] =     { 0.00, 0.00, 	0.020, 0.00}; // manual misalignment [relative misalignment per module]
-	// float dispX[4] =     { 0.00, 0.0005, 	-0.0005, 0.00}; // manual misalignment [relative misalignment per module]
+	// float dispX[4] =     { 0.00, 0.00, 	0.020, 0.00}; // manual misalignment [relative misalignment per module]
+	float dispX[4] =     { 0.00, 0.05, 	-0.05, 0.00}; // manual misalignment [relative misalignment per module]
 	float dispZ[4] =     {0.00,  0.00,  0.0,  0.00}; // manual misalignment [relative misalignment per module]
 	float dispTheta[4] = {0.00,  0.00,  0.0,  0.00}; // radians
 

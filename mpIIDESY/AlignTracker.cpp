@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
 	TH1F* h_residual_true = new TH1F("h_residual_true", "Residuals: Truth", 500, -0.06, 0.06);
 	TH1F* h_chi2_true = new TH1F("h_chi2_true", "#Chi^{2}: Truth", 40, -1, 50);
 	TH1F* h_residual_recon = new TH1F("h_residual_recon", "Residuals: Recon", 199, -0.2, 0.2);
-	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "#Chi^{2}: Recon", 250, 0, 120);
+	TH1F* h_chi2_recon = new TH1F("h_chi2_recon", "#Chi^{2}: Recon", 250, 0, 250);
 	TH1I* h_hitCount = new TH1I("h_hitCount", "Hit count", 33 , 0, 33);
 	TH1F* h_reconMinusTrue_track_slope = new TH1F("h_reconMinusTrue_track_slope", "#Delta (Recon - True) Slope",  119,  -0.002, 0.002);
 
