@@ -82,7 +82,7 @@ RMS_S18_ver_error=[]
 cases=[]
 
 #First take the reference nominal point "0"
-scr = "/Users/gleb/software/alignTrack/mpIIDESY/BK/Systematics/nominalAlign/trackRecoPlots.root"
+scr = "/Users/gleb/software/alignTrack/mpIIDESY/AlignmentData/BK/Systematics/nominalAlign/trackRecoPlots.root"
 # scr = str(os.environ['MRB_SOURCE'])+"/gm2tracker/align/Systematics/nominalAlign/trackRecoPlots.root"
 scrFile = TFile.Open(scr)
 
@@ -154,7 +154,8 @@ for i_trial in range(0, trialN):
     # if (i_trial==5 or i_trial==11 or i_trial==12):
     #     continue
 
-    scr = "/Users/gleb/software/alignTrack/mpIIDESY/BK/Systematics/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
+    # scr = "/Users/gleb/software/alignTrack/mpIIDESY/AlignmentData/AUE/BK/Systematics/"+str(dirName)+"/"+str(i_trial+1)+"/trackRecoPlots.root"
+    scr = /Users/gleb/software/alignTrack/mpIIDESY/AlignmentData/AUE/BK/P0_Off_100_Mis_U_B
 
     #Check file exists
     scrFilePresent=os.path.isfile(str(scr))
@@ -276,8 +277,8 @@ for i in range(0, 2):
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))),color = str(color[i]), linestyle="--") # plot the line 
     plt.text(0, S_rad[i][0]+0.02, str(round(S_rad[i][0], 3))+r" $\pm$ "+str(round(S_rad_error[i][0],3)), fontsize=9) # plot the reference value 
     
-    for i_trial in range(0, trialN+1):
-        plt.text(i_trial, S_rad[i][i_trial]+0.02, str(round(S_rad[i][i_trial], 3))+r" $\pm$ "+str(round(S_rad_error[i][i_trial],3)), fontsize=9) # plot the reference value 
+    # for i_trial in range(0, trialN+1):
+        # plt.text(i_trial, S_rad[i][i_trial]+0.02, str(round(S_rad[i][i_trial], 3))+r" $\pm$ "+str(round(S_rad_error[i][i_trial],3)), fontsize=9) # plot the reference value 
     
     plt.scatter(cases, S_rad[i],  marker="+", color=str(color[i])) # plot all cases and reference points 
     plt.errorbar(cases, S_rad[i], yerr=S_rad_error[i],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i])) # add error bar
@@ -301,8 +302,8 @@ for i in range(0, 2):
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--")
     plt.text(0, S_ver[i][0]+0.02, str(round(S_ver[i][0], 3))+r" $\pm$ "+str(round(S_ver_error[i][0],3)), fontsize=9)
     
-    for i_trial in range(0, trialN+1):
-        plt.text(i_trial, S_ver[i][i_trial]+0.02, str(round(S_ver[i][i_trial], 3))+r" $\pm$ "+str(round(S_ver_error[i][i_trial],3)), fontsize=9)
+    # for i_trial in range(0, trialN+1):
+    #     plt.text(i_trial, S_ver[i][i_trial]+0.02, str(round(S_ver[i][i_trial], 3))+r" $\pm$ "+str(round(S_ver_error[i][i_trial],3)), fontsize=9)
     
     plt.scatter(cases, S_ver[i],  marker="+", color=str(color[i]))
     plt.errorbar(cases, S_ver[i], yerr=S_ver_error[i],  color=str(color[i]), markersize=14, elinewidth=3, linewidth=0, label=str(label[i]))
@@ -321,66 +322,66 @@ plt.savefig("Mean_"+str(dirName)+".png", dpi=600)
 
 # '''
 
-# #New containers for the mean values 
-# RMS_S_rad_mean = []
-# RMS_S_rad_error_mean = []
-# RMS_S_rad_max = []
-# RMS_S_rad_error_max = []
+#New containers for the mean values 
+RMS_S_rad_mean = []
+RMS_S_rad_error_mean = []
+RMS_S_rad_max = []
+RMS_S_rad_error_max = []
 
-# RMS_S_ver_mean = []
-# RMS_S_ver_error_mean = []
-# RMS_S_ver_max = []
-# RMS_S_ver_error_max = []
+RMS_S_ver_mean = []
+RMS_S_ver_error_mean = []
+RMS_S_ver_max = []
+RMS_S_ver_error_max = []
 
 
 
-# #Fill Plots SD 
-# plt.figure(2) 
+#Fill Plots SD 
+plt.figure(2) 
 
-# plt.subplot(211) # RADIAL 
-# axes=plt.gca()
-# axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
-# axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
-# axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
+plt.subplot(211) # RADIAL 
+axes=plt.gca()
+axes.xaxis.set_major_locator(MaxNLocator(integer=True)) # int ticks only on x-axis 
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
+axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout') #in-out ticks on y axis 
 
-# for i in range(0, 2):
-#     line = [[0,RMS_S_rad[i][0]], [trialN+1, RMS_S_rad[i][0]]]  # put line at mean position 
-#     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--") 
-#     plt.text(0, RMS_S_rad[i][0]+0.02, str(round(RMS_S_rad[i][0], 3))+r" $\pm$ "+str(round(RMS_S_rad_error[i][0],3)), fontsize=9) # plot the reference value 
-#     plt.text(trialN, RMS_S_rad[i][trialN]+0.02, str(round(RMS_S_rad[i][trialN], 3))+r" $\pm$ "+str(round(RMS_S_rad_error[i][trialN],3)), fontsize=9) # plot the reference value 
-#     plt.scatter(cases, RMS_S_rad[i],  marker="+", color=str(color[i])) # plot all cases and reference points 
-#     plt.errorbar(cases, RMS_S_rad[i], yerr=RMS_S_rad_error[i],  color=str(color[i]), markersize=12, elinewidth=2, linewidth=0, label=str(label[i])) # add error bar
+for i in range(0, 2):
+    line = [[0,RMS_S_rad[i][0]], [trialN+1, RMS_S_rad[i][0]]]  # put line at mean position 
+    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--") 
+    # plt.text(0, RMS_S_rad[i][0]+0.02, str(round(RMS_S_rad[i][0], 3))+r" $\pm$ "+str(round(RMS_S_rad_error[i][0],3)), fontsize=9) # plot the reference value 
+    # plt.text(trialN, RMS_S_rad[i][trialN]+0.02, str(round(RMS_S_rad[i][trialN], 3))+r" $\pm$ "+str(round(RMS_S_rad_error[i][trialN],3)), fontsize=9) # plot the reference value 
+    plt.scatter(cases, RMS_S_rad[i],  marker="+", color=str(color[i])) # plot all cases and reference points 
+    plt.errorbar(cases, RMS_S_rad[i], yerr=RMS_S_rad_error[i],  color=str(color[i]), markersize=12, elinewidth=2, linewidth=0, label=str(label[i])) # add error bar
 
-# plt.legend(loc='center')
-# plt.title("Radial Position case " + str(dirName) , fontsize=10)
-# plt.xlabel("Sample #", fontsize=10)
-# plt.ylabel("SD Radial Position [mm]", fontsize=10)
+plt.legend(loc='center')
+plt.title("Radial Position case " + str(dirName) , fontsize=10)
+plt.xlabel("Sample #", fontsize=10)
+plt.ylabel("SD Radial Position [mm]", fontsize=10)
 
-# plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
+plt.tight_layout(pad=0.4, w_pad=0.1, h_pad=1.0)
 
-# plt.subplot(212) # VERTICAL 
-# axes=plt.gca()
-# axes.xaxis.set_major_locator(MaxNLocator(integer=True))
-# axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
-# axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+plt.subplot(212) # VERTICAL 
+axes=plt.gca()
+axes.xaxis.set_major_locator(MaxNLocator(integer=True))
+axes.yaxis.set_major_formatter(FormatStrFormatter("%.1f")) # 1 decimal point of y-axis 
+axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
 
-# for i in range(0, 2):
-#     line = [[0,RMS_S_ver[i][0]], [trialN+1, RMS_S_ver[i][0]]]
-#     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--")
-#     plt.text(0, RMS_S_ver[i][0]+0.02, str(round(RMS_S_ver[i][0], 3))+r" $\pm$ "+str(round(RMS_S_ver_error[i][0],3)), fontsize=9)
-#     plt.text(trialN, RMS_S_ver[i][trialN]+0.02, str(round(RMS_S_ver[i][trialN], 3))+r" $\pm$ "+str(round(RMS_S_ver_error[i][trialN],3)), fontsize=9)
-#     plt.scatter(cases, RMS_S_ver[i],  marker="+", color=str(color[i]))
-#     plt.errorbar(cases, RMS_S_ver[i], yerr=RMS_S_ver_error[i],  color=str(color[i]), markersize=12, elinewidth=2, linewidth=0, label=str(label[i]))
+for i in range(0, 2):
+    line = [[0,RMS_S_ver[i][0]], [trialN+1, RMS_S_ver[i][0]]]
+    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = str(color[i]), linestyle="--")
+    # plt.text(0, RMS_S_ver[i][0]+0.02, str(round(RMS_S_ver[i][0], 3))+r" $\pm$ "+str(round(RMS_S_ver_error[i][0],3)), fontsize=9)
+    # plt.text(trialN, RMS_S_ver[i][trialN]+0.02, str(round(RMS_S_ver[i][trialN], 3))+r" $\pm$ "+str(round(RMS_S_ver_error[i][trialN],3)), fontsize=9)
+    plt.scatter(cases, RMS_S_ver[i],  marker="+", color=str(color[i]))
+    plt.errorbar(cases, RMS_S_ver[i], yerr=RMS_S_ver_error[i],  color=str(color[i]), markersize=12, elinewidth=2, linewidth=0, label=str(label[i]))
 
-# plt.legend(loc='center')
-# plt.title("Vertical Position case "+str(dirName), fontsize=10)
-# plt.xlabel("Sample #", fontsize=10)
-# plt.ylabel("SD Vertical Position [mm]", fontsize=10)
+plt.legend(loc='center')
+plt.title("Vertical Position case "+str(dirName), fontsize=10)
+plt.xlabel("Sample #", fontsize=10)
+plt.ylabel("SD Vertical Position [mm]", fontsize=10)
 
-# plt.subplots_adjust(bottom=0.1)
-# plt.subplots_adjust(hspace=0.43)
+plt.subplots_adjust(bottom=0.1)
+plt.subplots_adjust(hspace=0.43)
 
-# plt.savefig("SD_"+str(dirName)+".png", dpi=600)
+plt.savefig("SD_"+str(dirName)+".png", dpi=600)
 
 # '''
 
