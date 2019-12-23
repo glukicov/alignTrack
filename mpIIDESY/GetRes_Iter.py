@@ -35,6 +35,7 @@ eL=str(args.eL)
 NModules=8
 NLayers=4 # per modules
 tracker=("Tracker 1", "Tracker 2")
+markerShape=["8", "*"]
 NTotalLayers=32
 LayerNames = ["U0", "U1", "V0", "V1"]
 moduleNames=np.arange(1, NModules+1) #1-8
@@ -68,8 +69,8 @@ else:
 if (regime=="align"): # only alignment data has Pz/P and implicit station number 
     label_mean_1 = f1.Get("TrackerAlignment/Hits/Labels").GetMean()
     label_mean_2 = f2.Get("TrackerAlignment/Hits/Labels").GetMean()
-    print("Mean label 1:", round(label_mean_1))
-    print("Mean label 2:", round(label_mean_2))
+    #print("Mean label 1:", round(label_mean_1))
+    #print("Mean label 2:", round(label_mean_2))
     label_mean = (label_mean_1 + label_mean_2)/2
     if(label_mean < 1280 and label_mean > 1210):
         stationN = "S12"
@@ -103,8 +104,8 @@ for i in range(0, len(moduleNames)):
     meanError2 = t2.GetMeanError()
     plt.errorbar(i_module, mean1*1e3, yerr=meanError1*1e3, color="purple", markersize=15, elinewidth=3) 
     plt.errorbar(i_module, mean2*1e3, yerr=meanError2*1e3, color="green", markersize=15, elinewidth=3) 
-    plt.plot(i_module, mean1*1e3, marker="+", color="purple", markersize=15, mew=3, linewidth=0, label="Misaligned" if i == 0 else "")
-    plt.plot(i_module, mean2*1e3, marker="+", color="green", markersize=15, mew=3, linewidth=0, label="Aligned" if i == 0 else "")
+    plt.plot(i_module, mean1*1e3, marker=markerShape[0], color="purple", markersize=15, mew=1, linewidth=0, label="Misaligned" if i == 0 else "")
+    plt.plot(i_module, mean2*1e3, marker=markerShape[1], color="green", markersize=15, mew=1, linewidth=0, label="Aligned" if i == 0 else "")
     line = [[i_module+0.5,yMin], [i_module+0.5, yMax]]
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey', linewidth=1)
     i_totalLayer+=1
@@ -112,10 +113,10 @@ for i in range(0, len(moduleNames)):
 line = [[0.5,0.0], [NModules+0.5, 0.0]]
 plt.plot( *zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'black', linewidth=1)
 # axes.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 12}) # outside (R) of the plot 
-axes.legend(loc='upper left', prop={'size': 12})
+axes.legend(title=stationN+":", title_fontsize=15, loc='upper left', prop={'size': 12})
 axes.set_xlim(0.5, NModules+0.5)
 axes.set_ylim(yMin, yMax)
-plt.title("UV Residuals in "+stationN+" "+eL, fontsize=18)
+# plt.title("UV Residuals in "+stationN+" "+eL, fontsize=18)
 # plt.title("UV Residuals in "+tracker[i_station]+" "+eL, fontsize=18)
 plt.ylabel(r"Residual Mean [$\mathrm{\mu}$m]", fontsize=18)
 axes.tick_params(axis="y", labelsize=11)

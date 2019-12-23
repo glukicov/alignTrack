@@ -16,6 +16,8 @@ import numpy.polynomial.polynomial as poly # linear fit
 import matplotlib.pyplot as plt #for plotting  
 import itertools # smart lines in plotting 
 
+markerShape=["x", "8", "+"]
+
 ### HELPER FUNCTIONS ######
 ## Read offsets from FHICL file 
 def getOffsets(f, name):
@@ -230,17 +232,17 @@ def main():
             data_points.append(data[i_global][i_module][1])
             error_points.append(data[i_global][i_module][2])
         #Plot data 
-        plt.errorbar(ModuleArray, data_points, yerr=error_points,  color="purple", markersize=12, elinewidth=1, label="Reconstructed\n misalignment\n(this iteration)")
-        plt.plot(ModuleArray, data_points, marker="+", color="purple")
+        plt.errorbar(ModuleArray, data_points, yerr=error_points,  color="purple", marker=markerShape[2], markersize=10, elinewidth=1, label="Reconstructed\n misalignment\n(this iteration)")
+        plt.plot(ModuleArray, data_points, marker=markerShape[2], color="purple")
         meanAbsReco = np.sum(np.abs(data_points))/len(data_points)
         textstr = "<|Reco|>="+str(int(meanAbsReco))+str(units[i_global])
         plt.text(8.7, yMax[i_global]*0.7, textstr, fontsize=10, color="purple")
         #Plot previous iteration
         if(useOffsets):
-            plt.plot(ModuleArray, offsets[i_global],  marker="+", color="black", label="Reconstructed\n misalignment\n(previous iteration)")
+            plt.plot(ModuleArray, offsets[i_global],  marker=markerShape[1], color="black", label="Reconstructed\n misalignment\n(previous iteration)")
         #Plot truth
         if(useTruth and i_global != 2): # ignoring truth for angles 
-            plt.plot(ModuleArray, truth[i_global], marker=".", color="red", label="Truth misalignment")
+            plt.plot(ModuleArray, truth[i_global], marker=markerShape[0], markersize=8, color="red", label="Truth misalignment")
             meanAbsTruth = np.sum(np.abs(truth[i_global]))/len(truth[i_global])
             textstr =  "<|Truth|>="+str(int(meanAbsTruth))+str(units[i_global])
             plt.text(8.7, yMax[i_global]*0.5, textstr, fontsize=10, color="red")
