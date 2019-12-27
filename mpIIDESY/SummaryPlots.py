@@ -211,6 +211,7 @@ if (mode == "iteration"):
     # stationName=["S12"]
     stationN=len(stationName)
     colors=["red", "blue"]
+    markers=["+", "."]
     tracks = [[0 for i_iter in range(0, len(path)) ] for i_station in range(stationN) ]
     tracks_errors = [[0 for i_iter in range(0, len(path)) ] for i_station in range(stationN)] # keep zero errors for symmetry 
     pvals = [[0 for i_iter in range(0, len(path))]  for i_station in range(stationN)]
@@ -280,15 +281,15 @@ if (mode == "iteration"):
         
         plt.ylabel(plot_names[i_state], fontsize=14)
         plt.xlabel("Iteration", fontsize=14)
-        plt.xticks(fontsize=12, rotation=0) 
-        plt.yticks(fontsize=12, rotation=0)
+        plt.xticks(fontsize=13, rotation=0) 
+        plt.yticks(fontsize=13, rotation=0)
         plt.minorticks_on()
         axes.tick_params(axis='x', which='minor',bottom=False)
         axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
        
         #Plot data
         textStr = "After "+str(x_ticks[-1])+" iterations:"
-        plt.text(0.65, 0.65, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
+        plt.text(0.65, 0.7, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
         for i_station in range(0, stationN):
             #print("Station:", stationName[i_station], "state:", i_state, "iter:", plot_names[i_iter])
 
@@ -303,14 +304,14 @@ if (mode == "iteration"):
                 # data[i_state][i_station] = data[i_state][i_station]/truth_tracks * 100
                 # print("\n\nUsing truth tracks for scaling\n\n")
 
-            plt.plot(x_ticks, data[i_state][i_station], color=colors[i_station], marker=".", linewidth=0, linestyle=":")  
-            plt.errorbar(x_ticks, data[i_state][i_station],  yerr=errors[i_state][i_station], color=colors[i_station], label=stationName[i_station], elinewidth=0, linestyle=":")  
+            plt.plot(x_ticks, data[i_state][i_station], color=colors[i_station], marker=markers[i_station], markersize=12, label=stationName[i_station], linewidth=0, linestyle=":")  
+            plt.errorbar(x_ticks, data[i_state][i_station],  yerr=errors[i_state][i_station], color=colors[i_station], elinewidth=0, linestyle=":")  
             textStr = stationName[i_station] + ": +" + str( round( (data[i_state][i_station][-1] - data[i_state][i_station][0])*100/data[i_state][i_station][-1], 1 ) ) + "%\n"
-            plt.text(0.75, 0.55-float(i_station)/10, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
+            plt.text(0.75, 0.6-float(i_station)/10, textStr, fontsize=13, color="green", horizontalalignment='center', verticalalignment='center', transform=axes.transAxes)
         if(i_state==0 or i_state==1):
             axes.legend(loc='upper left', fontsize=14)
         else:     
-            axes.legend(loc='center right', fontsize=14)      
+            axes.legend(loc='center right', fontsize=14)     
 
     plt.tight_layout()
     plt.savefig("Summary_Iterations.png", dpi=250)
