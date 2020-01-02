@@ -70,17 +70,19 @@ TfileName = "gm2tracker_MomSlices_ana.root"
 stationName = ["12", "18"]
 # states = ["run15922-15924_align", "sim_truth_default", "sim_truth_cbo"]
 # names = ["data (aligned)", "sim default", "sim cbo"]
-states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
-names = ["data (aligned)", "sim a=-0.5#times10^{-6} mm^{-1}", "sim a=0 mm^{-1}", "sim a=+0.3#times10^{-6} mm^{-1}", "sim a=+0.4#times10^{-6} mm^{-1}", "sim a=+0.5#times10^{-6} mm^{-1}", "sim a=+1.0#times10^{-6} mm^{-1}"]
-# states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.35e-6", "sim_a=0.4e-6", "sim_a=0.45e-6", "sim_a=0.5e-6", "sim_a=0.55e-6", "sim_a=0.6e-6", "sim_a=1e-6"]
-# names = ["data (aligned)", "sim a=-0.5e-6", "sim a=truth  ", "sim a=0.1e-6 ", "sim a=0.2e-6 ", "sim a=0.3e-6 ", "sim a=0.35e-6 ", "sim a=0.4e-6 ", "sim a=0.45e-6 ", "sim a=0.5e-6 ", "sim a=0.55e-6 ", "sim a=0.6e-6 ","sim a=1.0e-6 "]
+# states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
+# names = ["data (aligned)", "sim a=-0.5#times10^{-6} mm^{-1}", "sim a=0 mm^{-1}", "sim a=+0.3#times10^{-6} mm^{-1}", "sim a=+0.4#times10^{-6} mm^{-1}", "sim a=+0.5#times10^{-6} mm^{-1}", "sim a=+1.0#times10^{-6} mm^{-1}"]
+states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.35e-6", "sim_a=0.4e-6", "sim_a=0.45e-6", "sim_a=0.5e-6", "sim_a=0.55e-6", "sim_a=0.6e-6", "sim_a=1e-6"]
+names = ["data (aligned)", "sim a=-0.5e-6", "sim a=truth  ", "sim a=0.1e-6 ", "sim a=0.2e-6 ", "sim a=0.3e-6 ", "sim a=0.35e-6 ", "sim a=0.4e-6 ", "sim a=0.45e-6 ", "sim a=0.5e-6 ", "sim a=0.55e-6 ", "sim a=0.6e-6 ","sim a=1.0e-6 "]
 stateN=len(states)
 
 #Containers to store histograms in orders as the names 
 
-# colors = [1, 2, 3 ,4 ,5, 6 ,7 ,41 ,9, 49, 46, 30, 12] #purple, green 
-colors = [0, 1, 2, 4 , 3, 41 ,9, 49, 46, 30, 12] #purple, green 
+colors = [1, 2, 3 ,4 ,5, 6 ,7 ,41 ,9, 49, 46, 30, 12] #purple, green 
+# colors = [0, 1, 2, 4 , 3, 41 ,9, 49, 46, 30, 12] #purple, green 
 marker_styles= [2, 20, 4, 23, 34, 21, 33]
+marker_styles=["+", "*"]
+colorsStn=["purple", "orange"]
 styles = [3001, 3002]
 plotName = ["h_"+coord+"Pos_vs_mom_timeCut", "h_"+coord+"Pos_vs_mom"]
 if (coord == "vertex"):
@@ -255,100 +257,100 @@ c.Print(coord+"_"+mode+"_"+"Pos_vs_mom_timeCut.png")
 profile2DArray[0]=profileArray[0:int(stateN)]
 profile2DArray[1]=profileArray[int(stateN):]
 
-#Now plot the difference of data-sim
-cD = TCanvas("cD", "cD", w, h)
-cD.SetWindowSize(w + (w - cD.GetWw()), h + (h - cD.GetWh()))
-cD.Divide(2,1)
-i_total=0 # canvas id counter 
-for i_station in range(0, len(stationName)):
-    #canvas pad and legend per station 
-    cD.cd(i_total+1)
-    #if(coord == "radial" or coord == "vertical"):
-    legend_ =  TLegend(0.25,0.12,0.40,0.45)
-    # if(coord == "vertex"):
-    #     legend =  TLegend(0.10,0.45,0.45,0.9)
-    legendArray_.append(legend_) # stroe all to keep in scope 
-    for i_state in range(1, stateN):
-        x=array( 'f', [])
-        y=array( 'f', [])
-        ex=array( 'f', [])
-        ey=array( 'f', [])
-        data=profile2DArray[i_station][0]
-        sim=profile2DArray[i_station][i_state]
+# #Now plot the difference of data-sim
+# cD = TCanvas("cD", "cD", w, h)
+# cD.SetWindowSize(w + (w - cD.GetWw()), h + (h - cD.GetWh()))
+# cD.Divide(2,1)
+# i_total=0 # canvas id counter 
+# for i_station in range(0, len(stationName)):
+#     #canvas pad and legend per station 
+#     cD.cd(i_total+1)
+#     #if(coord == "radial" or coord == "vertical"):
+#     legend_ =  TLegend(0.25,0.12,0.40,0.45)
+#     # if(coord == "vertex"):
+#     #     legend =  TLegend(0.10,0.45,0.45,0.9)
+#     legendArray_.append(legend_) # stroe all to keep in scope 
+#     for i_state in range(1, stateN):
+#         x=array( 'f', [])
+#         y=array( 'f', [])
+#         ex=array( 'f', [])
+#         ey=array( 'f', [])
+#         data=profile2DArray[i_station][0]
+#         sim=profile2DArray[i_station][i_state]
 
-        #loop over bins 
-        bin_number_X = data.GetNbinsX()
-        #print(bin_number_X)
-        i_total_bins = 0
-        for i_bin_x in range(0, bin_number_X):
-            bin_content = data.GetBinContent(i_bin_x)
-            #skip empty bins 
-            if (bin_content == 0):
-                continue
-            #skip bins at the start (below the cut)":
-            bin_center=data.GetBinCenter(i_bin_x)
-            #print(bin_center)
-            if (bin_center < x_min):
-                continue
-            #once we hit the final bin, stop:
-            if (bin_center >= x_max):
-                break
+#         #loop over bins 
+#         bin_number_X = data.GetNbinsX()
+#         #print(bin_number_X)
+#         i_total_bins = 0
+#         for i_bin_x in range(0, bin_number_X):
+#             bin_content = data.GetBinContent(i_bin_x)
+#             #skip empty bins 
+#             if (bin_content == 0):
+#                 continue
+#             #skip bins at the start (below the cut)":
+#             bin_center=data.GetBinCenter(i_bin_x)
+#             #print(bin_center)
+#             if (bin_center < x_min):
+#                 continue
+#             #once we hit the final bin, stop:
+#             if (bin_center >= x_max):
+#                 break
 
-            #get the bin data 
-            data_r = data.GetBinContent(i_bin_x)
-            sim_r = sim.GetBinContent(i_bin_x)
-            data_er=data.GetBinError(i_bin_x)*2
-            sim_er=sim.GetBinError(i_bin_x)*2
-            y.append(sim_r-data_r)
-            ey.append(np.sqrt(data_er**2+sim_er**2))
-            x.append(data.GetBinCenter(i_bin_x))
-            ex.append(data.GetBinWidth(i_bin_x)*0.5)
-            i_total_bins+=1
+#             #get the bin data 
+#             data_r = data.GetBinContent(i_bin_x)
+#             sim_r = sim.GetBinContent(i_bin_x)
+#             data_er=data.GetBinError(i_bin_x)*2
+#             sim_er=sim.GetBinError(i_bin_x)*2
+#             y.append(sim_r-data_r)
+#             ey.append(np.sqrt(data_er**2+sim_er**2))
+#             x.append(data.GetBinCenter(i_bin_x))
+#             ex.append(data.GetBinWidth(i_bin_x)*0.5)
+#             i_total_bins+=1
 
-        gr_ = TGraphErrors(i_total_bins, x, y ,ex, ey)
-        gr_.SetName("TGraphErrors_"+str(i_state)+str(i_station)+"_")
-        graphArray_[i_station].append(gr_)
+#         gr_ = TGraphErrors(i_total_bins, x, y ,ex, ey)
+#         gr_.SetName("TGraphErrors_"+str(i_state)+str(i_station)+"_")
+#         graphArray_[i_station].append(gr_)
 
-          #new profile/graph y-axis tools (in case tgrpah is drawn first)
-        gr_.GetYaxis().SetTitle("#Delta (data - simulation) radial beam position [mm]")            
-        gr_.GetYaxis().SetTitleSize(0.045)            
-        gr_.GetYaxis().SetLabelSize(0.040)            
-        gr_.GetXaxis().SetTitleSize(0.045)            
-        gr_.GetXaxis().SetLabelSize(0.040)            
-        gr_.GetYaxis().CenterTitle()
-        gr_.GetYaxis().SetTitleOffset(1.15)
-        gr_.GetYaxis().SetRangeUser(y_min, y_max) 
-        gr_.GetXaxis().SetRangeUser(x_min, x_max) 
-        gr_.SetTitle("S"+stationName[i_station])
-        gStyle.SetTitleY(0.95)
-        gr_.GetXaxis().SetTitle(plotXtitle[0]+"/ "+str(round(binN_X,3))+" "+ unitsX[0])
-        gr_.GetXaxis().CenterTitle()
-        gr_.SetMarkerColor( colors[i_state] )
-        gr_.SetLineColor( colors[i_state] )
-        gr_.SetMarkerStyle(marker_styles[i_state])
-        gr_.SetMarkerSize(2.0)
+#           #new profile/graph y-axis tools (in case tgrpah is drawn first)
+#         gr_.GetYaxis().SetTitle("#Delta (data - simulation) radial beam position [mm]")            
+#         gr_.GetYaxis().SetTitleSize(0.045)            
+#         gr_.GetYaxis().SetLabelSize(0.040)            
+#         gr_.GetXaxis().SetTitleSize(0.045)            
+#         gr_.GetXaxis().SetLabelSize(0.040)            
+#         gr_.GetYaxis().CenterTitle()
+#         gr_.GetYaxis().SetTitleOffset(1.15)
+#         gr_.GetYaxis().SetRangeUser(y_min, y_max) 
+#         gr_.GetXaxis().SetRangeUser(x_min, x_max) 
+#         gr_.SetTitle("S"+stationName[i_station])
+#         gStyle.SetTitleY(0.95)
+#         gr_.GetXaxis().SetTitle(plotXtitle[0]+"/ "+str(round(binN_X,3))+" "+ unitsX[0])
+#         gr_.GetXaxis().CenterTitle()
+#         gr_.SetMarkerColor( colors[i_state] )
+#         gr_.SetLineColor( colors[i_state] )
+#         gr_.SetMarkerStyle(marker_styles[i_state])
+#         gr_.SetMarkerSize(2.0)
 
-        if (i_state == 1):  
-            gr_.Draw("AP")
-                #gr.SetMarkerSize(2)
-        else:
-            gr_.Draw("P same")
+#         if (i_state == 1):  
+#             gr_.Draw("AP")
+#                 #gr.SetMarkerSize(2)
+#         else:
+#             gr_.Draw("P same")
             
-        #fill legend once per state      
+#         #fill legend once per state      
        
-        legenValue1 = str(names[i_state])
-        legend_.AddEntry(gr_, str(legenValue1))
+#         legenValue1 = str(names[i_state])
+#         legend_.AddEntry(gr_, str(legenValue1))
 
 
-    #draw legend once per canvas 
-    legend_.Draw("same")
-    i_total+=1
-    meanArray=[]
-    legend_.SetFillStyle(0)
-    legend_.SetTextSize(0.035)
+#     #draw legend once per canvas 
+#     legend_.Draw("same")
+#     i_total+=1
+#     meanArray=[]
+#     legend_.SetFillStyle(0)
+#     legend_.SetTextSize(0.035)
 
-cD.Draw()
-cD.Print("dif"+coord+"_"+"Pos_vs_mom_timeCut.png")
+# cD.Draw()
+# cD.Print("dif"+coord+"_"+"Pos_vs_mom_timeCut.png")
 
 
 if(method == None):
@@ -476,16 +478,15 @@ if(method == "chi2"):
     print(len(x_ticks[0]))
     print(len(C_array_2D[0]))
 
-    colorsStn=["red", "blue"]
     f = plt.figure(figsize=(7,7))
     # #Plot the 0th line 
-    #line = [[x_ticks[0][0]-0.1,0.0], [x_ticks[0][-1]+0.1, 0.0]]
-    #plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
-    # plt.ylabel(r"$\langle\chi^2\rangle$", fontsize=12))
-    plt.ylabel(r"$\delta d$ [mm]", fontsize=12)
-    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=12)
-    plt.xticks(fontsize=10, rotation=0) 
-    plt.yticks(fontsize=10, rotation=0)
+    line = [[x_ticks[0][0]-0.1,0.0], [x_ticks[0][-1]+0.1, 0.0]]
+    plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
+    # plt.ylabel(r"$\langle\chi^2\rangle$", fontsize=14)
+    plt.ylabel(r"$\delta d$ [mm]", fontsize=14)
+    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=14)
+    plt.xticks(fontsize=12, rotation=0) 
+    plt.yticks(fontsize=12, rotation=0)
     for i_station in range(0, len(stationName)):
         # x_new = np.linspace(float(min(x_ticks[0])), float(max(x_ticks[0])), num=1000) # generate x-points for evaluation 
         # coefs = poly.polyfit(x_ticks[0], C_array_2D[i_station], 2) # x1 line
@@ -493,8 +494,9 @@ if(method == "chi2"):
         # plt.plot(x_new, ffit, color=colorsStn[i_station])
         chi2_min=(min(np.abs(C_array_2D[i_station])))
         # chi2_min=(min(C_array_2D[i_station]))
-        a_min=(x_ticks[1][np.argmin(np.abs(C_array_2D[i_station]))])
-        plt.plot(x_ticks[0], C_array_2D[i_station], marker="+", color=colorsStn[i_station], label="S"+stationName[i_station]+": "+a_min, linestyle=":")
+        a_min=(x_ticks[1][np.argmin(np.abs(D_array_2D[i_station]))])
+        a_min=round(float(a_min)*1e6,2)
+        plt.plot(x_ticks[0], D_array_2D[i_station], marker=marker_styles[i_station], mew=1, markersize=14, color=colorsStn[i_station], label="S"+stationName[i_station]+": $a$="+str(a_min)+r"$\times10^{-6}$", linestyle=":")
         #print(S_array_2D[i_station])
 
     axes=plt.gca()
@@ -504,7 +506,8 @@ if(method == "chi2"):
     axes.tick_params(axis='x',which='minor', bottom=True, top=True, direction='inout')
     axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
     plt.minorticks_on()
-    axes.legend(loc='upper center', prop={'size': 12}) # outside (R) of the plot 
+    plt.tight_layout()
+    axes.legend(loc='upper center', prop={'size': 14}) # outside (R) of the plot 
     plt.savefig("Chi2.png", dpi=250)
 
 ### Sigma method ###### 
@@ -573,22 +576,21 @@ if(method == "sigma"):
 
 
     x_ticks =  ( [0.1, 0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6] ,["0.1e-6 ", "0.2e-6 ", "0.3e-6 ", "0.35e-6 ", "0.4e-6 ", "0.45e-6 ", "0.5e-6 ", "0.55e-6 ", "0.6e-6 "])
-    colorsStn=["red", "blue"]
     f = plt.figure(figsize=(7,7))
     #Plot the 0th line 
     line = [[x_ticks[0][0]-0.1,0.0], [x_ticks[0][-1]+0.1, 0.0]]
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
-    plt.ylabel(r"$\sigma$", fontsize=12)
-    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=12)
-    plt.xticks(fontsize=10, rotation=0) 
-    plt.yticks(fontsize=10, rotation=0)
+    plt.ylabel(r"$\langle\sigma\rangle$", fontsize=16)
+    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=14)
+    plt.xticks(fontsize=12, rotation=0) 
+    plt.yticks(fontsize=12, rotation=0)
     for i_station in range(0, len(stationName)):
         x_new = np.linspace(float(min(x_ticks[0])), float(max(x_ticks[0])), num=1000) # generate x-points for evaluation 
         coefs = poly.polyfit(x_ticks[0], S_array_2D[i_station], 1) # x1 line
         ffit = poly.polyval(x_new, coefs) # plot over generated points 
         plt.plot(x_new, ffit, color=colorsStn[i_station])
         x_0 = -coefs[0]/coefs[1] # x(y=0) = -c/m 
-        plt.scatter(x_ticks[0], S_array_2D[i_station], marker="+", color=colorsStn[i_station], label="S"+stationName[i_station]+": a="+str(round(x_0,3))+r"$\times10^{-6}$" )
+        plt.scatter(x_ticks[0], S_array_2D[i_station], marker=marker_styles[i_station], color=colorsStn[i_station], s=80, label="S"+stationName[i_station]+": $a$="+str(round(x_0,2))+r"$\times10^{-6}$" )
         #print(S_array_2D[i_station])
 
     axes=plt.gca()
@@ -598,5 +600,6 @@ if(method == "sigma"):
     axes.tick_params(axis='x',which='minor', bottom=True, top=True, direction='inout')
     axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
     plt.minorticks_on()
-    axes.legend(loc='upper left', prop={'size': 12}) # outside (R) of the plot 
+    axes.legend(loc='upper left', prop={'size': 14}) # outside (R) of the plot 
+    plt.tight_layout()
     plt.savefig("Sigma.png", dpi=250)
