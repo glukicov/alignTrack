@@ -29,6 +29,7 @@ parser = argparse.ArgumentParser(description='arguments')
 parser.add_argument('-m', '--mode', type=str)
 parser.add_argument('-c', '--coord', type=str, default="radial")
 parser.add_argument('--method', type=str, default=None)
+parser.add_argument('-xbins', '--nX_bins', type=int, default=1)
 parser.add_argument('-xmin', '--x_min', type=float, default=300)
 parser.add_argument('-xmax', '--x_max', type=float, default=3000)
 parser.add_argument('-ymin', '--y_min', type=float, default=-25)
@@ -56,6 +57,7 @@ y_min = args.y_min
 y_max = args.y_max
 x_min = args.x_min
 x_max = args.x_max
+nX_bins = args.nX_bins
 
 
 gStyle.SetOptStat(0) 
@@ -71,16 +73,16 @@ stationName = ["12", "18"]
 # states = ["run15922-15924_align", "sim_truth_default", "sim_truth_cbo"]
 # names = ["data (aligned)", "sim default", "sim cbo"]
 # states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=0.3e-6", "sim_a=0.4e-6", "sim_a=0.5e-6", "sim_a=1e-6"]
-# names = ["data (aligned)", "sim a=-0.5#times10^{-6} mm^{-1}", "sim a=0 mm^{-1}", "sim a=+0.3#times10^{-6} mm^{-1}", "sim a=+0.4#times10^{-6} mm^{-1}", "sim a=+0.5#times10^{-6} mm^{-1}", "sim a=+1.0#times10^{-6} mm^{-1}"]
+# names = ["data (aligned)", "simulation #it{a}=-0.5#times10^{-6} mm^{-1}", "simulation #it{a}=0 mm^{-1}", "simulation #it{a}=+0.3#times10^{-6} mm^{-1}", "simulation #it{a}=+0.4#times10^{-6} mm^{-1}", "simulation #it{a}=+0.5#times10^{-6} mm^{-1}", "simulation #it{a}=+1.0#times10^{-6} mm^{-1}"]
 states = ["run15922-15924_align", "sim_a=-0.5e-6", "sim_truth", "sim_a=1e-7", "sim_a=0.2e-6", "sim_a=0.3e-6", "sim_a=0.35e-6", "sim_a=0.4e-6", "sim_a=0.45e-6", "sim_a=0.5e-6", "sim_a=0.55e-6", "sim_a=0.6e-6", "sim_a=1e-6"]
 names = ["data (aligned)", "sim a=-0.5e-6", "sim a=truth  ", "sim a=0.1e-6 ", "sim a=0.2e-6 ", "sim a=0.3e-6 ", "sim a=0.35e-6 ", "sim a=0.4e-6 ", "sim a=0.45e-6 ", "sim a=0.5e-6 ", "sim a=0.55e-6 ", "sim a=0.6e-6 ","sim a=1.0e-6 "]
 stateN=len(states)
 
 #Containers to store histograms in orders as the names 
 
-colors = [1, 2, 3 ,4 ,5, 6 ,7 ,41 ,9, 49, 46, 30, 12] #purple, green 
-# colors = [0, 1, 2, 4 , 3, 41 ,9, 49, 46, 30, 12] #purple, green 
-marker_styles= [2, 20, 4, 23, 34, 21, 33]
+colors = [1, 2, 3 ,4 ,5, 6 ,7 ,41 ,9, 49, 46, 30, 12] 
+# colors = [0, 1, 2, 4 , 3, 41 ,9, 49, 46, 30, 12] 
+# marker_styles= [2, 20, 4, 23, 34, 21, 33]
 marker_styles=["+", "*"]
 colorsStn=["purple", "orange"]
 styles = [3001, 3002]
@@ -144,10 +146,10 @@ for i_station in range(0, len(stationName)):
         plot = scrFile.Get(str(path+stationName[i_station]+"/"+plotNameAfterCut))
         histArray.append(plot)
 
-        # print("before: ", plot.GetNbinsX())
+       # print("before re-binning: ", plot.GetNbinsX())
         # Rebin2D(X,Y)
-        plot.Rebin2D(5,1)
-        # print("after: ", plot.GetNbinsX())
+        plot.Rebin2D(nX_bins,1)
+        #print("after re-binning: ", plot.GetNbinsX())
 
         #Get the normalisation scale
         correction = plot.GetMean(2) 
@@ -266,7 +268,7 @@ profile2DArray[1]=profileArray[int(stateN):]
 #     #canvas pad and legend per station 
 #     cD.cd(i_total+1)
 #     #if(coord == "radial" or coord == "vertical"):
-#     legend_ =  TLegend(0.25,0.12,0.40,0.45)
+#     legend_ =  TLegend(0.13,0.12,0.40,0.45)
 #     # if(coord == "vertex"):
 #     #     legend =  TLegend(0.10,0.45,0.45,0.9)
 #     legendArray_.append(legend_) # stroe all to keep in scope 
@@ -482,27 +484,38 @@ if(method == "chi2"):
     # #Plot the 0th line 
     line = [[x_ticks[0][0]-0.1,0.0], [x_ticks[0][-1]+0.1, 0.0]]
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
-    # plt.ylabel(r"$\langle\chi^2\rangle$", fontsize=14)
-    plt.ylabel(r"$\delta d$ [mm]", fontsize=14)
-    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=14)
+    plt.ylabel(r"$\delta r$ [mm]", fontsize=14)
+    plt.xlabel(r"Curvature (a$\times10^{-6}$) [mm$^{-1}$]", fontsize=14)
     plt.xticks(fontsize=12, rotation=0) 
     plt.yticks(fontsize=12, rotation=0)
     for i_station in range(0, len(stationName)):
-        # x_new = np.linspace(float(min(x_ticks[0])), float(max(x_ticks[0])), num=1000) # generate x-points for evaluation 
-        # coefs = poly.polyfit(x_ticks[0], C_array_2D[i_station], 2) # x1 line
-        # ffit = poly.polyval(x_new, coefs) # plot over generated points 
-        # plt.plot(x_new, ffit, color=colorsStn[i_station])
-        chi2_min=(min(np.abs(C_array_2D[i_station])))
-        # chi2_min=(min(C_array_2D[i_station]))
         a_min=(x_ticks[1][np.argmin(np.abs(D_array_2D[i_station]))])
         a_min=round(float(a_min)*1e6,2)
         plt.plot(x_ticks[0], D_array_2D[i_station], marker=marker_styles[i_station], mew=1, markersize=14, color=colorsStn[i_station], label="S"+stationName[i_station]+": $a$="+str(a_min)+r"$\times10^{-6}$", linestyle=":")
-        #print(S_array_2D[i_station])
 
     axes=plt.gca()
-    plt.title("Range: "+str(x_min)+" to "+str(x_max)+" [MeV]", fontsize=12)
+    #plt.title("Range: "+str(x_min)+" to "+str(x_max)+" [MeV]; bins="+str(nX_bins), fontsize=12)
     axes.set_xlim(x_ticks[0][0]-0.1, x_ticks[0][-1]+0.1)
-    # axes.set_ylim(-3, 3)
+    axes.tick_params(axis='x',which='minor', bottom=True, top=True, direction='inout')
+    axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
+    plt.minorticks_on()
+    plt.tight_layout()
+    axes.legend(loc='upper center', prop={'size': 14}) # outside (R) of the plot 
+    plt.savefig("D.png", dpi=250)
+
+    f = plt.figure(figsize=(7,7))
+    plt.ylabel(r"$\chi^2/\mathrm{DoF}$", fontsize=14)
+    plt.xlabel(r"Curvature (a$\times10^{-6}$) [mm$^{-1}$]", fontsize=14)
+    plt.xticks(fontsize=12, rotation=0) 
+    plt.yticks(fontsize=12, rotation=0)
+    for i_station in range(0, len(stationName)):
+        a_min=(x_ticks[1][np.argmin(np.abs(C_array_2D[i_station]))])
+        a_min=round(float(a_min)*1e6,2)
+        plt.plot(x_ticks[0], C_array_2D[i_station], marker=marker_styles[i_station], mew=1, markersize=14, color=colorsStn[i_station], label="S"+stationName[i_station]+": $a$="+str(a_min)+r"$\times10^{-6}$", linestyle=":")
+
+    axes=plt.gca()
+    #plt.title("Range: "+str(x_min)+" to "+str(x_max)+" [MeV]; bins="+str(nX_bins), fontsize=12)
+    axes.set_xlim(x_ticks[0][0]-0.1, x_ticks[0][-1]+0.1)
     axes.tick_params(axis='x',which='minor', bottom=True, top=True, direction='inout')
     axes.tick_params(axis='y', which='both', left=True, right=True, direction='inout')
     plt.minorticks_on()
@@ -580,21 +593,21 @@ if(method == "sigma"):
     #Plot the 0th line 
     line = [[x_ticks[0][0]-0.1,0.0], [x_ticks[0][-1]+0.1, 0.0]]
     plt.plot(*zip(*itertools.chain.from_iterable(itertools.combinations(line, 2))), color = 'grey')
-    plt.ylabel(r"$\langle\sigma\rangle$", fontsize=16)
-    plt.xlabel(r"Curvature (a$\times10^{-6}$)", fontsize=14)
+    plt.ylabel(r"$\sigma/\mathrm{DoF}$", fontsize=16)
+    plt.xlabel(r"Curvature (a$\times10^{-6}$) [mm$^{-1}$]", fontsize=14)
     plt.xticks(fontsize=12, rotation=0) 
     plt.yticks(fontsize=12, rotation=0)
     for i_station in range(0, len(stationName)):
         x_new = np.linspace(float(min(x_ticks[0])), float(max(x_ticks[0])), num=1000) # generate x-points for evaluation 
         coefs = poly.polyfit(x_ticks[0], S_array_2D[i_station], 1) # x1 line
         ffit = poly.polyval(x_new, coefs) # plot over generated points 
-        plt.plot(x_new, ffit, color=colorsStn[i_station])
+        plt.plot(x_new, ffit, color=colorsStn[i_station], linestyle=":")
         x_0 = -coefs[0]/coefs[1] # x(y=0) = -c/m 
-        plt.scatter(x_ticks[0], S_array_2D[i_station], marker=marker_styles[i_station], color=colorsStn[i_station], s=80, label="S"+stationName[i_station]+": $a$="+str(round(x_0,2))+r"$\times10^{-6}$" )
+        plt.scatter(x_ticks[0], S_array_2D[i_station], marker=marker_styles[i_station], color=colorsStn[i_station], s=80, label="S"+stationName[i_station]+": $a$="+str(round(x_0,1))+r"$\times10^{-6}$")
         #print(S_array_2D[i_station])
 
     axes=plt.gca()
-    plt.title("Range: "+str(x_min)+" to "+str(x_max)+" [MeV]", fontsize=12)
+    #plt.title("Range: "+str(x_min)+" to "+str(x_max)+" [MeV]", fontsize=12)
     axes.set_xlim(x_ticks[0][0]-0.1, x_ticks[0][-1]+0.1)
     # axes.set_ylim(-3, 3)
     axes.tick_params(axis='x',which='minor', bottom=True, top=True, direction='inout')
