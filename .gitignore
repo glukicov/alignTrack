@@ -5,6 +5,8 @@ mpIIDESY/Plots/.ipynb_checkpoints/
 mpIIDESY/EP/Curve/BK/tmp.exe
 mpIIDESY/EP/Curve/curve.exe
 mpIIDESY/EP/data/
+.idea/
+.ipynb_checkpoints/
 *.o
 *.his
 *.log
