@@ -1,7 +1,6 @@
 # alignTrack
 
-### Alignment manual:
-### <http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16>
+### [Alignment manual][http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16]
 
 ### This project has moved to its new home: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
 
