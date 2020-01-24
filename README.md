@@ -1,12 +1,15 @@
 # alignTrack
 
-### This project has moved to its new home: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework ###
+### Alignment manual:
+### http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16
+
+### This project has moved to its new home: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
 
 ### Legacy code up to v1.0 is mainted here:
 
 ### DIR Structure ###
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
-2. PEDE/ - up-to-date clean version of pede from DESY svn: http://svnsrv.desy.de/public/MillepedeII/tags/V04-03-08
+2. PEDE/ - up-to-date clean version of pede from DESY svn: http://svnsrv.desy.de/public/MillepedeII/tags/V04-06-00
 2. C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
 4. F_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
 5. python_toy_tracker/ - John's python code for toy tracker
