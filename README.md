@@ -2,7 +2,7 @@
 
 <a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align_2.png" height="250"></a>
 
-#### This project contains alignment code and plotting scripts for the internal alignment of the g-2 tracking detector.
+#### This project contains code and plotting scripts for the internal alignment (calibration) of the g-2 tracking detector.
 
 A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-value (i.e. track quality) of a fitted track.
 
@@ -13,6 +13,7 @@ A misalignment of a tracking detector results in a residual between a hit positi
 
 ### The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
 
+### The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking
 
 #### Legacy code up to v1.0 is mainted here
 #### The official release is now maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
