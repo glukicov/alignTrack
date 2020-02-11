@@ -10,27 +10,28 @@ A misalignment of a tracking detector results in a residual between a hit positi
 <a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a>
 
 ### This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.
-
 ### The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
-
 ### The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking
-
 #### Legacy code up to v1.0 is mainted here
-#### The official release is now maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
+#### The official release is now maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework
 
-### DIR Structure ###
+DIR Structure
+============
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
 2. PEDE/ - up-to-date clean version of pede from DESY svn: http://svnsrv.desy.de/public/MillepedeII/tags/V04-06-00
 2. C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
 4. F_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
 5. python_toy_tracker/ - John's python code for toy tracker
 
-### INSTALLATION of MC code (to verify the alignment routines) ###
+Installation (to verify the alignment routines)
+============
 To get the code (requires c++0x compiler suport for the Logger) working on gm2gpvm0x at Fermilab:
 The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 5 Dec 2017).
 Makefiles detect the OS (SL Linux or Mac Unix) and use the right compiler automatically.
 
-1.  `git clone https://github.com/glukicov/alignTrack.git`
+1.  .. code-block:: bash
+   git clone https://github.com/glukicov/alignTrack.git
+   
 to get the latest code from our repository 
 2. `cd alignTrack/mpIIDESY`
 3. `make`
