@@ -1,15 +1,15 @@
 # alignTrack
 
-<a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align_2.png" height="220"></a>
+<a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align_2.png" height="250"></a>
 
 #### This project contains alignment code and plotting scripts for the internal alignment of the g-2 tracking detector.
 
 A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-value (i.e. track quality) of a fitted track.
 
-#### Results showing the performance of the alignment procedure are shown below:
+#### Results showing the performance of the alignment procedure (in simulation) are shown below:
+<a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align_1.png" height="250"></a>
 
-
-### This work led to a publication (arXiv:1909.12900) https://arxiv.org/pdf/1909.12900.pdf
+### This work led to a publication (arXiv:1909.12900): https://arxiv.org/pdf/1909.12900.pdf, where alignment results with data are discussed.
 
 ### The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
 
