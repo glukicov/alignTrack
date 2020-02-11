@@ -1,21 +1,21 @@
 # alignTrack
 
-<a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_2.png" height="230"></a>
+<div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_2.png" height="230"></a></div>
 
 #### This project contains code and plotting scripts for the internal alignment (calibration) of the g-2 tracking detector.
 
 A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-value (i.e. track quality) of a fitted track.
 
-#### Results showing the performance of the alignment procedure (in simulation) are shown below:
-<a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a>
+#### Results demonstrating the performance of the alignment procedure (in simulation) are shown below:
+<div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a></div>
 
-* This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.
-* The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
+* **This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.**
+* The alignment procedure and alignment monitoring, including writing the derived calibration constants to the production database (PSQL), are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
 * The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking
 
 Alignment flow
 ============
-<img src="mpIIDESY/align_4.png" height="400">
+<div style="text-align:center"><img src="mpIIDESY/align_4.png" height="400"></div>
 
 Project structure
 ============
@@ -34,42 +34,41 @@ To get the code (requires c++0x compiler suport for the Logger) working on gm2gp
 The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 5 Dec 2017).
 Makefiles detect the OS (SL Linux or Mac Unix) and use the right compiler automatically.
 
-.. code-block:: bash
+
 
     git clone https://github.com/glukicov/alignTrack.git #to get the latest code from our repository 
     cd alignTrack/mpIIDESY
-    make
-to build the pede executable 
-4. test that it works by `pede -t`
-(should give a terminal output like below [i.e. last 2 lines]):
- Millepede II-P ending   ... Mon Dec 12 12:31:15 2016 
- Peak dynamic memory allocation:    0.100512 GB
-5. `./getRandoms.sh 100000`  (see description below!) 
+    make #to build the pede executable 
+    pede -t # test that it works (should give a terminal output like below [i.e. last 2 lines]): Millepede II-P ending   ... Mon Dec 12 12:31:15 2016  Peak dynamic memory allocation:    0.100512 GB
+    ./getRandoms.sh 100000  # see description below (!)
 
 ### Random (Integer) Number Generation ###
 To generate random numbers:
-* `./getRandoms.sh x y`
-where x is the number of tracks the MC will be run for, and y is a seed. This bash script calls:
- 1.* `python randomIntGenerator.py -u True -o uniform_ran.txt -s y -n x*4`
- 2.* `python randomIntGenerator.py -g True -o gaussian_ran.txt -s y -n x*16`
-
- to produce the correct number of random numbers for the requested number of tracks. 
+   
+    ./getRandoms.sh x y # where x is the number of tracks the MC will be run for, and y is a seed. This bash script calls:
+    python randomIntGenerator.py -u True -o uniform_ran.txt -s y -n x*4
+    python randomIntGenerator.py -g True -o gaussian_ran.txt -s y -n x*16 
+to produce the correct number of random numbers for the requested number of tracks. 
  
 ### Running C++ MC AlignTracker: ###
-1. Compile code with `make -f AlignTracker.mk` [supports ROOT5/6, Logger from gm2trackedaq, and RandomNumberBuffer]
-[`make -f AlignTracker.mk clean` - also removes previusly generated data, steering and constrain files - can be useful]
+1. Compile code with `make -f AlignTracker.mk` (supports ROOT5/6, Logger from gm2trackedaq, and RandomNumberBuffer)
+`make -f AlignTracker.mk clean` - also removes previusly generated data, steering and constrain files - can be useful]
 2. Generate data by running `./AlignTracker n x y z` (where x is the number of tracks to generate, y and z are the offsets [keep 0.0 0.0 for intial runs!]) for normal or `./AlignTracker d x y z` for debug/verbose output, or `./AlignTracker p x y z` for plotting with reduced statistics (to see individual tracks) All options generate:
+
    * `Tracker_data.bin`, `Tracker_con.txt`, `Tracker_str.txt`, `Tracker_par.txt`  [data, constrains, steering, pre-sigma files]
-    * `Tracker.root` [sanity plots]
+   * `Tracker.root` [sanity plots]
 3. Align the detector by running `./pede Tracker_str.txt`.
 The `d` and `p` options produce additional debug files: Tracker_d_*.txt or Tracker_p_*.txt, respecivelly. 
 AlignTracker.cpp (contains definition of purpose) - main programme calling on methods from AlignTracker_methods.cpp. 
 
-### Producing PEDE Histograms ### 
-` root readPedeHists.C+ ` will display all PEDE histograms in canvases, alternatively:
-1. ` root`
-2. root [0]  ` .L readPedeHists.C+`
-3. root [2] ` readPedeHists()` [possible options inisde () "write" "nodraw" "print"] 
+### Producing PEDE Histograms
+    root readPedeHists.C+ # will display all PEDE histograms in canvases
+
+alternatively:
+
+    root
+    root [0] .L readPedeHists.C+
+    root [2] readPedeHists() # [possible options inisde () "write" "nodraw" "print"] 
 The rootlogon.C file takes care of over/undeflows, sig.fig., etc.
 
 
