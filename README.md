@@ -11,12 +11,11 @@ A misalignment of a tracking detector results in a residual between a hit positi
 
 ### This work led to a publication (arXiv:1909.12900) https://arxiv.org/pdf/1909.12900.pdf
 
-### [Alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
-
+### The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
 
 
 #### Legacy code up to v1.0 is mainted here
-#### The official release is maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
+#### The official release is now maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
 
 ### DIR Structure ###
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
@@ -25,7 +24,7 @@ A misalignment of a tracking detector results in a residual between a hit positi
 4. F_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
 5. python_toy_tracker/ - John's python code for toy tracker
 
-###  INSTALLATION ###
+### INSTALLATION of MC code (to verify the alignment routines) ###
 To get the code (requires c++0x compiler suport for the Logger) working on gm2gpvm0x at Fermilab:
 The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 5 Dec 2017).
 Makefiles detect the OS (SL Linux or Mac Unix) and use the right compiler automatically.
