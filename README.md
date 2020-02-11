@@ -1,6 +1,6 @@
 # alignTrack
 
-<a href=http://www.hep.ucl.ac.uk/~lukicov/> <img src="mpIIDESY/align.png" height="250" class="center"></a>
+<a href=http://www.hep.ucl.ac.uk/~lukicov/> <img src="mpIIDESY/align.png" height="250" class="center"><img src="mpIIDESY/Straw.png" height="200" class="center"></a>
 
 ### [Alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
 
