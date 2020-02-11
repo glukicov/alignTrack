@@ -7,7 +7,7 @@
 A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-value (i.e. track quality) of a fitted track.
 
 #### Results showing the performance of the alignment procedure (in simulation) are shown below:
-<a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align_1.png" height="270"></a>
+<a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align_3.png" height="270"></a>
 
 ### This work led to a publication (arXiv:1909.12900): https://arxiv.org/pdf/1909.12900.pdf, where alignment results with data are discussed.
 
