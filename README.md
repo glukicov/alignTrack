@@ -1,6 +1,6 @@
 # alignTrack
 
-<a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align2.png" height="220"></a>
+<a href=http://www.hep.ucl.ac.uk/~lukicov><img src="mpIIDESY/align.png" height="220"></a>
 
 #### This project contains alignment code and plotting scripts for the internal alignment of the g-2 tracking detector.
 
