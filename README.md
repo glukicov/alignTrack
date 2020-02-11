@@ -34,11 +34,7 @@ To get the code (requires c++0x compiler suport for the Logger) working on gm2gp
 The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 5 Dec 2017).
 Makefiles detect the OS (SL Linux or Mac Unix) and use the right compiler automatically.
 
- 
-.. code-block:: bash
-    
-    git clone https://github.com/glukicov/alignTrack.git
-
+1. `git clone https://github.com/glukicov/alignTrack.git`
 to get the latest code from our repository 
 2. `cd alignTrack/mpIIDESY`
 3. `make`
