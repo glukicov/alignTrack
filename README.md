@@ -1,10 +1,13 @@
 # alignTrack
 
+<a href=http://www.hep.ucl.ac.uk/~lukicov/> <img src="mpIIDESY/align.png" height="250" class="center"></a>
+
 ### [Alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
 
-### This project has moved to its new home: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
+This project contains a simple 2D alignment model and plotting scripts for the alignment of the g-2 tracking detector.
 
-### Legacy code up to v1.0 is mainted here:
+#### Legacy code up to v1.0 is mainted here
+#### Official release: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework 
 
 ### DIR Structure ###
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
