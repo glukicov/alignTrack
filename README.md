@@ -12,8 +12,6 @@ A misalignment of a tracking detector results in a residual between a hit positi
 ### This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.
 ### The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
 ### The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking
-#### Legacy code up to v1.0 is mainted here
-#### The official release is now maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework
 
 Alignment flow
 ============
@@ -26,6 +24,9 @@ Project structure
 2. C_mpIIDESY/ - for experimenting with toy C++ model MC and pede.
 4. F_mpIIDESY/ - for experimenting with toy Fortran model MC and pede.
 5. python_toy_tracker/ - John's python code for toy tracker
+
+#### Legacy code up to v1.0 is mainted here
+#### The official release is now maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework
 
 Installation (to verify the alignment routines)
 ============
