@@ -15,7 +15,7 @@ A misalignment of a tracking detector results in a residual between a hit positi
 
 Alignment flow
 ============
-<div style="text-align:center"><img src="mpIIDESY/align_4.png" height="400"></div>
+<div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_4.png" height="400"></a></div>
 
 Project structure
 ============
