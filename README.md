@@ -15,7 +15,11 @@ A misalignment of a tracking detector results in a residual between a hit positi
 #### Legacy code up to v1.0 is mainted here
 #### The official release is now maintained on Fermilab's redmine repository: https://cdcvs.fnal.gov/redmine/projects/gm2tracker/wiki/Tracker_Alignment_MC_with_Millipede_II_Framework
 
-DIR Structure
+Alignment flow
+============
+<img src="mpIIDESY/align_4.png" height="400">
+
+Project structure
 ============
 1. mpIIDESY/ - main directory for C++ Tracker MC code, and pede. 
 2. PEDE/ - up-to-date clean version of pede from DESY svn: http://svnsrv.desy.de/public/MillepedeII/tags/V04-06-00
@@ -29,9 +33,10 @@ To get the code (requires c++0x compiler suport for the Logger) working on gm2gp
 The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 5 Dec 2017).
 Makefiles detect the OS (SL Linux or Mac Unix) and use the right compiler automatically.
 
-1.  .. code-block:: bash
+1. 
+.. code-block:: bash
    git clone https://github.com/glukicov/alignTrack.git
-   
+
 to get the latest code from our repository 
 2. `cd alignTrack/mpIIDESY`
 3. `make`
