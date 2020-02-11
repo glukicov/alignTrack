@@ -9,9 +9,9 @@ A misalignment of a tracking detector results in a residual between a hit positi
 #### Results showing the performance of the alignment procedure (in simulation) are shown below:
 <a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a>
 
-#### * This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.
-#### * The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
-#### * The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking
+* This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.
+* The alignment procedure and alignment monitoring (including writing the derived calibration constants to the production database (PSQL) are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
+* The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking
 
 Alignment flow
 ============
@@ -34,9 +34,10 @@ To get the code (requires c++0x compiler suport for the Logger) working on gm2gp
 The utilised version of PEDE is V04-03-08 (up-to-date with DESY as of 5 Dec 2017).
 Makefiles detect the OS (SL Linux or Mac Unix) and use the right compiler automatically.
 
-1. 
+ 
 .. code-block:: bash
-   git clone https://github.com/glukicov/alignTrack.git
+    
+    git clone https://github.com/glukicov/alignTrack.git
 
 to get the latest code from our repository 
 2. `cd alignTrack/mpIIDESY`
