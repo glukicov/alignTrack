@@ -8,7 +8,7 @@ A misalignment of a tracking detector results in a residual between a hit positi
 
 #### Results demonstrating the performance of the alignment procedure (in simulation) are shown below:
 <div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a></div>
-For a well-aligned (calibrated) detector, the mean value of residuals are at zero, the p-value distribution of the fitted tracks is uniform, and more data is reconstructed (i.e. increased yield). 
+For a well-aligned (calibrated) detector, the mean value of residuals are at zero, the p-value distribution of the fitted tracks is uniform, and more data is reconstructed (i.e. increased yield).<br />
 
 * **This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.**
 * **The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking**
