@@ -4,10 +4,11 @@
 
 #### This project contains code and plotting scripts for the internal alignment (calibration) of the g-2 tracking detector.
 
-A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-value (i.e. track quality) of a fitted track.
+A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections (i.e. calibration) to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-values (i.e. track quality) of fitted tracks in data.
 
 #### Results demonstrating the performance of the alignment procedure (in simulation) are shown below:
 <div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a></div>
+For a well-aligned (calibrated) detector, the mean value of residuals are at zero, the p-value distribution of the fitted tracks is uniform, and more data is reconstructed (i.e. increased yield). 
 
 * **This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.**
 * **The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking**
