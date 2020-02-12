@@ -10,8 +10,8 @@ A misalignment of a tracking detector results in a residual between a hit positi
 <div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a></div>
 
 * **This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.**
+* **The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking**
 * The alignment procedure and alignment monitoring, including writing the derived calibration constants to the production database (PSQL), are detailed in [the alignment manual (link)](http://gm2-docdb.fnal.gov/cgi-bin/RetrieveFile?docid=9857&filename=manual.pdf&version=16)
-* The analysis of data from the now-calibrated (aligned) detector is continued in https://github.com/glukicov/EDMTracking
 
 Alignment flow
 ============
