@@ -1,6 +1,6 @@
 # alignTrack
 #### This project contains code and plotting scripts for the internal alignment (calibration) of the g-2 tracking detector.
-![Build status](https://travis-ci.org/glukicov/alignTrack.svg?branch=master)
+[![Build Status](https://travis-ci.org/glukicov/EDMTracking.svg?branch=master)](https://travis-ci.org/glukicov/EDMTracking)
 [![Build status](https://ci.appveyor.com/api/projects/status/bxd1k1qp0iqs68tw?svg=true)](https://ci.appveyor.com/project/glukicov/aligntrack)
 [![DOI](https://zenodo.org/badge/72191814.svg)](https://zenodo.org/badge/latestdoi/72191814)
 [![Coverage Status](https://coveralls.io/repos/github/glukicov/alignTrack/badge.svg?branch=master)](https://coveralls.io/github/glukicov/alignTrack?branch=master)
