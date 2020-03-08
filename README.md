@@ -1,6 +1,9 @@
 # alignTrack
 #### This project contains code and plotting scripts for the internal alignment (calibration) of the g-2 tracking detector.
+[![Build Status](https://travis-ci.org/glukicov/EDMTracking.svg?branch=master)](https://travis-ci.org/glukicov/EDMTracking)
+[![Build status](https://ci.appveyor.com/api/projects/status/bxd1k1qp0iqs68tw?svg=true)](https://ci.appveyor.com/project/glukicov/aligntrack)
 [![DOI](https://zenodo.org/badge/72191814.svg)](https://zenodo.org/badge/latestdoi/72191814)
+[![Coverage Status](https://coveralls.io/repos/github/glukicov/alignTrack/badge.svg?branch=master)](https://coveralls.io/github/glukicov/alignTrack?branch=master)
 <div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_2.png" height="230"></a></div>
 
 A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections (i.e. calibration) to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-values (i.e. track quality) of fitted tracks in data.
