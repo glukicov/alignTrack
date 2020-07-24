@@ -1,5 +1,6 @@
 # alignTrack
 #### This project contains code and plotting scripts for the internal alignment (calibration) of the g-2 tracking detector.
+[![release](https://img.shields.io/github/v/release/glukicov/alignTrack)](https://img.shields.io/github/v/release/glukicov/alignTrack)
 [![Build Status](https://travis-ci.org/glukicov/alignTrack.svg?branch=master)](https://travis-ci.org/glukicov/alignTrack)
 [![DOI](https://zenodo.org/badge/72191814.svg)](https://zenodo.org/badge/latestdoi/72191814)
 <div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_2.png" height="230"></a></div>
