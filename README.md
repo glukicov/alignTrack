@@ -3,14 +3,14 @@
 [![release](https://img.shields.io/github/v/release/glukicov/alignTrack)](https://img.shields.io/github/v/release/glukicov/alignTrack)
 [![Build Status](https://travis-ci.org/glukicov/alignTrack.svg?branch=master)](https://travis-ci.org/glukicov/alignTrack)
 [![DOI](https://zenodo.org/badge/72191814.svg)](https://zenodo.org/badge/latestdoi/72191814)
-<div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_2.png" height="230"></a></div>
+<div style="text-align:center"><a href=https://glukicov.github.io target="_blank"><img src="mpIIDESY/align_2.png" height="230"></a></div>
 <!--- [![Build status](https://ci.appveyor.com/api/projects/status/bxd1k1qp0iqs68tw?svg=true)](https://ci.appveyor.com/project/glukicov/aligntrack) --->
 <!--[![Coverage Status](https://coveralls.io/repos/github/glukicov/alignTrack/badge.svg?branch=master)](https://coveralls.io/github/glukicov/alignTrack?branch=master)-->
 
 A misalignment of a tracking detector results in a residual between a hit position (i.e. measurement) and a fitted track (i.e. prediction). This residual arises from the fact that the assumed detector position, which was used in the fitting of the track, is not the actual position of that detector. The alignment procedure aims to establish the corrections (i.e. calibration) to the assumed detector position, and hence, minimise the residuals. This minimisation of the residuals is a statistical problem, involving the optimisation of the p-values (i.e. track quality) of fitted tracks in data.
 
 #### Results demonstrating the performance of the alignment procedure (in simulation) are shown below:
-<div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a></div>
+<div style="text-align:center"><a href=https://glukicov.github.io target="_blank"><img src="mpIIDESY/align_3.png" height="270"></a></div>
 For a well-aligned (calibrated) detector, the mean value of residuals are at zero, the p-value distribution of the fitted tracks is uniform, and more data is reconstructed (i.e. increased yield):
 
 * **This work led to a publication (arXiv:1909.12900): <a href=https://arxiv.org/pdf/1909.12900.pdf target="_blank"> https://arxiv.org/pdf/1909.12900.pdf</a>, where alignment results with data are discussed.**
@@ -19,7 +19,7 @@ For a well-aligned (calibrated) detector, the mean value of residuals are at zer
 
 Alignment flow
 ============
-<div style="text-align:center"><a href=http://www.hep.ucl.ac.uk/~lukicov target="_blank"><img src="mpIIDESY/align_4.png" height="400"></a></div>
+<div style="text-align:center"><a href=https://glukicov.github.io target="_blank"><img src="mpIIDESY/align_4.png" height="400"></a></div>
 
 Project structure
 ============
